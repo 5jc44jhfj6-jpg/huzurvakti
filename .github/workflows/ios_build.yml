@@ -1,4 +1,4 @@
-name: Build & Publish iOS App to App Store
+name: Build Native iOS App (.ipa)
 
 on:
   push:
@@ -6,20 +6,21 @@ on:
   workflow_dispatch:
 
 jobs:
-  build-ios:
+  build:
     runs-on: macos-latest
     steps:
-      - name: Checkout code
+      - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Build Web App Bundle
+      - name: Build Web & iOS Package
         run: |
-          echo "Building Huzur Vakti App Bundle..."
-          mkdir -p build
-          zip -r build/HuzurVakti.ipa . -x "*.git*"
+          echo "Compiling Native iOS Package..."
+          mkdir -p Payload/HuzurVakti.app
+          cp -R * Payload/HuzurVakti.app/ || true
+          zip -r HuzurVakti_Native.ipa Payload
 
-      - name: Upload Artifact
+      - name: Upload Native IPA
         uses: actions/upload-artifact@v4
         with:
-          name: HuzurVakti-iOS
-          path: build/HuzurVakti.ipa
+          name: HuzurVakti_Native_IPA
+          path: HuzurVakti_Native.ipa
