@@ -9,6 +9,10 @@ workflows:
       ios_signing:
         distribution_type: app_store
         bundle_identifier: com.huzurvakti.namazvakitleri
+      vars:
+        BUNDLE_ID: com.huzurvakti.namazvakitleri
+        XCODE_WORKSPACE: "Huzur Vakti.xcworkspace"
+        XCODE_SCHEME: "Huzur Vakti"
     scripts:
       - name: Install CocoaPods
         script: |
@@ -18,10 +22,11 @@ workflows:
         script: |
           cd "Huzur Vakti"
           xcode-project use-profiles
-          xcodebuild -workspace "Huzur Vakti.xcworkspace" \
-            -scheme "Huzur Vakti" \
+          xcodebuild -workspace "$XCODE_WORKSPACE" \
+            -scheme "$XCODE_SCHEME" \
             -configuration Release \
             -archivePath "$CM_BUILD_DIR/HuzurVakti.xcarchive" \
+            CODE_SIGN_STYLE=Automatic \
             archive
           xcodebuild -exportArchive \
             -archivePath "$CM_BUILD_DIR/HuzurVakti.xcarchive" \
@@ -29,7 +34,6 @@ workflows:
             -exportPath "$CM_BUILD_DIR/output"
     artifacts:
       - "**/*.ipa"
-      - "**/*.xcarchive"
     publishing:
       app_store_connect:
         auth: integration
