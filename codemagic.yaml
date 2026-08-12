@@ -1,20 +1,35 @@
 workflows:
   ios-app-store:
     name: Huzur Vakti iOS Build
-    max_build_duration: 30
+    max_build_duration: 60
     instance_type: mac_mini_m1
     integrations:
       app_store_connect: Huzur Vakti
+    environment:
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: com.huzurvakti.namazvakitleri
     scripts:
-      - name: Prepare Huzur Vakti Web App
+      - name: Install CocoaPods
         script: |
-          echo "Preparing Huzur Vakti iOS Package..."
-          mkdir -p output
-          zip -r output/huzurvakti.zip . -x "*.git*"
+          cd "Huzur Vakti"
+          pod install --repo-update
+      - name: Build iOS App
+        script: |
+          cd "Huzur Vakti"
+          xcode-project use-profiles
+          xcodebuild -workspace "Huzur Vakti.xcworkspace" \
+            -scheme "Huzur Vakti" \
+            -configuration Release \
+            -archivePath "$CM_BUILD_DIR/HuzurVakti.xcarchive" \
+            archive
+          xcodebuild -exportArchive \
+            -archivePath "$CM_BUILD_DIR/HuzurVakti.xcarchive" \
+            -exportOptionsPlist /Users/builder/export_options.plist \
+            -exportPath "$CM_BUILD_DIR/output"
     artifacts:
-      - output/*.zip
-      - "*.zip"
-      - "*.ipa"
+      - "**/*.ipa"
+      - "**/*.xcarchive"
     publishing:
       app_store_connect:
         auth: integration
