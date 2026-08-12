@@ -1,0 +1,25 @@
+name: Build & Publish iOS App to App Store
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build-ios:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Build Web App Bundle
+        run: |
+          echo "Building Huzur Vakti App Bundle..."
+          mkdir -p build
+          zip -r build/HuzurVakti.ipa . -x "*.git*"
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: HuzurVakti-iOS
+          path: build/HuzurVakti.ipa
