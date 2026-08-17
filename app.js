@@ -12,7 +12,11 @@ const APP_STATE = {
   fontSize: 20,
   qiblaAngle: 0,
   surahList: [],
-  activePrayerId: null
+  activePrayerId: null,
+  notifyEnabled: false,
+  notifyOffset: 0,
+  notifySound: 'ezan',
+  qari: 'afs'
 };
 
 document.addEventListener('DOMContentLoaded', initApp);
@@ -40,6 +44,15 @@ function initApp() {
       loader.style.opacity = '0';
       setTimeout(() => { loader.style.display = 'none'; }, 500);
     }
+
+    // First time Notification Prompt
+    if (!localStorage.getItem('namaz_vakti_v25_prompted')) {
+      localStorage.setItem('namaz_vakti_v25_prompted', 'true');
+      setTimeout(() => {
+        const notifyModal = document.getElementById('notify-permission-modal');
+        if (notifyModal) notifyModal.style.display = 'flex';
+      }, 600); // Wait a bit after loader is hidden
+    }
   }, 800);
 }
 
@@ -54,6 +67,12 @@ function setupNavTabs() {
 }
 
 function navigateTo(pageId) {
+  // Pause audio when leaving page
+  const audioPlayer = document.getElementById('surah-audio-player');
+  if (audioPlayer) {
+    audioPlayer.pause();
+  }
+
   document.querySelectorAll('.nav-tab').forEach(t => {
     t.classList.toggle('active', t.getAttribute('data-page') === pageId);
   });
@@ -92,8 +111,12 @@ function saveSettings() {
     currentCity: APP_STATE.currentCity,
     currentDistrict: APP_STATE.currentDistrict,
     userLocation: APP_STATE.userLocation,
+    qiblaAngle: APP_STATE.qiblaAngle,
     isDarkTheme: APP_STATE.isDarkTheme,
-    fontSize: APP_STATE.fontSize
+    notifyEnabled: APP_STATE.notifyEnabled,
+    notifyOffset: APP_STATE.notifyOffset,
+    notifySound: APP_STATE.notifySound,
+    qari: APP_STATE.qari
   }));
 }
 
@@ -110,6 +133,21 @@ function applyStateSettings() {
   document.documentElement.style.setProperty('--quran-font-size', APP_STATE.fontSize + 'px');
   const sizeVal = document.getElementById('font-size-val');
   if (sizeVal) sizeVal.textContent = APP_STATE.fontSize + 'px';
+
+  const notifyToggle = document.getElementById('notify-toggle');
+  if (notifyToggle) notifyToggle.checked = APP_STATE.notifyEnabled;
+
+  const notifyTime = document.getElementById('notify-time');
+  if (notifyTime) notifyTime.value = APP_STATE.notifyOffset;
+
+  const notifySound = document.getElementById('notify-sound');
+  if (notifySound) notifySound.value = APP_STATE.notifySound;
+
+  const settingsQariSelect = document.getElementById('settings-qari-select');
+  if (settingsQariSelect) settingsQariSelect.value = APP_STATE.qari;
+
+  const surahQariSelect = document.getElementById('qari-select');
+  if (surahQariSelect) surahQariSelect.value = APP_STATE.qari;
 
   updateLocationHeaderLabel();
 }
@@ -401,16 +439,20 @@ function updatePrayerCountdown() {
   const s = Math.floor((diffMs % (1000 * 60)) / 1000);
 
   if (timerText) {
-    timerText.textContent = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+    timerText.textContent = `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
   }
 
-  const circle = document.getElementById('countdown-ticks-progress');
+  // Handle Notifications
+  checkPrayerNotification(nextPrayer, nextTimeDate, diffMs);
+
+  const activeIdx = order.indexOf(nextPrayer.id) - 1;
+  const currentActiveId = activeIdx >= 0 ? order[activeIdx] : order[order.length - 1];
+
+  const circle = document.getElementById('countdown-progress');
   if (circle) {
     const radius = circle.r.baseVal.value;
     const circumference = 2 * Math.PI * radius;
-    
-    const activeIdx = order.indexOf(nextPrayer.id) - 1;
-    const currentActiveId = activeIdx >= 0 ? order[activeIdx] : order[order.length - 1];
+    circle.style.strokeDasharray = `${circumference} ${circumference}`;
     
     let prevTimeDate = new Date();
     const prevTimeStr = APP_STATE.prayerTimes[currentActiveId];
@@ -426,12 +468,7 @@ function updatePrayerCountdown() {
     
     const totalWindowMs = nextTimeDate - prevTimeDate;
     const progressRatio = Math.max(0, Math.min(1, diffMs / totalWindowMs));
-    circle.style.strokeDashoffset = circumference * (1 - progressRatio);
-
-    const miniFill = document.getElementById('mini-flow-fill');
-    if (miniFill) {
-      miniFill.style.width = `${progressRatio * 100}%`;
-    }
+    circle.style.strokeDashoffset = circumference * progressRatio;
   }
 
   document.querySelectorAll('.prayer-card').forEach(c => {
@@ -440,8 +477,6 @@ function updatePrayerCountdown() {
     if (badge) badge.remove();
   });
 
-  const activeIdx = order.indexOf(nextPrayer.id) - 1;
-  const currentActiveId = activeIdx >= 0 ? order[activeIdx] : order[order.length - 1];
   const activeCard = document.getElementById(`prayer-card-${currentActiveId}`);
   if (activeCard) {
     activeCard.classList.add('active');
@@ -450,19 +485,18 @@ function updatePrayerCountdown() {
 
 // Daily Verse
 function loadDailyVerse() {
-  if (typeof DAILY_VERSES === 'undefined' || !DAILY_VERSES.length) return;
+  if (typeof DAILY_VERSES !== 'undefined' && DAILY_VERSES.length) {
+    const randomIndex = Math.floor(Math.random() * DAILY_VERSES.length);
+    const v = DAILY_VERSES[randomIndex];
 
-  // Random verse selection on every single refresh!
-  const randomIndex = Math.floor(Math.random() * DAILY_VERSES.length);
-  const v = DAILY_VERSES[randomIndex];
+    const ar = document.getElementById('daily-verse-arabic');
+    const tr = document.getElementById('daily-verse-turkish');
+    const src = document.getElementById('daily-verse-source');
 
-  const ar = document.getElementById('daily-verse-arabic');
-  const tr = document.getElementById('daily-verse-turkish');
-  const src = document.getElementById('daily-verse-source');
-
-  if (ar) ar.textContent = v.arabic;
-  if (tr) tr.textContent = `"${v.turkish}"`;
-  if (src) src.textContent = `— ${v.surah} Suresi, ${v.ayah}. Ayet`;
+    if (ar) ar.textContent = v.arabic;
+    if (tr) tr.textContent = `"${v.turkish}"`;
+    if (src) src.textContent = `— ${v.surah} Suresi, ${v.ayah}. Ayet`;
+  }
 }
 
 
@@ -512,13 +546,14 @@ function initQiblaCompass() {
 
   setupCompassTouchEvents();
 
-  // If permission not granted yet, show prompt automatically; otherwise start sensor automatically!
+  // If permission not granted yet, show prompt automatically
   const modal = document.getElementById('qibla-permission-modal');
   if (!localStorage.getItem('qibla_permission_granted')) {
     if (modal) modal.style.display = 'flex';
   } else {
     if (modal) modal.style.display = 'none';
-    startQiblaSensor();
+    // Already granted in a previous session, try to start sensors
+    startCompassSensors(true);
   }
 
   updateQiblaUI(0);
@@ -603,13 +638,51 @@ function setupCompassTouchEvents() {
   window.addEventListener('mouseup', handleEnd);
 }
 
-function startQiblaSensor(event) {
+function requestQiblaPermissionFlow(event) {
   if (event) event.preventDefault();
+  const modal = document.getElementById('qibla-permission-modal');
+  if (modal) modal.style.display = 'flex';
+}
+
+function acceptQiblaPermissionFlow() {
+  localStorage.setItem('qibla_permission_granted', 'true');
+  closeQiblaPermissionModal();
+  startCompassSensors(false);
+}
+
+function closeQiblaPermissionModal() {
+  const modal = document.getElementById('qibla-permission-modal');
+  if (modal) modal.style.display = 'none';
+}
+
+function startCompassSensors(isAutoStart = false) {
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        APP_STATE.userLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+        const degVal = document.getElementById('qibla-degree-val');
+        const distVal = document.getElementById('kaaba-dist-val');
+        APP_STATE.qiblaAngle = calculateQiblaBearing(pos.coords.latitude, pos.coords.longitude);
+        const dist = calculateGreatCircleDistance(pos.coords.latitude, pos.coords.longitude, 21.4225, 39.8262);
+        if (degVal) degVal.textContent = `${Math.round(APP_STATE.qiblaAngle)}° Güneydoğu`;
+        if (distVal) distVal.textContent = `${dist.toLocaleString('tr-TR')} km`;
+        updateQiblaUI(0);
+      },
+      (err) => console.warn('Compass geo error:', err),
+      { enableHighAccuracy: true, timeout: 5000 }
+    );
+  }
+
   const btn = document.getElementById('enable-compass-btn');
   const status = document.getElementById('compass-status-msg');
 
   if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
-    DeviceOrientationEvent.requestPermission()
+    if (isAutoStart) {
+      window.addEventListener('deviceorientation', handleOrientationEvent, true);
+      if (btn) btn.innerHTML = "✅ SENSÖR AKTİF (TELEFONU ÇEVİRİN)";
+      if (status) status.innerHTML = "✅ <b>Pusula sensörü aktif!</b> Telefonunuzu düz tutarak çevirin.";
+    } else {
+      DeviceOrientationEvent.requestPermission()
       .then(permissionState => {
         if (permissionState === 'granted') {
           window.addEventListener('deviceorientation', handleOrientationEvent, true);
@@ -617,18 +690,21 @@ function startQiblaSensor(event) {
           if (status) status.innerHTML = "✅ <b>Pusula sensörü aktif!</b> Telefonunuzu düz tutarak çevirin.";
         } else {
           if (btn) btn.innerHTML = "⚡ SENSÖR İZNİ VER & BAŞLAT";
-          if (status) status.innerHTML = "⚠️ Sensör izni verilmedi. Yukarıdaki butona basarak izin verin.";
+          if (status) status.innerHTML = "⚠️ Sensör izni reddedildi. İzin vermelisiniz.";
+          localStorage.removeItem('qibla_permission_granted'); // Reset if denied
         }
       })
       .catch(err => {
         console.warn('Compass permission error:', err);
+        // iOS requires user interaction, if it fails, reset
+        localStorage.removeItem('qibla_permission_granted');
         if (btn) btn.innerHTML = "⚡ SENSÖR İZNİ VER & BAŞLAT";
       });
+    }
   } else {
     if ('ondeviceorientationabsolute' in window) {
       window.addEventListener('deviceorientationabsolute', handleOrientationEvent, true);
-    }
-    if (window.DeviceOrientationEvent) {
+    } else if (window.DeviceOrientationEvent) {
       window.addEventListener('deviceorientation', handleOrientationEvent, true);
     }
     if (btn) btn.innerHTML = "✅ CANLI SENSÖR AKTİF";
@@ -665,11 +741,12 @@ function handleOrientationEvent(e) {
   if (smoothHeading === null) {
     smoothHeading = compassHeading;
   } else {
-    let diff = compassHeading - smoothHeading;
+    let normalizedSmooth = ((smoothHeading % 360) + 360) % 360;
+    let diff = compassHeading - normalizedSmooth;
     if (diff > 180) diff -= 360;
     if (diff < -180) diff += 360;
-    // Fast response factor (0.7 for instant rotation without lag)
-    smoothHeading = (smoothHeading + diff * 0.7 + 360) % 360;
+    // Accumulate the continuous heading to prevent CSS rotate from spinning backwards
+    smoothHeading += diff * 0.7;
   }
 
   const slider = document.getElementById('manual-compass-slider');
@@ -692,7 +769,7 @@ function updateQiblaUI(heading) {
 
   // Rotate gold needle to point relative to fixed 12 o'clock Kâbe target
   // Needle points straight UP (0°) into 🕋 Kâbe target when heading == qiblaAngle
-  const relativeNeedleAngle = (APP_STATE.qiblaAngle - heading + 360) % 360;
+  const relativeNeedleAngle = APP_STATE.qiblaAngle - heading;
 
   if (needle) {
     needle.style.transform = `translate(-50%, -50%) rotate(${relativeNeedleAngle}deg)`;
@@ -758,6 +835,13 @@ function initQuranSection() {
   document.getElementById('back-to-surahs')?.addEventListener('click', () => {
     document.getElementById('surah-list-view').style.display = 'block';
     document.getElementById('surah-detail-view').style.display = 'none';
+    
+    // Pause audio when returning to list
+    const audioPlayer = document.getElementById('surah-audio-player');
+    if (audioPlayer) {
+      audioPlayer.pause();
+      audioPlayer.currentTime = 0;
+    }
   });
 }
 
@@ -806,6 +890,37 @@ function filterSurahList(query) {
 async function loadSurahDetail(id, localSurahObj) {
   document.getElementById('surah-list-view').style.display = 'none';
   document.getElementById('surah-detail-view').style.display = 'block';
+
+  // Setup Audio Player
+  const audioPlayer = document.getElementById('surah-audio-player');
+  const qariSelect = document.getElementById('qari-select');
+  if (audioPlayer && qariSelect) {
+    const paddedId = String(id).padStart(3, '0');
+    
+    const setAudioSource = () => {
+      const option = qariSelect.options[qariSelect.selectedIndex];
+      const server = option.getAttribute('data-server');
+      const qari = option.value;
+      audioPlayer.src = `https://${server}.mp3quran.net/${qari}/${paddedId}.mp3`;
+      audioPlayer.load();
+    };
+
+    setAudioSource();
+
+    qariSelect.onchange = () => {
+      const wasPlaying = !audioPlayer.paused;
+      const currentTime = audioPlayer.currentTime;
+      setAudioSource();
+      
+      if (wasPlaying) {
+        audioPlayer.oncanplay = () => {
+          audioPlayer.currentTime = currentTime;
+          audioPlayer.play();
+          audioPlayer.oncanplay = null;
+        };
+      }
+    };
+  }
 
   const headerCard = document.getElementById('surah-header-card');
   const ayahWrap = document.getElementById('ayah-list-wrap');
@@ -1102,6 +1217,41 @@ function setupSettingsListeners() {
     saveSettings();
   });
 
+  document.getElementById('notify-toggle')?.addEventListener('change', (e) => {
+    APP_STATE.notifyEnabled = e.target.checked;
+    saveSettings();
+    if (APP_STATE.notifyEnabled) {
+      if (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers['push-permission-request']) {
+        window.webkit.messageHandlers['push-permission-request'].postMessage('');
+      } else if (Notification.permission !== 'granted') {
+        Notification.requestPermission();
+      }
+    }
+  });
+
+  document.getElementById('notify-time')?.addEventListener('change', (e) => {
+    APP_STATE.notifyOffset = parseInt(e.target.value);
+    saveSettings();
+  });
+
+  document.getElementById('notify-sound')?.addEventListener('change', (e) => {
+    APP_STATE.notifySound = e.target.value;
+    saveSettings();
+  });
+
+  const syncQari = (e) => {
+    APP_STATE.qari = e.target.value;
+    applyStateSettings();
+    saveSettings();
+    const surahQariSelect = document.getElementById('qari-select');
+    if (surahQariSelect && typeof surahQariSelect.onchange === 'function') {
+      surahQariSelect.onchange({ target: surahQariSelect });
+    }
+  };
+
+  document.getElementById('settings-qari-select')?.addEventListener('change', syncQari);
+  document.getElementById('qari-select')?.addEventListener('change', syncQari);
+
   document.getElementById('auto-gps-btn')?.addEventListener('click', requestGPSLocation);
 }
 
@@ -1173,3 +1323,73 @@ function requestGPSLocation() {
     { enableHighAccuracy: true, timeout: 12000 }
   );
 }
+
+// --- NOTIFICATION LOGIC ---
+let notifiedPrayers = JSON.parse(localStorage.getItem('namaz_vakti_notified') || '{}');
+let activeAudioObj = null;
+
+function checkPrayerNotification(nextPrayer, nextTimeDate, diffMs) {
+  if (!APP_STATE.notifyEnabled) return;
+
+  const targetMs = APP_STATE.notifyOffset * 60 * 1000;
+  const dateStr = nextTimeDate.toISOString().split('T')[0];
+  const prayerKey = `${dateStr}_${nextPrayer.id}_${APP_STATE.notifyOffset}`;
+
+  // 1.5 seconds window to trigger (to catch it reliably during the 1-second interval)
+  if (diffMs <= targetMs && diffMs > targetMs - 1500 && !notifiedPrayers[prayerKey]) {
+    notifiedPrayers[prayerKey] = true;
+    localStorage.setItem('namaz_vakti_notified', JSON.stringify(notifiedPrayers));
+    triggerNotification(nextPrayer, APP_STATE.notifyOffset);
+  }
+}
+
+function triggerNotification(prayer, offset) {
+  const title = "Huzur Vakti Namaz Hatırlatıcısı";
+  const msg = offset === 0 
+    ? `${prayer.name} vakti girdi!`
+    : `${prayer.name} vaktine ${offset} dakika kaldı.`;
+
+  // 1. Browser API Notification
+  if (Notification.permission === 'granted') {
+    try {
+      new Notification(title, { body: msg, icon: 'icon.png' });
+    } catch (e) { console.warn("Notification error:", e); }
+  }
+
+  // 2. Play Sound
+  if (APP_STATE.notifySound !== 'silent') {
+    if (activeAudioObj) {
+      activeAudioObj.pause();
+      activeAudioObj.currentTime = 0;
+    }
+    
+    let audioUrl = '';
+    if (APP_STATE.notifySound === 'beep') {
+      audioUrl = 'https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3';
+    } else if (APP_STATE.notifySound === 'ezan') {
+      // Using a short beautiful recitation (Fatiha) as alert since direct adhan APIs often block CORS
+      audioUrl = 'https://server8.mp3quran.net/afs/001.mp3'; 
+    }
+
+    if (audioUrl) {
+      activeAudioObj = new Audio(audioUrl);
+      activeAudioObj.play().catch(e => console.warn('Audio play blocked by browser:', e));
+    }
+  }
+}
+
+// Notification Flow
+window.acceptNotificationPermissionFlow = function() {
+  const notifyModal = document.getElementById('notify-permission-modal');
+  if (notifyModal) notifyModal.style.display = 'none';
+  
+  APP_STATE.notifyEnabled = true;
+  saveSettings();
+  applyStateSettings();
+  
+  if (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers['push-permission-request']) {
+    window.webkit.messageHandlers['push-permission-request'].postMessage('');
+  } else if (Notification.permission !== 'granted') {
+    Notification.requestPermission();
+  }
+};

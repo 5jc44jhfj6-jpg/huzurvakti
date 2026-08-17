@@ -19,10 +19,10 @@
     <link rel="apple-touch-icon" href="icon-512.jpg">
     <meta name="description" content="Namaz Vakitleri, Kıble Pusulası, Kuran-ı Kerim ve Namaz Rehberi">
 
-    <link rel="stylesheet" href="styles.css?v=52.0.0">
-    <script src="cities.js?v=52.0.0" defer></script>
-    <script src="data.js?v=52.0.0" defer></script>
-    <script src="app.js?v=52.0.0" defer></script>
+    <link rel="stylesheet" href="styles.css?v=54.0.0">
+    <script src="cities.js?v=54.0.0" defer></script>
+    <script src="data.js?v=54.0.0" defer></script>
+    <script src="app.js?v=54.0.0" defer></script>
 </head>
 <body class="dark-theme">
     <!-- Loading Screen -->
@@ -63,9 +63,18 @@
                 <!-- 2. ORTA: Dairesel Çember (SADECE İkindi Vaktine Kalan + Geri Sayım) -->
                 <div class="countdown-hero-wrap">
                     <div class="circle-progress-wrapper">
-                        <svg class="circle-progress-svg" width="200" height="200" viewBox="0 0 200 200">
-                            <circle class="progress-bg" stroke-width="8" fill="transparent" r="86" cx="100" cy="100"/>
-                            <circle id="countdown-progress" class="progress-bar" stroke-width="8" fill="transparent" r="86" cx="100" cy="100"/>
+                        <svg class="circle-progress-svg" width="190" height="190" viewBox="0 0 190 190">
+                            <defs>
+                                <linearGradient id="goldGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                                    <stop offset="0%" stop-color="#fff5c3" />
+                                    <stop offset="50%" stop-color="#d4af37" />
+                                    <stop offset="100%" stop-color="#8a6d1c" />
+                                </linearGradient>
+                            </defs>
+                            <!-- Background track -->
+                            <circle class="progress-bg" stroke-width="6" fill="transparent" r="85" cx="95" cy="95"/>
+                            <!-- Animated progress -->
+                            <circle id="countdown-progress" class="progress-bar" stroke-width="6" fill="transparent" r="85" cx="95" cy="95" stroke="url(#goldGradient)"/>
                         </svg>
                         <div class="countdown-inner">
                             <div id="countdown-target" class="countdown-target">İkindi Vaktine Kalan</div>
@@ -171,9 +180,21 @@
                     <div class="modal-icon-badge">🕋</div>
                     <h3>Kıble Yönü İzin Onayı</h3>
                     <p>Kıblenin yönünü doğru bulabilmek için konum bilgisine ve telefon pusula sensörüne izin vermeniz gerekmektedir.</p>
-                    <div class="modal-btn-row">
-                        <button class="modal-approve-btn" onclick="acceptQiblaPermissionFlow()">✅ TAMAM, İZİN VER</button>
-                        <button class="modal-cancel-btn" onclick="closeQiblaPermissionModal()">❌ İPTAL</button>
+                    <div class="modal-actions" style="margin-top: 15px; display: flex; flex-direction: column; gap: 10px;">
+                        <button class="modal-approve-btn" onclick="acceptQiblaPermissionFlow()">✅ DEVAM ET</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bildirim İzin Onay Penceresi (Modal Prompt) -->
+            <div id="notify-permission-modal" class="modal-backdrop-overlay" style="display: none;">
+                <div class="modal-dialog-card">
+                    <div class="modal-icon-badge">🔔</div>
+                    <h3>Bildirim Onayı</h3>
+                    <p>Namaz vakitleri için cihazınızdan bildirim almak istiyor musunuz?</p>
+                    <div class="modal-actions" style="margin-top: 15px; display: flex; flex-direction: column; gap: 10px;">
+                        <button class="modal-approve-btn" onclick="acceptNotificationPermissionFlow()">✅ DEVAM ET</button>
+                        <button class="modal-approve-btn" onclick="document.getElementById('notify-permission-modal').style.display='none'" style="background: var(--bg-deep); color: var(--text-sub); border: 1px solid var(--border-soft); box-shadow: none;">Şimdilik Geç</button>
                     </div>
                 </div>
             </div>
@@ -202,6 +223,20 @@
                             <button id="font-increase" class="font-btn">A+</button>
                         </div>
                     </div>
+                    
+                    <div class="audio-player-card" style="background: var(--bg-card); border: 1px solid var(--border-gold); border-radius: 12px; padding: 12px; margin-bottom: 14px; display: flex; flex-direction: column; align-items: center; gap: 8px;">
+                        <div style="width: 100%; display: flex; justify-content: space-between; align-items: center; padding: 0 4px;">
+                            <div style="font-size: 0.9rem; color: var(--gold-light); font-weight: 600;">🎙️ Sesli Dinle</div>
+                            <select id="qari-select" style="background: var(--bg-dark); color: var(--text-main); border: 1px solid var(--border-light); border-radius: 6px; padding: 4px; font-size: 0.8rem; outline: none; cursor: pointer;">
+                                <option value="afs" data-server="server8">Mishary Rashid Alafasy</option>
+                                <option value="basit" data-server="server7">Abdul Basit Abdussamed</option>
+                                <option value="maher" data-server="server12">Maher Al Muaiqly</option>
+                                <option value="s_gmd" data-server="server7">Saad El Ghamidi</option>
+                            </select>
+                        </div>
+                        <audio id="surah-audio-player" controls style="width: 100%; height: 36px; outline: none; border-radius: 20px;"></audio>
+                    </div>
+
                     <div id="surah-header-card" class="surah-detail-header-card"></div>
                     <div id="ayah-list-wrap"></div>
                 </div>
@@ -258,6 +293,52 @@
                         </div>
                     </div>
                     <div class="settings-group">
+                        <div class="group-title">🔔 Bildirim Ayarları</div>
+                        <div class="settings-card-box">
+                            <div class="setting-row" style="display: flex; justify-content: space-between; align-items: center;">
+                                <label for="notify-toggle" style="margin: 0; font-weight: 600;">Vakit Bildirimleri</label>
+                                <label class="switch">
+                                    <input type="checkbox" id="notify-toggle">
+                                    <span class="slider round"></span>
+                                </label>
+                            </div>
+                            <div class="setting-row">
+                                <label for="notify-time">Bildirim Zamanı</label>
+                                <select id="notify-time" class="select-input">
+                                    <option value="0">Tam vaktinde</option>
+                                    <option value="1">1 dakika kala (Test)</option>
+                                    <option value="15">15 dakika kala</option>
+                                    <option value="30">30 dakika kala</option>
+                                    <option value="45">45 dakika kala</option>
+                                </select>
+                            </div>
+                            <div class="setting-row">
+                                <label for="notify-sound">Bildirim Türü</label>
+                                <select id="notify-sound" class="select-input">
+                                    <option value="silent">Sessiz (Sadece Ekranda)</option>
+                                    <option value="beep">Sesli (Kısa Zil)</option>
+                                    <option value="ezan">Sesli (Kısa Ezan)</option>
+                                </select>
+                            </div>
+                            <div style="font-size: 0.75rem; color: var(--text-sub); margin-top: 8px;">* Tarayıcı/Cihaz bildirim izinlerinin açık olduğundan emin olun.</div>
+                        </div>
+                    </div>
+
+                    <div class="settings-group">
+                        <div class="group-title">🎙️ Ses ve Okuma</div>
+                        <div class="settings-card-box">
+                            <div class="setting-row">
+                                <label for="settings-qari-select">Kuran Okuyucu (İmam)</label>
+                                <select id="settings-qari-select" class="select-input">
+                                    <option value="afs" data-server="server8">Mishary Rashid Alafasy</option>
+                                    <option value="basit" data-server="server7">Abdul Basit Abdussamed</option>
+                                    <option value="maher" data-server="server12">Maher Al Muaiqly</option>
+                                    <option value="s_gmd" data-server="server7">Saad El Ghamidi</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="settings-group">
                         <div class="group-title">🎨 Görünüm</div>
                         <div class="settings-card-box">
                             <div class="setting-row">
@@ -273,9 +354,21 @@
                             </div>
                         </div>
                     </div>
+                    <div class="settings-group">
+                        <div class="group-title">🔊 Ses & Bildirim</div>
+                        <div class="settings-card-box">
+                            <div class="setting-row">
+                                <label for="reciter-select">Kuran Okuyucu (İmam)</label>
+                                <select id="reciter-select" class="select-input" disabled>
+                                    <option value="alafasy" selected>Mishary Rashid Alafasy</option>
+                                    <option value="abdulbasit">Abdulbasit Abdussamed (Yakında)</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
                     <div class="app-info-footer">
                         <div class="footer-logo">🕌</div>
-                        <div class="footer-ver">Huzur Vakti v2.8 Premium</div>
+                        <div class="footer-ver">Huzur Vakti v1.1 Premium</div>
                         <div style="font-size: 0.8rem; margin-top: 4px;">Tüm Hakları Saklıdır • Diyanet Uyumlu</div>
                     </div>
                 </div>
@@ -298,7 +391,7 @@
     <script>
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
-          navigator.serviceWorker.register('/sw.js?v=32.0.0')
+          navigator.serviceWorker.register('/sw.js?v=54.0.0')
             .then(reg => {
               reg.onupdatefound = () => {
                 const installingWorker = reg.installing;

@@ -44,6 +44,29 @@ body.light-theme {
   --shadow-glow: 0 0 20px rgba(179, 139, 30, 0.3);
 }
 
+body.light-theme .hero-frame-box {
+  background: radial-gradient(circle at 50% 25%, rgba(255, 255, 255, 0.85) 0%, rgba(245, 242, 232, 0.95) 85%);
+  border-color: var(--gold);
+}
+
+body.light-theme .location-chip {
+  background: rgba(255, 255, 255, 0.9);
+  color: var(--text-main);
+}
+body.light-theme .location-chip:hover {
+  background: rgba(240, 240, 240, 0.95);
+}
+
+body.light-theme .verse-arabic {
+  color: var(--gold-light);
+  text-shadow: none;
+}
+
+body.light-theme .compass-dial-ring {
+  background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.95) 0%, rgba(240, 235, 220, 1) 90%);
+  box-shadow: 0 0 30px rgba(212, 175, 55, 0.3), inset 0 0 20px rgba(0, 0, 0, 0.1);
+}
+
 * {
   box-sizing: border-box;
   margin: 0;
@@ -77,7 +100,7 @@ body::before {
   z-index: 0;
   background-image: 
     linear-gradient(180deg, rgba(4, 13, 10, 0.50) 0%, rgba(4, 13, 10, 0.75) 100%),
-    url('bg-mosque.jpg');
+    url('sivas_bg.jpg');
   background-size: cover;
   background-position: center top;
   background-repeat: no-repeat;
@@ -87,7 +110,7 @@ body::before {
 body.light-theme::before {
   background-image: 
     linear-gradient(180deg, rgba(245, 242, 232, 0.65) 0%, rgba(245, 242, 232, 0.85) 100%),
-    url('bg-mosque.jpg');
+    url('sivas_bg.jpg');
   opacity: 0.45;
 }
 
@@ -172,7 +195,7 @@ body.light-theme #app-header { background: rgba(245, 242, 232, 0.9); }
   background: radial-gradient(circle at 50% 25%, rgba(13, 40, 32, 0.92) 0%, rgba(4, 13, 10, 0.96) 85%);
   backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
   border: 1.8px solid var(--gold); border-radius: var(--radius-lg);
-  padding: 12px 10px 40px 10px;
+  padding: 10px;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7), var(--shadow-glow);
   display: flex; flex-direction: column; justify-content: flex-start;
   height: 100%; width: 100%; overflow-y: auto; -webkit-overflow-scrolling: touch;
@@ -206,43 +229,45 @@ body.light-theme #app-header { background: rgba(245, 242, 232, 0.9); }
 
 .circle-progress-wrapper {
   position: relative;
-  width: 205px; height: 205px; border-radius: 50%;
-  padding: 12px;
-  background: radial-gradient(circle, rgba(212, 175, 55, 0.18) 0%, rgba(4, 13, 10, 0.96) 75%);
-  border: 3px double var(--gold);
-  box-shadow: 0 0 35px rgba(212, 175, 55, 0.65), inset 0 0 25px rgba(212, 175, 55, 0.3);
+  width: 190px; height: 190px; border-radius: 50%;
+  padding: 0; margin: 4px auto;
   display: flex; justify-content: center; align-items: center;
+  background: radial-gradient(circle, rgba(14, 40, 33, 0.4) 0%, transparent 70%);
 }
 
 .circle-progress-svg {
-  transform: rotate(-90deg); width: 180px; height: 180px;
+  transform: rotate(-90deg); width: 190px; height: 190px;
+  position: absolute;
+  top: 0; left: 0;
 }
 
-.progress-bg { stroke: rgba(212, 175, 55, 0.22); stroke-dasharray: 6 3; }
+.progress-bg { 
+  stroke: rgba(212, 175, 55, 0.15); 
+  stroke-dasharray: 2 4;
+}
 
 .progress-bar {
-  stroke: #f7e8a1; stroke-dasharray: 8 4; stroke-linecap: round;
+  stroke-linecap: round;
   transition: stroke-dashoffset 1s linear;
-  filter: drop-shadow(0 0 12px rgba(247, 232, 161, 0.95));
+  filter: drop-shadow(0 0 6px rgba(212, 175, 55, 0.8));
 }
 
 .countdown-inner {
-  position: absolute; top: 50%; left: 50%;
-  transform: translate(-50%, -50%);
-  text-align: center; width: 155px;
+  position: relative; z-index: 2;
+  text-align: center;
   display: flex; flex-direction: column; align-items: center; justify-content: center;
 }
 
 .countdown-target {
-  font-size: 0.96rem; color: var(--gold-light); font-weight: 700;
-  line-height: 1.25; margin-bottom: 4px; word-break: break-word;
-  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.9);
+  font-size: 0.78rem; color: var(--gold-light); font-weight: 600;
+  margin-bottom: 2px; text-transform: uppercase; letter-spacing: 0.8px;
+  padding: 0 10px;
 }
 
 .countdown-timer-text {
-  font-size: 2.15rem; font-weight: 700; color: #ffffff; line-height: 1;
+  font-size: 1.6rem; font-weight: 800; color: #ffffff;
+  letter-spacing: 1.5px; text-shadow: 0 2px 8px rgba(0,0,0,0.9);
   font-variant-numeric: tabular-nums;
-  text-shadow: 0 0 16px rgba(212, 175, 55, 0.8);
 }
 
 /* ═══ 3. ALT: NAMAZ VAKİTLERİ & GÜNÜN AYETİ ═══ */
@@ -250,8 +275,11 @@ body.light-theme #app-header { background: rgba(245, 242, 232, 0.9); }
   position: relative;
   border: 1.8px solid var(--gold); border-radius: 16px;
   background: linear-gradient(180deg, rgba(8, 28, 22, 0.96) 0%, rgba(4, 13, 10, 0.98) 100%);
-  padding: 8px;
+  padding: 10px;
   box-shadow: 0 0 30px rgba(212, 175, 55, 0.4), inset 0 0 20px rgba(0, 0, 0, 0.6);
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
 }
 .corner-ornament { position: absolute; color: var(--gold); font-size: 0.95rem; line-height: 1; pointer-events: none; }
 .corner-ornament.tl { top: 3px; left: 5px; }
@@ -277,11 +305,18 @@ body.light-theme #app-header { background: rgba(245, 242, 232, 0.9); }
 .prayer-time { font-size: 1.15rem; font-weight: 700; color: #ffffff; }
 
 /* Daily Verse */
-.daily-verse-card { border-top: 1.5px solid rgba(212, 175, 55, 0.4); padding: 6px 8px; margin-top: 4px; }
-.verse-card-title { font-size: 0.88rem; font-weight: 700; color: var(--gold-light); text-align: center; margin-bottom: 2px; }
-.verse-arabic { font-family: var(--font-ar); font-size: clamp(1.05rem, 3.4vw, 1.3rem); color: var(--gold-light); line-height: 1.4; direction: rtl; text-align: right; margin-bottom: 2px; }
-.verse-turkish { font-size: clamp(0.72rem, 2.3vw, 0.82rem); color: var(--text-sub); line-height: 1.35; margin-bottom: 2px; }
-.verse-source { font-size: 0.7rem; color: var(--gold-light); text-align: right; font-weight: 600; }
+.daily-verse-card {
+  background: var(--bg-card);
+  border: 1.5px solid var(--border-gold);
+  border-radius: var(--radius-md);
+  padding: 12px 16px;
+  margin-top: 16px;
+  box-shadow: var(--shadow-card);
+}
+.verse-card-title { font-size: 0.95rem; font-weight: 700; color: var(--gold-light); text-align: center; margin-bottom: 4px; }
+.verse-arabic { font-family: var(--font-ar); font-size: clamp(1.2rem, 4vw, 1.5rem); color: var(--gold-light); line-height: 1.4; direction: rtl; text-align: right; margin-bottom: 4px; }
+.verse-turkish { font-size: clamp(0.9rem, 3.2vw, 1.05rem); color: var(--text-sub); line-height: 1.4; margin-bottom: 6px; font-weight: 500; }
+.verse-source { font-size: 0.75rem; color: var(--gold-light); text-align: right; font-weight: 700; opacity: 0.9; }
 
 /* Page Headers */
 .page-header-title { text-align: center; margin-bottom: 12px; }
@@ -523,40 +558,39 @@ input:checked + .toggle-slider::before { transform: translateX(20px); }
 /* ═══ QIBLA COMPASS ENHANCEMENTS ═══ */
 .compass-container {
   position: relative;
-  width: 260px;
-  height: 260px;
-  margin: 10px auto 16px;
+  width: 280px;
+  height: 280px;
+  margin: 15px auto 20px;
 }
 
 .compass-dial-ring {
   position: absolute;
   inset: 0;
   border-radius: 50%;
-  border: 3px solid var(--gold);
-  background: radial-gradient(circle, rgba(14, 40, 33, 0.92) 0%, rgba(4, 12, 10, 0.98) 80%);
-  box-shadow: 0 0 40px rgba(212, 175, 55, 0.6), inset 0 0 30px rgba(0, 0, 0, 0.8);
+  border: 2px solid rgba(212, 175, 55, 0.5);
+  background: radial-gradient(circle, rgba(18, 38, 33, 0.95) 0%, rgba(8, 20, 16, 0.98) 100%);
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.6), inset 0 0 15px rgba(212, 175, 55, 0.15);
 }
 
-/* Compass tick marks around the edge */
 .compass-dial-ring::before {
   content: '';
   position: absolute;
   inset: 6px;
   border-radius: 50%;
-  border: 1.5px dashed rgba(212, 175, 55, 0.3);
+  border: 1px dashed rgba(212, 175, 55, 0.4);
+  pointer-events: none;
 }
-
 .compass-dial-ring::after {
   content: '';
   position: absolute;
-  inset: 15px;
+  inset: 12px;
   border-radius: 50%;
-  border: 1px solid rgba(212, 175, 55, 0.15);
+  border: 1px solid rgba(212, 175, 55, 0.2);
 }
 
 .compass-inner-dial {
   position: absolute;
-  inset: 20px;
+  inset: 16px;
   border-radius: 50%;
   border: none;
   transition: transform 0.08s ease-out;
@@ -565,13 +599,13 @@ input:checked + .toggle-slider::before { transform: translateX(20px); }
 
 .compass-point {
   position: absolute;
-  font-weight: 700;
-  font-size: 1.05rem;
-  color: var(--gold-light);
-  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.8);
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: rgba(212, 175, 55, 0.85);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
 }
 
-.compass-point.n { top: 4px; left: 50%; transform: translateX(-50%); color: #ff5252; font-size: 1.2rem; font-weight: 800; }
+.compass-point.n { top: 4px; left: 50%; transform: translateX(-50%); color: #e53935; font-size: 1.1rem; font-weight: 700; }
 .compass-point.s { bottom: 4px; left: 50%; transform: translateX(-50%); }
 .compass-point.e { top: 50%; right: 4px; transform: translateY(-50%); }
 .compass-point.w { top: 50%; left: 4px; transform: translateY(-50%); }
