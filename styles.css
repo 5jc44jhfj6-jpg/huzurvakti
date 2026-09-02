@@ -955,3 +955,233 @@ input:checked + .toggle-slider::before { transform: translateX(20px); }
   font-weight: 700;
   box-shadow: 0 2px 10px rgba(212, 175, 55, 0.5);
 }
+
+/* ══════════════════════════════════════════════════════════
+   HUZUR VAKTİ v55 — YENİ ÖZELLİK STİLLERİ (content.js + features.js)
+   Mevcut stiller korunmuştur; bu blok yalnızca yeni bileşenler içindir.
+   ══════════════════════════════════════════════════════════ */
+
+/* Home ek: Hicri ayraç, mini paylaş, Günün Hadisi */
+.date-sep { margin: 0 6px; opacity: 0.5; }
+#date-display-hijri { color: var(--gold); font-weight: 700; }
+
+.mini-share-btn {
+  margin-top: 8px; background: rgba(212,175,55,0.14); border: 1px solid var(--border-gold);
+  color: var(--gold-light); font-size: 0.72rem; font-weight: 700; padding: 5px 14px;
+  border-radius: 16px; cursor: pointer; display: block; margin-left: auto;
+}
+.mini-share-btn:active { transform: scale(0.96); }
+
+.daily-hadis-card {
+  background: var(--bg-card); border: 1.5px solid var(--border-gold); border-radius: var(--radius-md);
+  padding: 12px 16px; margin-top: 10px; box-shadow: var(--shadow-card);
+}
+.hadis-arabic { font-family: var(--font-ar); font-size: 1.15rem; color: var(--gold-light); direction: rtl; text-align: right; margin-bottom: 6px; line-height: 1.6; }
+.hadis-text { font-size: clamp(0.9rem,3.2vw,1.02rem); color: var(--text-sub); line-height: 1.5; font-weight: 500; font-style: italic; }
+.hadis-source { font-size: 0.75rem; color: var(--gold-light); text-align: right; font-weight: 700; margin-top: 6px; opacity: 0.9; }
+
+/* ── HUB IZGARASI ── */
+.hub-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; padding: 4px 0; }
+.hub-card {
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
+  background: var(--bg-card); border: 1.4px solid var(--border-gold); border-radius: var(--radius-md);
+  padding: 16px 10px; cursor: pointer; text-align: center; box-shadow: var(--shadow-card);
+  transition: all 0.22s ease; min-height: 108px; color: var(--text-main); font-family: var(--font-ui);
+}
+.hub-card:hover, .hub-card:active { background: var(--bg-card-hover); border-color: var(--gold-light); transform: translateY(-2px); box-shadow: 0 0 18px rgba(212,175,55,0.4); }
+.hub-icon { font-size: 2rem; filter: drop-shadow(0 2px 6px rgba(0,0,0,0.4)); margin-bottom: 2px; }
+.hub-title { font-size: 0.92rem; font-weight: 700; color: var(--gold-light); line-height: 1.15; }
+.hub-sub { font-size: 0.72rem; color: var(--text-muted); }
+
+/* ── GERİ BUTONU ── */
+.hub-back-btn {
+  background: var(--bg-card); border: 1.2px solid var(--border-gold); color: var(--gold-light);
+  padding: 6px 14px; border-radius: 20px; cursor: pointer; font-size: 0.82rem; font-weight: 600;
+  margin-bottom: 10px; align-self: flex-start; font-family: var(--font-ui);
+}
+.hub-back-btn:active { transform: scale(0.97); }
+
+/* ── SEGMENT BUTON ── */
+.segmented-switch, .share-type-switch {
+  display: flex; gap: 6px; background: rgba(4,13,10,0.8); border: 1.2px solid var(--border-gold);
+  border-radius: 30px; padding: 4px; margin-bottom: 14px; box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+}
+.seg-btn {
+  flex: 1; background: transparent; border: none; color: var(--text-sub); font-size: 0.82rem;
+  font-weight: 600; padding: 8px 6px; border-radius: 22px; cursor: pointer; transition: all 0.25s ease;
+  font-family: var(--font-ui);
+}
+.seg-btn.active { background: var(--gold-gradient); color: #050d0b; font-weight: 700; box-shadow: 0 2px 10px rgba(212,175,55,0.5); }
+
+/* ── GENEL ÖZELLİK KARTI ── */
+.feature-card {
+  background: var(--bg-card); border: 1.2px solid var(--border-gold); border-radius: var(--radius-md);
+  padding: 12px 14px; margin-bottom: 10px; box-shadow: var(--shadow-card);
+}
+.fc-title { font-size: 0.95rem; font-weight: 700; color: var(--gold-light); margin-bottom: 8px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.fc-ar { font-family: var(--font-ar); font-size: clamp(1.15rem,4vw,1.4rem); color: var(--gold-light); direction: rtl; text-align: right; line-height: 1.8; margin-bottom: 8px; padding: 8px; background: rgba(212,175,55,0.08); border-radius: 8px; border-right: 3px solid var(--gold); }
+.fc-ok { font-size: 0.85rem; color: var(--gold-light); line-height: 1.5; background: rgba(212,175,55,0.08); border-left: 3px solid var(--gold); border-radius: 6px; padding: 8px 12px; margin-bottom: 8px; }
+.fc-tr { font-size: 0.85rem; color: var(--text-sub); line-height: 1.5; }
+.fc-note { font-size: 0.78rem; color: var(--text-muted); margin-top: 8px; padding: 6px 10px; background: rgba(0,0,0,0.2); border-radius: 6px; border: 1px dashed rgba(212,175,55,0.25); }
+.count-badge { background: var(--gold-gradient); color: #050d0b; font-size: 0.72rem; font-weight: 800; padding: 2px 8px; border-radius: 12px; }
+.empty-note, .info-note { text-align: center; color: var(--text-muted); font-size: 0.82rem; padding: 12px; background: rgba(10,32,25,0.5); border: 1px solid rgba(212,175,55,0.2); border-radius: var(--radius-md); margin-bottom: 10px; line-height: 1.5; }
+.section-mini-title { font-size: 0.9rem; font-weight: 700; color: var(--gold-light); margin: 12px 0 8px; padding-bottom: 5px; border-bottom: 1px solid rgba(212,175,55,0.3); }
+
+/* ── ÖNEMLİ SURELER ── */
+.onemli-card { cursor: pointer; transition: all 0.2s ease; }
+.onemli-card:active { transform: scale(0.99); }
+.onemli-head { display: flex; align-items: center; gap: 10px; margin-bottom: 4px; }
+.onemli-badge { width: 30px; height: 30px; border-radius: 50%; background: rgba(212,175,55,0.18); border: 1.2px solid var(--border-gold); color: var(--gold-light); font-weight: 700; font-size: 0.8rem; display: flex; justify-content: center; align-items: center; flex-shrink: 0; }
+.onemli-head .fc-title { margin: 0; flex: 1; }
+.onemli-go { font-size: 1.4rem; color: var(--gold); }
+
+/* ── ESMAÜL HÜSNA ── */
+.esma-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+.esma-item { background: var(--bg-card); border: 1.2px solid var(--border-gold); border-radius: var(--radius-md); padding: 10px; box-shadow: var(--shadow-card); }
+.esma-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; }
+.esma-no { width: 22px; height: 22px; border-radius: 50%; background: rgba(212,175,55,0.18); border: 1px solid var(--border-gold); color: var(--gold-light); font-size: 0.68rem; font-weight: 700; display: flex; justify-content: center; align-items: center; }
+.esma-ar { font-family: var(--font-ar); font-size: 1.4rem; color: var(--gold-light); direction: rtl; }
+.esma-tr { font-size: 0.9rem; font-weight: 700; color: var(--text-main); margin-bottom: 2px; }
+.esma-mean { font-size: 0.75rem; color: var(--text-sub); line-height: 1.4; }
+
+/* ── ZİKİRMATİK ── */
+.zikir-presets { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; margin-bottom: 14px; }
+.zikir-preset { background: var(--bg-card); border: 1.2px solid var(--border-gold); color: var(--text-sub); padding: 8px; border-radius: 12px; cursor: pointer; font-size: 0.8rem; font-weight: 600; font-family: var(--font-ui); }
+.zikir-preset.active { background: var(--gold-gradient); color: #050d0b; font-weight: 700; }
+.zikir-display { text-align: center; background: radial-gradient(circle at 50% 30%, rgba(13,40,32,0.9), rgba(4,13,10,0.95)); border: 1.8px solid var(--gold); border-radius: var(--radius-lg); padding: 18px; margin-bottom: 14px; box-shadow: inset 0 0 25px rgba(0,0,0,0.5), var(--shadow-glow); }
+.zikir-ar { font-family: var(--font-ar); font-size: 1.7rem; color: var(--gold-light); margin-bottom: 4px; }
+.zikir-label { font-size: 0.85rem; color: var(--text-sub); text-transform: uppercase; letter-spacing: 1px; }
+.zikir-count { font-size: 4rem; font-weight: 800; line-height: 1.1; background: var(--gold-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-variant-numeric: tabular-nums; }
+.zikir-target { font-size: 0.85rem; color: var(--gold-light); font-weight: 600; }
+.zikir-btn-main { width: 100%; background: var(--gold-gradient); color: #050d0b; border: none; border-radius: var(--radius-lg); padding: 22px; font-size: 1.3rem; font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; box-shadow: 0 6px 20px rgba(212,175,55,0.5); transition: transform 0.08s ease; user-select: none; }
+.zikir-btn-main:active { transform: scale(0.97); box-shadow: 0 2px 10px rgba(212,175,55,0.6); }
+.zikir-tap-icon { font-size: 1.6rem; }
+.zikir-actions { display: flex; gap: 8px; margin-top: 12px; }
+.zikir-mini-btn { flex: 1; background: var(--bg-card); border: 1.2px solid var(--border-gold); color: var(--gold-light); padding: 10px; border-radius: 12px; cursor: pointer; font-size: 0.82rem; font-weight: 600; font-family: var(--font-ui); }
+.zikir-mini-btn:active { transform: scale(0.97); }
+
+/* ── NAMAZ TAKİBİ ── */
+.takip-summary { text-align: center; background: var(--bg-card); border: 1.5px solid var(--border-gold); border-radius: var(--radius-lg); padding: 14px; margin-bottom: 12px; box-shadow: var(--shadow-card); }
+.ts-big { font-size: 2.4rem; font-weight: 800; background: var(--gold-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+.ts-label { font-size: 0.8rem; color: var(--text-sub); }
+.prayer-check-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px; }
+.prayer-check-row { display: flex; align-items: center; justify-content: space-between; background: var(--bg-card); border: 1.2px solid var(--border-gold); border-radius: var(--radius-md); padding: 12px 16px; cursor: pointer; box-shadow: var(--shadow-card); transition: all 0.2s ease; font-family: var(--font-ui); }
+.prayer-check-row.checked { background: linear-gradient(135deg, rgba(212,175,55,0.3), rgba(18,48,38,0.95)); border-color: var(--gold-light); }
+.pc-label { font-size: 0.95rem; font-weight: 600; color: var(--text-main); }
+.pc-box { width: 26px; height: 26px; border-radius: 50%; border: 2px solid var(--gold); display: flex; align-items: center; justify-content: center; color: #050d0b; font-weight: 800; background: transparent; }
+.prayer-check-row.checked .pc-box { background: var(--gold-gradient); }
+.streak-box { text-align: center; background: rgba(212,175,55,0.12); border: 1px solid var(--border-gold); border-radius: var(--radius-md); padding: 10px; font-size: 0.9rem; color: var(--text-main); }
+.week-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; }
+.week-day { text-align: center; background: var(--bg-card); border: 1px solid var(--border-light); border-radius: 10px; padding: 8px 2px; }
+.week-day.today { border-color: var(--gold-light); box-shadow: 0 0 10px rgba(212,175,55,0.4); }
+.wd-label { font-size: 0.68rem; color: var(--text-muted); margin-bottom: 4px; }
+.wd-dot { width: 26px; height: 26px; margin: 0 auto; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.78rem; font-weight: 700; background: rgba(255,255,255,0.08); color: var(--text-sub); }
+.week-day.full .wd-dot { background: var(--gold-gradient); color: #050d0b; }
+
+/* ── KAZA & SAYAÇLAR ── */
+.kaza-row { display: flex; align-items: center; justify-content: space-between; background: var(--bg-card); border: 1.2px solid var(--border-gold); border-radius: var(--radius-md); padding: 10px 14px; margin-bottom: 8px; box-shadow: var(--shadow-card); }
+.kaza-label { font-size: 0.92rem; font-weight: 600; color: var(--text-main); }
+.counter-group { display: flex; align-items: center; gap: 12px; }
+.counter-btn { width: 34px; height: 34px; border-radius: 50%; border: 1.5px solid var(--border-gold); background: var(--bg-card); color: var(--gold-light); font-size: 1.3rem; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; line-height: 1; }
+.counter-btn.plus { background: var(--gold-gradient); color: #050d0b; border: none; }
+.counter-btn:active { transform: scale(0.9); }
+.counter-val { min-width: 34px; text-align: center; font-size: 1.2rem; font-weight: 800; color: var(--gold-light); font-variant-numeric: tabular-nums; }
+.kaza-total { text-align: center; margin-top: 10px; padding: 10px; background: rgba(212,175,55,0.12); border: 1px solid var(--border-gold); border-radius: var(--radius-md); color: var(--text-main); font-size: 0.95rem; }
+
+/* ── HATİM ── */
+.hatim-stat { display: flex; gap: 8px; margin-bottom: 12px; }
+.hs-item { flex: 1; text-align: center; background: var(--bg-card); border: 1.2px solid var(--border-gold); border-radius: var(--radius-md); padding: 12px 6px; box-shadow: var(--shadow-card); }
+.hs-num { font-size: 1.5rem; font-weight: 800; color: var(--gold-light); }
+.hs-lbl { font-size: 0.72rem; color: var(--text-sub); }
+.hatim-bar-wrap { height: 16px; background: rgba(255,255,255,0.1); border-radius: 10px; overflow: hidden; border: 1px solid var(--border-gold); margin-bottom: 14px; }
+.hatim-bar { height: 100%; background: var(--gold-gradient); border-radius: 10px; transition: width 0.4s ease; box-shadow: 0 0 10px rgba(212,175,55,0.6); }
+.hatim-controls { display: flex; gap: 8px; align-items: stretch; }
+.hatim-add-btn { flex: 1; background: var(--gold-gradient); color: #050d0b; border: none; border-radius: var(--radius-md); padding: 12px; font-size: 0.9rem; font-weight: 800; cursor: pointer; }
+.hatim-add-btn:active { transform: scale(0.97); }
+.hatim-controls .counter-btn { width: auto; padding: 0 14px; border-radius: var(--radius-md); font-size: 0.85rem; font-weight: 700; }
+.hatim-done { text-align: center; margin-top: 12px; padding: 12px; background: linear-gradient(135deg,#10b981,#047857); color: #fff; border-radius: var(--radius-md); font-weight: 700; }
+
+/* ── HESAPLAYICILAR ── */
+.calc-form { display: flex; flex-direction: column; gap: 10px; margin-bottom: 14px; }
+.calc-row { display: flex; flex-direction: column; gap: 4px; }
+.calc-row label { font-size: 0.82rem; color: var(--gold-light); font-weight: 600; }
+.calc-input { width: 100%; padding: 10px 14px; border-radius: 10px; border: 1.5px solid var(--border-gold); background: rgba(8,18,15,0.75); color: var(--text-main); font-size: 0.95rem; outline: none; font-family: var(--font-ui); }
+.calc-input:focus { border-color: var(--gold-light); box-shadow: var(--shadow-glow); }
+.calc-result { text-align: center; padding: 14px; background: var(--bg-card); border: 1.2px solid var(--border-gold); border-radius: var(--radius-md); color: var(--text-sub); font-size: 0.9rem; line-height: 1.6; }
+.calc-result.active { border-color: var(--gold-light); box-shadow: var(--shadow-glow); }
+.calc-result hr { border: none; border-top: 1px dashed rgba(212,175,55,0.3); margin: 8px 0; }
+.calc-big { margin-top: 4px; font-size: 0.9rem; color: var(--text-main); }
+.calc-amount { font-size: 1.8rem; font-weight: 800; background: var(--gold-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; display: inline-block; margin-top: 4px; }
+.calc-neg { color: #ff9b9b; font-weight: 600; }
+
+/* ── QUIZ ── */
+.quiz-intro, .quiz-result { text-align: center; padding: 20px 14px; background: var(--bg-card); border: 1.4px solid var(--border-gold); border-radius: var(--radius-lg); box-shadow: var(--shadow-card); }
+.quiz-intro-icon, .quiz-result-icon { font-size: 3.4rem; margin-bottom: 8px; }
+.quiz-intro p { font-size: 0.92rem; color: var(--text-sub); line-height: 1.5; margin-bottom: 8px; }
+.quiz-progress { display: flex; justify-content: space-between; font-size: 0.82rem; font-weight: 700; color: var(--gold-light); margin-bottom: 6px; }
+.quiz-bar-wrap { height: 8px; background: rgba(255,255,255,0.1); border-radius: 6px; overflow: hidden; margin-bottom: 14px; }
+.quiz-bar { height: 100%; background: var(--gold-gradient); transition: width 0.3s ease; }
+.quiz-q { font-size: 1.05rem; font-weight: 700; color: var(--text-main); background: var(--bg-card); border: 1.2px solid var(--border-gold); border-radius: var(--radius-md); padding: 16px; margin-bottom: 12px; line-height: 1.45; box-shadow: var(--shadow-card); }
+.quiz-opts { display: flex; flex-direction: column; gap: 8px; }
+.quiz-opt { text-align: left; background: var(--bg-card); border: 1.4px solid var(--border-gold); color: var(--text-main); padding: 13px 16px; border-radius: var(--radius-md); cursor: pointer; font-size: 0.9rem; font-weight: 500; font-family: var(--font-ui); transition: all 0.2s ease; }
+.quiz-opt:active { transform: scale(0.99); }
+.quiz-opt.correct { background: linear-gradient(135deg,#10b981,#047857); color: #fff; border-color: #6ee7b7; font-weight: 700; }
+.quiz-opt.wrong { background: linear-gradient(135deg,#ef4444,#991b1b); color: #fff; border-color: #fca5a5; }
+.quiz-result-score { font-size: 2.6rem; font-weight: 800; background: var(--gold-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+.quiz-result-msg { font-size: 1rem; color: var(--text-main); font-weight: 600; margin-bottom: 8px; }
+
+/* ── RÜYA ── */
+.ruya-item { background: var(--bg-card); border: 1.2px solid var(--border-gold); border-left: 4px solid var(--gold); border-radius: var(--radius-md); padding: 12px 14px; margin-bottom: 8px; box-shadow: var(--shadow-card); }
+.ruya-kw { font-size: 0.95rem; font-weight: 700; color: var(--gold-light); margin-bottom: 4px; }
+.ruya-mean { font-size: 0.85rem; color: var(--text-sub); line-height: 1.5; }
+
+/* ── BEBEK İSİMLERİ ── */
+.bebek-count-note { font-size: 0.78rem; color: var(--text-muted); margin-bottom: 8px; text-align: right; }
+.bebek-item { background: var(--bg-card); border: 1.2px solid var(--border-gold); border-radius: var(--radius-md); padding: 12px 14px; margin-bottom: 8px; box-shadow: var(--shadow-card); }
+.bebek-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; }
+.bebek-name { font-size: 1.05rem; font-weight: 700; color: var(--gold-light); }
+.bebek-gender-badge { font-size: 0.7rem; font-weight: 700; padding: 3px 10px; border-radius: 12px; }
+.bebek-gender-badge.erkek { background: rgba(59,130,246,0.25); color: #93c5fd; border: 1px solid rgba(59,130,246,0.5); }
+.bebek-gender-badge.kiz { background: rgba(236,72,153,0.25); color: #f9a8d4; border: 1px solid rgba(236,72,153,0.5); }
+.bebek-mean { font-size: 0.83rem; color: var(--text-sub); line-height: 1.45; }
+
+/* ── HİCRİ TAKVİM & KANDİL ── */
+.hijri-today-card { text-align: center; background: radial-gradient(circle at 50% 20%, rgba(13,40,32,0.92), rgba(4,13,10,0.96)); border: 1.8px solid var(--gold); border-radius: var(--radius-lg); padding: 16px; margin-bottom: 14px; box-shadow: var(--shadow-glow); }
+.ht-hijri { font-size: 1.5rem; font-weight: 800; color: var(--gold-light); }
+.ht-greg { font-size: 0.85rem; color: var(--text-sub); margin-top: 2px; }
+.kandil-item { display: flex; align-items: center; gap: 10px; background: var(--bg-card); border: 1.2px solid var(--border-gold); border-radius: var(--radius-md); padding: 12px; margin-bottom: 8px; box-shadow: var(--shadow-card); }
+.kandil-item.is-today { border-color: var(--gold-light); box-shadow: 0 0 18px rgba(212,175,55,0.5); background: linear-gradient(135deg, rgba(212,175,55,0.2), var(--bg-card)); }
+.kandil-item.is-past { opacity: 0.55; }
+.kandil-icon { font-size: 1.8rem; flex-shrink: 0; }
+.kandil-body { flex: 1; min-width: 0; }
+.kandil-name { font-size: 0.95rem; font-weight: 700; color: var(--gold-light); }
+.kandil-date { font-size: 0.75rem; color: var(--text-sub); }
+.kandil-desc { font-size: 0.76rem; color: var(--text-muted); line-height: 1.4; margin-top: 3px; }
+.kandil-count { font-size: 0.72rem; font-weight: 700; color: var(--text-sub); text-align: center; flex-shrink: 0; padding: 4px 8px; border-radius: 12px; background: rgba(212,175,55,0.12); border: 1px solid rgba(212,175,55,0.3); }
+.kandil-count.today { background: var(--gold-gradient); color: #050d0b; }
+
+/* ── PAYLAŞIM KARTLARI ── */
+.share-card-preview { margin: 14px 0; }
+.scp-inner { background: linear-gradient(160deg, #0d2820 0%, #061511 100%); border: 2px solid var(--gold); border-radius: var(--radius-lg); padding: 22px 18px; text-align: center; box-shadow: var(--shadow-glow); position: relative; }
+.scp-badge { display: inline-block; font-size: 0.72rem; font-weight: 700; color: #050d0b; background: var(--gold-gradient); padding: 4px 14px; border-radius: 14px; margin-bottom: 14px; }
+.scp-ar { font-family: var(--font-ar); font-size: 1.5rem; color: var(--gold-light); direction: rtl; line-height: 1.8; margin-bottom: 12px; }
+.scp-tr { font-size: 1rem; color: var(--text-main); line-height: 1.6; font-weight: 500; font-style: italic; margin-bottom: 10px; }
+.scp-src { font-size: 0.8rem; color: var(--gold-light); font-weight: 700; }
+.scp-brand { margin-top: 14px; font-size: 0.85rem; font-weight: 700; color: var(--gold); letter-spacing: 0.5px; }
+.share-actions { display: flex; gap: 8px; }
+.share-actions .gold-primary-btn { flex: 1; }
+.share-actions .zikir-mini-btn { flex: 0 0 auto; }
+
+/* ── CUMA MESAJLARI ── */
+.cuma-msg-card { background: var(--bg-card); border: 1.2px solid var(--border-gold); border-radius: var(--radius-md); padding: 14px; margin-bottom: 10px; box-shadow: var(--shadow-card); }
+.cuma-msg-text { font-size: 0.92rem; color: var(--text-main); line-height: 1.55; margin-bottom: 10px; }
+.cuma-actions { display: flex; gap: 8px; }
+.cuma-act-btn { flex: 1; background: rgba(212,175,55,0.14); border: 1px solid var(--border-gold); color: var(--gold-light); padding: 8px; border-radius: 12px; cursor: pointer; font-size: 0.8rem; font-weight: 600; font-family: var(--font-ui); }
+.cuma-act-btn.share { background: var(--gold-gradient); color: #050d0b; border: none; font-weight: 700; }
+.cuma-act-btn:active { transform: scale(0.97); }
+
+/* Küçük ekran uyarlaması */
+@media (max-width: 360px) {
+  .hub-grid, .esma-grid { grid-template-columns: repeat(2, 1fr); }
+  .zikir-count { font-size: 3.2rem; }
+}

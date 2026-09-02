@@ -66,16 +66,21 @@ function setupNavTabs() {
   });
 }
 
+// Maps every sub-page to its parent bottom-nav tab so the correct tab stays highlighted
+const PAGE_PARENT = {
+  home: 'home',
+  kurandua: 'kurandua', quran: 'kurandua', 'dua-ogrenme': 'kurandua', esma: 'kurandua', ezkar: 'kurandua', 'gunluk-dua': 'kurandua', 'onemli-sureler': 'kurandua',
+  ibadet: 'ibadet', guide: 'ibadet', qibla: 'ibadet', zikirmatik: 'ibadet', 'namaz-takibi': 'ibadet', kaza: 'ibadet', hatim: 'ibadet',
+  araclar: 'araclar', zekat: 'araclar', fitre: 'araclar', quiz: 'araclar', ruya: 'araclar', bebek: 'araclar', takvim: 'araclar', paylasim: 'araclar', cuma: 'araclar',
+  settings: 'settings'
+};
+
 function navigateTo(pageId) {
   // Pause audio when leaving page
   const audioPlayer = document.getElementById('surah-audio-player');
   if (audioPlayer) {
     audioPlayer.pause();
   }
-
-  document.querySelectorAll('.nav-tab').forEach(t => {
-    t.classList.toggle('active', t.getAttribute('data-page') === pageId);
-  });
 
   document.querySelectorAll('.page-section').forEach(sec => {
     sec.classList.remove('active');
@@ -84,14 +89,28 @@ function navigateTo(pageId) {
   const activeSec = document.getElementById('page-' + pageId);
   if (activeSec) {
     activeSec.classList.add('active');
+    const box = activeSec.querySelector('.hero-frame-box');
+    if (box) box.scrollTop = 0;
   }
+
+  // Highlight the parent tab (feature sub-pages keep their hub tab lit)
+  const parent = PAGE_PARENT[pageId] || pageId;
+  document.querySelectorAll('.nav-tab').forEach(t => {
+    t.classList.toggle('active', t.getAttribute('data-page') === parent);
+  });
 
   APP_STATE.currentPage = pageId;
 
   if (pageId === 'qibla') {
     initQiblaCompass();
   }
+
+  // Lazy-initialise feature pages (defined in features.js)
+  if (window.FEATURE_ROUTES && typeof window.FEATURE_ROUTES[pageId] === 'function') {
+    try { window.FEATURE_ROUTES[pageId](); } catch (e) { console.warn('Feature route error:', pageId, e); }
+  }
 }
+window.navigateTo = navigateTo;
 
 // Local Storage & Settings
 function loadSavedSettings() {
@@ -290,7 +309,16 @@ async function fetchPrayerTimes(lat, lng) {
       t.Maghrib = addMinutes(t.Maghrib, 1); // 20:15 → 20:16
       t.Isha    = addMinutes(t.Isha,    1); // 21:46 → 21:47
       APP_STATE.prayerTimes = t;
-      APP_STATE.hijriDateText = null;
+
+      // Hicri tarih (API method=13 -> data.date.hijri)
+      if (json.data.date && json.data.date.hijri) {
+        const h = json.data.date.hijri;
+        const monthEn = h.month && h.month.en ? h.month.en : '';
+        const monthTr = HIJRI_MONTHS_TR[monthEn] || (h.month && h.month.ar ? h.month.ar : monthEn);
+        APP_STATE.hijriDateText = `${h.day} ${monthTr} ${h.year}`;
+        updateHijriDateDisplay(APP_STATE.hijriDateText);
+      }
+
       renderPrayerCards(t);
       updatePrayerCountdown();
     }
@@ -309,6 +337,34 @@ function updateHijriBadgeUI(day, month, year) {
   if (monthEl) monthEl.textContent = month || "Safer";
   if (yearEl) yearEl.textContent = year || "1448";
 }
+
+// Home ekranındaki Hicri tarih satırını doldurur (index.html'e eklenen #date-display-hijri)
+function updateHijriDateDisplay(text) {
+  const el = document.getElementById('date-display-hijri');
+  if (el && text) el.textContent = `☪ ${text}`;
+}
+
+// İnternet yoksa cihazdan (Intl - Ümmü'l-Kura takvimi) Hicri tarihi hesaplar
+const HIJRI_MONTHS_NUM_TR = ["Muharrem","Safer","Rebiülevvel","Rebiülahir","Cemaziyelevvel","Cemaziyelahir","Recep","Şaban","Ramazan","Şevval","Zilkade","Zilhicce"];
+function computeLocalHijriText(dateObj) {
+  const d = dateObj || new Date();
+  try {
+    const parts = new Intl.DateTimeFormat('en-u-ca-islamic-umalqura', {
+      day: 'numeric', month: 'numeric', year: 'numeric'
+    }).formatToParts(d);
+    let day = '', monthNum = 1, year = '';
+    parts.forEach(p => {
+      if (p.type === 'day') day = p.value;
+      if (p.type === 'month') monthNum = parseInt(p.value, 10);
+      if (p.type === 'year') year = p.value.replace(/[^0-9]/g, '');
+    });
+    const monthTr = HIJRI_MONTHS_NUM_TR[(monthNum - 1 + 12) % 12] || '';
+    return `${day} ${monthTr} ${year}`;
+  } catch (e) {
+    return '';
+  }
+}
+window.computeLocalHijriText = computeLocalHijriText;
 
 function renderPrayerCards(timings) {
   const container = document.getElementById('prayer-times-container');
@@ -386,8 +442,10 @@ function renderFallbackPrayerTimes() {
   const mockTimings = { Fajr: "04:35", Sunrise: "06:12", Dhuhr: "13:18", Asr: "17:02", Maghrib: "20:15", Isha: "21:45" };
   APP_STATE.prayerTimes = mockTimings;
 
-  APP_STATE.hijriDateText = "25 Safer 1448";
-  updateHijriBadgeUI("25", "Safer", "1448");
+  // API başarısızsa Hicri tarihi cihazdan (Intl) hesapla
+  const localHijri = computeLocalHijriText();
+  APP_STATE.hijriDateText = localHijri;
+  updateHijriDateDisplay(localHijri);
   renderPrayerCards(mockTimings);
   updatePrayerCountdown();
 }
@@ -1011,11 +1069,25 @@ async function loadSurahDetail(id, localSurahObj) {
     ayahWrap.innerHTML = `
       <div style="text-align:center; padding: 40px; color: var(--text-sub);">
         <p>Ayetler yüklenirken internet bağlantısı kurulamadı.</p>
-        <button class="gold-primary-btn" style="margin-top: 12px;" onclick="loadSurahDetail(${id}, localSurahObj)">Tekrar Deneyin</button>
+        <button class="gold-primary-btn" style="margin-top: 12px;" onclick="retryLoadSurah(${id})">Tekrar Deneyin</button>
       </div>
     `;
   }
 }
+
+// Retry butonu düzeltmesi: sure nesnesini HTML'e gömmek yerine id ile listeden bulur
+function retryLoadSurah(id) {
+  let s = null;
+  if (typeof ALL_114_SURAHS !== 'undefined') {
+    s = ALL_114_SURAHS.find(x => (x.id || x.number) === id) || null;
+  }
+  if (!s && APP_STATE.surahList) {
+    s = APP_STATE.surahList.find(x => (x.id || x.number) === id) || null;
+  }
+  loadSurahDetail(id, s);
+}
+window.retryLoadSurah = retryLoadSurah;
+window.loadSurahDetail = loadSurahDetail;
 
 function adjustQuranFontSize(delta) {
   APP_STATE.fontSize = Math.max(14, Math.min(36, APP_STATE.fontSize + delta));

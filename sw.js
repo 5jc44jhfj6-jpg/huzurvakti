@@ -1,10 +1,12 @@
-const CACHE_NAME = 'huzur-vakti-v52.0';
+const CACHE_NAME = 'huzur-vakti-v55.0';
 const ASSETS_TO_CACHE = [
   '/',
   '/index.html',
   '/styles.css',
   '/app.js',
   '/data.js',
+  '/content.js',
+  '/features.js',
   '/cities.js',
   '/icon-512.jpg',
   '/manifest.json',
