@@ -93,19 +93,27 @@ function openSurahById(id) {
 }
 window.openSurahById = openSurahById;
 
-/* ══════════ DUA ÖĞRENME ══════════ */
-function renderDuaOgrenme() {
+/* ══════════ DUA ÖĞRENME (Namaz Duaları + Namazda Okunan Sureler + Arama) ══════════ */
+function renderDuaOgrenme(filter) {
   const c = document.getElementById('dua-ogrenme-content');
   if (!c || typeof DUA_LEARN === 'undefined') return;
-  c.innerHTML = DUA_LEARN.map(d => `
+  const q = (filter || '').toLocaleLowerCase('tr').trim();
+  const match = d => !q || d.title.toLocaleLowerCase('tr').includes(q) || (d.turkish || '').toLocaleLowerCase('tr').includes(q) || (d.okunusu || '').toLocaleLowerCase('tr').includes(q);
+  const cardHtml = (d, icon) => `
     <div class="feature-card">
-      <div class="fc-title">🤲 ${hvEsc(d.title)}</div>
+      <div class="fc-title">${icon} ${hvEsc(d.title)}</div>
       <div class="fc-ar">${d.arabic}</div>
       <div class="fc-ok">🗣️ <b>Okunuşu:</b> ${hvEsc(d.okunusu)}</div>
       <div class="fc-tr">📖 <b>Anlamı:</b> ${hvEsc(d.turkish)}</div>
       ${d.note ? `<div class="fc-note">💡 ${hvEsc(d.note)}</div>` : ''}
-    </div>
-  `).join('');
+    </div>`;
+  const duas = DUA_LEARN.filter(match);
+  const sureler = (typeof KISA_SURELER !== 'undefined' ? KISA_SURELER : []).filter(match);
+  let html = '';
+  if (duas.length) html += `<div class="section-mini-title">📿 Namaz Duaları</div>` + duas.map(d => cardHtml(d, '🤲')).join('');
+  if (sureler.length) html += `<div class="section-mini-title">📖 Namazda Okunan Sureler (Zamm-ı Sure)</div>` + sureler.map(d => cardHtml(d, '📖')).join('');
+  if (!html) html = '<div class="empty-note">Sonuç bulunamadı.</div>';
+  c.innerHTML = html;
 }
 
 /* ══════════ ESMAÜL HÜSNA ══════════ */
@@ -736,10 +744,167 @@ function cumaKopyala(i) {
 }
 window.cumaKopyala = cumaKopyala;
 
+/* ══════════ ABDEST / GUSÜL / TEYEMMÜM REHBERİ ══════════ */
+let _taharetActive = 'abdest';
+function switchTaharet(key) {
+  _taharetActive = key;
+  document.querySelectorAll('#taharet-switch .seg-btn').forEach(b => b.classList.toggle('active', b.dataset.k === key));
+  renderTaharet();
+}
+window.switchTaharet = switchTaharet;
+function renderTaharet() {
+  const c = document.getElementById('taharet-content');
+  if (!c || typeof TAHARET_REHBERI === 'undefined') return;
+  const g = TAHARET_REHBERI.find(t => t.key === _taharetActive) || TAHARET_REHBERI[0];
+  c.innerHTML = `
+    <div class="info-note">${hvEsc(g.intro)}</div>
+    ${g.steps.map(s => `
+      <div class="step-card">
+        <div class="step-circle-num">${s.n}</div>
+        <div class="step-body">
+          <h4>${hvEsc(s.title)}</h4>
+          <p>${hvEsc(s.desc)}</p>
+        </div>
+      </div>`).join('')}`;
+}
+
+/* ══════════ ÖZEL NAMAZLAR ══════════ */
+function renderOzelNamazlar() {
+  const c = document.getElementById('ozel-namaz-content');
+  if (!c || typeof OZEL_NAMAZLAR === 'undefined') return;
+  c.innerHTML = OZEL_NAMAZLAR.map(n => `
+    <div class="feature-card">
+      <div class="fc-title">🕌 ${hvEsc(n.title)}</div>
+      <div class="ozel-ozet">${hvEsc(n.ozet)}</div>
+      <div class="fc-tr">${hvEsc(n.detay)}</div>
+    </div>`).join('');
+}
+
+/* ══════════ İMAN ESASLARI (ÂMENTÜ) ══════════ */
+function renderImanEsaslari() {
+  const c = document.getElementById('iman-content');
+  if (!c || typeof IMAN_ESASLARI === 'undefined') return;
+  const a = typeof AMENTU !== 'undefined' ? AMENTU : null;
+  c.innerHTML = `
+    ${a ? `<div class="feature-card">
+      <div class="fc-title">📜 Âmentü</div>
+      <div class="fc-ar">${a.arabic}</div>
+      <div class="fc-ok">🗣️ <b>Okunuşu:</b> ${hvEsc(a.okunusu)}</div>
+      <div class="fc-tr">📖 <b>Anlamı:</b> ${hvEsc(a.turkish)}</div>
+    </div>` : ''}
+    <div class="section-mini-title">İmanın 6 Şartı</div>
+    ${IMAN_ESASLARI.map(i => `
+      <div class="feature-card">
+        <div class="fc-title">✦ ${hvEsc(i.title)}</div>
+        <div class="fc-tr">${hvEsc(i.desc)}</div>
+      </div>`).join('')}`;
+}
+
+/* ══════════ AYET & MEAL ARAMA (Al Quran Cloud API) ══════════ */
+let _ayetAramaTimer = null;
+function renderAyetArama() {
+  const c = document.getElementById('ayet-arama-content');
+  if (!c) return;
+  if (!c.dataset.built) {
+    c.dataset.built = '1';
+    c.innerHTML = '<div class="info-note">Yukarıdaki kutuya bir kelime yazın (ör. sabır, namaz, rahmet). Kur\'an mealinde geçtiği ayetler listelenir.</div>';
+  }
+}
+function doAyetArama(query) {
+  const c = document.getElementById('ayet-arama-content');
+  if (!c) return;
+  const q = (query || '').trim();
+  if (q.length < 2) { c.innerHTML = '<div class="info-note">En az 2 harf yazın.</div>'; return; }
+  c.innerHTML = '<div class="info-note">🔎 Aranıyor...</div>';
+  clearTimeout(_ayetAramaTimer);
+  _ayetAramaTimer = setTimeout(async () => {
+    try {
+      const res = await fetch(`https://api.alquran.cloud/v1/search/${encodeURIComponent(q)}/all/tr.diyanet`);
+      const json = await res.json();
+      if (json && json.data && json.data.count > 0) {
+        const matches = json.data.matches.slice(0, 60);
+        c.innerHTML = `<div class="bebek-count-note">${json.data.count} sonuç bulundu${json.data.count > 60 ? ' (ilk 60 gösteriliyor)' : ''}</div>` +
+          matches.map(m => {
+            const sid = m.surah.number, aname = m.surah.name || m.surah.englishName;
+            return `<div class="ayet-result" onclick="openSurahById(${sid})">
+              <div class="ayet-ref">${hvEsc(aname)} Suresi • ${m.numberInSurah}. Ayet</div>
+              <div class="ayet-meal">${hvEsc(m.text)}</div>
+            </div>`;
+          }).join('');
+      } else {
+        c.innerHTML = '<div class="empty-note">Bu kelime için sonuç bulunamadı. Farklı bir kelime deneyin.</div>';
+      }
+    } catch (e) {
+      c.innerHTML = '<div class="empty-note">Arama için internet bağlantısı gerekiyor. Lütfen tekrar deneyin.</div>';
+    }
+  }, 400);
+}
+
+/* ══════════ 40 HADİS (İmam Nevevî) ══════════ */
+function renderKirkHadis(filter) {
+  const c = document.getElementById('kirk-hadis-content');
+  if (!c || typeof KIRK_HADIS === 'undefined') return;
+  const q = (filter || '').toLocaleLowerCase('tr').trim();
+  const list = q ? KIRK_HADIS.filter(h => h.text.toLocaleLowerCase('tr').includes(q) || String(h.no) === q) : KIRK_HADIS;
+  if (!list.length) { c.innerHTML = '<div class="empty-note">Sonuç bulunamadı.</div>'; return; }
+  c.innerHTML = list.map(h => `
+    <div class="hadis40-card">
+      <div class="hadis40-no">${h.no}</div>
+      <div class="hadis40-body">
+        <div class="hadis40-text">${hvEsc(h.text)}</div>
+        <div class="hadis40-src">— ${hvEsc(h.source)}</div>
+      </div>
+    </div>`).join('');
+}
+
+/* ══════════ SİYER ══════════ */
+function renderSiyer() {
+  const c = document.getElementById('siyer-content');
+  if (!c || typeof SIYER_OLAYLARI === 'undefined') return;
+  c.innerHTML = `<div class="info-note">Peygamber Efendimizin (s.a.v.) hayatından önemli olaylar (Miladî).</div>
+    <div class="timeline">${SIYER_OLAYLARI.map(o => `
+      <div class="tl-item">
+        <div class="tl-year">${hvEsc(o.yil)}</div>
+        <div class="tl-body">
+          <div class="tl-title">${hvEsc(o.baslik)}</div>
+          <div class="tl-desc">${hvEsc(o.desc)}</div>
+        </div>
+      </div>`).join('')}</div>`;
+}
+
+/* ══════════ PEYGAMBERLER ══════════ */
+function renderPeygamberler() {
+  const c = document.getElementById('peygamberler-content');
+  if (!c || typeof PEYGAMBERLER === 'undefined') return;
+  c.innerHTML = `<div class="info-note">Kur'an-ı Kerim'de adı geçen 25 peygamber.</div>` +
+    PEYGAMBERLER.map((p, i) => `
+      <div class="peygamber-card">
+        <div class="peygamber-no">${i + 1}</div>
+        <div class="peygamber-body">
+          <div class="peygamber-name">${hvEsc(p.name)}</div>
+          <div class="peygamber-info">${hvEsc(p.info)}</div>
+        </div>
+      </div>`).join('');
+}
+
+/* ══════════ DİNİ SÖZLÜK ══════════ */
+function renderSozluk(filter) {
+  const c = document.getElementById('sozluk-content');
+  if (!c || typeof DINI_SOZLUK === 'undefined') return;
+  const q = (filter || '').toLocaleLowerCase('tr').trim();
+  const list = q ? DINI_SOZLUK.filter(t => t.term.toLocaleLowerCase('tr').includes(q) || t.meaning.toLocaleLowerCase('tr').includes(q)) : DINI_SOZLUK;
+  if (!list.length) { c.innerHTML = '<div class="empty-note">Kelime bulunamadı.</div>'; return; }
+  c.innerHTML = list.map(t => `
+    <div class="sozluk-item">
+      <div class="sozluk-term">${hvEsc(t.term)}</div>
+      <div class="sozluk-mean">${hvEsc(t.meaning)}</div>
+    </div>`).join('');
+}
+
 /* ══════════ FEATURE ROUTE KAYIT & BAŞLATMA ══════════ */
 window.FEATURE_ROUTES = {
   'onemli-sureler': renderOnemliSureler,
-  'dua-ogrenme': renderDuaOgrenme,
+  'dua-ogrenme': () => renderDuaOgrenme(document.getElementById('dua-search-input') ? document.getElementById('dua-search-input').value : ''),
   'esma': () => renderEsma(document.getElementById('esma-search-input') ? document.getElementById('esma-search-input').value : ''),
   'ezkar': () => switchEzkar(_ezkarMode),
   'gunluk-dua': () => renderGunlukDua(document.getElementById('gunluk-search-input') ? document.getElementById('gunluk-search-input').value : ''),
@@ -754,7 +919,15 @@ window.FEATURE_ROUTES = {
   'bebek': () => renderBebek(document.getElementById('bebek-search-input') ? document.getElementById('bebek-search-input').value : ''),
   'takvim': renderTakvim,
   'paylasim': renderPaylasim,
-  'cuma': renderCuma
+  'cuma': renderCuma,
+  'taharet': () => switchTaharet(_taharetActive),
+  'ozel-namaz': renderOzelNamazlar,
+  'iman': renderImanEsaslari,
+  'ayet-arama': renderAyetArama,
+  'kirk-hadis': () => renderKirkHadis(document.getElementById('hadis-search-input') ? document.getElementById('hadis-search-input').value : ''),
+  'siyer': renderSiyer,
+  'peygamberler': renderPeygamberler,
+  'sozluk': () => renderSozluk(document.getElementById('sozluk-search-input') ? document.getElementById('sozluk-search-input').value : '')
 };
 
 function featuresInit() {
@@ -768,6 +941,18 @@ function featuresInit() {
 
   const ruyaSearch = document.getElementById('ruya-search-input');
   if (ruyaSearch) ruyaSearch.addEventListener('input', e => renderRuya(e.target.value));
+
+  const duaSearch = document.getElementById('dua-search-input');
+  if (duaSearch) duaSearch.addEventListener('input', e => renderDuaOgrenme(e.target.value));
+
+  const hadisSearch = document.getElementById('hadis-search-input');
+  if (hadisSearch) hadisSearch.addEventListener('input', e => renderKirkHadis(e.target.value));
+
+  const sozlukSearch = document.getElementById('sozluk-search-input');
+  if (sozlukSearch) sozlukSearch.addEventListener('input', e => renderSozluk(e.target.value));
+
+  const ayetSearch = document.getElementById('ayet-search-input');
+  if (ayetSearch) ayetSearch.addEventListener('input', e => doAyetArama(e.target.value));
 
   const bebekSearch = document.getElementById('bebek-search-input');
   if (bebekSearch) bebekSearch.addEventListener('input', e => renderBebek(e.target.value));

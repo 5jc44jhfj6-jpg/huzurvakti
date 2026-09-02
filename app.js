@@ -69,9 +69,9 @@ function setupNavTabs() {
 // Maps every sub-page to its parent bottom-nav tab so the correct tab stays highlighted
 const PAGE_PARENT = {
   home: 'home',
-  kurandua: 'kurandua', quran: 'kurandua', 'dua-ogrenme': 'kurandua', esma: 'kurandua', ezkar: 'kurandua', 'gunluk-dua': 'kurandua', 'onemli-sureler': 'kurandua',
-  ibadet: 'ibadet', guide: 'ibadet', qibla: 'ibadet', zikirmatik: 'ibadet', 'namaz-takibi': 'ibadet', kaza: 'ibadet', hatim: 'ibadet',
-  araclar: 'araclar', zekat: 'araclar', fitre: 'araclar', quiz: 'araclar', ruya: 'araclar', bebek: 'araclar', takvim: 'araclar', paylasim: 'araclar', cuma: 'araclar',
+  kurandua: 'kurandua', quran: 'kurandua', 'dua-ogrenme': 'kurandua', esma: 'kurandua', ezkar: 'kurandua', 'gunluk-dua': 'kurandua', 'onemli-sureler': 'kurandua', 'ayet-arama': 'kurandua', 'kirk-hadis': 'kurandua',
+  ibadet: 'ibadet', guide: 'ibadet', qibla: 'ibadet', zikirmatik: 'ibadet', 'namaz-takibi': 'ibadet', kaza: 'ibadet', hatim: 'ibadet', taharet: 'ibadet', 'ozel-namaz': 'ibadet', iman: 'ibadet',
+  araclar: 'araclar', zekat: 'araclar', fitre: 'araclar', quiz: 'araclar', ruya: 'araclar', bebek: 'araclar', takvim: 'araclar', paylasim: 'araclar', cuma: 'araclar', siyer: 'araclar', peygamberler: 'araclar', sozluk: 'araclar',
   settings: 'settings'
 };
 
