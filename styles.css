@@ -1325,3 +1325,71 @@ mark.hl { background: rgba(212, 175, 55, 0.42); color: #fff; border-radius: 3px;
 .imsak-today { background: linear-gradient(90deg, rgba(212,175,55,0.28), rgba(212,175,55,0.12)) !important; }
 .imsak-today td { border-color: var(--gold); }
 .imsak-today .im-day { color: #fff; }
+
+/* ══════════════════════════════════════════════════════════
+   v55.5 — ANA SAYFA YENİDEN: uyumlu renkler + yeni geri sayım
+   (Günün Ayeti kaldırıldı, sadece Günün Hadisi kaldı)
+   ══════════════════════════════════════════════════════════ */
+
+/* Daha sakin, uyumlu koyu zümrüt zemin (parlak yeşil yumuşatıldı) */
+body.dark-theme {
+  --bg-main: #05100c;
+  --bg-gradient: radial-gradient(1100px 560px at 50% -12%, rgba(23, 72, 58, 0.30) 0%, transparent 58%),
+                 linear-gradient(180deg, #0a201a 0%, #061711 56%, #030c09 100%);
+}
+body.dark-theme .hero-frame-box {
+  background: linear-gradient(180deg, rgba(14, 45, 36, 0.90) 0%, rgba(7, 23, 17, 0.96) 55%, rgba(4, 14, 10, 0.98) 100%);
+  border-color: rgba(212, 175, 55, 0.72);
+  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.045);
+}
+body.dark-theme .hero-prayer-unified-box {
+  background: linear-gradient(180deg, rgba(12, 40, 32, 0.82) 0%, rgba(5, 17, 13, 0.95) 100%);
+  border-color: rgba(212, 175, 55, 0.5);
+  box-shadow: inset 0 0 22px rgba(0, 0, 0, 0.45), 0 0 22px rgba(212, 175, 55, 0.14);
+}
+body.dark-theme #app-header { background: rgba(6, 22, 16, 0.95); border-bottom-color: rgba(212, 175, 55, 0.55); }
+
+/* Saat & tarih */
+#clock-display { font-size: clamp(2.1rem, 8vw, 2.75rem); letter-spacing: 0.5px; margin-bottom: 1px; }
+.date-hijri-subrow { color: var(--gold-light); opacity: 0.92; font-size: 0.82rem; }
+
+/* ─── YENİ GERİ SAYIM TASARIMI ─── */
+.countdown-hero-wrap { margin: 10px 0 12px; }
+.circle-progress-wrapper {
+  width: 188px; height: 188px; margin: 0 auto;
+  background: radial-gradient(circle at 50% 44%, rgba(9, 34, 27, 0.95) 0%, rgba(5, 16, 12, 0.55) 58%, transparent 74%);
+}
+.circle-progress-svg { width: 188px; height: 188px; }
+.progress-bg { stroke: rgba(255, 255, 255, 0.065); stroke-width: 7; stroke-dasharray: none; }
+.progress-bar { stroke-width: 8; stroke-linecap: round; filter: drop-shadow(0 0 8px rgba(212, 175, 55, 0.9)); }
+.countdown-inner { gap: 0; }
+.countdown-target { font-size: 0.64rem; letter-spacing: 1.5px; color: var(--gold-light); opacity: 0.82; text-transform: uppercase; margin-bottom: 5px; font-weight: 600; }
+.countdown-timer-text {
+  font-size: 2.1rem; font-weight: 800; letter-spacing: 1px; line-height: 1;
+  background: linear-gradient(180deg, #ffffff 0%, #fbeeb4 50%, #d9b64a 100%);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 2px 5px rgba(0, 0, 0, 0.55));
+}
+.countdown-next {
+  margin-top: 7px; font-size: 0.78rem; font-weight: 700; color: var(--gold-light);
+  background: rgba(212, 175, 55, 0.15); border: 1px solid rgba(212, 175, 55, 0.32);
+  padding: 2px 13px; border-radius: 14px;
+}
+
+/* Vakit kartları biraz daha ferah (ayet kalktığı için yer açıldı) */
+.hero-prayer-unified-box { padding: 11px; }
+.prayer-grid { gap: 6px; margin-bottom: 10px; }
+.prayer-card { padding: 8px 4px; }
+.prayer-name { font-size: 0.76rem; }
+.prayer-time { font-size: 1.08rem; }
+
+/* Günün Hadisi kartı öne çıksın */
+.daily-hadis-card {
+  margin-top: 2px; padding: 13px 16px;
+  background: linear-gradient(180deg, rgba(17, 50, 40, 0.72) 0%, rgba(6, 20, 15, 0.8) 100%);
+  border: 1.4px solid rgba(212, 175, 55, 0.55);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255,255,255,0.04);
+}
+.daily-hadis-card .verse-card-title { font-size: 0.96rem; margin-bottom: 6px; }
+.hadis-arabic { font-size: 1.08rem; }
+.hadis-text { font-size: clamp(0.88rem, 3vw, 1.02rem); color: var(--text-main); line-height: 1.5; }

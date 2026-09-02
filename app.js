@@ -482,7 +482,10 @@ function updatePrayerCountdown() {
   }
 
   const targetLabel = document.getElementById('countdown-target');
-  if (targetLabel) targetLabel.textContent = `${nextPrayer.name} Vaktine Kalan`;
+  if (targetLabel) targetLabel.textContent = `${nextPrayer.name} Vaktine`;
+
+  const nextEl = document.getElementById('countdown-next');
+  if (nextEl) nextEl.textContent = '🕌 ' + nextTimeDate.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
 
   const diffMs = nextTimeDate - now;
   const timerText = document.getElementById('countdown-timer');
