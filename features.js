@@ -11,6 +11,22 @@ function hvEsc(s) {
 function hvToast(title, msg) {
   if (typeof showToastNotification === 'function') showToastNotification(title, msg);
 }
+// Aranan kelimeyi metin içinde <mark> ile vurgular (XSS güvenli: her parça escape edilir)
+function hvHighlight(text, q) {
+  const raw = String(text == null ? '' : text);
+  if (!q) return hvEsc(raw);
+  const ql = q.toLocaleLowerCase('tr');
+  const lower = raw.toLocaleLowerCase('tr');
+  let out = '', i = 0;
+  if (lower.length !== raw.length) return hvEsc(raw); // güvenlik: uzunluk kayması varsa vurgulama
+  while (true) {
+    const idx = lower.indexOf(ql, i);
+    if (idx === -1) { out += hvEsc(raw.slice(i)); break; }
+    out += hvEsc(raw.slice(i, idx)) + '<mark class="hl">' + hvEsc(raw.slice(idx, idx + ql.length)) + '</mark>';
+    i = idx + ql.length;
+  }
+  return out;
+}
 function hvVibrate(pattern) {
   if (navigator.vibrate) { try { navigator.vibrate(pattern); } catch (e) {} }
 }
@@ -821,18 +837,22 @@ function doAyetArama(query) {
     try {
       const res = await fetch(`https://api.alquran.cloud/v1/search/${encodeURIComponent(q)}/all/tr.diyanet`);
       const json = await res.json();
-      if (json && json.data && json.data.count > 0) {
-        const matches = json.data.matches.slice(0, 60);
-        c.innerHTML = `<div class="bebek-count-note">${json.data.count} sonuç bulundu${json.data.count > 60 ? ' (ilk 60 gösteriliyor)' : ''}</div>` +
+      const ql = q.toLocaleLowerCase('tr');
+      // Sadece aranan kelimeyi GERÇEKTEN içeren ayetleri göster (API bazen alakasız sonuç döndürüyor)
+      let matches = (json && json.data && json.data.matches) ? json.data.matches.filter(m => (m.text || '').toLocaleLowerCase('tr').includes(ql)) : [];
+      const total = matches.length;
+      matches = matches.slice(0, 60);
+      if (total > 0) {
+        c.innerHTML = `<div class="bebek-count-note">"${hvEsc(q)}" için ${total} ayet bulundu${total > 60 ? ' (ilk 60 gösteriliyor)' : ''}</div>` +
           matches.map(m => {
             const sid = m.surah.number, aname = m.surah.name || m.surah.englishName;
             return `<div class="ayet-result" onclick="openSurahById(${sid})">
-              <div class="ayet-ref">${hvEsc(aname)} Suresi • ${m.numberInSurah}. Ayet</div>
-              <div class="ayet-meal">${hvEsc(m.text)}</div>
+              <div class="ayet-ref">${hvEsc(aname)} Suresi • ${m.numberInSurah}. Ayet <span class="ayet-go">›</span></div>
+              <div class="ayet-meal">${hvHighlight(m.text, q)}</div>
             </div>`;
           }).join('');
       } else {
-        c.innerHTML = '<div class="empty-note">Bu kelime için sonuç bulunamadı. Farklı bir kelime deneyin.</div>';
+        c.innerHTML = '<div class="empty-note">"' + hvEsc(q) + '" kelimesini içeren ayet bulunamadı. Farklı bir kelime deneyin.</div>';
       }
     } catch (e) {
       c.innerHTML = '<div class="empty-note">Arama için internet bağlantısı gerekiyor. Lütfen tekrar deneyin.</div>';
@@ -876,12 +896,15 @@ function renderSiyer() {
 function renderPeygamberler() {
   const c = document.getElementById('peygamberler-content');
   if (!c || typeof PEYGAMBERLER === 'undefined') return;
-  c.innerHTML = `<div class="info-note">Kur'an-ı Kerim'de adı geçen 25 peygamber.</div>` +
+  c.innerHTML = `<div class="info-note">Kur'an-ı Kerim'de adı geçen 25 peygamber ve kıssaları.</div>` +
     PEYGAMBERLER.map((p, i) => `
       <div class="peygamber-card">
         <div class="peygamber-no">${i + 1}</div>
         <div class="peygamber-body">
-          <div class="peygamber-name">${hvEsc(p.name)}</div>
+          <div class="peygamber-head">
+            <span class="peygamber-name">${hvEsc(p.name)}</span>
+            ${p.lakab ? `<span class="peygamber-lakab">${hvEsc(p.lakab)}</span>` : ''}
+          </div>
           <div class="peygamber-info">${hvEsc(p.info)}</div>
         </div>
       </div>`).join('');
@@ -899,6 +922,66 @@ function renderSozluk(filter) {
       <div class="sozluk-term">${hvEsc(t.term)}</div>
       <div class="sozluk-mean">${hvEsc(t.meaning)}</div>
     </div>`).join('');
+}
+
+/* ══════════ RAMAZAN İMSAKİYESİ (Aladhan Calendar API) ══════════ */
+let _imsakiyeDate = new Date();
+function imsakiyeNav(delta) {
+  _imsakiyeDate = new Date(_imsakiyeDate.getFullYear(), _imsakiyeDate.getMonth() + delta, 1);
+  renderImsakiye();
+}
+window.imsakiyeNav = imsakiyeNav;
+function trWeekdayShort(en) {
+  return ({ Monday: 'Pzt', Tuesday: 'Sal', Wednesday: 'Çar', Thursday: 'Per', Friday: 'Cum', Saturday: 'Cmt', Sunday: 'Paz' })[en] || '';
+}
+async function renderImsakiye() {
+  const c = document.getElementById('imsakiye-content');
+  if (!c) return;
+  const month = _imsakiyeDate.getMonth() + 1, year = _imsakiyeDate.getFullYear();
+  const monthNames = ['Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran', 'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'];
+  const loc = (typeof APP_STATE !== 'undefined' && APP_STATE.userLocation) ? APP_STATE.userLocation : { lat: 41.01, lng: 28.97 };
+  const cityLbl = (typeof APP_STATE !== 'undefined') ? `${APP_STATE.currentCity || ''}${APP_STATE.currentDistrict ? ', ' + APP_STATE.currentDistrict : ''}` : '';
+  c.innerHTML = `
+    <div class="imsakiye-nav">
+      <button class="counter-btn minus" onclick="imsakiyeNav(-1)">‹</button>
+      <div class="imsakiye-month">${monthNames[month - 1]} ${year}<div class="imsakiye-loc">📍 ${hvEsc(cityLbl)}</div></div>
+      <button class="counter-btn plus" onclick="imsakiyeNav(1)">›</button>
+    </div>
+    <div class="info-note" id="imsakiye-loading">🔎 İmsakiye yükleniyor...</div>`;
+  try {
+    const res = await fetch(`https://api.aladhan.com/v1/calendar?latitude=${loc.lat}&longitude=${loc.lng}&method=13&month=${month}&year=${year}`);
+    const json = await res.json();
+    if (json && json.data && json.data.length) {
+      const todayKey = hvTodayKey();
+      const strip = t => (t || '').split(' ')[0];
+      const rows = json.data.map(d => {
+        const g = d.date.gregorian, t = d.timings;
+        const dateKey = `${g.year}-${String(g.month.number).padStart(2, '0')}-${String(g.day).padStart(2, '0')}`;
+        const isToday = dateKey === todayKey;
+        return `<tr class="${isToday ? 'imsak-today' : ''}">
+          <td class="im-day">${g.day}<span class="im-wd">${trWeekdayShort(g.weekday.en)}</span></td>
+          <td>${strip(t.Imsak)}</td><td>${strip(t.Sunrise)}</td><td>${strip(t.Dhuhr)}</td>
+          <td>${strip(t.Asr)}</td><td class="im-iftar">${strip(t.Maghrib)}</td><td>${strip(t.Isha)}</td>
+        </tr>`;
+      }).join('');
+      const load = document.getElementById('imsakiye-loading');
+      if (load) load.remove();
+      const wrap = document.createElement('div');
+      wrap.innerHTML = `
+        <div class="imsakiye-table-wrap">
+          <table class="imsakiye-table">
+            <thead><tr><th>Gün</th><th>İmsak</th><th>Güneş</th><th>Öğle</th><th>İkindi</th><th>Akşam</th><th>Yatsı</th></tr></thead>
+            <tbody>${rows}</tbody>
+          </table>
+        </div>
+        <div class="info-note" style="margin-top:8px;">Ramazan'da <b>İmsak</b> = sahurun sonu (orucun başı), <b>Akşam</b> = iftar vaktidir.</div>`;
+      c.appendChild(wrap);
+    } else { throw new Error('empty'); }
+  } catch (e) {
+    const load = document.getElementById('imsakiye-loading');
+    if (load) load.textContent = '';
+    c.insertAdjacentHTML('beforeend', '<div class="empty-note">İmsakiye için internet bağlantısı gerekiyor. Lütfen tekrar deneyin.</div>');
+  }
 }
 
 /* ══════════ FEATURE ROUTE KAYIT & BAŞLATMA ══════════ */
@@ -927,7 +1010,8 @@ window.FEATURE_ROUTES = {
   'kirk-hadis': () => renderKirkHadis(document.getElementById('hadis-search-input') ? document.getElementById('hadis-search-input').value : ''),
   'siyer': renderSiyer,
   'peygamberler': renderPeygamberler,
-  'sozluk': () => renderSozluk(document.getElementById('sozluk-search-input') ? document.getElementById('sozluk-search-input').value : '')
+  'sozluk': () => renderSozluk(document.getElementById('sozluk-search-input') ? document.getElementById('sozluk-search-input').value : ''),
+  'imsakiye': renderImsakiye
 };
 
 function featuresInit() {

@@ -70,8 +70,8 @@ function setupNavTabs() {
 const PAGE_PARENT = {
   home: 'home',
   kurandua: 'kurandua', quran: 'kurandua', 'dua-ogrenme': 'kurandua', esma: 'kurandua', ezkar: 'kurandua', 'gunluk-dua': 'kurandua', 'onemli-sureler': 'kurandua', 'ayet-arama': 'kurandua', 'kirk-hadis': 'kurandua',
-  ibadet: 'ibadet', guide: 'ibadet', qibla: 'ibadet', zikirmatik: 'ibadet', 'namaz-takibi': 'ibadet', kaza: 'ibadet', hatim: 'ibadet', taharet: 'ibadet', 'ozel-namaz': 'ibadet', iman: 'ibadet',
-  araclar: 'araclar', zekat: 'araclar', fitre: 'araclar', quiz: 'araclar', ruya: 'araclar', bebek: 'araclar', takvim: 'araclar', paylasim: 'araclar', cuma: 'araclar', siyer: 'araclar', peygamberler: 'araclar', sozluk: 'araclar',
+  ibadet: 'ibadet', guide: 'ibadet', qibla: 'ibadet', zikirmatik: 'ibadet', 'namaz-takibi': 'ibadet', kaza: 'ibadet', hatim: 'ibadet', taharet: 'ibadet', 'ozel-namaz': 'ibadet', iman: 'ibadet', peygamberler: 'ibadet', siyer: 'ibadet',
+  araclar: 'araclar', zekat: 'araclar', fitre: 'araclar', quiz: 'araclar', ruya: 'araclar', bebek: 'araclar', takvim: 'araclar', paylasim: 'araclar', cuma: 'araclar', sozluk: 'araclar', imsakiye: 'araclar',
   settings: 'settings'
 };
 
@@ -984,10 +984,12 @@ async function loadSurahDetail(id, localSurahObj) {
   const ayahWrap = document.getElementById('ayah-list-wrap');
 
   if (headerCard && localSurahObj) {
+    const aciklama = (typeof SURE_ACIKLAMA !== 'undefined' && SURE_ACIKLAMA[id]) ? SURE_ACIKLAMA[id] : '';
     headerCard.innerHTML = `
       <div class="detail-ar-name">${localSurahObj.name_original || ''}</div>
       <div class="detail-tr-name">${localSurahObj.name} Suresi</div>
       <div class="detail-meta">${localSurahObj.verse_count} Ayet • ${localSurahObj.revelation_place}</div>
+      ${aciklama ? `<div class="sure-hakkinda"><span class="sh-label">📘 Sure Hakkında</span>${aciklama}</div>` : ''}
     `;
   }
 
@@ -1429,26 +1431,49 @@ function triggerNotification(prayer, offset) {
   }
 
   // 2. Play Sound
-  if (APP_STATE.notifySound !== 'silent') {
-    if (activeAudioObj) {
-      activeAudioObj.pause();
-      activeAudioObj.currentTime = 0;
-    }
-    
-    let audioUrl = '';
-    if (APP_STATE.notifySound === 'beep') {
-      audioUrl = 'https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3';
-    } else if (APP_STATE.notifySound === 'ezan') {
-      // Using a short beautiful recitation (Fatiha) as alert since direct adhan APIs often block CORS
-      audioUrl = 'https://server8.mp3quran.net/afs/001.mp3'; 
-    }
-
-    if (audioUrl) {
-      activeAudioObj = new Audio(audioUrl);
-      activeAudioObj.play().catch(e => console.warn('Audio play blocked by browser:', e));
-    }
+  if (APP_STATE.notifySound === 'beep') {
+    playNotifyAudio(['https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3']);
+  } else if (APP_STATE.notifySound === 'ezan') {
+    playAdhan();
   }
 }
+
+// Gerçek ezan sesi (birkaç kaynak; biri çalmazsa diğerine geçer)
+const ADHAN_URLS = [
+  'https://www.islamcan.com/audio/adhan/azan1.mp3',
+  'https://www.islamcan.com/audio/adhan/azan2.mp3',
+  'https://download.tvquran.com/download/mp3quran/adhan/mishary_rashid.mp3',
+  'https://server8.mp3quran.net/afs/001.mp3'
+];
+function playNotifyAudio(urls, i) {
+  i = i || 0;
+  if (i >= urls.length) return;
+  if (activeAudioObj) { try { activeAudioObj.pause(); activeAudioObj.currentTime = 0; } catch (e) {} }
+  activeAudioObj = new Audio(urls[i]);
+  activeAudioObj.onerror = () => playNotifyAudio(urls, i + 1);
+  activeAudioObj.play().catch(err => {
+    console.warn('Audio play blocked/failed, trying next:', err);
+    playNotifyAudio(urls, i + 1);
+  });
+}
+function playAdhan() { playNotifyAudio(ADHAN_URLS, 0); }
+window.playAdhan = playAdhan;
+
+// Ayarlardaki "Ezanı Test Et" butonu
+function testAdhanSound() {
+  const btn = document.getElementById('test-adhan-btn');
+  if (btn) { btn.textContent = '🔊 Ezan çalıyor... (durdurmak için tekrar dokun)'; }
+  if (activeAudioObj && !activeAudioObj.paused) {
+    try { activeAudioObj.pause(); activeAudioObj.currentTime = 0; } catch (e) {}
+    if (btn) btn.textContent = '🔊 Ezanı Test Et';
+    return;
+  }
+  playAdhan();
+  if (activeAudioObj) {
+    activeAudioObj.onended = () => { if (btn) btn.textContent = '🔊 Ezanı Test Et'; };
+  }
+}
+window.testAdhanSound = testAdhanSound;
 
 // Notification Flow
 window.acceptNotificationPermissionFlow = function() {

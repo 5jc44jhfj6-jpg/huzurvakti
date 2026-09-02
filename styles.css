@@ -1233,3 +1233,95 @@ input:checked + .toggle-slider::before { transform: translateX(20px); }
 .sozluk-item { background: var(--bg-card); border: 1.2px solid var(--border-gold); border-left: 4px solid var(--gold); border-radius: var(--radius-md); padding: 11px 14px; margin-bottom: 8px; box-shadow: var(--shadow-card); }
 .sozluk-term { font-size: 0.95rem; font-weight: 700; color: var(--gold-light); margin-bottom: 3px; }
 .sozluk-mean { font-size: 0.83rem; color: var(--text-sub); line-height: 1.45; }
+
+/* ══════════════════════════════════════════════════════════
+   v55.3 — PREMIUM RÖTUŞ: zengin yeşil ton, geri sayım,
+   ana sayfa sığdırma, yeni bileşen stilleri
+   ══════════════════════════════════════════════════════════ */
+
+/* Daha derin, canlı zümrüt yeşili arka plan (dark tema) */
+body.dark-theme {
+  --bg-gradient: radial-gradient(circle at 50% -8%, #1756455e 0%, transparent 55%),
+                 radial-gradient(circle at 50% 12%, #0f3a2e 0%, #08241c 48%, #030f0b 100%);
+  --emerald-accent: #1c5a49;
+  --emerald-light: #2f8770;
+}
+body.dark-theme .hero-frame-box {
+  background: radial-gradient(circle at 50% 0%, rgba(24, 78, 63, 0.95) 0%, rgba(9, 33, 26, 0.97) 62%, rgba(4, 15, 11, 0.98) 100%);
+  border-color: var(--gold);
+  box-shadow: 0 12px 34px rgba(0, 0, 0, 0.72), 0 0 40px rgba(212, 175, 55, 0.28), inset 0 1px 0 rgba(255,255,255,0.04);
+}
+body.dark-theme .hero-prayer-unified-box {
+  background: linear-gradient(180deg, rgba(15, 52, 42, 0.96) 0%, rgba(5, 18, 14, 0.98) 100%);
+}
+body.dark-theme #app-header { background: rgba(5, 20, 15, 0.94); }
+
+/* ─── ANA SAYFAYI TEK EKRANA SIĞDIRMA ─── */
+#clock-display { font-size: clamp(1.95rem, 7.4vw, 2.5rem); margin-bottom: 0; }
+.date-hijri-subrow { font-size: 0.78rem; flex-wrap: wrap; }
+.countdown-hero-wrap { margin: 2px 0 4px; }
+.circle-progress-wrapper {
+  width: 158px; height: 158px; margin: 2px auto;
+  background: radial-gradient(circle, rgba(47, 135, 112, 0.28) 0%, transparent 66%);
+}
+.circle-progress-svg { width: 158px; height: 158px; }
+.progress-bg { stroke: rgba(212, 175, 55, 0.16); stroke-dasharray: none; }
+.progress-bar { filter: drop-shadow(0 0 9px rgba(212, 175, 55, 0.95)); }
+.countdown-target { font-size: 0.7rem; letter-spacing: 0.6px; margin-bottom: 3px; }
+.countdown-timer-text {
+  font-size: 1.55rem; letter-spacing: 1px;
+  background: linear-gradient(180deg, #ffffff 0%, #fff3be 45%, #e9c85a 100%);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 1px 4px rgba(0,0,0,0.5));
+}
+.hero-prayer-unified-box { padding: 8px; box-shadow: 0 0 26px rgba(212,175,55,0.32), inset 0 0 18px rgba(0,0,0,0.5); }
+.prayer-grid { gap: 5px; margin-bottom: 5px; }
+.prayer-card { padding: 5px 4px; }
+.prayer-name { font-size: 0.74rem; }
+.prayer-time { font-size: 1.02rem; }
+.svg-prayer-icon { width: 20px; height: 20px; }
+
+.daily-verse-card, .daily-hadis-card { padding: 9px 13px; margin-top: 8px; }
+.daily-verse-card .verse-card-title, .daily-hadis-card .verse-card-title { font-size: 0.86rem; margin-bottom: 3px; }
+.verse-arabic { font-size: clamp(1.02rem, 3.5vw, 1.28rem); margin-bottom: 3px; line-height: 1.35; }
+.verse-turkish { font-size: clamp(0.8rem, 2.9vw, 0.94rem); margin-bottom: 4px; line-height: 1.35; }
+.verse-source { font-size: 0.72rem; }
+.hadis-arabic { font-size: 1.0rem; margin-bottom: 4px; line-height: 1.5; }
+.hadis-text { font-size: clamp(0.8rem, 2.9vw, 0.94rem); line-height: 1.4; }
+.hadis-source { font-size: 0.72rem; margin-top: 4px; }
+.mini-share-btn { margin-top: 6px; padding: 4px 12px; font-size: 0.68rem; }
+
+/* ─── PEYGAMBER lakap rozeti ─── */
+.peygamber-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 3px; }
+.peygamber-lakab { font-size: 0.68rem; font-weight: 700; color: #050d0b; background: var(--gold-gradient); padding: 2px 9px; border-radius: 11px; }
+.peygamber-card { align-items: flex-start; }
+.peygamber-name { margin: 0; }
+
+/* ─── Ayet arama: chevron + vurgu ─── */
+.ayet-go { float: right; color: var(--gold); font-size: 1.1rem; line-height: 1; }
+mark.hl { background: rgba(212, 175, 55, 0.42); color: #fff; border-radius: 3px; padding: 0 2px; font-weight: 700; }
+
+/* ─── Hub kartlarına ince premium parlaklık ─── */
+.hub-card { position: relative; overflow: hidden; background: linear-gradient(160deg, rgba(20, 62, 50, 0.9) 0%, rgba(8, 28, 22, 0.92) 100%); }
+.hub-card::after { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 40%; background: linear-gradient(180deg, rgba(255,255,255,0.05), transparent); pointer-events: none; }
+.hub-card:active { transform: scale(0.98); }
+
+/* ══════ v55.4 — Sure Hakkında (tefsir) + Ramazan İmsakiyesi ══════ */
+.sure-hakkinda { margin-top: 10px; text-align: left; font-size: 0.82rem; color: var(--text-sub); line-height: 1.5; background: rgba(212,175,55,0.1); border: 1px solid var(--border-light); border-left: 3px solid var(--gold); border-radius: 8px; padding: 9px 12px; }
+.sh-label { display: block; font-size: 0.75rem; font-weight: 700; color: var(--gold-light); margin-bottom: 3px; }
+
+/* İmsakiye */
+.imsakiye-nav { display: flex; align-items: center; justify-content: space-between; gap: 10px; background: var(--bg-card); border: 1.2px solid var(--border-gold); border-radius: var(--radius-md); padding: 8px 12px; margin-bottom: 12px; box-shadow: var(--shadow-card); }
+.imsakiye-month { text-align: center; font-size: 1rem; font-weight: 700; color: var(--gold-light); flex: 1; }
+.imsakiye-loc { font-size: 0.72rem; font-weight: 500; color: var(--text-sub); margin-top: 2px; }
+.imsakiye-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; border-radius: var(--radius-md); border: 1.2px solid var(--border-gold); }
+.imsakiye-table { width: 100%; border-collapse: collapse; font-size: 0.8rem; background: var(--bg-card); }
+.imsakiye-table th { background: linear-gradient(180deg, #d4af37, #a8831b); color: #071511; font-weight: 700; padding: 8px 4px; font-size: 0.74rem; position: sticky; top: 0; }
+.imsakiye-table td { padding: 7px 4px; text-align: center; color: var(--text-main); border-bottom: 1px solid var(--border-light); font-variant-numeric: tabular-nums; }
+.imsakiye-table tbody tr:nth-child(even), .imsakiye-table tbody tr:nth-child(even) { background: rgba(212,175,55,0.04); }
+.im-day { font-weight: 700; color: var(--gold-light); }
+.im-wd { display: block; font-size: 0.62rem; font-weight: 500; color: var(--text-muted); }
+.im-iftar { color: #ffd36a; font-weight: 700; }
+.imsak-today { background: linear-gradient(90deg, rgba(212,175,55,0.28), rgba(212,175,55,0.12)) !important; }
+.imsak-today td { border-color: var(--gold); }
+.imsak-today .im-day { color: #fff; }

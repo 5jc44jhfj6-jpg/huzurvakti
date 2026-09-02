@@ -19,12 +19,12 @@
     <link rel="apple-touch-icon" href="icon-512.jpg">
     <meta name="description" content="Namaz Vakitleri, Kıble Pusulası, Kuran-ı Kerim ve Namaz Rehberi">
 
-    <link rel="stylesheet" href="styles.css?v=55.2.0">
-    <script src="cities.js?v=55.2.0" defer></script>
-    <script src="data.js?v=55.2.0" defer></script>
-    <script src="content.js?v=55.2.0" defer></script>
-    <script src="app.js?v=55.2.0" defer></script>
-    <script src="features.js?v=55.2.0" defer></script>
+    <link rel="stylesheet" href="styles.css?v=55.4.0">
+    <script src="cities.js?v=55.4.0" defer></script>
+    <script src="data.js?v=55.4.0" defer></script>
+    <script src="content.js?v=55.4.0" defer></script>
+    <script src="app.js?v=55.4.0" defer></script>
+    <script src="features.js?v=55.4.0" defer></script>
 </head>
 <body class="dark-theme">
     <!-- Loading Screen -->
@@ -146,7 +146,7 @@
                         <span class="hub-icon">🔎</span><span class="hub-title">Ayet & Meal Arama</span><span class="hub-sub">Kelimeyle ayet bul</span>
                     </button>
                     <button class="hub-card" onclick="navigateTo('kirk-hadis')">
-                        <span class="hub-icon">📜</span><span class="hub-title">40 Hadis</span><span class="hub-sub">İmam Nevevî</span>
+                        <span class="hub-icon">📜</span><span class="hub-title">100 Hadis</span><span class="hub-sub">Hadis-i Şerifler</span>
                     </button>
                 </div>
             </div>
@@ -187,6 +187,12 @@
                     <button class="hub-card" onclick="navigateTo('iman')">
                         <span class="hub-icon">📜</span><span class="hub-title">İman Esasları</span><span class="hub-sub">Âmentü & 6 Şart</span>
                     </button>
+                    <button class="hub-card" onclick="navigateTo('peygamberler')">
+                        <span class="hub-icon">👳</span><span class="hub-title">Peygamberler</span><span class="hub-sub">Kur'an'daki 25 Nebi</span>
+                    </button>
+                    <button class="hub-card" onclick="navigateTo('siyer')">
+                        <span class="hub-icon">🌟</span><span class="hub-title">Siyer</span><span class="hub-sub">Peygamberimizin Hayatı</span>
+                    </button>
                 </div>
             </div>
         </section>
@@ -217,17 +223,14 @@
                     <button class="hub-card" onclick="navigateTo('takvim')">
                         <span class="hub-icon">📅</span><span class="hub-title">Hicri Takvim</span><span class="hub-sub">Kandiller & Bayramlar</span>
                     </button>
+                    <button class="hub-card" onclick="navigateTo('imsakiye')">
+                        <span class="hub-icon">🌙</span><span class="hub-title">İmsakiye</span><span class="hub-sub">Ramazan • Sahur & İftar</span>
+                    </button>
                     <button class="hub-card" onclick="navigateTo('paylasim')">
                         <span class="hub-icon">📤</span><span class="hub-title">Paylaşım Kartları</span><span class="hub-sub">Ayet & Hadis</span>
                     </button>
                     <button class="hub-card" onclick="navigateTo('cuma')">
                         <span class="hub-icon">🕌</span><span class="hub-title">Cuma Mesajları</span><span class="hub-sub">Hayırlı Cumalar</span>
-                    </button>
-                    <button class="hub-card" onclick="navigateTo('siyer')">
-                        <span class="hub-icon">🌟</span><span class="hub-title">Siyer</span><span class="hub-sub">Peygamberimizin Hayatı</span>
-                    </button>
-                    <button class="hub-card" onclick="navigateTo('peygamberler')">
-                        <span class="hub-icon">👳</span><span class="hub-title">Peygamberler</span><span class="hub-sub">Kur'an'daki 25 Nebi</span>
                     </button>
                     <button class="hub-card" onclick="navigateTo('sozluk')">
                         <span class="hub-icon">📚</span><span class="hub-title">Dini Sözlük</span><span class="hub-sub">Kavramlar & Anlamları</span>
@@ -615,7 +618,7 @@
         <section id="page-kirk-hadis" class="page-section">
             <div class="hero-frame-box">
                 <button class="hub-back-btn" onclick="navigateTo('kurandua')">← Kuran &amp; Dua</button>
-                <div class="page-header-title"><h2>📜 40 Hadis</h2><p>İmam Nevevî'nin Kırk Hadisi</p></div>
+                <div class="page-header-title"><h2>📜 100 Hadis-i Şerif</h2><p>İlk 42'si İmam Nevevî'nin Kırk Hadisi</p></div>
                 <div class="quran-search-bar">
                     <span class="search-icon-fixed">🔍</span>
                     <input type="text" id="hadis-search-input" class="search-input-field" placeholder="Hadis ara (ör. niyet, komşu)...">
@@ -626,7 +629,7 @@
 
         <section id="page-siyer" class="page-section">
             <div class="hero-frame-box">
-                <button class="hub-back-btn" onclick="navigateTo('araclar')">← Araçlar</button>
+                <button class="hub-back-btn" onclick="navigateTo('ibadet')">← İbadet</button>
                 <div class="page-header-title"><h2>🌟 Siyer</h2><p>Peygamberimizin Hayatı</p></div>
                 <div id="siyer-content"></div>
             </div>
@@ -634,7 +637,7 @@
 
         <section id="page-peygamberler" class="page-section">
             <div class="hero-frame-box">
-                <button class="hub-back-btn" onclick="navigateTo('araclar')">← Araçlar</button>
+                <button class="hub-back-btn" onclick="navigateTo('ibadet')">← İbadet</button>
                 <div class="page-header-title"><h2>👳 Peygamberler</h2><p>Kur'an'da adı geçen 25 peygamber</p></div>
                 <div id="peygamberler-content"></div>
             </div>
@@ -649,6 +652,14 @@
                     <input type="text" id="sozluk-search-input" class="search-input-field" placeholder="Kavram ara (ör. takva, nisab)...">
                 </div>
                 <div id="sozluk-content"></div>
+            </div>
+        </section>
+
+        <section id="page-imsakiye" class="page-section">
+            <div class="hero-frame-box">
+                <button class="hub-back-btn" onclick="navigateTo('araclar')">← Araçlar</button>
+                <div class="page-header-title"><h2>🌙 Ramazan İmsakiyesi</h2><p>Aylık sahur ve iftar vakitleri</p></div>
+                <div id="imsakiye-content"></div>
             </div>
         </section>
 
@@ -702,10 +713,13 @@
                                 <select id="notify-sound" class="select-input">
                                     <option value="silent">Sessiz (Sadece Ekranda)</option>
                                     <option value="beep">Sesli (Kısa Zil)</option>
-                                    <option value="ezan">Sesli (Kısa Ezan)</option>
+                                    <option value="ezan">Sesli (Gerçek Ezan)</option>
                                 </select>
                             </div>
-                            <div style="font-size: 0.75rem; color: var(--text-sub); margin-top: 8px;">* Tarayıcı/Cihaz bildirim izinlerinin açık olduğundan emin olun.</div>
+                            <div class="action-row">
+                                <button id="test-adhan-btn" class="gold-primary-btn" onclick="testAdhanSound()">🔊 Ezanı Test Et</button>
+                            </div>
+                            <div style="font-size: 0.75rem; color: var(--text-sub); margin-top: 8px;">* Tarayıcı/Cihaz bildirim izinlerinin açık olduğundan emin olun. Arka planda tam ezan bildirimi için uygulamayı ana ekrana ekleyin.</div>
                         </div>
                     </div>
 
@@ -776,7 +790,7 @@
     <script>
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
-          navigator.serviceWorker.register('/sw.js?v=55.2.0')
+          navigator.serviceWorker.register('/sw.js?v=55.4.0')
             .then(reg => {
               reg.onupdatefound = () => {
                 const installingWorker = reg.installing;
