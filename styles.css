@@ -1674,3 +1674,9 @@ body.dark-theme .location-chip .loc-icon{ filter:saturate(1.1); }
 body.dark-theme.green-theme .location-chip{
   background:rgba(18,38,33,.9); border-color:var(--border-gold); color:var(--gold-light);
 }
+
+/* v60 — arka plan bildirimi durum satırı */
+.notify-status{ font-size:.78rem; line-height:1.5; color:var(--text-sub); padding:10px 14px 6px; }
+.notify-status.ok{ color:#8fe0b0; }
+body.dark-theme .notify-status.ok{ color:#a8e6c0; }
+.notify-status.warn{ color:#f0c08a; }

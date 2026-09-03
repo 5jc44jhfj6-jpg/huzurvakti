@@ -181,6 +181,9 @@ function applyStateSettings() {
     if (k in offs) inp.value = offs[k];
   });
 
+  // Arka plan bildirimi durum satırı
+  try { updateNotifyStatusUI(); } catch (e) {}
+
   updateLocationHeaderLabel();
 }
 
@@ -385,6 +388,8 @@ function reapplyTimeOffsets() {
   APP_STATE.prayerTimes = t;
   renderPrayerCards(t);
   updatePrayerCountdown();
+  // vakit ince ayarı değişti → bildirimleri de yeniden kur
+  try { scheduleNativePrayerNotifications(); } catch (e) {}
 }
 window.reapplyTimeOffsets = reapplyTimeOffsets;
 
@@ -402,6 +407,157 @@ function setOfflineBadge(offline) {
 }
 window.addEventListener('online', () => { setOfflineBadge(false); fetchPrayerTimes(APP_STATE.userLocation.lat, APP_STATE.userLocation.lng); });
 window.addEventListener('offline', () => setOfflineBadge(true));
+
+/* ────────────────────────────────────────────────────────────
+   NATIVE YEREL BİLDİRİM (iOS kabuğu köprüsü)
+   Uygulama KAPALIYKEN bile bildirim gelmesi için, önümüzdeki
+   günlerin vakitleri telefonun kendi bildirim sistemine önceden
+   yazılır. Native taraf (ViewController.swift) şu köprüleri sunar:
+     schedule-local-notification  { id, title, body, timestamp(sn) }
+     clear-local-notifications
+   Tarayıcıda bu köprü yoktur; o durumda sessizce devre dışı kalır.
+   ──────────────────────────────────────────────────────────── */
+const HV_NOTIFY_DAYS = 12;   // kaç gün ileriye kurulacak
+const HV_NOTIFY_MAX = 60;    // iOS sınırı 64; güvenli marj
+const HV_NOTIFY_PRAYERS = ['Fajr', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'];
+
+function hvNativeHandler(name) {
+  try {
+    if (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers[name]) {
+      return window.webkit.messageHandlers[name];
+    }
+  } catch (e) {}
+  return null;
+}
+function hvHasNativeNotifications() { return !!hvNativeHandler('schedule-local-notification'); }
+window.hvHasNativeNotifications = hvHasNativeNotifications;
+
+function hvClearNativeNotifications() {
+  const h = hvNativeHandler('clear-local-notifications');
+  if (h) { try { h.postMessage(''); return true; } catch (e) {} }
+  return false;
+}
+
+function hvPad2(n) { return String(n).padStart(2, '0'); }
+
+// Önümüzdeki günlerin vakitlerini telefona bildirim olarak kurar
+function scheduleNativePrayerNotifications() {
+  if (!hvHasNativeNotifications()) { updateNotifyStatusUI(0); return 0; }
+
+  hvClearNativeNotifications();
+
+  if (!APP_STATE.notifyEnabled) { updateNotifyStatusUI(0); return 0; }
+
+  const sched = hvNativeHandler('schedule-local-notification');
+  if (!sched) { updateNotifyStatusUI(0); return 0; }
+
+  const timeOffs = getTimeOffsets();
+  const early = parseInt(APP_STATE.notifyOffset, 10) || 0;   // kaç dk kala
+  const lat = APP_STATE.userLocation.lat;
+  const lng = APP_STATE.userLocation.lng;
+  const now = Date.now();
+  let count = 0;
+
+  for (let d = 0; d < HV_NOTIFY_DAYS && count < HV_NOTIFY_MAX; d++) {
+    const day = new Date();
+    day.setHours(0, 0, 0, 0);
+    day.setDate(day.getDate() + d);
+
+    const entry = getCachedDay(lat, lng, day);
+    if (!entry || !entry.t) continue;
+    const ramazan = /ramazan|ramadan/i.test(entry.h || '');
+
+    for (const id of HV_NOTIFY_PRAYERS) {
+      if (count >= HV_NOTIFY_MAX) break;
+      const rawTime = entry.t[id];
+      if (!rawTime) continue;
+
+      // kullanıcının vakit ince ayarını uygula
+      const adjusted = addMinutes(rawTime, parseInt(timeOffs[id], 10) || 0);
+      const parts = adjusted.split(':');
+      const fireAt = new Date(day);
+      fireAt.setHours(parseInt(parts[0], 10), parseInt(parts[1], 10), 0, 0);
+      // "x dk kala" ayarını uygula
+      fireAt.setTime(fireAt.getTime() - early * 60000);
+
+      if (fireAt.getTime() <= now + 20000) continue; // geçmiş ya da çok yakın
+
+      let label = (typeof PRAYER_NAMES !== 'undefined' && PRAYER_NAMES[id]) ? PRAYER_NAMES[id].name : id;
+      if (ramazan && id === 'Maghrib') label = 'İftar';
+      if (ramazan && id === 'Fajr') label = 'İmsak';
+
+      const body = early === 0
+        ? `${label} vakti girdi.`
+        : `${label} vaktine ${early} dakika kaldı.`;
+
+      const notifId = `hv_${day.getFullYear()}${hvPad2(day.getMonth() + 1)}${hvPad2(day.getDate())}_${id}`;
+
+      try {
+        sched.postMessage({
+          id: notifId,
+          title: 'Namaz Dostu',
+          body: body,
+          timestamp: Math.floor(fireAt.getTime() / 1000)
+        });
+        count++;
+      } catch (e) { console.warn('Bildirim kurulamadı:', e); }
+    }
+  }
+
+  try { localStorage.setItem('hv_notif_count', String(count)); } catch (e) {}
+  updateNotifyStatusUI(count);
+  return count;
+}
+window.scheduleNativePrayerNotifications = scheduleNativePrayerNotifications;
+
+// Ayarlar ekranındaki durum satırı
+function updateNotifyStatusUI(count) {
+  const el = document.getElementById('notify-native-status');
+  const btn = document.getElementById('test-native-notif-btn');
+  if (!el) return;
+  if (!hvHasNativeNotifications()) {
+    el.className = 'notify-status warn';
+    el.textContent = '⚠️ Bu ortamda (tarayıcı) uygulama kapalıyken bildirim gelmez. App Store\'dan kurulu uygulamada arka plan bildirimi çalışır.';
+    if (btn) btn.style.display = 'none';
+    return;
+  }
+  if (btn) btn.style.display = '';
+  if (!APP_STATE.notifyEnabled) {
+    el.className = 'notify-status';
+    el.textContent = 'Bildirimler kapalı. Açarsan vakitler telefonuna önceden kurulur ve uygulama kapalıyken de bildirim gelir.';
+    return;
+  }
+  const n = (typeof count === 'number') ? count : parseInt(localStorage.getItem('hv_notif_count') || '0', 10);
+  el.className = 'notify-status ok';
+  el.textContent = n > 0
+    ? `✅ Arka plan bildirimi aktif — ${n} vakit için hatırlatma kuruldu (yaklaşık ${HV_NOTIFY_DAYS} gün). Uygulama kapalıyken de gelir.`
+    : 'Vakitler yüklenince bildirimler otomatik kurulacak.';
+}
+window.updateNotifyStatusUI = updateNotifyStatusUI;
+
+// Ayarlardaki "Test Bildirimi" — 10 saniye sonra bildirim gönderir
+function hvTestNativeNotification() {
+  if (!hvHasNativeNotifications()) {
+    showToastNotification('⚠️ Desteklenmiyor', 'Arka plan bildirimi yalnızca App Store sürümünde çalışır.');
+    return;
+  }
+  const sched = hvNativeHandler('schedule-local-notification');
+  const permReq = hvNativeHandler('push-permission-request');
+  if (permReq) { try { permReq.postMessage(''); } catch (e) {} }
+  if (!sched) return;
+  try {
+    sched.postMessage({
+      id: 'hv_test_' + Date.now(),
+      title: 'Namaz Dostu',
+      body: 'Test bildirimi — bildirimler çalışıyor. 🌙',
+      timestamp: Math.floor((Date.now() + 10000) / 1000)
+    });
+    showToastNotification('🔔 Test bildirimi kuruldu', 'Uygulamayı kapat, 10 saniye içinde gelecek.');
+  } catch (e) {
+    showToastNotification('❌ Kurulamadı', 'Bildirim izni verilmemiş olabilir.');
+  }
+}
+window.hvTestNativeNotification = hvTestNativeNotification;
 
 async function fetchMonthCalendar(lat, lng, year, month) {
   const res = await fetch(`https://api.aladhan.com/v1/calendar?latitude=${lat}&longitude=${lng}&method=13&month=${month}&year=${year}`);
@@ -428,9 +584,10 @@ async function fetchPrayerTimes(lat, lng) {
       const fresh = getCachedDay(lat, lng, today);
       if (fresh) applyDayTimings(fresh);
       // Ay sonuna yaklaştıysa sonraki ayı da önceden indir
-      if (today.getDate() >= 24) {
+      // (bildirimler 12 gün ileriye kurulduğu için erken indiriyoruz)
+      if (today.getDate() >= 18) {
         const nx = new Date(today.getFullYear(), today.getMonth() + 1, 1);
-        fetchMonthCalendar(lat, lng, nx.getFullYear(), nx.getMonth() + 1).catch(() => {});
+        try { await fetchMonthCalendar(lat, lng, nx.getFullYear(), nx.getMonth() + 1); } catch (e) {}
       }
     } else if (!cached) {
       throw new Error('Takvim boş');
@@ -444,6 +601,9 @@ async function fetchPrayerTimes(lat, lng) {
       setOfflineBadge(true);
     }
   }
+
+  // 3) Vakitler hazır → telefona arka plan bildirimlerini kur
+  try { scheduleNativePrayerNotifications(); } catch (e) { console.warn('Bildirim kurulum hatası:', e); }
 }
 
 function updateHijriBadgeUI(day, month, year) {
@@ -1747,15 +1907,20 @@ function setupSettingsListeners() {
     if (APP_STATE.notifyEnabled) {
       if (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers['push-permission-request']) {
         window.webkit.messageHandlers['push-permission-request'].postMessage('');
-      } else if (Notification.permission !== 'granted') {
+      } else if (typeof Notification !== 'undefined' && Notification.permission !== 'granted') {
         Notification.requestPermission();
       }
     }
+    // Arka plan bildirimlerini yeniden kur (kapalıysa temizler)
+    setTimeout(() => scheduleNativePrayerNotifications(), 400);
   });
 
   document.getElementById('notify-time')?.addEventListener('change', (e) => {
     APP_STATE.notifyOffset = parseInt(e.target.value);
     saveSettings();
+    scheduleNativePrayerNotifications();
+    showToastNotification('⏰ Bildirim zamanı güncellendi',
+      APP_STATE.notifyOffset === 0 ? 'Tam vaktinde bildirim gelecek.' : `${APP_STATE.notifyOffset} dakika kala bildirim gelecek.`);
   });
 
   document.getElementById('notify-sound')?.addEventListener('change', (e) => {
@@ -1937,8 +2102,10 @@ window.acceptNotificationPermissionFlow = function() {
   
   if (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers['push-permission-request']) {
     window.webkit.messageHandlers['push-permission-request'].postMessage('');
-  } else if (Notification.permission !== 'granted') {
+  } else if (typeof Notification !== 'undefined' && Notification.permission !== 'granted') {
     Notification.requestPermission();
   }
+  // İzin verildikten kısa süre sonra arka plan bildirimlerini kur
+  setTimeout(() => { try { scheduleNativePrayerNotifications(); } catch (e) {} }, 1200);
 };
 
