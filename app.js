@@ -27,8 +27,12 @@ function injectPageSky() {
   try {
     const html = '<div class="page-sky-inner">' +
       '<span class="rays"></span><span class="aurora a1"></span><span class="aurora a2"></span>' +
+      '<span class="cloud c1"></span><span class="cloud c2"></span><span class="cloud c3"></span>' +
+      '<span class="gust g1"></span><span class="gust g2"></span><span class="gust g3"></span>' +
       '<span class="mote m1"></span><span class="mote m2"></span><span class="mote m3"></span>' +
       '<span class="mote m4"></span><span class="mote m5"></span><span class="mote m6"></span>' +
+      '<span class="mote m7"></span><span class="mote m8"></span><span class="mote m9"></span>' +
+      '<span class="mote m10"></span>' +
       '</div>';
     document.querySelectorAll('.page-section:not(#page-home) > .hero-frame-box').forEach(box => {
       if (box.querySelector(':scope > .page-sky')) return;

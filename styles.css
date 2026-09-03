@@ -2051,3 +2051,42 @@ body.green-theme .cd-lbl{ color:#fff6d6; }
 .page-sky .mote{ animation-name:pageMote; }
 body.green-theme .page-sky .rays{ opacity:.14; }
 @media (prefers-reduced-motion: reduce){ .page-sky .rays, .page-sky .aurora, .page-sky .mote{ animation:none !important; } .page-sky .mote{ opacity:0; } }
+
+/* ═══════════════════════════════════════════════════════════
+   v60.6 — Hub sayfalarında BELİRGİN gökyüzü + güvenli katmanlama
+   (negatif z-index yerine: gökyüzü z:0, içerik z:1)
+   ═══════════════════════════════════════════════════════════ */
+.hero-frame-box{ position:relative; isolation:isolate; }
+.hero-frame-box > *:not(.page-sky){ position:relative; z-index:1; }
+.page-sky{ z-index:0; }
+.page-sky-inner{ height:120vh; }
+.page-sky .rays{ opacity:.55; top:38%; animation-duration:70s; }
+.page-sky .aurora{ opacity:.62; }
+.page-sky .aurora.a2{ opacity:.42; }
+.page-sky .cloud{ opacity:0; }
+.page-sky .cloud.c1{ width:300px; height:80px; top:8%;  animation-duration:15s; animation-delay:-3s;  }
+.page-sky .cloud.c2{ width:240px; height:64px; top:34%; animation-duration:20s; animation-delay:-11s; }
+.page-sky .cloud.c3{ width:340px; height:90px; top:60%; animation-duration:24s; animation-delay:-17s; }
+.page-sky .gust.g1{ width:150px; top:18%; animation-duration:4.6s; animation-delay:-0.8s; }
+.page-sky .gust.g2{ width:110px; top:42%; animation-duration:5.8s; animation-delay:-2.9s; }
+.page-sky .gust.g3{ width:180px; top:66%; animation-duration:5.1s; animation-delay:-4.2s; }
+.page-sky .mote{ bottom:20%; box-shadow:0 0 10px 3px rgba(255,208,156,.6); animation-name:moteFloat; }
+.page-sky .mote.m7 { left:15%; animation-duration:9s;  animation-delay:-4s;   width:5px; height:5px; }
+.page-sky .mote.m8 { left:35%; animation-duration:12s; animation-delay:-7s;   }
+.page-sky .mote.m9 { left:55%; animation-duration:8s;  animation-delay:-2.5s; width:5px; height:5px; }
+.page-sky .mote.m10{ left:72%; animation-duration:11s; animation-delay:-9s;   width:3px; height:3px; }
+/* ana sayfa sahnesindeki katman bu kuraldan etkilenmesin */
+.cd-stage .wind-layer{ z-index:0; }
+.warm-home .cd-stage{ z-index:1; }
+
+/* Günün hadisi: dokununca yumuşak geçiş + dokunulabilir his */
+#daily-hadis-card{ cursor:pointer; transition:opacity .18s ease, transform .18s ease; }
+#daily-hadis-card:active{ transform:scale(.99); }
+#daily-hadis-card.hadis-swap{ opacity:.35; }
+
+/* 1000 Hadis: Arapça satır + sayfalama */
+.hadis40-ar{ font-family:var(--font-ar); font-size:1.15rem; color:var(--gold-light); direction:rtl; text-align:right; line-height:1.7; margin-bottom:6px; }
+.hadis-pager{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin:8px 0 12px; }
+.hadis-pager .gold-outline-btn{ flex:1; }
+.hadis-pager .gold-outline-btn:disabled{ opacity:.4; cursor:default; }
+.hadis-pager-info{ font-size:.82rem; color:var(--gold-light); font-weight:700; white-space:nowrap; }

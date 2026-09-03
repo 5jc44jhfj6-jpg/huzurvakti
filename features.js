@@ -59,20 +59,71 @@ function hvShareText(text) {
   }
 }
 
-/* ══════════ GÜNÜN HADİSİ ══════════ */
-function loadDailyHadis() {
-  if (typeof HADITHS === 'undefined' || !HADITHS.length) return;
-  const h = HADITHS[hvDayIndex(HADITHS.length)];
+/* ══════════ HADİS HAVUZU (1000+) ══════════
+   HADITHS (41) + KIRK_HADIS (100) + HADIS_HAVUZU (900+) → tek liste,
+   tekrarlar metne göre ayıklanır. Ortak biçim: { text, source, ar } */
+let _hvAllHadis = null;
+function hvAllHadis() {
+  if (_hvAllHadis) return _hvAllHadis;
+  const seen = new Set();
+  const out = [];
+  const norm = (s) => String(s || '').toLocaleLowerCase('tr').replace(/[^a-zçğıöşü0-9]+/gi, '').slice(0, 80);
+  const push = (text, source, ar) => {
+    if (!text) return;
+    const k = norm(text);
+    if (seen.has(k)) return;
+    seen.add(k);
+    out.push({ text: String(text), source: source || 'Hadis-i Şerif', ar: ar || '' });
+  };
+  if (typeof HADITHS !== 'undefined') HADITHS.forEach(h => push(h.text, h.source, h.ar));
+  if (typeof KIRK_HADIS !== 'undefined') KIRK_HADIS.forEach(h => push(h.text, h.source, h.ar));
+  if (typeof HADIS_HAVUZU !== 'undefined') HADIS_HAVUZU.forEach(h => push(h.t, h.s, h.a));
+  _hvAllHadis = out;
+  return out;
+}
+window.hvAllHadis = hvAllHadis;
+
+/* ══════════ GÜNÜN HADİSİ ══════════
+   Her açılışta rastgele bir hadis (bir öncekiyle aynı olmaz);
+   karta dokununca da yenisi gelir. */
+function hvPickHadis() {
+  const all = hvAllHadis();
+  if (!all.length) return null;
+  let last = -1;
+  try { last = parseInt(localStorage.getItem('hv_last_hadis_idx') || '-1', 10); } catch (e) {}
+  let idx = Math.floor(Math.random() * all.length);
+  if (all.length > 1 && idx === last) idx = (idx + 1 + Math.floor(Math.random() * (all.length - 1))) % all.length;
+  try { localStorage.setItem('hv_last_hadis_idx', String(idx)); } catch (e) {}
+  return all[idx];
+}
+function hvRenderHadis(h, animate) {
+  if (!h) return;
+  const card = document.getElementById('daily-hadis-card');
   const arEl = document.getElementById('daily-hadis-arabic');
   const txtEl = document.getElementById('daily-hadis-text');
   const srcEl = document.getElementById('daily-hadis-source');
-  if (arEl) arEl.textContent = h.ar || '';
-  if (txtEl) txtEl.textContent = '"' + h.text + '"';
-  if (srcEl) srcEl.textContent = '— ' + h.source;
+  const apply = () => {
+    if (arEl) { arEl.textContent = h.ar || ''; arEl.style.display = h.ar ? '' : 'none'; }
+    if (txtEl) txtEl.textContent = '"' + h.text + '"';
+    if (srcEl) srcEl.textContent = '— ' + h.source;
+  };
+  if (animate && card) {
+    card.classList.add('hadis-swap');
+    setTimeout(() => { apply(); card.classList.remove('hadis-swap'); }, 180);
+  } else apply();
   window._currentHadis = h;
 }
-function shareDailyHadis() {
-  const h = window._currentHadis || (typeof HADITHS !== 'undefined' ? HADITHS[hvDayIndex(HADITHS.length)] : null);
+function loadDailyHadis() {
+  hvRenderHadis(hvPickHadis(), false);
+}
+function nextDailyHadis() {
+  hvRenderHadis(hvPickHadis(), true);
+  if (typeof hvVibrate === 'function') hvVibrate(12);
+}
+window.nextDailyHadis = nextDailyHadis;
+function shareDailyHadis(ev) {
+  if (ev && ev.stopPropagation) ev.stopPropagation();
+  const h = window._currentHadis || hvPickHadis();
   if (!h) return;
   hvShareText(`📿 Günün Hadisi\n\n"${h.text}"\n— ${h.source}\n\nNamaz Dostu 🌙`);
 }
@@ -862,21 +913,40 @@ function doAyetArama(query) {
 }
 
 /* ══════════ 40 HADİS (İmam Nevevî) ══════════ */
-function renderKirkHadis(filter) {
+/* 1000 Hadis sayfası — birleşik havuz, arama, sayfalama (performans için 100'er) */
+let _hadisPage = 0;
+const HADIS_PAGE_SIZE = 100;
+function renderKirkHadis(filter, page) {
   const c = document.getElementById('kirk-hadis-content');
-  if (!c || typeof KIRK_HADIS === 'undefined') return;
+  if (!c) return;
+  const all = hvAllHadis().map((h, i) => ({ no: i + 1, text: h.text, source: h.source, ar: h.ar }));
   const q = (filter || '').toLocaleLowerCase('tr').trim();
-  const list = q ? KIRK_HADIS.filter(h => h.text.toLocaleLowerCase('tr').includes(q) || String(h.no) === q) : KIRK_HADIS;
+  const list = q ? all.filter(h => h.text.toLocaleLowerCase('tr').includes(q) || h.source.toLocaleLowerCase('tr').includes(q) || String(h.no) === q) : all;
+  const countEl = document.getElementById('kirk-hadis-count');
+  if (countEl) countEl.textContent = q ? `${list.length} sonuç (toplam ${all.length} hadis)` : `Toplam ${all.length} hadis-i şerif`;
   if (!list.length) { c.innerHTML = '<div class="empty-note">Sonuç bulunamadı.</div>'; return; }
-  c.innerHTML = list.map(h => `
+  if (typeof page === 'number') _hadisPage = page; else if (q) _hadisPage = 0;
+  const pages = Math.ceil(list.length / HADIS_PAGE_SIZE);
+  if (_hadisPage >= pages) _hadisPage = pages - 1;
+  if (_hadisPage < 0) _hadisPage = 0;
+  const slice = list.slice(_hadisPage * HADIS_PAGE_SIZE, (_hadisPage + 1) * HADIS_PAGE_SIZE);
+  const nav = pages > 1 ? `
+    <div class="hadis-pager">
+      <button class="gold-outline-btn" ${_hadisPage === 0 ? 'disabled' : ''} onclick="renderKirkHadis(document.getElementById('hadis-search-input') ? document.getElementById('hadis-search-input').value : '', ${_hadisPage - 1}); document.querySelector('#page-kirk-hadis .hero-frame-box').scrollTop = 0;">‹ Önceki</button>
+      <span class="hadis-pager-info">${_hadisPage + 1} / ${pages}</span>
+      <button class="gold-outline-btn" ${_hadisPage >= pages - 1 ? 'disabled' : ''} onclick="renderKirkHadis(document.getElementById('hadis-search-input') ? document.getElementById('hadis-search-input').value : '', ${_hadisPage + 1}); document.querySelector('#page-kirk-hadis .hero-frame-box').scrollTop = 0;">Sonraki ›</button>
+    </div>` : '';
+  c.innerHTML = nav + slice.map(h => `
     <div class="hadis40-card">
       <div class="hadis40-no">${h.no}</div>
       <div class="hadis40-body">
-        <div class="hadis40-text">${hvEsc(h.text)}</div>
+        ${h.ar ? `<div class="hadis40-ar">${hvEsc(h.ar)}</div>` : ''}
+        <div class="hadis40-text">${q ? hvHighlight(h.text, q) : hvEsc(h.text)}</div>
         <div class="hadis40-src">— ${hvEsc(h.source)}</div>
       </div>
-    </div>`).join('');
+    </div>`).join('') + nav;
 }
+window.renderKirkHadis = renderKirkHadis;
 
 /* ══════════ SİYER ══════════ */
 function renderSiyer() {

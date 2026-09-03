@@ -16,16 +16,17 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Namaz Dostu">
-    <link rel="apple-touch-icon" href="apple-touch-icon.png?v=60.5.0">
-    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png?v=60.5.0">
+    <link rel="apple-touch-icon" href="apple-touch-icon.png?v=60.6.0">
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png?v=60.6.0">
     <meta name="description" content="Namaz Dostu: Namaz vakitleri, ezan, Kur'an-ı Kerim, kıble, dualar, zikirmatik ve yeni başlayanlar için adım adım namaz rehberi. Ücretsiz, reklamsız, çevrimdışı.">
 
-    <link rel="stylesheet" href="styles.css?v=60.5.0">
-    <script src="cities.js?v=60.5.0" defer></script>
-    <script src="data.js?v=60.5.0" defer></script>
-    <script src="content.js?v=60.5.0" defer></script>
-    <script src="app.js?v=60.5.0" defer></script>
-    <script src="features.js?v=60.5.0" defer></script>
+    <link rel="stylesheet" href="styles.css?v=60.6.0">
+    <script src="cities.js?v=60.6.0" defer></script>
+    <script src="data.js?v=60.6.0" defer></script>
+    <script src="content.js?v=60.6.0" defer></script>
+    <script src="hadisler.js?v=60.6.0" defer></script>
+    <script src="app.js?v=60.6.0" defer></script>
+    <script src="features.js?v=60.6.0" defer></script>
 </head>
 <body class="dark-theme">
     <!-- Loading Screen -->
@@ -140,12 +141,12 @@
                 <div id="prayer-times-container" class="prayer-grid"></div>
 
                 <!-- Günün Hadisi -->
-                <div class="daily-hadis-card" id="daily-hadis-card">
+                <div class="daily-hadis-card" id="daily-hadis-card" onclick="nextDailyHadis()" title="Yeni hadis için dokun">
                     <div class="verse-card-title">📿 Günün Hadisi</div>
                     <div id="daily-hadis-arabic" class="hadis-arabic"></div>
                     <div id="daily-hadis-text" class="hadis-text">Yükleniyor...</div>
                     <div id="daily-hadis-source" class="hadis-source"></div>
-                    <button class="mini-share-btn" onclick="shareDailyHadis()">📤 Paylaş</button>
+                    <button class="mini-share-btn" onclick="shareDailyHadis(event)">📤 Paylaş</button>
                 </div>
             </div>
         </section>
@@ -186,7 +187,7 @@
                         <span class="hub-icon">🔎</span><span class="hub-title">Ayet & Meal Arama</span><span class="hub-sub">Kelimeyle ayet bul</span>
                     </button>
                     <button class="hub-card" onclick="navigateTo('kirk-hadis')">
-                        <span class="hub-icon">📜</span><span class="hub-title">100 Hadis</span><span class="hub-sub">Hadis-i Şerifler</span>
+                        <span class="hub-icon">📜</span><span class="hub-title">1000 Hadis</span><span class="hub-sub">Hadis-i Şerifler</span>
                     </button>
                 </div>
             </div>
@@ -656,10 +657,10 @@
         <section id="page-kirk-hadis" class="page-section">
             <div class="hero-frame-box">
                 <button class="hub-back-btn" onclick="navigateTo('kurandua')">← Kuran &amp; Dua</button>
-                <div class="page-header-title"><h2>📜 100 Hadis-i Şerif</h2><p>İlk 42'si İmam Nevevî'nin Kırk Hadisi</p></div>
+                <div class="page-header-title"><h2>📜 1000 Hadis-i Şerif</h2><p id="kirk-hadis-count">Buhârî, Müslim, Tirmizî, Ebû Dâvûd, Nesâî, İbn Mâce, Riyâzü's-Sâlihîn</p></div>
                 <div class="quran-search-bar">
                     <span class="search-icon-fixed">🔍</span>
-                    <input type="text" id="hadis-search-input" class="search-input-field" placeholder="Hadis ara (ör. niyet, komşu)...">
+                    <input type="text" id="hadis-search-input" class="search-input-field" placeholder="1000 hadiste ara (ör. niyet, komşu, sabır)...">
                 </div>
                 <div id="kirk-hadis-content"></div>
             </div>
@@ -724,7 +725,7 @@
                     </div>
                     <div class="kaynak-card">
                         <h3>📜 Hadisler</h3>
-                        <p>Günlük hadisler ve 100 Hadis bölümü <b>Sahih-i Buhârî, Sahih-i Müslim, Sünen-i Tirmizî, Sünen-i Ebû Dâvûd, Sünen-i Nesâî, Sünen-i İbn Mâce, Muvatta ve Riyâzü's-Sâlihîn</b> gibi muteber kaynaklardan seçilmiş, her hadisin altında kaynağı belirtilmiştir. Türkçe çeviriler Diyanet İşleri Başkanlığı "Hadislerle İslâm" ve Riyâzü's-Sâlihîn tercümeleri esas alınarak sadeleştirilmiştir.</p>
+                        <p>Günlük hadisler ve 1000 Hadis bölümü <b>Sahih-i Buhârî, Sahih-i Müslim, Sünen-i Tirmizî, Sünen-i Ebû Dâvûd, Sünen-i Nesâî, Sünen-i İbn Mâce, Muvatta ve Riyâzü's-Sâlihîn</b> gibi muteber kaynaklardan seçilmiş, her hadisin altında kaynağı belirtilmiştir. Türkçe çeviriler Diyanet İşleri Başkanlığı "Hadislerle İslâm" ve Riyâzü's-Sâlihîn tercümeleri esas alınarak sadeleştirilmiştir.</p>
                     </div>
                     <div class="kaynak-card">
                         <h3>🤲 Dualar, Zikirler ve Esmâü'l-Hüsnâ</h3>
@@ -942,7 +943,7 @@
     <script>
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
-          navigator.serviceWorker.register('/sw.js?v=60.5.0')
+          navigator.serviceWorker.register('/sw.js?v=60.6.0')
             .then(reg => {
               reg.onupdatefound = () => {
                 const installingWorker = reg.installing;
