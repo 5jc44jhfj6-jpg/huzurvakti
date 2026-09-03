@@ -1864,3 +1864,126 @@ body.dark-theme[data-tod="Isha"] .horizon-glow{
 .sky-body{ width:38px; height:38px; margin:-19px 0 0 -19px; }
 [data-sky="day"] .sky-body{ box-shadow:0 0 24px 9px rgba(255,196,110,.34), 0 0 62px 24px rgba(255,168,74,.15); }
 [data-sky="night"] .sky-body{ width:30px; height:30px; margin:-15px 0 0 -15px; }
+
+/* ═══════════════════════════════════════════════════════════
+   v60.4 — "Bu neymiş be" seviyesi: canlı, dalgalı gökyüzü
+   Dönen ışık huzmeleri + dalgalanan aurora + büyük hızlı bulutlar
+   + kayan yıldız + daha fazla zerre. Hepsi transform/opacity.
+   ═══════════════════════════════════════════════════════════ */
+
+/* ── Dönen ışık huzmeleri (halkanın arkasında güneş patlaması) ── */
+.rays{
+  position:absolute; left:50%; top:40%;
+  width:640px; height:640px; margin:-320px 0 0 -320px; border-radius:50%;
+  background:repeating-conic-gradient(from 0deg,
+    rgba(255,224,184,0) 0deg 8deg,
+    rgba(255,224,184,.13) 10deg 13deg,
+    rgba(255,224,184,0) 15deg 22deg);
+  -webkit-mask:radial-gradient(circle, rgba(0,0,0,.95) 0%, rgba(0,0,0,.55) 30%, rgba(0,0,0,.18) 48%, transparent 60%);
+  mask:radial-gradient(circle, rgba(0,0,0,.95) 0%, rgba(0,0,0,.55) 30%, rgba(0,0,0,.18) 48%, transparent 60%);
+  animation:raysSpin 60s linear infinite; will-change:transform;
+}
+@keyframes raysSpin{ to{ transform:rotate(360deg); } }
+[data-sky="night"] .rays{ opacity:.45; }
+
+/* ── Aurora: dalgalanan ışık bantları ── */
+.aurora{
+  position:absolute; left:-25%; width:150%; height:40%; top:4%;
+  border-radius:50%;
+  background:linear-gradient(90deg,
+    rgba(255,208,152,0) 0%, rgba(255,208,152,.26) 28%,
+    rgba(255,182,112,.36) 50%, rgba(255,208,152,.26) 72%, rgba(255,208,152,0) 100%);
+  filter:blur(20px); opacity:.9; will-change:transform;
+  animation:auroraWave 12s ease-in-out infinite alternate;
+}
+.aurora.a2{ top:32%; height:32%; opacity:.62; animation-duration:17s; animation-delay:-8s; }
+@keyframes auroraWave{
+  0%   { transform:translateX(-9%) skewY(-6deg)  scaleY(1);    }
+  35%  { transform:translateX(2%)  skewY(4deg)   scaleY(1.30); }
+  70%  { transform:translateX(7%)  skewY(-3deg)  scaleY(.92);  }
+  100% { transform:translateX(11%) skewY(5deg)   scaleY(1.18); }
+}
+[data-sky="night"] .aurora{ opacity:.45; }
+
+/* ── Bulutlar: daha büyük, daha parlak, daha hızlı, hafif dalgalı ── */
+.cloud{
+  background:radial-gradient(ellipse at center, rgba(255,230,198,.62) 0%, rgba(255,210,164,.28) 48%, rgba(255,210,164,0) 74%);
+  filter:blur(10px);
+}
+.cloud.c1{ width:320px; height:84px; top:10%; animation-duration:13s; animation-delay:-2s;  }
+.cloud.c2{ width:250px; height:66px; top:30%; animation-duration:17s; animation-delay:-9s;  }
+.cloud.c3{ width:380px; height:98px; top:52%; animation-duration:21s; animation-delay:-15s; }
+.cloud.c4{ width:210px; height:58px; top:70%; animation-duration:15s; animation-delay:-6s;  }
+.cloud.c5{ width:290px; height:74px; top:42%; animation-duration:19s; animation-delay:-12s; }
+@keyframes windDrift{
+  0%   { transform:translateX(-460px) translateY(0)    scaleX(1);   opacity:0; }
+  10%  { opacity:1; }
+  30%  { transform:translateX(-160px) translateY(-9px) scaleX(1.06); }
+  55%  { transform:translateX(120px)  translateY(6px)  scaleX(.96); }
+  80%  { transform:translateX(380px)  translateY(-7px) scaleX(1.05); }
+  90%  { opacity:1; }
+  100% { transform:translateX(600px)  translateY(3px)  scaleX(1);   opacity:0; }
+}
+
+/* ── Esinti çizgileri: 4 tane, daha hızlı ── */
+.gust.g1{ width:160px; top:16%; animation-duration:4.2s; animation-delay:-0.4s; }
+.gust.g2{ width:110px; top:36%; animation-duration:5.4s; animation-delay:-2.6s; }
+.gust.g3{ width:190px; top:58%; animation-duration:4.8s; animation-delay:-3.9s; }
+.gust.g4{ width:130px; top:76%; animation-duration:6.1s; animation-delay:-1.7s; }
+
+/* ── Kayan yıldız: her ~11 sn'de bir çapraz geçer ── */
+.shooting{
+  position:absolute; top:10%; left:-12%; width:130px; height:2px; border-radius:2px;
+  background:linear-gradient(90deg, rgba(255,242,218,0) 0%, rgba(255,242,218,.98) 60%, rgba(255,242,218,0) 100%);
+  box-shadow:0 0 10px 2px rgba(255,232,196,.5);
+  transform:rotate(20deg); opacity:0; will-change:transform, opacity;
+  animation:shoot 11s linear infinite; animation-delay:2.5s;
+}
+@keyframes shoot{
+  0%, 86% { transform:translate(0,0) rotate(20deg);       opacity:0; }
+  87%     { opacity:1; }
+  100%    { transform:translate(560px,200px) rotate(20deg); opacity:0; }
+}
+
+/* ── Zerreler: 16 tane, daha canlı ── */
+.wind-layer .mote{ width:4px; height:4px; box-shadow:0 0 11px 3px rgba(255,208,156,.7); animation-name:moteFloat; }
+.wind-layer .mote.m1 { left:4%;  animation-duration:8s;  animation-delay:0s;    }
+.wind-layer .mote.m2 { left:11%; animation-duration:10s; animation-delay:-2s;   width:3px; height:3px; }
+.wind-layer .mote.m3 { left:17%; animation-duration:7s;  animation-delay:-4s;   }
+.wind-layer .mote.m4 { left:24%; animation-duration:11s; animation-delay:-1s;   width:3px; height:3px; }
+.wind-layer .mote.m5 { left:31%; animation-duration:9s;  animation-delay:-6s;   width:5px; height:5px; }
+.wind-layer .mote.m6 { left:38%; animation-duration:8s;  animation-delay:-3s;   }
+.wind-layer .mote.m7 { left:45%; animation-duration:12s; animation-delay:-8s;   width:3px; height:3px; }
+.wind-layer .mote.m8 { left:52%; animation-duration:7s;  animation-delay:-5s;   }
+.wind-layer .mote.m9 { left:59%; animation-duration:10s; animation-delay:-2.5s; width:5px; height:5px; }
+.wind-layer .mote.m10{ left:66%; animation-duration:8s;  animation-delay:-7s;   }
+.wind-layer .mote.m11{ left:73%; animation-duration:11s; animation-delay:-4.5s; width:3px; height:3px; }
+.wind-layer .mote.m12{ left:80%; animation-duration:9s;  animation-delay:-1.5s; }
+.wind-layer .mote.m13{ left:86%; animation-duration:7s;  animation-delay:-6.5s; width:3px; height:3px; }
+.wind-layer .mote.m14{ left:92%; animation-duration:10s; animation-delay:-3.5s; }
+.wind-layer .mote.m15{ left:96%; animation-duration:8s;  animation-delay:-9s;   width:5px; height:5px; }
+.wind-layer .mote.m16{ left:28%; animation-duration:13s; animation-delay:-10s;  width:3px; height:3px; }
+@keyframes moteFloat{
+  0%   { transform:translate(0,0) scale(.5);          opacity:0;  }
+  10%  { opacity:1; }
+  40%  { transform:translate(22px,-80px) scale(1.05); }
+  75%  { opacity:.75; }
+  100% { transform:translate(-16px,-175px) scale(.4); opacity:0; }
+}
+
+/* ── Ufuk ışığı daha güçlü nefes ── */
+@keyframes glowBreathe{
+  from{ opacity:.7;  transform:translateX(-50%) scale(1);    }
+  to  { opacity:1;   transform:translateX(-50%) scale(1.12); }
+}
+.horizon-glow{ animation-duration:4.5s; }
+
+/* yeşil temada altın tonlar */
+body.green-theme .rays{ background:repeating-conic-gradient(from 0deg, rgba(212,175,55,0) 0deg 8deg, rgba(212,175,55,.12) 10deg 13deg, rgba(212,175,55,0) 15deg 22deg); }
+body.green-theme .aurora{ background:linear-gradient(90deg, rgba(212,175,55,0) 0%, rgba(212,175,55,.2) 28%, rgba(240,210,110,.3) 50%, rgba(212,175,55,.2) 72%, rgba(212,175,55,0) 100%); }
+body.green-theme .shooting{ background:linear-gradient(90deg, rgba(247,232,161,0), rgba(247,232,161,.98) 60%, rgba(247,232,161,0)); }
+
+@media (prefers-reduced-motion: reduce){
+  .rays, .aurora, .shooting{ animation:none !important; }
+  .rays{ opacity:.25; } .aurora{ opacity:.3; } .shooting{ opacity:0; }
+}

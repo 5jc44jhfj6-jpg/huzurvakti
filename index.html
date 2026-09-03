@@ -16,16 +16,16 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Namaz Dostu">
-    <link rel="apple-touch-icon" href="apple-touch-icon.png?v=60.2.0">
-    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png?v=60.2.0">
+    <link rel="apple-touch-icon" href="apple-touch-icon.png?v=60.4.0">
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png?v=60.4.0">
     <meta name="description" content="Namaz Dostu: Namaz vakitleri, ezan, Kur'an-ı Kerim, kıble, dualar, zikirmatik ve yeni başlayanlar için adım adım namaz rehberi. Ücretsiz, reklamsız, çevrimdışı.">
 
-    <link rel="stylesheet" href="styles.css?v=60.2.0">
-    <script src="cities.js?v=60.2.0" defer></script>
-    <script src="data.js?v=60.2.0" defer></script>
-    <script src="content.js?v=60.2.0" defer></script>
-    <script src="app.js?v=60.2.0" defer></script>
-    <script src="features.js?v=60.2.0" defer></script>
+    <link rel="stylesheet" href="styles.css?v=60.4.0">
+    <script src="cities.js?v=60.4.0" defer></script>
+    <script src="data.js?v=60.4.0" defer></script>
+    <script src="content.js?v=60.4.0" defer></script>
+    <script src="app.js?v=60.4.0" defer></script>
+    <script src="features.js?v=60.4.0" defer></script>
 </head>
 <body class="dark-theme">
     <!-- Loading Screen -->
@@ -66,17 +66,24 @@
                 <div class="cd-stage">
                     <!-- Rüzgârlı gökyüzü: süzülen sis bantları + uçuşan ışık zerreleri -->
                     <div class="wind-layer" aria-hidden="true">
+                        <span class="rays"></span>
+                        <span class="aurora a1"></span>
+                        <span class="aurora a2"></span>
                         <span class="sky-body"><span class="sky-orb"></span></span>
+                        <span class="shooting"></span>
                         <span class="gust g1"></span>
                         <span class="gust g2"></span>
                         <span class="gust g3"></span>
+                        <span class="gust g4"></span>
                         <span class="cloud c1"></span>
                         <span class="cloud c2"></span>
                         <span class="cloud c3"></span>
                         <span class="cloud c4"></span>
-                        <span class="mote"></span><span class="mote"></span><span class="mote"></span><span class="mote"></span>
-                        <span class="mote"></span><span class="mote"></span><span class="mote"></span><span class="mote"></span>
-                        <span class="mote"></span><span class="mote"></span>
+                        <span class="cloud c5"></span>
+                        <span class="mote m1"></span><span class="mote m2"></span><span class="mote m3"></span><span class="mote m4"></span>
+                        <span class="mote m5"></span><span class="mote m6"></span><span class="mote m7"></span><span class="mote m8"></span>
+                        <span class="mote m9"></span><span class="mote m10"></span><span class="mote m11"></span><span class="mote m12"></span>
+                        <span class="mote m13"></span><span class="mote m14"></span><span class="mote m15"></span><span class="mote m16"></span>
                     </div>
                     <div class="cd-ring">
                         <div class="cd-ticks"></div>
@@ -935,7 +942,7 @@
     <script>
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
-          navigator.serviceWorker.register('/sw.js?v=60.2.0')
+          navigator.serviceWorker.register('/sw.js?v=60.4.0')
             .then(reg => {
               reg.onupdatefound = () => {
                 const installingWorker = reg.installing;
