@@ -393,6 +393,12 @@ function renderPrayerCards(timings) {
     `;
     container.appendChild(card);
   });
+
+  // Ana sayfa üst bilgi çubuğu: Doğuş (Güneş) ve Batış (Akşam)
+  const sr = document.getElementById('ip-sunrise');
+  if (sr && timings.Sunrise) sr.textContent = timings.Sunrise;
+  const ss = document.getElementById('ip-sunset');
+  if (ss && timings.Maghrib) ss.textContent = timings.Maghrib;
 }
 
 // Show remaining/elapsed time modal when clicking a prayer card
@@ -485,7 +491,7 @@ function updatePrayerCountdown() {
   if (targetLabel) targetLabel.textContent = `${nextPrayer.name} Vaktine`;
 
   const nextEl = document.getElementById('countdown-next');
-  if (nextEl) nextEl.textContent = '🕌 ' + nextTimeDate.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
+  if (nextEl) nextEl.textContent = 'Ezan ' + nextTimeDate.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
 
   const diffMs = nextTimeDate - now;
   const timerText = document.getElementById('countdown-timer');
@@ -502,6 +508,9 @@ function updatePrayerCountdown() {
   if (timerText) {
     timerText.textContent = `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
   }
+
+  const remainEl = document.getElementById('ip-remain');
+  if (remainEl) remainEl.textContent = (h > 0 ? h + ' sa ' : '') + m + ' dk';
 
   // Handle Notifications
   checkPrayerNotification(nextPrayer, nextTimeDate, diffMs);
@@ -538,7 +547,8 @@ function updatePrayerCountdown() {
     if (badge) badge.remove();
   });
 
-  const activeCard = document.getElementById(`prayer-card-${currentActiveId}`);
+  // Aktif vurgu: sıradaki (geri sayılan) vakit — mockup ile uyumlu
+  const activeCard = document.getElementById(`prayer-card-${nextPrayer.id}`);
   if (activeCard) {
     activeCard.classList.add('active');
   }

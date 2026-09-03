@@ -19,12 +19,12 @@
     <link rel="apple-touch-icon" href="icon-512.jpg">
     <meta name="description" content="Namaz Vakitleri, Kıble Pusulası, Kuran-ı Kerim ve Namaz Rehberi">
 
-    <link rel="stylesheet" href="styles.css?v=55.5.0">
-    <script src="cities.js?v=55.5.0" defer></script>
-    <script src="data.js?v=55.5.0" defer></script>
-    <script src="content.js?v=55.5.0" defer></script>
-    <script src="app.js?v=55.5.0" defer></script>
-    <script src="features.js?v=55.5.0" defer></script>
+    <link rel="stylesheet" href="styles.css?v=56.0.0">
+    <script src="cities.js?v=56.0.0" defer></script>
+    <script src="data.js?v=56.0.0" defer></script>
+    <script src="content.js?v=56.0.0" defer></script>
+    <script src="app.js?v=56.0.0" defer></script>
+    <script src="features.js?v=56.0.0" defer></script>
 </head>
 <body class="dark-theme">
     <!-- Loading Screen -->
@@ -40,7 +40,10 @@
         <div class="header-container">
             <div class="brand-wrapper-center">
                 <span class="brand-logo-crescent">🌙</span>
-                <h1 class="brand-title-gold">Huzur Vakti</h1>
+                <div class="brand-col">
+                    <h1 class="brand-title-gold">Huzur Vakti</h1>
+                    <span id="date-display-hijri" class="brand-hijri">☾ Hicri</span>
+                </div>
             </div>
             <div class="location-chip" id="location-chip-btn" onclick="navigateTo('settings')">
                 <span class="loc-icon">📍</span>
@@ -53,56 +56,65 @@
     <main id="app-main">
         <!-- ═══ 1. HOME SECTION ═══ -->
         <section id="page-home" class="page-section active">
-            <div class="hero-frame-box">
-                <!-- 1. EN ÜST: Canlı Saat ve Tarih -->
-                <div class="time-header-centered">
-                    <div id="clock-display">15:43:00</div>
-                    <div class="date-hijri-subrow">
-                        <span id="date-display">11 Ağustos 2026 Salı</span>
-                    </div>
-                </div>
-
-                <!-- 2. ORTA: Dairesel Çember (SADECE İkindi Vaktine Kalan + Geri Sayım) -->
-                <div class="countdown-hero-wrap">
-                    <div class="circle-progress-wrapper">
-                        <svg class="circle-progress-svg" width="190" height="190" viewBox="0 0 190 190">
+            <div class="hero-frame-box warm-home">
+                <!-- Geri sayım sahnesi: çentikli halka + ufuk ışığı + cami silüeti -->
+                <div class="cd-stage">
+                    <div class="cd-ring">
+                        <div class="cd-ticks"></div>
+                        <svg class="cd-arc" width="200" height="200" viewBox="0 0 200 200">
                             <defs>
-                                <linearGradient id="goldGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                                    <stop offset="0%" stop-color="#fff5c3" />
-                                    <stop offset="50%" stop-color="#d4af37" />
-                                    <stop offset="100%" stop-color="#8a6d1c" />
+                                <linearGradient id="peachGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                    <stop offset="0%" stop-color="#fce3ca" />
+                                    <stop offset="55%" stop-color="#efb98d" />
+                                    <stop offset="100%" stop-color="#cf8f5f" />
                                 </linearGradient>
                             </defs>
-                            <!-- Background track -->
-                            <circle class="progress-bg" stroke-width="6" fill="transparent" r="85" cx="95" cy="95"/>
-                            <!-- Animated progress -->
-                            <circle id="countdown-progress" class="progress-bar" stroke-width="6" fill="transparent" r="85" cx="95" cy="95" stroke="url(#goldGradient)"/>
+                            <circle class="cd-track" cx="100" cy="100" r="88" fill="none" stroke-width="9"/>
+                            <circle id="countdown-progress" class="cd-prog" cx="100" cy="100" r="88" fill="none" stroke-width="9" stroke="url(#peachGrad)"/>
                         </svg>
-                        <div class="countdown-inner">
-                            <div id="countdown-target" class="countdown-target">İkindi Vaktine Kalan</div>
-                            <div id="countdown-timer" class="countdown-timer-text">01:21:45</div>
-                            <div id="countdown-next" class="countdown-next"></div>
+                        <div class="cd-center">
+                            <div id="countdown-target" class="cd-lbl">Öğle Vaktine</div>
+                            <div id="countdown-timer" class="cd-time">04:38:52</div>
+                            <div id="countdown-next" class="cd-ezan">Ezan 13:18</div>
                         </div>
+                    </div>
+                    <div class="horizon">
+                        <div class="horizon-glow"></div>
+                        <svg class="mosque" viewBox="0 0 320 92" preserveAspectRatio="xMidYMax meet" fill="#1c0f07">
+                            <rect x="0" y="86" width="320" height="6"/>
+                            <!-- sol minare -->
+                            <rect x="40" y="34" width="5" height="52"/><path d="M39,36 Q42.5,20 46,36 Z"/><rect x="41.7" y="16" width="1.6" height="7"/>
+                            <!-- sağ minare -->
+                            <rect x="276" y="34" width="5" height="52"/><path d="M275,36 Q278.5,20 282,36 Z"/><rect x="277.7" y="16" width="1.6" height="7"/>
+                            <!-- yan yapılar -->
+                            <rect x="66" y="60" width="40" height="26"/><path d="M66,60 h40 l-20,-13 Z"/>
+                            <rect x="214" y="60" width="40" height="26"/><path d="M214,60 h40 l-20,-13 Z"/>
+                            <!-- ana cami -->
+                            <rect x="120" y="54" width="80" height="32"/>
+                            <path d="M126,54 C126,34 146,28 146,20 Q146,12 160,8 Q174,12 174,20 C174,28 194,34 194,54 Z"/>
+                            <rect x="158.7" y="2" width="2.6" height="8"/><circle cx="160" cy="2" r="2.4"/>
+                            <path d="M120,54 Q120,38 138,38 L138,54 Z"/><path d="M200,54 Q200,38 182,38 L182,54 Z"/>
+                        </svg>
                     </div>
                 </div>
 
-                <!-- 3. ALT: Namaz Vakitleri & Günün Ayeti -->
-                <div class="hero-prayer-unified-box">
-                    <div class="corner-ornament tl">❖</div>
-                    <div class="corner-ornament tr">❖</div>
-                    <div class="corner-ornament bl">❖</div>
-                    <div class="corner-ornament br">❖</div>
+                <!-- Doğuş / Batış / Kalan -->
+                <div class="info-pills">
+                    <span class="ip">Doğuş <b id="ip-sunrise">06:12</b></span>
+                    <span class="ip">Batış <b id="ip-sunset">20:15</b></span>
+                    <span class="ip remain" id="ip-remain">—</span>
+                </div>
 
-                    <div id="prayer-times-container" class="prayer-grid"></div>
+                <!-- Namaz Vakitleri -->
+                <div id="prayer-times-container" class="prayer-grid"></div>
 
-                    <!-- Günün Hadisi -->
-                    <div class="daily-hadis-card" id="daily-hadis-card">
-                        <div class="verse-card-title">📿 Günün Hadisi</div>
-                        <div id="daily-hadis-arabic" class="hadis-arabic"></div>
-                        <div id="daily-hadis-text" class="hadis-text">Yükleniyor...</div>
-                        <div id="daily-hadis-source" class="hadis-source"></div>
-                        <button class="mini-share-btn" onclick="shareDailyHadis()">📤 Paylaş</button>
-                    </div>
+                <!-- Günün Hadisi -->
+                <div class="daily-hadis-card" id="daily-hadis-card">
+                    <div class="verse-card-title">📿 Günün Hadisi</div>
+                    <div id="daily-hadis-arabic" class="hadis-arabic"></div>
+                    <div id="daily-hadis-text" class="hadis-text">Yükleniyor...</div>
+                    <div id="daily-hadis-source" class="hadis-source"></div>
+                    <button class="mini-share-btn" onclick="shareDailyHadis()">📤 Paylaş</button>
                 </div>
             </div>
         </section>
@@ -781,7 +793,7 @@
     <script>
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
-          navigator.serviceWorker.register('/sw.js?v=55.5.0')
+          navigator.serviceWorker.register('/sw.js?v=56.0.0')
             .then(reg => {
               reg.onupdatefound = () => {
                 const installingWorker = reg.installing;

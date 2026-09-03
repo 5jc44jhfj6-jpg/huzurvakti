@@ -1,4 +1,4 @@
-const CACHE_NAME = 'huzur-vakti-v55.5';
+const CACHE_NAME = 'huzur-vakti-v56.0';
 const ASSETS_TO_CACHE = [
   '/',
   '/index.html',
