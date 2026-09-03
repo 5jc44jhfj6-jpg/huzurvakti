@@ -516,12 +516,21 @@ function scheduleNativePrayerNotifications() {
 
       const notifId = `hv_${day.getFullYear()}${hvPad2(day.getMonth() + 1)}${hvPad2(day.getDate())}_${id}`;
 
+      // Bildirim sesi: Ayarlar → Bildirim Sesi + vakit bazlı ezan tercihi
+      // "ezan"    → uygulamadaki ezan.caf (iOS 1.3+), yoksa varsayılan ses
+      // "default" → telefonun standart bildirim sesi
+      // "none"    → sessiz (yalnızca ekranda)
+      let sound = 'default';
+      if (APP_STATE.notifySound === 'silent') sound = 'none';
+      else if (APP_STATE.notifySound === 'ezan' && getPrayerAdhan(id)) sound = 'ezan';
+
       try {
         sched.postMessage({
           id: notifId,
           title: 'Namaz Dostu',
           body: body,
-          timestamp: Math.floor(fireAt.getTime() / 1000)
+          timestamp: Math.floor(fireAt.getTime() / 1000),
+          sound: sound
         });
         count++;
       } catch (e) { console.warn('Bildirim kurulamadı:', e); }
@@ -537,15 +546,12 @@ window.scheduleNativePrayerNotifications = scheduleNativePrayerNotifications;
 // Ayarlar ekranındaki durum satırı
 function updateNotifyStatusUI(count) {
   const el = document.getElementById('notify-native-status');
-  const btn = document.getElementById('test-native-notif-btn');
   if (!el) return;
   if (!hvHasNativeNotifications()) {
     el.className = 'notify-status warn';
     el.textContent = '⚠️ Bu ortamda (tarayıcı) uygulama kapalıyken bildirim gelmez. App Store\'dan kurulu uygulamada arka plan bildirimi çalışır.';
-    if (btn) btn.style.display = 'none';
     return;
   }
-  if (btn) btn.style.display = '';
   if (!APP_STATE.notifyEnabled) {
     el.className = 'notify-status';
     el.textContent = 'Bildirimler kapalı. Açarsan vakitler telefonuna önceden kurulur ve uygulama kapalıyken de bildirim gelir.';
@@ -558,30 +564,6 @@ function updateNotifyStatusUI(count) {
     : 'Vakitler yüklenince bildirimler otomatik kurulacak.';
 }
 window.updateNotifyStatusUI = updateNotifyStatusUI;
-
-// Ayarlardaki "Test Bildirimi" — 10 saniye sonra bildirim gönderir
-function hvTestNativeNotification() {
-  if (!hvHasNativeNotifications()) {
-    showToastNotification('⚠️ Desteklenmiyor', 'Arka plan bildirimi yalnızca App Store sürümünde çalışır.');
-    return;
-  }
-  const sched = hvNativeHandler('schedule-local-notification');
-  const permReq = hvNativeHandler('push-permission-request');
-  if (permReq) { try { permReq.postMessage(''); } catch (e) {} }
-  if (!sched) return;
-  try {
-    sched.postMessage({
-      id: 'hv_test_' + Date.now(),
-      title: 'Namaz Dostu',
-      body: 'Test bildirimi — bildirimler çalışıyor. 🌙',
-      timestamp: Math.floor((Date.now() + 10000) / 1000)
-    });
-    showToastNotification('🔔 Test bildirimi kuruldu', 'Uygulamayı kapat, 10 saniye içinde gelecek.');
-  } catch (e) {
-    showToastNotification('❌ Kurulamadı', 'Bildirim izni verilmemiş olabilir.');
-  }
-}
-window.hvTestNativeNotification = hvTestNativeNotification;
 
 async function fetchMonthCalendar(lat, lng, year, month) {
   const res = await fetch(`https://api.aladhan.com/v1/calendar?latitude=${lat}&longitude=${lng}&method=13&month=${month}&year=${year}`);
@@ -753,6 +735,7 @@ function togglePrayerAdhan(on) {
   try { localStorage.setItem('hv_adhan_' + _sheetPrayerId, on ? '1' : '0'); } catch (e) {}
   const nm = (PRAYER_NAMES[_sheetPrayerId] && PRAYER_NAMES[_sheetPrayerId].name) || 'Vakit';
   showToastNotification(on ? '🔊 Ezan sesi açık' : '🔇 Ezan sesi kapalı', `${nm} vakti için ezan ${on ? 'çalacak' : 'çalmayacak'}.`);
+  setTimeout(scheduleNativePrayerNotifications, 300);
 }
 function setPrayerReminder() {
   APP_STATE.notifyEnabled = true;
@@ -1994,6 +1977,8 @@ function setupSettingsListeners() {
   document.getElementById('notify-sound')?.addEventListener('change', (e) => {
     APP_STATE.notifySound = e.target.value;
     saveSettings();
+    // Ses tercihi değişince telefondaki bildirimleri yeni sesle yeniden kur
+    setTimeout(scheduleNativePrayerNotifications, 300);
   });
 
   const syncQari = (e) => {
