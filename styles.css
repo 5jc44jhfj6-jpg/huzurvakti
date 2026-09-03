@@ -1652,3 +1652,25 @@ body.green-theme .hv-badge-offline{ color:#d9e8dc; border-color:rgba(217,232,220
 .settings-card-box > .backup-status:empty{ padding-bottom:4px; }
 .settings-card-box > .offset-grid{ padding:0 12px 4px; }
 .settings-card-box > div[style*="font-size: 0.75rem"]{ padding:0 14px 12px; }
+
+/* v59.1 — ayet kartı sıcak ton (eski yeşil "nth-child(even)" düzeltmesi) */
+body.dark-theme .ayah-card{ background:rgba(40,22,12,0.62); border-color:rgba(212,175,55,.24); }
+body.dark-theme .ayah-card:nth-child(even){ background:rgba(58,33,18,0.55); }
+body.dark-theme.green-theme .ayah-card{ background:rgba(10,32,25,0.62); border-color:var(--border-gold); }
+body.dark-theme.green-theme .ayah-card:nth-child(even){ background:rgba(18,38,33,0.72); }
+
+/* v59.2 — konum çipi sıcak bakır ton (eski yeşil düzeltmesi) */
+body.dark-theme .location-chip{
+  background:linear-gradient(135deg, rgba(78,44,24,.92), rgba(42,22,11,.9));
+  border:1px solid rgba(212,175,55,.42);
+  color:#f3ddc4;
+  box-shadow:0 4px 14px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,233,211,.12);
+}
+body.dark-theme .location-chip:hover{
+  background:linear-gradient(135deg, rgba(96,54,30,.95), rgba(54,29,15,.92));
+  border-color:var(--gold-light);
+}
+body.dark-theme .location-chip .loc-icon{ filter:saturate(1.1); }
+body.dark-theme.green-theme .location-chip{
+  background:rgba(18,38,33,.9); border-color:var(--border-gold); color:var(--gold-light);
+}
