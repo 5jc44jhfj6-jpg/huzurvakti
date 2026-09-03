@@ -22,9 +22,29 @@ const APP_STATE = {
 
 document.addEventListener('DOMContentLoaded', initApp);
 
+// Ana sayfa dışındaki her sayfaya belli belirsiz canlı gökyüzü katmanı ekler
+function injectPageSky() {
+  try {
+    const html = '<div class="page-sky-inner">' +
+      '<span class="rays"></span><span class="aurora a1"></span><span class="aurora a2"></span>' +
+      '<span class="mote m1"></span><span class="mote m2"></span><span class="mote m3"></span>' +
+      '<span class="mote m4"></span><span class="mote m5"></span><span class="mote m6"></span>' +
+      '</div>';
+    document.querySelectorAll('.page-section:not(#page-home) > .hero-frame-box').forEach(box => {
+      if (box.querySelector(':scope > .page-sky')) return;
+      const sky = document.createElement('div');
+      sky.className = 'page-sky';
+      sky.setAttribute('aria-hidden', 'true');
+      sky.innerHTML = html;
+      box.insertBefore(sky, box.firstChild);
+    });
+  } catch (e) { console.warn('page-sky eklenemedi:', e); }
+}
+
 function initApp() {
   loadSavedSettings();
   applyStateSettings();
+  injectPageSky();
   populateLocationsDropdown();
   setupNavTabs();
   setupSettingsListeners();

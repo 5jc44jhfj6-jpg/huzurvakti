@@ -1987,3 +1987,67 @@ body.green-theme .shooting{ background:linear-gradient(90deg, rgba(247,232,161,0
   .rays, .aurora, .shooting{ animation:none !important; }
   .rays{ opacity:.25; } .aurora{ opacity:.3; } .shooting{ opacity:0; }
 }
+
+/* ═══════════════════════════════════════════════════════════
+   v60.5 — Okunabilirlik + hadis kartı + diğer sayfalara hafif gökyüzü
+   ═══════════════════════════════════════════════════════════ */
+
+/* ── "İKİNDİ VAKTİNE" etiketi: yaşlılar için belirgin ── */
+.cd-lbl{
+  font-size:.96rem; letter-spacing:2.6px; font-weight:800;
+  color:#fff1e0; opacity:1;
+  text-shadow:0 1px 2px rgba(0,0,0,.55), 0 0 12px rgba(0,0,0,.35);
+  margin-bottom:5px;
+}
+.cd-time{ text-shadow:0 2px 4px rgba(0,0,0,.45), 0 0 18px rgba(0,0,0,.25); }
+body.green-theme .cd-lbl{ color:#fff6d6; }
+
+/* ── Günün Hadisi: daha büyük punto, kartı doldursun ── */
+.warm-home .daily-hadis-card{
+  justify-content:center; gap:4px; padding:14px 18px 12px;
+}
+.warm-home .daily-hadis-card .verse-card-title{
+  font-size:1.08rem; margin-bottom:8px; color:#f7dcc0;
+  text-shadow:0 1px 2px rgba(0,0,0,.4);
+}
+.warm-home .hadis-arabic{
+  font-size:1.42rem; line-height:1.75; margin-bottom:8px; color:#ffe6c8;
+}
+.warm-home .hadis-text{
+  font-size:clamp(1.02rem, 3.8vw, 1.18rem); line-height:1.62;
+  color:#fbeee0; font-weight:500;
+}
+.warm-home .hadis-source{ font-size:.88rem; margin-top:8px; color:#f2c9a2; opacity:1; }
+.warm-home .mini-share-btn{ margin-top:10px; padding:6px 16px; font-size:.78rem; }
+
+/* ── Diğer sayfalar: belli belirsiz canlı gökyüzü ── */
+.hero-frame-box{ isolation:isolate; }
+.page-sky{
+  position:sticky; top:0; height:0; z-index:-1;
+  pointer-events:none; margin:0; padding:0; flex:0 0 0;
+}
+.page-sky-inner{
+  position:absolute; left:-10px; right:-10px; top:-10px; height:105vh;
+  overflow:hidden; pointer-events:none;
+}
+.page-sky .rays{ opacity:.20; top:34%; animation-duration:80s; }
+.page-sky .aurora{ opacity:.26; }
+.page-sky .aurora.a2{ opacity:.18; }
+.page-sky .mote{ opacity:0; }
+.page-sky .mote.m1{ left:8%;  animation-duration:11s; animation-delay:-1s; }
+.page-sky .mote.m2{ left:26%; animation-duration:13s; animation-delay:-5s; width:3px; height:3px; }
+.page-sky .mote.m3{ left:44%; animation-duration:10s; animation-delay:-3s; }
+.page-sky .mote.m4{ left:62%; animation-duration:14s; animation-delay:-8s; width:3px; height:3px; }
+.page-sky .mote.m5{ left:79%; animation-duration:12s; animation-delay:-6s; }
+.page-sky .mote.m6{ left:92%; animation-duration:11s; animation-delay:-2s; width:3px; height:3px; }
+.page-sky .mote{ bottom:30%; box-shadow:0 0 8px 2px rgba(255,208,156,.45); }
+@keyframes pageMote{
+  0%   { transform:translate(0,0) scale(.5);         opacity:0;  }
+  12%  { opacity:.55; }
+  50%  { transform:translate(14px,-90px) scale(1);   }
+  85%  { opacity:.35; }
+  100% { transform:translate(-10px,-200px) scale(.4); opacity:0; }
+}
+.page-sky .mote{ animation-name:pageMote; }
+body.green-theme .page-sky .rays{ opacity:.14; }
+@media (prefers-reduced-motion: reduce){ .page-sky .rays, .page-sky .aurora, .page-sky .mote{ animation:none !important; } .page-sky .mote{ opacity:0; } }
