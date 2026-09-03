@@ -784,6 +784,47 @@ function renderFallbackPrayerTimes() {
   updatePrayerCountdown();
 }
 
+/* Gökyüzü cismi: gündüz güneş, gece ay.
+   Konum gerçek doğuş/batış saatlerine göre yay çizer:
+   doğuşta ufukta doğar, öğlen tepeye çıkar, batışta ufka iner. */
+function updateSkyBody() {
+  const stage = document.querySelector('.cd-stage');
+  if (!stage || !APP_STATE.prayerTimes) return;
+
+  const toMin = (s) => {
+    const p = String(s || '').split(':');
+    return (parseInt(p[0], 10) || 0) * 60 + (parseInt(p[1], 10) || 0);
+  };
+  const t = APP_STATE.prayerTimes;
+  const sunrise = toMin(t.Sunrise);
+  const sunset = toMin(t.Maghrib);
+  if (!sunrise || !sunset) return;
+
+  const now = new Date();
+  const nowMin = now.getHours() * 60 + now.getMinutes() + now.getSeconds() / 60;
+
+  let isDay, prog;
+  if (sunset > sunrise && nowMin >= sunrise && nowMin < sunset) {
+    isDay = true;
+    prog = (nowMin - sunrise) / (sunset - sunrise);
+  } else {
+    isDay = false;
+    const nightLen = (1440 - sunset) + sunrise;
+    const elapsed = nowMin >= sunset ? (nowMin - sunset) : (1440 - sunset + nowMin);
+    prog = nightLen > 0 ? elapsed / nightLen : 0;
+  }
+  prog = Math.max(0, Math.min(1, prog));
+
+  const x = 8 + prog * 84;                              // soldan sağa
+  const y = 92 - Math.sin(prog * Math.PI) * 80;         // ufuktan tepeye, sonra ufka
+
+  stage.style.setProperty('--sky-x', x.toFixed(2) + '%');
+  stage.style.setProperty('--sky-y', y.toFixed(2) + '%');
+  const mode = isDay ? 'day' : 'night';
+  if (stage.dataset.sky !== mode) stage.dataset.sky = mode;
+}
+window.updateSkyBody = updateSkyBody;
+
 function updatePrayerCountdown() {
   if (!APP_STATE.prayerTimes) return;
 
@@ -858,6 +899,9 @@ function updatePrayerCountdown() {
 
   // Günün saatine göre zemin tonu (sabah aydınlık kehribar → gece koyu)
   if (document.body.dataset.tod !== currentActiveId) document.body.dataset.tod = currentActiveId;
+
+  // Gökyüzündeki güneş/ay konumu (gerçek doğuş-batış saatine göre)
+  updateSkyBody();
 
   const circle = document.getElementById('countdown-progress');
   if (circle) {

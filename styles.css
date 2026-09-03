@@ -1764,3 +1764,103 @@ body.green-theme .cloud{ background:radial-gradient(ellipse at center, rgba(212,
   .cloud, .mote, .horizon-glow{ animation:none !important; }
   .cloud{ opacity:.35; transform:none; }
 }
+
+/* ═══════════════════════════════════════════════════════════
+   v60.2 — Gökyüzü: yol alan güneş/ay + belirgin rüzgâr
+   ═══════════════════════════════════════════════════════════ */
+
+/* ── Güneş / Ay: gerçek doğuş-batış saatine göre yay çizer ── */
+.sky-body{
+  position:absolute;
+  left:var(--sky-x, 50%); top:var(--sky-y, 20%);
+  width:46px; height:46px; margin:-23px 0 0 -23px;
+  border-radius:50%;
+  transition:left 1.5s linear, top 1.5s linear, box-shadow 1.2s ease, width .8s ease, height .8s ease;
+  pointer-events:none;
+}
+.sky-orb{ display:block; width:100%; height:100%; border-radius:50%; }
+
+/* gündüz: parlak güneş */
+[data-sky="day"] .sky-body{
+  box-shadow:0 0 30px 12px rgba(255,196,110,.42), 0 0 76px 30px rgba(255,168,74,.20);
+}
+[data-sky="day"] .sky-orb{
+  background:radial-gradient(circle at 36% 32%, #fffdf4 0%, #ffe6a8 42%, #ffb757 100%);
+  animation:sunPulse 6s ease-in-out infinite alternate;
+}
+@keyframes sunPulse{ from{ filter:brightness(1); } to{ filter:brightness(1.14); } }
+
+/* gece: soluk ay (hilal) */
+[data-sky="night"] .sky-body{
+  width:34px; height:34px; margin:-17px 0 0 -17px;
+  box-shadow:0 0 20px 7px rgba(240,226,202,.22), 0 0 50px 20px rgba(215,200,175,.10);
+}
+[data-sky="night"] .sky-orb{
+  background:radial-gradient(circle at 36% 30%, #fffaf0 0%, #efdec2 55%, #cbb694 100%);
+  -webkit-mask:radial-gradient(circle at 74% 26%, transparent 0 48%, #000 50%);
+  mask:radial-gradient(circle at 74% 26%, transparent 0 48%, #000 50%);
+}
+
+/* ── Rüzgâr: daha belirgin, daha hızlı ── */
+.cloud{
+  background:radial-gradient(ellipse at center, rgba(255,226,192,.52) 0%, rgba(255,206,158,.22) 46%, rgba(255,206,158,0) 74%);
+  filter:blur(11px);
+}
+.cloud.c1{ animation-duration:16s; animation-delay:-3s;  }
+.cloud.c2{ animation-duration:21s; animation-delay:-11s; }
+.cloud.c3{ animation-duration:26s; animation-delay:-18s; }
+.cloud.c4{ animation-duration:18s; animation-delay:-7s;  }
+@keyframes windDrift{
+  0%   { transform:translateX(-440px) translateY(0);    opacity:0; }
+  10%  { opacity:1; }
+  50%  { transform:translateX(60px) translateY(-6px); }
+  90%  { opacity:1; }
+  100% { transform:translateX(580px) translateY(4px);   opacity:0; }
+}
+
+/* rüzgâr çizgileri: hızla süzülüp geçen esinti */
+.gust{
+  position:absolute; left:0; height:2px; border-radius:2px;
+  background:linear-gradient(90deg, transparent 0%, rgba(255,231,199,.62) 45%, rgba(255,231,199,.30) 70%, transparent 100%);
+  opacity:0; will-change:transform, opacity;
+  animation:gustFly linear infinite;
+}
+.gust.g1{ width:140px; top:20%; animation-duration:5.2s; animation-delay:-0.6s; }
+.gust.g2{ width:96px;  top:44%; animation-duration:6.8s; animation-delay:-3.2s; }
+.gust.g3{ width:170px; top:64%; animation-duration:5.9s; animation-delay:-4.6s; }
+@keyframes gustFly{
+  0%   { transform:translateX(-200px) scaleX(.55); opacity:0; }
+  14%  { opacity:.95; }
+  72%  { opacity:.6; }
+  100% { transform:translateX(540px) scaleX(1.35); opacity:0; }
+}
+
+/* zerreler biraz daha canlı */
+.mote{ box-shadow:0 0 10px 3px rgba(255,204,150,.62); }
+
+/* ── Günün saatine göre gökyüzü aydınlığı (öğlen en parlak) ── */
+body.dark-theme[data-tod="Fajr"]{    --t1:#5a3d26; --t2:#3a2415; --t3:#22120a; --t4:#140a05; }
+body.dark-theme[data-tod="Sunrise"]{ --t1:#8e5f36; --t2:#5e3c21; --t3:#3a2110; --t4:#241206; }
+body.dark-theme[data-tod="Dhuhr"]{   --t1:#a97144; --t2:#734827; --t3:#452712; --t4:#281406; }
+body.dark-theme[data-tod="Asr"]{     --t1:#8a5732; --t2:#5b3720; --t3:#351d0e; --t4:#1e0f05; }
+body.dark-theme[data-tod="Maghrib"]{ --t1:#5a3220; --t2:#361c10; --t3:#1d0f06; --t4:#100703; }
+body.dark-theme[data-tod="Isha"]{    --t1:#36210f; --t2:#211208; --t3:#130903; --t4:#0a0502; }
+
+/* akşam ufku daha turuncu, gece daha sönük */
+body.dark-theme[data-tod="Maghrib"] .horizon-glow{
+  background:radial-gradient(ellipse at 50% 100%, rgba(255,166,96,.72) 0%, rgba(226,110,52,.30) 44%, transparent 72%);
+}
+body.dark-theme[data-tod="Isha"] .horizon-glow{
+  background:radial-gradient(ellipse at 50% 100%, rgba(224,176,128,.34) 0%, rgba(180,120,74,.14) 44%, transparent 72%);
+}
+
+@media (prefers-reduced-motion: reduce){
+  .gust{ animation:none !important; opacity:0; }
+  .sky-orb{ animation:none !important; }
+  .sky-body{ transition:none; }
+}
+
+/* v60.3 — güneş boyutu/parlaklığı ince ayarı (yazıyı bastırmasın) */
+.sky-body{ width:38px; height:38px; margin:-19px 0 0 -19px; }
+[data-sky="day"] .sky-body{ box-shadow:0 0 24px 9px rgba(255,196,110,.34), 0 0 62px 24px rgba(255,168,74,.15); }
+[data-sky="night"] .sky-body{ width:30px; height:30px; margin:-15px 0 0 -15px; }
