@@ -594,8 +594,9 @@ function renderRuya(filter) {
   if (!c || typeof RUYA_TABIRLERI === 'undefined') return;
   const q = (filter || '').toLocaleLowerCase('tr').trim();
   const list = q ? RUYA_TABIRLERI.filter(r => r.kw.toLocaleLowerCase('tr').includes(q) || r.meaning.toLocaleLowerCase('tr').includes(q)) : RUYA_TABIRLERI;
-  if (!list.length) { c.innerHTML = '<div class="empty-note">Bu konuda tabir bulunamadı.</div>'; return; }
-  c.innerHTML = list.map(r => `
+  const note = '<div class="info-note ruya-note">⚠️ Rüya tabirleri İbn Sîrîn ve Nablusî geleneğine dayanan kültürel bir derlemedir; dinî hüküm veya kesin bilgi değildir. Hayırlı rüyaları Allah\'a hamd ile, hoşa gitmeyenleri kimseye anlatmadan Allah\'a sığınarak karşılamak sünnettir.</div>';
+  if (!list.length) { c.innerHTML = note + '<div class="empty-note">Bu konuda tabir bulunamadı.</div>'; return; }
+  c.innerHTML = (q ? '' : note) + list.map(r => `
     <div class="ruya-item">
       <div class="ruya-kw">🌙 ${hvEsc(r.kw)}</div>
       <div class="ruya-mean">${hvEsc(r.meaning)}</div>
@@ -984,6 +985,72 @@ async function renderImsakiye() {
   }
 }
 
+/* ══════════ ORUÇ TAKİBİ ══════════ */
+function renderOruc() {
+  const c = document.getElementById('oruc-content');
+  if (!c) return;
+  const data = hvLoad('oruc', {});
+  const kaza = hvLoad('oruc_kaza', 0);
+  const today = hvTodayKey();
+  const todayDone = !!data[today];
+  const now = new Date();
+  const ym = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+  const monthCount = Object.keys(data).filter(k => data[k] && k.startsWith(ym)).length;
+  const total = Object.keys(data).filter(k => data[k]).length;
+  // seri: bugün (veya dün) ile biten kesintisiz gün sayısı
+  let streak = 0; const d = new Date();
+  if (!data[hvTodayKey(d)]) d.setDate(d.getDate() - 1);
+  for (let i = 0; i < 400; i++) { if (data[hvTodayKey(d)]) { streak++; d.setDate(d.getDate() - 1); } else break; }
+  // son 30 gün
+  const days = [];
+  for (let i = 29; i >= 0; i--) {
+    const dd = new Date(); dd.setDate(dd.getDate() - i);
+    const key = hvTodayKey(dd);
+    days.push({ n: dd.getDate(), on: !!data[key], isToday: i === 0 });
+  }
+  c.innerHTML = `
+    <div class="takip-summary">
+      <div class="ts-big">${streak}</div>
+      <div class="ts-label">günlük oruç serisi</div>
+    </div>
+    <button class="prayer-check-row ${todayDone ? 'checked' : ''}" onclick="toggleOrucToday()">
+      <span class="pc-label">${todayDone ? '🌙 Bugün oruç tuttum' : 'Bugün oruç tuttum'}</span>
+      <span class="pc-box">${todayDone ? '✓' : ''}</span>
+    </button>
+    <div class="hatim-stat" style="margin-top:12px;">
+      <div class="hs-item"><div class="hs-num">${monthCount}</div><div class="hs-lbl">Bu ay</div></div>
+      <div class="hs-item"><div class="hs-num">${total}</div><div class="hs-lbl">Toplam</div></div>
+      <div class="hs-item"><div class="hs-num">${kaza}</div><div class="hs-lbl">Kaza borcu</div></div>
+    </div>
+    <div class="section-mini-title">📅 Son 30 Gün</div>
+    <div class="oruc-grid">${days.map(x => `<div class="oruc-day ${x.on ? 'on' : ''} ${x.isToday ? 'today' : ''}">${x.n}</div>`).join('')}</div>
+    <div class="section-mini-title">🔄 Kaza Orucu</div>
+    <div class="kaza-row">
+      <span class="kaza-label">Tutulacak kaza orucu</span>
+      <div class="counter-group">
+        <button class="counter-btn minus" onclick="orucKazaAdjust(-1)">−</button>
+        <span class="counter-val">${kaza}</span>
+        <button class="counter-btn plus" onclick="orucKazaAdjust(1)">+</button>
+      </div>
+    </div>
+    <div class="info-note">Ramazan, Şevval (6 gün), Aşure, Pazartesi-Perşembe gibi tüm oruçlarınızı işaretleyebilirsiniz. Kaza tuttukça sayacı azaltın.</div>`;
+}
+function toggleOrucToday() {
+  const data = hvLoad('oruc', {});
+  const t = hvTodayKey();
+  data[t] = !data[t];
+  hvSave('oruc', data);
+  hvVibrate(15);
+  renderOruc();
+}
+window.toggleOrucToday = toggleOrucToday;
+function orucKazaAdjust(delta) {
+  const k = Math.max(0, hvLoad('oruc_kaza', 0) + delta);
+  hvSave('oruc_kaza', k);
+  renderOruc();
+}
+window.orucKazaAdjust = orucKazaAdjust;
+
 /* ══════════ FEATURE ROUTE KAYIT & BAŞLATMA ══════════ */
 window.FEATURE_ROUTES = {
   'onemli-sureler': renderOnemliSureler,
@@ -1011,8 +1078,75 @@ window.FEATURE_ROUTES = {
   'siyer': renderSiyer,
   'peygamberler': renderPeygamberler,
   'sozluk': () => renderSozluk(document.getElementById('sozluk-search-input') ? document.getElementById('sozluk-search-input').value : ''),
-  'imsakiye': renderImsakiye
+  'imsakiye': renderImsakiye,
+  'oruc': renderOruc,
+  'quran': () => { if (typeof renderQuranTools === 'function') renderQuranTools(); },
+  'kaynaklar': () => {}
 };
+
+/* ══════════ YEDEKLEME (DIŞA / İÇE AKTAR) ══════════ */
+const HV_BACKUP_PREFIXES = ['hv_', 'namaz_vakti', 'qibla_'];
+function hvBackupCollect() {
+  const data = {};
+  Object.keys(localStorage).forEach(k => {
+    if (k.startsWith('hv_cal_')) return; // takvim önbelleği yeniden indirilir, yedeğe gerek yok
+    if (HV_BACKUP_PREFIXES.some(p => k.startsWith(p))) data[k] = localStorage.getItem(k);
+  });
+  return { app: 'HuzurVakti', version: 58, exportedAt: new Date().toISOString(), data };
+}
+function hvBackupExport() {
+  const status = document.getElementById('backup-status');
+  try {
+    const payload = hvBackupCollect();
+    const json = JSON.stringify(payload, null, 2);
+    const count = Object.keys(payload.data).length;
+    const d = new Date();
+    const fname = `huzurvakti-yedek-${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}.json`;
+    const blob = new Blob([json], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = fname;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 4000);
+    if (status) status.textContent = `✅ ${count} kayıt "${fname}" olarak indirildi.`;
+    hvToast('💾 Yedek hazır', `${count} kayıt dışa aktarıldı.`);
+  } catch (e) {
+    if (status) status.textContent = '❌ Yedek oluşturulamadı: ' + e.message;
+  }
+}
+function hvBackupImport(input) {
+  const status = document.getElementById('backup-status');
+  const file = input && input.files && input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      const parsed = JSON.parse(reader.result);
+      if (!parsed || parsed.app !== 'HuzurVakti' || typeof parsed.data !== 'object') throw new Error('Bu dosya bir Huzur Vakti yedeği değil.');
+      let n = 0;
+      Object.keys(parsed.data).forEach(k => {
+        if (HV_BACKUP_PREFIXES.some(p => k.startsWith(p)) && typeof parsed.data[k] === 'string') {
+          localStorage.setItem(k, parsed.data[k]); n++;
+        }
+      });
+      if (status) status.textContent = `✅ ${n} kayıt geri yüklendi. Uygulama yenileniyor…`;
+      hvToast('📥 Yedek yüklendi', `${n} kayıt geri getirildi.`);
+      setTimeout(() => location.reload(), 1200);
+    } catch (e) {
+      if (status) status.textContent = '❌ ' + e.message;
+      hvToast('❌ Geri yükleme başarısız', e.message);
+    }
+    input.value = '';
+  };
+  reader.onerror = () => { if (status) status.textContent = '❌ Dosya okunamadı.'; };
+  reader.readAsText(file);
+}
+function hvShareApp() {
+  hvShareText('🌙 Huzur Vakti — namaz vakitleri, Kur\'an, dualar, zikirmatik ve daha fazlası tek uygulamada. Ücretsiz, reklamsız, çevrimdışı çalışır:\nhttps://huzurvaktinamazuygulamasi.vercel.app');
+}
+window.hvBackupExport = hvBackupExport;
+window.hvBackupImport = hvBackupImport;
+window.hvShareApp = hvShareApp;
 
 function featuresInit() {
   loadDailyHadis();

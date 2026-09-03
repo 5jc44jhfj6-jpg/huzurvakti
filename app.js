@@ -9,6 +9,7 @@ const APP_STATE = {
   currentDistrict: 'Armutlu',
   prayerTimes: null,
   isDarkTheme: true,
+  greenTheme: false,
   fontSize: 20,
   qiblaAngle: 0,
   surahList: [],
@@ -69,10 +70,10 @@ function setupNavTabs() {
 // Maps every sub-page to its parent bottom-nav tab so the correct tab stays highlighted
 const PAGE_PARENT = {
   home: 'home',
-  kurandua: 'kurandua', quran: 'kurandua', 'dua-ogrenme': 'kurandua', esma: 'kurandua', ezkar: 'kurandua', 'gunluk-dua': 'kurandua', 'onemli-sureler': 'kurandua', 'ayet-arama': 'kurandua', 'kirk-hadis': 'kurandua',
-  ibadet: 'ibadet', guide: 'ibadet', qibla: 'ibadet', zikirmatik: 'ibadet', 'namaz-takibi': 'ibadet', kaza: 'ibadet', hatim: 'ibadet', taharet: 'ibadet', 'ozel-namaz': 'ibadet', iman: 'ibadet', peygamberler: 'ibadet', siyer: 'ibadet',
+  kurandua: 'kurandua', quran: 'kurandua', 'dua-ogrenme': 'kurandua', esma: 'kurandua', ezkar: 'kurandua', 'gunluk-dua': 'kurandua', 'onemli-sureler': 'kurandua', 'ayet-arama': 'kurandua', 'kirk-hadis': 'kurandua', qibla: 'kurandua', guide: 'kurandua',
+  ibadet: 'ibadet', zikirmatik: 'ibadet', 'namaz-takibi': 'ibadet', kaza: 'ibadet', hatim: 'ibadet', oruc: 'ibadet', taharet: 'ibadet', 'ozel-namaz': 'ibadet', iman: 'ibadet', peygamberler: 'ibadet', siyer: 'ibadet',
   araclar: 'araclar', zekat: 'araclar', fitre: 'araclar', quiz: 'araclar', ruya: 'araclar', bebek: 'araclar', takvim: 'araclar', paylasim: 'araclar', cuma: 'araclar', sozluk: 'araclar', imsakiye: 'araclar',
-  settings: 'settings'
+  settings: 'settings', kaynaklar: 'settings'
 };
 
 function navigateTo(pageId) {
@@ -132,19 +133,24 @@ function saveSettings() {
     userLocation: APP_STATE.userLocation,
     qiblaAngle: APP_STATE.qiblaAngle,
     isDarkTheme: APP_STATE.isDarkTheme,
+    greenTheme: APP_STATE.greenTheme,
     notifyEnabled: APP_STATE.notifyEnabled,
     notifyOffset: APP_STATE.notifyOffset,
     notifySound: APP_STATE.notifySound,
-    qari: APP_STATE.qari
+    qari: APP_STATE.qari,
+    timeOffsets: APP_STATE.timeOffsets || {},
+    fontSize: APP_STATE.fontSize
   }));
 }
 
 function applyStateSettings() {
-  document.body.classList.toggle('dark-theme', APP_STATE.isDarkTheme);
-  document.body.classList.toggle('light-theme', !APP_STATE.isDarkTheme);
+  // Tema: her zaman koyu zemin; "Lüks Gece" anahtarı bakır ↔ yeşil arasında geçiş yapar
+  document.body.classList.add('dark-theme');
+  document.body.classList.remove('light-theme');
+  document.body.classList.toggle('green-theme', !!APP_STATE.greenTheme);
 
   const themeToggle = document.getElementById('theme-toggle');
-  if (themeToggle) themeToggle.checked = APP_STATE.isDarkTheme;
+  if (themeToggle) themeToggle.checked = !!APP_STATE.greenTheme;
 
   const fontSlider = document.getElementById('font-size-slider');
   if (fontSlider) fontSlider.value = APP_STATE.fontSize;
@@ -167,6 +173,13 @@ function applyStateSettings() {
 
   const surahQariSelect = document.getElementById('qari-select');
   if (surahQariSelect) surahQariSelect.value = APP_STATE.qari;
+
+  // Vakit ince ayarı girişleri
+  const offs = getTimeOffsets();
+  document.querySelectorAll('.offset-input').forEach(inp => {
+    const k = inp.dataset.k;
+    if (k in offs) inp.value = offs[k];
+  });
 
   updateLocationHeaderLabel();
 }
@@ -296,35 +309,140 @@ function addMinutes(timeStr, minsToAdd) {
 }
 
 // Prayer Times API & Calculation
-async function fetchPrayerTimes(lat, lng) {
+/* ────────────────────────────────────────────────────────────
+   ÇEVRİMDIŞI-ÖNCELİKLİ VAKİT SİSTEMİ
+   1) Aylık takvim localStorage'da önbellekte tutulur → uygulama
+      internetsiz de anında açılır.
+   2) Ağ varsa arka planda yenilenir; ay sonuna yakınsa sonraki ay
+      da önceden indirilir.
+   3) Kullanıcının "Vakit İnce Ayarı" (dk) her vakte uygulanır
+      (Diyanet takvimiyle birebir eşleştirme için).
+   ──────────────────────────────────────────────────────────── */
+const DEFAULT_TIME_OFFSETS = { Fajr: 0, Sunrise: 0, Dhuhr: 0, Asr: 0, Maghrib: 1, Isha: 1 };
+
+function calCacheKey(lat, lng, year, month) {
+  return `hv_cal_${Number(lat).toFixed(3)}_${Number(lng).toFixed(3)}_${year}-${String(month).padStart(2, '0')}`;
+}
+function stripTiming(t) { return (t || '').split(' ')[0]; }
+function hijriTextFromApi(h) {
+  if (!h) return '';
+  const monthEn = h.month && h.month.en ? h.month.en : '';
+  const monthTr = HIJRI_MONTHS_TR[monthEn] || (h.month && h.month.ar ? h.month.ar : monthEn);
+  return `${h.day} ${monthTr} ${h.year}`;
+}
+// Aladhan /calendar cevabını kompakt biçime indirip kaydeder
+function saveMonthCache(lat, lng, year, month, days) {
   try {
-    const ts = Math.floor(Date.now() / 1000);
-    const apiUrl = `https://api.aladhan.com/v1/timings/${ts}?latitude=${lat}&longitude=${lng}&method=13`;
-    const response = await fetch(apiUrl);
-    const json = await response.json();
+    const compact = days.map(d => ({
+      date: `${d.date.gregorian.year}-${String(d.date.gregorian.month.number).padStart(2, '0')}-${String(d.date.gregorian.day).padStart(2, '0')}`,
+      t: {
+        Fajr: stripTiming(d.timings.Fajr), Sunrise: stripTiming(d.timings.Sunrise), Dhuhr: stripTiming(d.timings.Dhuhr),
+        Asr: stripTiming(d.timings.Asr), Maghrib: stripTiming(d.timings.Maghrib), Isha: stripTiming(d.timings.Isha),
+        Imsak: stripTiming(d.timings.Imsak)
+      },
+      h: hijriTextFromApi(d.date.hijri)
+    }));
+    localStorage.setItem(calCacheKey(lat, lng, year, month), JSON.stringify(compact));
+    // Eski ayların önbelleğini temizle (yalnızca son 3 anahtar kalsın)
+    const keys = Object.keys(localStorage).filter(k => k.startsWith('hv_cal_')).sort();
+    while (keys.length > 3) localStorage.removeItem(keys.shift());
+  } catch (e) { console.warn('Takvim önbelleği yazılamadı:', e); }
+}
+function getCachedDay(lat, lng, dateObj) {
+  try {
+    const raw = localStorage.getItem(calCacheKey(lat, lng, dateObj.getFullYear(), dateObj.getMonth() + 1));
+    if (!raw) return null;
+    const key = `${dateObj.getFullYear()}-${String(dateObj.getMonth() + 1).padStart(2, '0')}-${String(dateObj.getDate()).padStart(2, '0')}`;
+    return JSON.parse(raw).find(d => d.date === key) || null;
+  } catch (e) { return null; }
+}
+function getTimeOffsets() {
+  return Object.assign({}, DEFAULT_TIME_OFFSETS, APP_STATE.timeOffsets || {});
+}
+function applyOffsets(raw) {
+  const off = getTimeOffsets();
+  const out = {};
+  Object.keys(raw).forEach(k => { out[k] = raw[k]; });
+  ['Fajr', 'Sunrise', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'].forEach(k => {
+    if (raw[k]) out[k] = addMinutes(raw[k], parseInt(off[k], 10) || 0);
+  });
+  return out;
+}
+// Bir günün ham vakitlerini (offset uygulayarak) ekrana basar
+function applyDayTimings(entry) {
+  if (!entry || !entry.t) return;
+  APP_STATE.rawTimes = entry.t;
+  const t = applyOffsets(entry.t);
+  APP_STATE.prayerTimes = t;
+  if (entry.h) { APP_STATE.hijriDateText = entry.h; updateHijriDateDisplay(entry.h); }
+  renderPrayerCards(t);
+  updatePrayerCountdown();
+}
+// Ayarlardan offset değişince mevcut ham vakitlere yeniden uygula
+function reapplyTimeOffsets() {
+  if (!APP_STATE.rawTimes) return;
+  const t = applyOffsets(APP_STATE.rawTimes);
+  APP_STATE.prayerTimes = t;
+  renderPrayerCards(t);
+  updatePrayerCountdown();
+}
+window.reapplyTimeOffsets = reapplyTimeOffsets;
 
-    if (json && json.data) {
-      const t = json.data.timings;
-      // Diyanet resmi sitesiyle birebir eşleştirme — Akşam ve Yatsı +1 dk
-      t.Maghrib = addMinutes(t.Maghrib, 1); // 20:15 → 20:16
-      t.Isha    = addMinutes(t.Isha,    1); // 21:46 → 21:47
-      APP_STATE.prayerTimes = t;
+// Ramazan ayı mı? (Hicri metin API'den ya da yerel Intl'den gelir)
+function isRamazan() {
+  const h = (APP_STATE.hijriDateText || '').toLowerCase();
+  return h.includes('ramazan') || h.includes('ramadan');
+}
+window.isRamazan = isRamazan;
 
-      // Hicri tarih (API method=13 -> data.date.hijri)
-      if (json.data.date && json.data.date.hijri) {
-        const h = json.data.date.hijri;
-        const monthEn = h.month && h.month.en ? h.month.en : '';
-        const monthTr = HIJRI_MONTHS_TR[monthEn] || (h.month && h.month.ar ? h.month.ar : monthEn);
-        APP_STATE.hijriDateText = `${h.day} ${monthTr} ${h.year}`;
-        updateHijriDateDisplay(APP_STATE.hijriDateText);
+// Çevrimdışı/çevrimiçi rozeti
+function setOfflineBadge(offline) {
+  const el = document.getElementById('offline-badge');
+  if (el) el.style.display = offline ? 'inline-flex' : 'none';
+}
+window.addEventListener('online', () => { setOfflineBadge(false); fetchPrayerTimes(APP_STATE.userLocation.lat, APP_STATE.userLocation.lng); });
+window.addEventListener('offline', () => setOfflineBadge(true));
+
+async function fetchMonthCalendar(lat, lng, year, month) {
+  const res = await fetch(`https://api.aladhan.com/v1/calendar?latitude=${lat}&longitude=${lng}&method=13&month=${month}&year=${year}`);
+  const json = await res.json();
+  if (json && Array.isArray(json.data) && json.data.length) {
+    saveMonthCache(lat, lng, year, month, json.data);
+    return true;
+  }
+  return false;
+}
+
+async function fetchPrayerTimes(lat, lng) {
+  const today = new Date();
+  // 1) Önbellekten ANINDA göster (internet olmasa da çalışır)
+  const cached = getCachedDay(lat, lng, today);
+  if (cached) applyDayTimings(cached);
+  setOfflineBadge(typeof navigator !== 'undefined' && navigator.onLine === false);
+
+  // 2) Ağdan aylık takvimi al, önbelleği tazele
+  try {
+    const ok = await fetchMonthCalendar(lat, lng, today.getFullYear(), today.getMonth() + 1);
+    if (ok) {
+      setOfflineBadge(false);
+      const fresh = getCachedDay(lat, lng, today);
+      if (fresh) applyDayTimings(fresh);
+      // Ay sonuna yaklaştıysa sonraki ayı da önceden indir
+      if (today.getDate() >= 24) {
+        const nx = new Date(today.getFullYear(), today.getMonth() + 1, 1);
+        fetchMonthCalendar(lat, lng, nx.getFullYear(), nx.getMonth() + 1).catch(() => {});
       }
-
-      renderPrayerCards(t);
-      updatePrayerCountdown();
+    } else if (!cached) {
+      throw new Error('Takvim boş');
     }
   } catch (err) {
-    console.warn('Prayer times API failed, using fallback:', err);
-    renderFallbackPrayerTimes();
+    if (!cached) {
+      console.warn('Vakit API başarısız, önbellek yok → yedek vakitler:', err);
+      renderFallbackPrayerTimes();
+    } else {
+      console.info('Çevrimdışı: önbellekteki vakitler kullanılıyor.');
+      setOfflineBadge(true);
+    }
   }
 }
 
@@ -341,7 +459,7 @@ function updateHijriBadgeUI(day, month, year) {
 // Home ekranındaki Hicri tarih satırını doldurur (index.html'e eklenen #date-display-hijri)
 function updateHijriDateDisplay(text) {
   const el = document.getElementById('date-display-hijri');
-  if (el && text) el.textContent = `☪ ${text}`;
+  if (el && text) el.textContent = text;
 }
 
 // İnternet yoksa cihazdan (Intl - Ümmü'l-Kura takvimi) Hicri tarihi hesaplar
@@ -421,8 +539,58 @@ function showPrayerTimeDetailsModal(prayerId, prayerName, timeStr) {
     msg = `${prayerName} vaktinin girmesinden ${h > 0 ? h + ' saat ' : ''}${m} dakika geçti.`;
   }
 
-  showToastNotification(`🕌 ${prayerName} (${timeStr})`, msg);
+  // Alttan açılan detay paneli (ezan sesi + hatırlatıcı)
+  const sheet = document.getElementById('prayer-sheet');
+  if (!sheet) { showToastNotification(`🕌 ${prayerName} (${timeStr})`, msg); return; }
+  _sheetPrayerId = prayerId;
+  const nm = document.getElementById('sheet-name'), tm = document.getElementById('sheet-time');
+  const st = document.getElementById('sheet-status'), cb = document.getElementById('sheet-adhan');
+  if (nm) nm.textContent = prayerName;
+  if (tm) tm.textContent = timeStr;
+  if (st) st.textContent = msg;
+  if (cb) cb.checked = getPrayerAdhan(prayerId);
+  sheet.style.display = 'flex';
+  requestAnimationFrame(() => sheet.classList.add('open'));
 }
+
+// ── Vakit bazlı ezan sesi tercihi (varsayılan: açık) ──
+let _sheetPrayerId = null;
+function getPrayerAdhan(id) {
+  try { const v = localStorage.getItem('hv_adhan_' + id); return v === null ? true : v === '1'; } catch (e) { return true; }
+}
+function closePrayerSheet() {
+  const s = document.getElementById('prayer-sheet');
+  if (!s) return;
+  s.classList.remove('open');
+  setTimeout(() => { s.style.display = 'none'; }, 220);
+}
+function togglePrayerAdhan(on) {
+  if (!_sheetPrayerId) return;
+  try { localStorage.setItem('hv_adhan_' + _sheetPrayerId, on ? '1' : '0'); } catch (e) {}
+  const nm = (PRAYER_NAMES[_sheetPrayerId] && PRAYER_NAMES[_sheetPrayerId].name) || 'Vakit';
+  showToastNotification(on ? '🔊 Ezan sesi açık' : '🔇 Ezan sesi kapalı', `${nm} vakti için ezan ${on ? 'çalacak' : 'çalmayacak'}.`);
+}
+function setPrayerReminder() {
+  APP_STATE.notifyEnabled = true;
+  if (APP_STATE.notifySound === 'silent') APP_STATE.notifySound = 'ezan';
+  saveSettings();
+  applyStateSettings();
+  if (_sheetPrayerId) {
+    try { localStorage.setItem('hv_adhan_' + _sheetPrayerId, '1'); } catch (e) {}
+    const cb = document.getElementById('sheet-adhan'); if (cb) cb.checked = true;
+  }
+  if (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers['push-permission-request']) {
+    window.webkit.messageHandlers['push-permission-request'].postMessage('');
+  } else if (typeof Notification !== 'undefined' && Notification.permission !== 'granted') {
+    Notification.requestPermission();
+  }
+  const nm = (PRAYER_NAMES[_sheetPrayerId] && PRAYER_NAMES[_sheetPrayerId].name) || 'Vakit';
+  showToastNotification('⏰ Hatırlatıcı kuruldu', `${nm} vakti için ezan bildirimi açıldı.`);
+  closePrayerSheet();
+}
+window.closePrayerSheet = closePrayerSheet;
+window.togglePrayerAdhan = togglePrayerAdhan;
+window.setPrayerReminder = setPrayerReminder;
 
 function showToastNotification(title, message) {
   let toast = document.getElementById('app-toast');
@@ -487,11 +655,21 @@ function updatePrayerCountdown() {
     nextTimeDate.setHours(hrs, mins, 0, 0);
   }
 
+  // Ramazan modu: Akşam → İftar, İmsak/Sabah → Sahur etiketleri
+  const ramazan = isRamazan();
+  let labelText = `${nextPrayer.name} Vaktine`;
+  let pillPrefix = 'Ezan ';
+  if (ramazan && nextPrayer.id === 'Maghrib') { labelText = 'İftara'; pillPrefix = 'İftar '; }
+  else if (ramazan && nextPrayer.id === 'Fajr') { labelText = 'Sahura (İmsak)'; pillPrefix = 'İmsak '; }
+
   const targetLabel = document.getElementById('countdown-target');
-  if (targetLabel) targetLabel.textContent = `${nextPrayer.name} Vaktine`;
+  if (targetLabel) targetLabel.textContent = labelText;
 
   const nextEl = document.getElementById('countdown-next');
-  if (nextEl) nextEl.textContent = 'Ezan ' + nextTimeDate.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
+  if (nextEl) nextEl.textContent = pillPrefix + nextTimeDate.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
+
+  const ramazanBadge = document.getElementById('ramazan-badge');
+  if (ramazanBadge) ramazanBadge.style.display = ramazan ? 'inline-flex' : 'none';
 
   const diffMs = nextTimeDate - now;
   const timerText = document.getElementById('countdown-timer');
@@ -517,6 +695,9 @@ function updatePrayerCountdown() {
 
   const activeIdx = order.indexOf(nextPrayer.id) - 1;
   const currentActiveId = activeIdx >= 0 ? order[activeIdx] : order[order.length - 1];
+
+  // Günün saatine göre zemin tonu (sabah aydınlık kehribar → gece koyu)
+  if (document.body.dataset.tod !== currentActiveId) document.body.dataset.tod = currentActiveId;
 
   const circle = document.getElementById('countdown-progress');
   if (circle) {
@@ -906,7 +1087,8 @@ function initQuranSection() {
   document.getElementById('back-to-surahs')?.addEventListener('click', () => {
     document.getElementById('surah-list-view').style.display = 'block';
     document.getElementById('surah-detail-view').style.display = 'none';
-    
+    renderQuranTools();
+
     // Pause audio when returning to list
     const audioPlayer = document.getElementById('surah-audio-player');
     if (audioPlayer) {
@@ -1008,6 +1190,27 @@ async function loadSurahDetail(id, localSurahObj) {
 
   if (ayahWrap) ayahWrap.innerHTML = '<div style="text-align:center; padding: 40px; color: var(--text-sub);">Ayetler yükleniyor...</div>';
 
+  // Son okunan sure kaydı
+  const prevLast = hvGetLastRead();
+  if (!prevLast || prevLast.surah !== id) hvSetLastRead(id, localSurahObj ? localSurahObj.name : ('Sure ' + id), 1);
+
+  // 1) Çevrimdışı önbellek (IndexedDB) — varsa ağa hiç çıkmadan göster
+  let verses = null;
+  let fromCache = false;
+  try {
+    const cached = await hvIdbGet('surah_' + id);
+    if (cached && Array.isArray(cached) && cached.length) { verses = cached; fromCache = true; }
+  } catch (e) { /* IDB yoksa sessizce geç */ }
+
+  // 2) Ağdan indir (önbellek yoksa)
+  if (!verses) verses = await fetchSurahVerses(id);
+  if (verses && !fromCache) hvIdbSet('surah_' + id, verses).catch(() => {});
+
+  renderSurahVerses(id, verses, ayahWrap);
+}
+
+// Ağdan sure ayetlerini çeker (önce Al Quran Cloud, sonra Açık Kuran)
+async function fetchSurahVerses(id) {
   let verses = null;
 
   // Primary API: Al Quran Cloud (Fastest global CDN with Turkish Transliteration + Diyanet translation)
@@ -1058,8 +1261,13 @@ async function loadSurahDetail(id, localSurahObj) {
       console.warn('Açık Kuran API failed:', e);
     }
   }
+  return verses;
+}
 
-  if (ayahWrap && verses && verses.length > 0) {
+// Ayet kartlarını basar (yer imi + son okunan butonlarıyla)
+function renderSurahVerses(id, verses, ayahWrap) {
+  if (!ayahWrap) return;
+  if (verses && verses.length > 0) {
     ayahWrap.innerHTML = '';
 
     // Bismillah header for all surahs except Fatiha (1) and Tevbe (9)
@@ -1070,25 +1278,232 @@ async function loadSurahDetail(id, localSurahObj) {
       ayahWrap.appendChild(bism);
     }
 
+    const marks = hvGetBookmarks();
+    const lastRead = hvGetLastRead();
     verses.forEach(v => {
+      const key = id + ':' + v.verse_number;
+      const isMarked = !!marks[key];
+      const isLast = lastRead && lastRead.surah === id && lastRead.ayah === v.verse_number;
       const card = document.createElement('div');
-      card.className = 'ayah-card';
+      card.className = 'ayah-card' + (isMarked ? ' ayah-marked' : '');
+      card.id = 'ayah-' + v.verse_number;
       card.innerHTML = `
         <div class="ayah-ar-text">${v.verse}</div>
         ${v.okunusu ? `<div class="ayah-okunusu-text">🗣️ <b>Okunuşu:</b> ${v.okunusu}</div>` : ''}
         <div class="ayah-tr-text"><span class="verse-num-badge">${v.verse_number}</span>📖 <b>Anlamı:</b> ${v.translation}</div>
+        <div class="ayah-actions">
+          <button class="ayah-act-btn ${isMarked ? 'on' : ''}" data-act="mark" onclick="hvToggleBookmark(${id}, ${v.verse_number}, this)">${isMarked ? '⭐ Kaydedildi' : '☆ Yer İmi'}</button>
+          <button class="ayah-act-btn ${isLast ? 'on' : ''}" data-act="last" onclick="hvMarkLastRead(${id}, ${v.verse_number}, this)">${isLast ? '📍 Kaldığım Yer' : '📍 Buraya Kadar'}</button>
+          <button class="ayah-act-btn" onclick="hvShareAyah(${id}, ${v.verse_number})">📤</button>
+        </div>
       `;
       ayahWrap.appendChild(card);
     });
-  } else if (ayahWrap) {
+  } else {
     ayahWrap.innerHTML = `
       <div style="text-align:center; padding: 40px; color: var(--text-sub);">
         <p>Ayetler yüklenirken internet bağlantısı kurulamadı.</p>
+        <p style="font-size:.8rem;margin-top:6px;">Bu sure daha önce indirilmediği için çevrimdışı gösterilemiyor. İnternet varken <b>Kuran-ı Kerim → Çevrimdışı İndir</b> ile tüm Kur'an'ı cihazınıza kaydedebilirsiniz.</p>
         <button class="gold-primary-btn" style="margin-top: 12px;" onclick="retryLoadSurah(${id})">Tekrar Deneyin</button>
       </div>
     `;
   }
 }
+
+/* ────────────────────────────────────────────────────────────
+   ÇEVRİMDIŞI KUR'AN — IndexedDB önbelleği, yer imleri, son okunan
+   ──────────────────────────────────────────────────────────── */
+const HV_IDB_NAME = 'huzurvakti';
+const HV_IDB_STORE = 'kv';
+function hvIdbOpen() {
+  return new Promise((resolve, reject) => {
+    if (!('indexedDB' in window)) return reject(new Error('IndexedDB yok'));
+    const req = indexedDB.open(HV_IDB_NAME, 1);
+    req.onupgradeneeded = () => { req.result.createObjectStore(HV_IDB_STORE); };
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
+async function hvIdbGet(key) {
+  const db = await hvIdbOpen();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(HV_IDB_STORE, 'readonly');
+    const rq = tx.objectStore(HV_IDB_STORE).get(key);
+    rq.onsuccess = () => resolve(rq.result);
+    rq.onerror = () => reject(rq.error);
+  });
+}
+async function hvIdbSet(key, value) {
+  const db = await hvIdbOpen();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(HV_IDB_STORE, 'readwrite');
+    tx.objectStore(HV_IDB_STORE).put(value, key);
+    tx.oncomplete = () => resolve(true);
+    tx.onerror = () => reject(tx.error);
+  });
+}
+async function hvIdbKeys() {
+  const db = await hvIdbOpen();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(HV_IDB_STORE, 'readonly');
+    const rq = tx.objectStore(HV_IDB_STORE).getAllKeys();
+    rq.onsuccess = () => resolve(rq.result || []);
+    rq.onerror = () => reject(rq.error);
+  });
+}
+async function hvIdbClear() {
+  const db = await hvIdbOpen();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(HV_IDB_STORE, 'readwrite');
+    tx.objectStore(HV_IDB_STORE).clear();
+    tx.oncomplete = () => resolve(true);
+    tx.onerror = () => reject(tx.error);
+  });
+}
+window.hvIdbGet = hvIdbGet; window.hvIdbSet = hvIdbSet; window.hvIdbKeys = hvIdbKeys; window.hvIdbClear = hvIdbClear;
+
+// İndirilmiş sure sayısı
+async function hvOfflineSurahCount() {
+  try { return (await hvIdbKeys()).filter(k => String(k).startsWith('surah_')).length; } catch (e) { return 0; }
+}
+
+// Tüm Kur'an'ı indir (114 sure) — ilerleme göstergeli
+let _hvDownloading = false;
+async function hvDownloadWholeQuran() {
+  if (_hvDownloading) return;
+  _hvDownloading = true;
+  const bar = document.getElementById('qdl-bar');
+  const txt = document.getElementById('qdl-text');
+  const btn = document.getElementById('qdl-btn');
+  if (btn) btn.disabled = true;
+  let done = 0, failed = 0;
+  let existing = [];
+  try { existing = (await hvIdbKeys()).map(String); } catch (e) {}
+  for (let i = 1; i <= 114; i++) {
+    if (existing.includes('surah_' + i)) { done++; }
+    else {
+      const v = await fetchSurahVerses(i);
+      if (v && v.length) { try { await hvIdbSet('surah_' + i, v); done++; } catch (e) { failed++; } }
+      else failed++;
+    }
+    const pct = Math.round((i / 114) * 100);
+    if (bar) bar.style.width = pct + '%';
+    if (txt) txt.textContent = `İndiriliyor… ${i}/114 sure (${pct}%)`;
+  }
+  _hvDownloading = false;
+  if (btn) btn.disabled = false;
+  if (txt) txt.textContent = failed ? `${done}/114 sure indirildi, ${failed} sure alınamadı. Tekrar deneyin.` : '✅ Kur\'an-ı Kerim tamamen çevrimdışı kullanılabilir (114/114).';
+  showToastNotification('📖 Çevrimdışı Kur\'an', failed ? `${done} sure indirildi, ${failed} eksik.` : 'Tüm sureler cihazınıza kaydedildi.');
+  renderQuranTools();
+}
+window.hvDownloadWholeQuran = hvDownloadWholeQuran;
+
+// Yer imleri: { "2:255": {surah:2, ayah:255, name:"Bakara", ts:...} }
+function hvGetBookmarks() {
+  try { return JSON.parse(localStorage.getItem('hv_bookmarks') || '{}'); } catch (e) { return {}; }
+}
+function hvSurahName(id) {
+  const list = (typeof ALL_114_SURAHS !== 'undefined') ? ALL_114_SURAHS : (APP_STATE.surahList || []);
+  const s = list.find(x => (x.id || x.number) === id);
+  return s ? s.name : ('Sure ' + id);
+}
+function hvToggleBookmark(surah, ayah, btn) {
+  const marks = hvGetBookmarks();
+  const key = surah + ':' + ayah;
+  if (marks[key]) { delete marks[key]; }
+  else { marks[key] = { surah, ayah, name: hvSurahName(surah), ts: Date.now() }; }
+  localStorage.setItem('hv_bookmarks', JSON.stringify(marks));
+  const on = !!marks[key];
+  if (btn) { btn.classList.toggle('on', on); btn.textContent = on ? '⭐ Kaydedildi' : '☆ Yer İmi'; }
+  const card = document.getElementById('ayah-' + ayah);
+  if (card) card.classList.toggle('ayah-marked', on);
+  showToastNotification(on ? '⭐ Yer imi eklendi' : 'Yer imi kaldırıldı', `${hvSurahName(surah)} ${ayah}. ayet`);
+}
+window.hvToggleBookmark = hvToggleBookmark;
+
+function hvGetLastRead() {
+  try { return JSON.parse(localStorage.getItem('hv_last_read') || 'null'); } catch (e) { return null; }
+}
+function hvSetLastRead(surah, name, ayah) {
+  localStorage.setItem('hv_last_read', JSON.stringify({ surah, name: name || hvSurahName(surah), ayah: ayah || 1, ts: Date.now() }));
+}
+function hvMarkLastRead(surah, ayah, btn) {
+  hvSetLastRead(surah, hvSurahName(surah), ayah);
+  document.querySelectorAll('.ayah-act-btn[data-act="last"]').forEach(b => { b.classList.remove('on'); b.textContent = '📍 Buraya Kadar'; });
+  if (btn) { btn.classList.add('on'); btn.textContent = '📍 Kaldığım Yer'; }
+  showToastNotification('📍 Kaldığın yer kaydedildi', `${hvSurahName(surah)} ${ayah}. ayet`);
+}
+window.hvMarkLastRead = hvMarkLastRead;
+
+function hvShareAyah(surah, ayah) {
+  const card = document.getElementById('ayah-' + ayah);
+  const tr = card ? (card.querySelector('.ayah-tr-text')?.textContent || '').replace(/^\s*\d+\s*📖\s*Anlamı:\s*/, '').trim() : '';
+  const text = `${hvSurahName(surah)} Suresi, ${ayah}. Ayet\n\n"${tr}"\n\n— Huzur Vakti`;
+  if (typeof hvShareText === 'function') hvShareText(text);
+  else if (navigator.share) navigator.share({ text }).catch(() => {});
+}
+window.hvShareAyah = hvShareAyah;
+
+// Belirli sure + ayete git
+function openSurahAt(surahId, ayah) {
+  navigateTo('quran');
+  retryLoadSurah(surahId);
+  const listView = document.getElementById('surah-list-view');
+  const detailView = document.getElementById('surah-detail-view');
+  if (listView) listView.style.display = 'none';
+  if (detailView) detailView.style.display = 'block';
+  let tries = 0;
+  const tick = setInterval(() => {
+    const el = document.getElementById('ayah-' + ayah);
+    tries++;
+    if (el) {
+      clearInterval(tick);
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      el.classList.add('ayah-flash');
+      setTimeout(() => el.classList.remove('ayah-flash'), 2200);
+    } else if (tries > 60) clearInterval(tick);
+  }, 150);
+}
+window.openSurahAt = openSurahAt;
+
+// Kuran listesi üstündeki araç kartı (kaldığın yer, yer imleri, çevrimdışı indirme)
+async function renderQuranTools() {
+  const box = document.getElementById('quran-tools');
+  if (!box) return;
+  const last = hvGetLastRead();
+  const marks = Object.values(hvGetBookmarks()).sort((a, b) => b.ts - a.ts);
+  const count = await hvOfflineSurahCount();
+  const pct = Math.round((count / 114) * 100);
+  const marksHtml = marks.length
+    ? `<div class="qt-marks">${marks.slice(0, 12).map(m => `<button class="qt-chip" onclick="openSurahAt(${m.surah}, ${m.ayah})">⭐ ${m.name} ${m.ayah}</button>`).join('')}${marks.length > 12 ? `<span class="qt-more">+${marks.length - 12}</span>` : ''}</div>`
+    : `<div class="qt-empty">Henüz yer imi yok. Ayet kartındaki ☆ ile ekleyin.</div>`;
+  box.innerHTML = `
+    <div class="qt-card">
+      <div class="qt-row">
+        <div class="qt-title">📍 Kaldığın Yer</div>
+        ${last ? `<button class="qt-go" onclick="openSurahAt(${last.surah}, ${last.ayah})">${last.name} ${last.ayah}. ayet →</button>` : `<span class="qt-empty">Henüz okuma yok</span>`}
+      </div>
+      <div class="qt-row qt-col">
+        <div class="qt-title">⭐ Yer İmleri <span class="qt-count">${marks.length}</span></div>
+        ${marksHtml}
+      </div>
+      <div class="qt-row qt-col">
+        <div class="qt-title">📥 Çevrimdışı Kur'an <span class="qt-count">${count}/114</span></div>
+        <div class="qdl-track"><div id="qdl-bar" class="qdl-bar" style="width:${pct}%"></div></div>
+        <div id="qdl-text" class="qdl-text">${count === 114 ? '✅ Tüm sureler cihazınızda — internetsiz okuyabilirsiniz.' : (count ? `${count} sure indirildi. Kalanını indirmek için dokunun.` : 'İnternet varken tüm Kur\'an\'ı indirin, sonra internetsiz okuyun.')}</div>
+        <div class="backup-row">
+          <button id="qdl-btn" class="gold-primary-btn" onclick="hvDownloadWholeQuran()" ${count === 114 ? 'disabled' : ''}>${count === 114 ? '✅ İndirildi' : '📥 Tüm Kur\'an\'ı İndir'}</button>
+          ${count ? `<button class="gold-outline-btn" onclick="hvClearQuranCache()">🗑️ Önbelleği Sil</button>` : ''}
+        </div>
+      </div>
+    </div>`;
+}
+window.renderQuranTools = renderQuranTools;
+async function hvClearQuranCache() {
+  try { await hvIdbClear(); showToastNotification('🗑️ Önbellek silindi', 'Çevrimdışı Kur\'an verisi kaldırıldı.'); } catch (e) {}
+  renderQuranTools();
+}
+window.hvClearQuranCache = hvClearQuranCache;
 
 // Retry butonu düzeltmesi: sure nesnesini HTML'e gömmek yerine id ile listeden bulur
 function retryLoadSurah(id) {
@@ -1291,10 +1706,32 @@ function setupSettingsListeners() {
     saveSettings();
   });
 
+  // Vakit ince ayarı (dk) — her vakte ayrı düzeltme
+  document.querySelectorAll('.offset-input').forEach(inp => {
+    inp.addEventListener('change', (e) => {
+      let v = parseInt(e.target.value, 10);
+      if (isNaN(v)) v = 0;
+      v = Math.max(-15, Math.min(15, v));
+      e.target.value = v;
+      APP_STATE.timeOffsets = APP_STATE.timeOffsets || {};
+      APP_STATE.timeOffsets[e.target.dataset.k] = v;
+      saveSettings();
+      reapplyTimeOffsets();
+    });
+  });
+  document.getElementById('offset-reset-btn')?.addEventListener('click', () => {
+    APP_STATE.timeOffsets = {};
+    saveSettings();
+    applyStateSettings();
+    reapplyTimeOffsets();
+    showToastNotification('🕰️ Vakit Ayarı', 'Varsayılan (Diyanet) değerlere dönüldü.');
+  });
+
   document.getElementById('theme-toggle')?.addEventListener('change', (e) => {
-    APP_STATE.isDarkTheme = e.target.checked;
+    APP_STATE.greenTheme = e.target.checked;
     applyStateSettings();
     saveSettings();
+    showToastNotification(APP_STATE.greenTheme ? '🌿 Yeşil Tema (Lüks Gece)' : '🟤 Bakır Tema', 'Tema değiştirildi.');
   });
 
   document.getElementById('font-size-slider')?.addEventListener('input', (e) => {
@@ -1447,7 +1884,8 @@ function triggerNotification(prayer, offset) {
   if (APP_STATE.notifySound === 'beep') {
     playNotifyAudio(['https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3']);
   } else if (APP_STATE.notifySound === 'ezan') {
-    playAdhan();
+    // Vakit bazlı "Ezan sesi açık" tercihine saygı duy
+    if (getPrayerAdhan(prayer.id)) playAdhan();
   }
 }
 
