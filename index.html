@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Huzur Vakti - Namaz Vakitleri & Kuran</title>
+    <title>Namaz Dostu - Namaz Vakitleri, Ezan & Kuran</title>
 
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -12,36 +12,37 @@
 
     <!-- PWA -->
     <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#040d0a">
+    <meta name="theme-color" content="#1c0f07">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="Huzur Vakti">
-    <link rel="apple-touch-icon" href="icon-512.jpg">
-    <meta name="description" content="Namaz Vakitleri, Kıble Pusulası, Kuran-ı Kerim ve Namaz Rehberi">
+    <meta name="apple-mobile-web-app-title" content="Namaz Dostu">
+    <link rel="apple-touch-icon" href="apple-touch-icon.png?v=59.0.0">
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png?v=59.0.0">
+    <meta name="description" content="Namaz Dostu: Namaz vakitleri, ezan, Kur'an-ı Kerim, kıble, dualar, zikirmatik ve yeni başlayanlar için adım adım namaz rehberi. Ücretsiz, reklamsız, çevrimdışı.">
 
-    <link rel="stylesheet" href="styles.css?v=58.1.0">
-    <script src="cities.js?v=58.1.0" defer></script>
-    <script src="data.js?v=58.1.0" defer></script>
-    <script src="content.js?v=58.1.0" defer></script>
-    <script src="app.js?v=58.1.0" defer></script>
-    <script src="features.js?v=58.1.0" defer></script>
+    <link rel="stylesheet" href="styles.css?v=59.0.0">
+    <script src="cities.js?v=59.0.0" defer></script>
+    <script src="data.js?v=59.0.0" defer></script>
+    <script src="content.js?v=59.0.0" defer></script>
+    <script src="app.js?v=59.0.0" defer></script>
+    <script src="features.js?v=59.0.0" defer></script>
 </head>
 <body class="dark-theme">
     <!-- Loading Screen -->
     <div id="loading-screen">
         <div class="loading-box">
             <div class="loading-crescent"></div>
-            <div class="loading-title">Huzur Vakti</div>
+            <div class="loading-title">Namaz Dostu</div>
         </div>
     </div>
 
-    <!-- App Header (🌙 Huzur Vakti) -->
+    <!-- App Header (🌙 Namaz Dostu) -->
     <header id="app-header">
         <div class="header-container">
             <div class="brand-wrapper-center">
                 <span class="brand-logo-crescent">🌙</span>
                 <div class="brand-col">
-                    <h1 class="brand-title-gold">Huzur Vakti</h1>
+                    <h1 class="brand-title-gold">Namaz Dostu</h1>
                     <span id="date-display-hijri" class="brand-hijri">Hicri Takvim</span>
                     <span class="brand-badges">
                         <span id="ramazan-badge" class="hv-badge hv-badge-ramazan" style="display:none;">🌙 Ramazan</span>
@@ -719,12 +720,12 @@
                     </div>
                     <div class="kaynak-card">
                         <h3>🔒 Gizlilik Politikası</h3>
-                        <p>Huzur Vakti <b>hesap açmanızı istemez, kişisel verinizi toplamaz ve hiçbir sunucuya göndermez</b>. Konumunuz yalnızca vakit hesabı için kullanılır; seçtiğiniz il/ilçe koordinatları ve GPS konumu sadece cihazınızda saklanır. Zikir sayaçları, namaz/oruç takibi, hatim, yer imleri ve ayarlar cihazınızın yerel depolamasında tutulur; "Yedekleme" ile dışa aktarabilir, istediğiniz an tarayıcı verilerini silerek tümünü kaldırabilirsiniz. Uygulama reklam, analitik veya takip kodu içermez. Vakit ve Kur'an verileri için üçüncü taraf servislere (aladhan.com, alquran.cloud, acikkuran.com, mp3quran.net) yalnızca ilgili isteğin gerektirdiği konum/sure bilgisi gönderilir.</p>
+                        <p>Namaz Dostu <b>hesap açmanızı istemez, kişisel verinizi toplamaz ve hiçbir sunucuya göndermez</b>. Konumunuz yalnızca vakit hesabı için kullanılır; seçtiğiniz il/ilçe koordinatları ve GPS konumu sadece cihazınızda saklanır. Zikir sayaçları, namaz/oruç takibi, hatim, yer imleri ve ayarlar cihazınızın yerel depolamasında tutulur; "Yedekleme" ile dışa aktarabilir, istediğiniz an tarayıcı verilerini silerek tümünü kaldırabilirsiniz. Uygulama reklam, analitik veya takip kodu içermez. Vakit ve Kur'an verileri için üçüncü taraf servislere (aladhan.com, alquran.cloud, acikkuran.com, mp3quran.net) yalnızca ilgili isteğin gerektirdiği konum/sure bilgisi gönderilir.</p>
                     </div>
                     <div class="kaynak-card">
                         <h3>✉️ Hata Bildirimi ve Öneri</h3>
                         <p>Bir içerik hatası, yanlış kaynak ya da eksik gördüğünüz bir bölüm varsa lütfen bildirin. İçeriklerin doğruluğu için azami özen gösterilmekle birlikte, dinî konularda nihai başvuru kaynağınız Diyanet İşleri Başkanlığı ve yetkin ilim ehli olmalıdır.</p>
-                        <div class="backup-row"><button class="gold-outline-btn" onclick="hvShareText('Huzur Vakti uygulaması için geri bildirim: ')">📝 Geri Bildirim Gönder</button></div>
+                        <div class="backup-row"><button class="gold-outline-btn" onclick="hvShareText('Namaz Dostu uygulaması için geri bildirim: ')">📝 Geri Bildirim Gönder</button></div>
                     </div>
                 </div>
             </div>
@@ -872,7 +873,7 @@
                     </div>
                     <div class="app-info-footer">
                         <div class="footer-logo">🕌</div>
-                        <div class="footer-ver">Huzur Vakti v58 Premium</div>
+                        <div class="footer-ver">Namaz Dostu v59</div>
                         <div style="font-size: 0.8rem; margin-top: 4px;">Tüm Hakları Saklıdır • Diyanet Uyumlu • Çevrimdışı Çalışır</div>
                     </div>
                 </div>
@@ -918,7 +919,7 @@
     <script>
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
-          navigator.serviceWorker.register('/sw.js?v=58.1.0')
+          navigator.serviceWorker.register('/sw.js?v=59.0.0')
             .then(reg => {
               reg.onupdatefound = () => {
                 const installingWorker = reg.installing;

@@ -1438,7 +1438,7 @@ window.hvMarkLastRead = hvMarkLastRead;
 function hvShareAyah(surah, ayah) {
   const card = document.getElementById('ayah-' + ayah);
   const tr = card ? (card.querySelector('.ayah-tr-text')?.textContent || '').replace(/^\s*\d+\s*📖\s*Anlamı:\s*/, '').trim() : '';
-  const text = `${hvSurahName(surah)} Suresi, ${ayah}. Ayet\n\n"${tr}"\n\n— Huzur Vakti`;
+  const text = `${hvSurahName(surah)} Suresi, ${ayah}. Ayet\n\n"${tr}"\n\n— Namaz Dostu`;
   if (typeof hvShareText === 'function') hvShareText(text);
   else if (navigator.share) navigator.share({ text }).catch(() => {});
 }
@@ -1868,7 +1868,7 @@ function checkPrayerNotification(nextPrayer, nextTimeDate, diffMs) {
 }
 
 function triggerNotification(prayer, offset) {
-  const title = "Huzur Vakti Namaz Hatırlatıcısı";
+  const title = "Namaz Dostu — Namaz Hatırlatıcısı";
   const msg = offset === 0 
     ? `${prayer.name} vakti girdi!`
     : `${prayer.name} vaktine ${offset} dakika kaldı.`;

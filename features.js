@@ -1,5 +1,5 @@
 /* ========================================================
-   Huzur Vakti - Yeni Özellik Mantığı (features.js)
+   Namaz Dostu - Yeni Özellik Mantığı (features.js)
    Mevcut app.js'i değiştirmez; navigateTo() içindeki
    window.FEATURE_ROUTES kancasını kullanır.
    ======================================================== */
@@ -52,7 +52,7 @@ function hvDayIndex(len) {
 // Paylaşım: Web Share API varsa onu, yoksa WhatsApp'ı kullanır
 function hvShareText(text) {
   if (navigator.share) {
-    navigator.share({ title: 'Huzur Vakti', text: text }).catch(() => {});
+    navigator.share({ title: 'Namaz Dostu', text: text }).catch(() => {});
   } else {
     const url = 'https://wa.me/?text=' + encodeURIComponent(text);
     window.open(url, '_blank');
@@ -74,7 +74,7 @@ function loadDailyHadis() {
 function shareDailyHadis() {
   const h = window._currentHadis || (typeof HADITHS !== 'undefined' ? HADITHS[hvDayIndex(HADITHS.length)] : null);
   if (!h) return;
-  hvShareText(`📿 Günün Hadisi\n\n"${h.text}"\n— ${h.source}\n\nHuzur Vakti 🌙`);
+  hvShareText(`📿 Günün Hadisi\n\n"${h.text}"\n— ${h.source}\n\nNamaz Dostu 🌙`);
 }
 window.shareDailyHadis = shareDailyHadis;
 
@@ -82,7 +82,7 @@ function shareDailyVerse() {
   const ar = document.getElementById('daily-verse-arabic');
   const tr = document.getElementById('daily-verse-turkish');
   const src = document.getElementById('daily-verse-source');
-  const text = `📖 Günün Ayeti\n\n${tr ? tr.textContent : ''}\n${src ? src.textContent : ''}\n\nHuzur Vakti 🌙`;
+  const text = `📖 Günün Ayeti\n\n${tr ? tr.textContent : ''}\n${src ? src.textContent : ''}\n\nNamaz Dostu 🌙`;
   hvShareText(text);
 }
 window.shareDailyVerse = shareDailyVerse;
@@ -721,7 +721,7 @@ function paylasimYenile() {
         ${_paylasimData.ar ? `<div class="scp-ar">${_paylasimData.ar}</div>` : ''}
         <div class="scp-tr">"${hvEsc(_paylasimData.tr)}"</div>
         <div class="scp-src">— ${hvEsc(_paylasimData.src)}</div>
-        <div class="scp-brand">🌙 Huzur Vakti</div>
+        <div class="scp-brand">🌙 Namaz Dostu</div>
       </div>`;
   }
 }
@@ -729,7 +729,7 @@ window.paylasimYenile = paylasimYenile;
 function paylasimPaylas() {
   if (!_paylasimData) return;
   const emoji = _paylasimTip === 'ayet' ? '📖 Ayet-i Kerime' : '📿 Hadis-i Şerif';
-  hvShareText(`${emoji}\n\n"${_paylasimData.tr}"\n— ${_paylasimData.src}\n\n🌙 Huzur Vakti`);
+  hvShareText(`${emoji}\n\n"${_paylasimData.tr}"\n— ${_paylasimData.src}\n\n🌙 Namaz Dostu`);
 }
 window.paylasimPaylas = paylasimPaylas;
 
@@ -1092,7 +1092,7 @@ function hvBackupCollect() {
     if (k.startsWith('hv_cal_')) return; // takvim önbelleği yeniden indirilir, yedeğe gerek yok
     if (HV_BACKUP_PREFIXES.some(p => k.startsWith(p))) data[k] = localStorage.getItem(k);
   });
-  return { app: 'HuzurVakti', version: 58, exportedAt: new Date().toISOString(), data };
+  return { app: 'NamazDostu', version: 59, exportedAt: new Date().toISOString(), data };
 }
 function hvBackupExport() {
   const status = document.getElementById('backup-status');
@@ -1101,7 +1101,7 @@ function hvBackupExport() {
     const json = JSON.stringify(payload, null, 2);
     const count = Object.keys(payload.data).length;
     const d = new Date();
-    const fname = `huzurvakti-yedek-${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}.json`;
+    const fname = `namazdostu-yedek-${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}.json`;
     const blob = new Blob([json], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -1122,7 +1122,7 @@ function hvBackupImport(input) {
   reader.onload = () => {
     try {
       const parsed = JSON.parse(reader.result);
-      if (!parsed || parsed.app !== 'HuzurVakti' || typeof parsed.data !== 'object') throw new Error('Bu dosya bir Huzur Vakti yedeği değil.');
+      if (!parsed || (parsed.app !== 'NamazDostu' && parsed.app !== 'HuzurVakti') || typeof parsed.data !== 'object') throw new Error('Bu dosya bir Namaz Dostu yedeği değil.');
       let n = 0;
       Object.keys(parsed.data).forEach(k => {
         if (HV_BACKUP_PREFIXES.some(p => k.startsWith(p)) && typeof parsed.data[k] === 'string') {
@@ -1142,7 +1142,7 @@ function hvBackupImport(input) {
   reader.readAsText(file);
 }
 function hvShareApp() {
-  hvShareText('🌙 Huzur Vakti — namaz vakitleri, Kur\'an, dualar, zikirmatik ve daha fazlası tek uygulamada. Ücretsiz, reklamsız, çevrimdışı çalışır:\nhttps://huzurvaktinamazuygulamasi.vercel.app');
+  hvShareText('🌙 Namaz Dostu — namaz vakitleri, Kur\'an, dualar, zikirmatik ve daha fazlası tek uygulamada. Ücretsiz, reklamsız, çevrimdışı çalışır:\nhttps://huzurvaktinamazuygulamasi.vercel.app');
 }
 window.hvBackupExport = hvBackupExport;
 window.hvBackupImport = hvBackupImport;

@@ -1,5 +1,5 @@
 /* ══════════════════════════════════════════════════════════════
-   HUZUR VAKTİ — Service Worker (v58.1)
+   NAMAZ DOSTU — Service Worker (v59.0)
    iOS/Safari uyumlu çevrimdışı çekirdek:
    • Çekirdek dosyalar kurulumda önbelleğe alınır (tek tek; biri
      başarısız olsa bile diğerleri kaydolur).
@@ -10,10 +10,10 @@
      takılıp kalmaz.
    • Dış kaynaklar (font, API) çevrimdışıyken sessizce boş geçilir.
    ══════════════════════════════════════════════════════════════ */
-const CACHE_NAME = 'huzur-vakti-v58.1';
+const CACHE_NAME = 'namaz-dostu-v59.0';
 
 // Sürüm etiketli çekirdek dosyalar (sayfanın gerçekte istediği URL'ler)
-const V = '58.1.0';
+const V = '59.0.0';
 const CORE_ASSETS = [
   './',
   './index.html',
@@ -24,7 +24,10 @@ const CORE_ASSETS = [
   './app.js?v=' + V,
   './features.js?v=' + V,
   './manifest.json',
-  './icon-512.jpg'
+  './icon-192.png?v=59',
+  './icon-512.png?v=59',
+  './apple-touch-icon.png?v=' + V,
+  './favicon-32.png?v=' + V
 ];
 
 // ─── Kurulum: çekirdek dosyaları tek tek önbelleğe al ───
