@@ -623,7 +623,7 @@ window.updateNotifyStatusUI = updateNotifyStatusUI;
 
 // Ayarlar → Geri Bildirim Gönder (doğrudan e-posta açar)
 function hvSendFeedback() {
-  const ver = 'v60.9';
+  const ver = 'v61.0';
   let ortam = 'Tarayıcı';
   try {
     if (window.hvIsAndroid) ortam = 'Android uygulaması';
@@ -1802,8 +1802,18 @@ window.hvMarkLastRead = hvMarkLastRead;
 function hvShareAyah(surah, ayah) {
   const card = document.getElementById('ayah-' + ayah);
   const tr = card ? (card.querySelector('.ayah-tr-text')?.textContent || '').replace(/^\s*\d+\s*📖\s*Anlamı:\s*/, '').trim() : '';
-  const text = `${hvSurahName(surah)} Suresi, ${ayah}. Ayet\n\n"${tr}"\n\n— Namaz Dostu`;
-  if (typeof hvShareText === 'function') hvShareText(text);
+  const ar = card ? (card.querySelector('.ayah-ar-text')?.textContent || '').trim() : '';
+  const text = `${hvSurahName(surah)} Suresi, ${ayah}. Ayet\n\n"${tr}"`;
+  if (typeof hvOpenShareCard === 'function') {
+    hvOpenShareCard({
+      badge: '📖 Ayet-i Kerime',
+      arabic: ar,
+      text: tr,
+      source: `${hvSurahName(surah)} Suresi, ${ayah}. ayet`,
+      fallbackText: text
+    });
+  }
+  else if (typeof hvShareText === 'function') hvShareText(text);
   else if (navigator.share) navigator.share({ text }).catch(() => {});
 }
 window.hvShareAyah = hvShareAyah;

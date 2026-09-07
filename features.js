@@ -134,7 +134,13 @@ function shareDailyHadis(ev) {
   if (ev && ev.stopPropagation) ev.stopPropagation();
   const h = window._currentHadis || hvPickHadis();
   if (!h) return;
-  hvShareText(`📿 Günün Hadisi\n\n"${h.text}"\n— ${h.source}\n\nNamaz Dostu 🌙`);
+  hvOpenShareCard({
+    badge: '📿 Günün Hadisi',
+    arabic: h.ar || '',
+    text: h.text,
+    source: h.source,
+    fallbackText: `📿 Günün Hadisi\n\n"${h.text}"\n— ${h.source}`
+  });
 }
 window.shareDailyHadis = shareDailyHadis;
 
@@ -142,8 +148,14 @@ function shareDailyVerse() {
   const ar = document.getElementById('daily-verse-arabic');
   const tr = document.getElementById('daily-verse-turkish');
   const src = document.getElementById('daily-verse-source');
-  const text = `📖 Günün Ayeti\n\n${tr ? tr.textContent : ''}\n${src ? src.textContent : ''}\n\nNamaz Dostu 🌙`;
-  hvShareText(text);
+  const arEl = document.getElementById('daily-verse-arabic');
+  hvOpenShareCard({
+    badge: '📖 Günün Ayeti',
+    arabic: arEl ? (arEl.textContent || '').trim() : '',
+    text: tr ? (tr.textContent || '').trim() : '',
+    source: src ? (src.textContent || '').replace(/^[\s—-]+/, '').trim() : '',
+    fallbackText: `📖 Günün Ayeti\n\n${tr ? tr.textContent : ''}\n${src ? src.textContent : ''}`
+  });
 }
 window.shareDailyVerse = shareDailyVerse;
 
@@ -789,7 +801,13 @@ window.paylasimYenile = paylasimYenile;
 function paylasimPaylas() {
   if (!_paylasimData) return;
   const emoji = _paylasimTip === 'ayet' ? '📖 Ayet-i Kerime' : '📿 Hadis-i Şerif';
-  hvShareText(`${emoji}\n\n"${_paylasimData.tr}"\n— ${_paylasimData.src}\n\n🌙 Namaz Dostu`);
+  hvOpenShareCard({
+    badge: emoji,
+    arabic: _paylasimData.ar || '',
+    text: _paylasimData.tr,
+    source: _paylasimData.src,
+    fallbackText: `${emoji}\n\n"${_paylasimData.tr}"\n— ${_paylasimData.src}`
+  });
 }
 window.paylasimPaylas = paylasimPaylas;
 
@@ -807,7 +825,9 @@ function renderCuma() {
         </div>
       </div>`).join('');
 }
-function cumaPaylas(i) { hvShareText(CUMA_MESAJLARI[i]); }
+function cumaPaylas(i) {
+  hvOpenShareCard({ badge: '🕌 Hayırlı Cumalar', text: CUMA_MESAJLARI[i], source: '', fallbackText: CUMA_MESAJLARI[i] });
+}
 window.cumaPaylas = cumaPaylas;
 function cumaKopyala(i) {
   const txt = CUMA_MESAJLARI[i];
@@ -1372,3 +1392,253 @@ function renderNamazProgrami() {
   c.innerHTML = html;
 }
 try { if (window.FEATURE_ROUTES) window.FEATURE_ROUTES['namaz-programi'] = renderNamazProgrami; } catch (e) {}
+
+/* ══════════ v61.0 — GÖRSEL PAYLAŞIM KARTI ══════════
+   Düz metin yerine 1080x1920 marka görseli üretir ve onu paylaşır.
+   WhatsApp durumu / Instagram hikayesi için doğru ölçü.        */
+
+const HV_CARD_W = 1080, HV_CARD_H = 1920;
+let _hvCardBg = null, _hvCardBgTried = false;
+
+function hvCardLoadBg() {
+  return new Promise((resolve) => {
+    if (_hvCardBg || _hvCardBgTried) return resolve(_hvCardBg);
+    _hvCardBgTried = true;
+    const img = new Image();
+    img.onload = () => { _hvCardBg = img; resolve(img); };
+    img.onerror = () => resolve(null);
+    img.src = 'bg-mosque.jpg';
+  });
+}
+
+// Metni kutuya sığdır: font boyutunu küçülterek satırlara böl
+function hvCardFit(ctx, text, maxW, maxH, opts) {
+  const o = opts || {};
+  let size = o.max || 62;
+  const min = o.min || 26;
+  const weight = o.weight || '600';
+  const family = o.family || "'Outfit', system-ui, -apple-system, sans-serif";
+  const lh = o.lineHeight || 1.42;
+  while (size >= min) {
+    ctx.font = `${weight} ${size}px ${family}`;
+    const words = String(text).split(/\s+/);
+    const lines = [];
+    let line = '';
+    for (const w of words) {
+      const t = line ? line + ' ' + w : w;
+      if (ctx.measureText(t).width > maxW && line) { lines.push(line); line = w; }
+      else line = t;
+    }
+    if (line) lines.push(line);
+    if (lines.length * size * lh <= maxH) return { size, lines, lh, family, weight };
+    size -= 2;
+  }
+  ctx.font = `${weight} ${min}px ${family}`;
+  return { size: min, lines: [String(text)], lh, family, weight };
+}
+
+
+function hvCardRoundRect(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.arcTo(x + w, y, x + w, y + h, r);
+  ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r);
+  ctx.arcTo(x, y, x + w, y, r);
+  ctx.closePath();
+}
+function hvCardMoon(ctx, cx, cy, r, color, alpha) {
+  ctx.save();
+  ctx.globalAlpha = (alpha == null ? 1 : alpha);
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.arc(cx, cy, r, 0, Math.PI * 2, false);
+  ctx.arc(cx + r * 0.44, cy - r * 0.2, r * 0.9, 0, Math.PI * 2, true);
+  ctx.fill('evenodd');
+  ctx.restore();
+}
+
+async function hvBuildShareCard(data) {
+  const d = data || {};
+  const cv = document.createElement('canvas');
+  cv.width = HV_CARD_W; cv.height = HV_CARD_H;
+  const ctx = cv.getContext('2d');
+
+  // ── Zemin: koyu bakır ──
+  ctx.fillStyle = '#160B04';
+  ctx.fillRect(0, 0, HV_CARD_W, HV_CARD_H);
+
+  // ── Desenli arka plan (varsa) + bakır tonlama ──
+  const bg = await hvCardLoadBg();
+  if (bg) {
+    const s = Math.max(HV_CARD_W / bg.width, HV_CARD_H / bg.height);
+    const w = bg.width * s, h = bg.height * s;
+    ctx.drawImage(bg, (HV_CARD_W - w) / 2, (HV_CARD_H - h) / 2, w, h);
+    // yeşil tonu bakıra çevir
+    ctx.globalCompositeOperation = 'color';
+    ctx.fillStyle = '#9A6634';
+    ctx.fillRect(0, 0, HV_CARD_W, HV_CARD_H);
+    ctx.globalCompositeOperation = 'source-over';
+  } else {
+    const rg = ctx.createRadialGradient(HV_CARD_W/2, HV_CARD_H*0.34, 60, HV_CARD_W/2, HV_CARD_H*0.34, HV_CARD_H*0.72);
+    rg.addColorStop(0, '#5C3B25'); rg.addColorStop(0.55, '#2A170C'); rg.addColorStop(1, '#160B04');
+    ctx.fillStyle = rg; ctx.fillRect(0, 0, HV_CARD_W, HV_CARD_H);
+  }
+
+  // ── Okunurluk perdesi (A2: açık zemin, desen görünsün) ──
+  const vg = ctx.createLinearGradient(0, 0, 0, HV_CARD_H);
+  vg.addColorStop(0, 'rgba(26,13,5,0.50)');
+  vg.addColorStop(0.45, 'rgba(26,13,5,0.30)');
+  vg.addColorStop(1, 'rgba(14,7,2,0.76)');
+  ctx.fillStyle = vg; ctx.fillRect(0, 0, HV_CARD_W, HV_CARD_H);
+
+  const GOLD = '#E3AD82', CREAM = '#F7DDC4', WHITE = '#FDF6EE';
+  const M = 82;
+  const cx = HV_CARD_W / 2;
+
+  // ── İnce altın çerçeve ──
+  ctx.strokeStyle = 'rgba(227,173,130,0.45)';
+  ctx.lineWidth = 3;
+  hvCardRoundRect(ctx, 48, 48, HV_CARD_W - 96, HV_CARD_H - 96, 44);
+  ctx.stroke();
+
+  ctx.textAlign = 'center';
+
+  // ── Gövde: etiket → arapça → ayraç → meal → kaynak (dikeyde ortalı) ──
+  const label = String(d.badge || '')
+    .replace(/[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\uFE0F\u200D]/gu, '')
+    .trim().toLocaleUpperCase('tr');
+
+  const boxW = HV_CARD_W - M * 2;
+  const TOP = 250, BOTTOM = HV_CARD_H - 470;   // Instagram hikayesi güvenli alanı
+  const avail = BOTTOM - TOP;
+
+  const LBL = 52;
+  const lblH = label ? LBL + 58 : 0;
+
+  let arFit = null, arH = 0;
+  if (d.arabic) {
+    arFit = hvCardFit(ctx, d.arabic, boxW, avail * 0.28, {
+      max: 76, min: 36, weight: '400',
+      family: "'Amiri', 'Traditional Arabic', serif", lineHeight: 1.85
+    });
+    arH = arFit.lines.length * arFit.size * arFit.lh + 112;
+  }
+
+  const bodyFit = hvCardFit(ctx, '\u201C' + (d.text || '') + '\u201D', boxW,
+    avail - lblH - arH - 130, { max: 80, min: 34, weight: '500', lineHeight: 1.36 });
+  const bodyH = bodyFit.lines.length * bodyFit.size * bodyFit.lh;
+  const srcH = d.source ? 118 : 0;
+
+  let y = TOP + Math.max(0, (avail - (lblH + arH + bodyH + srcH)) / 2);
+
+  if (label) {
+    y += LBL;
+    ctx.fillStyle = GOLD;
+    ctx.font = `600 ${LBL}px 'Outfit', system-ui, sans-serif`;
+    ctx.letterSpacing = '6px';
+    ctx.fillText(label, cx, y);
+    ctx.letterSpacing = '0px';
+    y += 58;
+  }
+
+  if (arFit) {
+    ctx.fillStyle = CREAM;
+    ctx.font = `${arFit.weight} ${arFit.size}px ${arFit.family}`;
+    ctx.direction = 'rtl';
+    for (const ln of arFit.lines) { y += arFit.size * arFit.lh; ctx.fillText(ln, cx, y); }
+    ctx.direction = 'ltr';
+    y += 50;
+    ctx.strokeStyle = 'rgba(227,173,130,0.40)'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(cx - 82, y); ctx.lineTo(cx + 82, y); ctx.stroke();
+    y += 62;
+  }
+
+  ctx.fillStyle = WHITE;
+  ctx.font = `${bodyFit.weight} ${bodyFit.size}px ${bodyFit.family}`;
+  for (const ln of bodyFit.lines) { y += bodyFit.size * bodyFit.lh; ctx.fillText(ln, cx, y); }
+
+  if (d.source) {
+    y += 82;
+    ctx.fillStyle = GOLD;
+    ctx.font = "600 42px 'Outfit', system-ui, sans-serif";
+    ctx.fillText('\u2014 ' + d.source, cx, y);
+  }
+
+  // ── Alt imza: hilal + isim (üst üste binmez) ──
+  ctx.strokeStyle = 'rgba(227,173,130,0.30)'; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(cx - 140, HV_CARD_H - 344); ctx.lineTo(cx + 140, HV_CARD_H - 344); ctx.stroke();
+
+  const SS = 52, GAP = 24, name = 'Namaz Dostu';
+  ctx.font = `600 ${SS}px 'Outfit', system-ui, sans-serif`;
+  const tw = ctx.measureText(name).width;
+  const r = SS * 0.46;
+  const x0 = cx - (r * 2 + GAP + tw) / 2;
+  hvCardMoon(ctx, x0 + r, HV_CARD_H - 264 - SS * 0.34, r, GOLD, 0.95);
+  ctx.textAlign = 'left';
+  ctx.fillStyle = CREAM;
+  ctx.fillText(name, x0 + r * 2 + GAP, HV_CARD_H - 264);
+  ctx.textAlign = 'center';
+
+  return cv;
+}
+
+// Görsel önizleme + paylaş penceresi
+async function hvOpenShareCard(data) {
+  const d = data || {};
+  let cv;
+  try { cv = await hvBuildShareCard(d); }
+  catch (e) { console.warn('Kart üretilemedi:', e); return hvShareText(d.fallbackText || d.text || ''); }
+
+  const dataUrl = cv.toDataURL('image/png');
+  const old = document.getElementById('hv-share-modal');
+  if (old) old.remove();
+
+  const wrap = document.createElement('div');
+  wrap.id = 'hv-share-modal';
+  wrap.className = 'hv-sc-backdrop';
+  wrap.innerHTML = `
+    <div class="hv-sc-box">
+      <img class="hv-sc-img" src="${dataUrl}" alt="Paylaşım görseli">
+      <div class="hv-sc-actions">
+        <button class="hv-sc-btn hv-sc-primary" id="hv-sc-share">📤 Paylaş</button>
+        <button class="hv-sc-btn" id="hv-sc-save">⬇️ Kaydet</button>
+        <button class="hv-sc-btn hv-sc-ghost" id="hv-sc-text">Yazı olarak paylaş</button>
+      </div>
+      <button class="hv-sc-close" id="hv-sc-close">Kapat</button>
+    </div>`;
+  document.body.appendChild(wrap);
+  wrap.addEventListener('click', (e) => { if (e.target === wrap) wrap.remove(); });
+  document.getElementById('hv-sc-close').onclick = () => wrap.remove();
+
+  const toBlob = () => new Promise((res) => cv.toBlob(res, 'image/png', 0.95));
+
+  document.getElementById('hv-sc-share').onclick = async () => {
+    try {
+      const blob = await toBlob();
+      const file = new File([blob], 'namaz-dostu.png', { type: 'image/png' });
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        await navigator.share({ files: [file] });
+        wrap.remove();
+        return;
+      }
+    } catch (e) { if (e && e.name === 'AbortError') return; }
+    // görsel paylaşılamıyorsa yazıya düş
+    hvShareText(d.fallbackText || d.text || '');
+    wrap.remove();
+  };
+
+  document.getElementById('hv-sc-save').onclick = () => {
+    const a = document.createElement('a');
+    a.href = dataUrl; a.download = 'namaz-dostu.png';
+    document.body.appendChild(a); a.click(); a.remove();
+    if (typeof hvToast === 'function') hvToast('⬇️ Kaydedildi', 'Görsel galerine indi, oradan paylaşabilirsin.');
+  };
+
+  document.getElementById('hv-sc-text').onclick = () => {
+    hvShareText(d.fallbackText || d.text || '');
+    wrap.remove();
+  };
+}
+window.hvOpenShareCard = hvOpenShareCard;
+window.hvBuildShareCard = hvBuildShareCard;

@@ -2213,3 +2213,18 @@ body.green-theme .page-sky .rays{ opacity:.14; }
 .loc-note{font-size:.76rem;line-height:1.55;color:var(--text-muted);margin:9px 0 0;padding:9px 11px;
   border-radius:10px;background:rgba(212,175,55,.08);border-left:3px solid var(--border-light)}
 .loc-note strong{color:var(--text-sub)}
+
+/* ═══════════ v61.0 — GÖRSEL PAYLAŞIM PENCERESİ ═══════════ */
+.hv-sc-backdrop{position:fixed;inset:0;z-index:9999;background:rgba(8,4,2,.88);
+  backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
+  display:flex;align-items:center;justify-content:center;padding:16px;animation:hvScIn .22s ease}
+@keyframes hvScIn{from{opacity:0}to{opacity:1}}
+.hv-sc-box{width:100%;max-width:340px;display:flex;flex-direction:column;align-items:center;gap:12px}
+.hv-sc-img{width:100%;max-height:58vh;object-fit:contain;border-radius:14px;
+  box-shadow:0 18px 50px rgba(0,0,0,.7);border:1px solid var(--border-light)}
+.hv-sc-actions{display:flex;flex-direction:column;gap:8px;width:100%}
+.hv-sc-btn{width:100%;padding:13px;border-radius:12px;font-size:.95rem;font-weight:700;cursor:pointer;
+  border:1px solid var(--border-light);background:rgba(255,255,255,.07);color:var(--text-main)}
+.hv-sc-primary{background:var(--gold-gradient);color:#231206;border:none}
+.hv-sc-ghost{background:transparent;font-weight:500;font-size:.86rem;color:var(--text-muted)}
+.hv-sc-close{background:none;border:none;color:var(--text-muted);font-size:.88rem;padding:6px 14px;cursor:pointer}
