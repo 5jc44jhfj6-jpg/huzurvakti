@@ -49,12 +49,21 @@ function hvDayIndex(len) {
   return len ? (day % len) : 0;
 }
 
+// Paylaşılan her metnin altına düşen imza (uygulamanın kendini yayması için)
+const HV_SHARE_SIG = "\n\n\ud83c\udf19 Namaz Dostu \u2014 namaz vakitleri, ezan, Kur'an, k\u0131ble\nhttps://huzurvaktinamazuygulamasi.vercel.app";
+
 // Paylaşım: Web Share API varsa onu, yoksa WhatsApp'ı kullanır
 function hvShareText(text) {
+  // Eski satır sonu imzalarını temizle, tek tip imzayı ekle
+  const body = String(text || '')
+    .replace(/\s*Namaz Dostu\s*\ud83c\udf19\s*$/u, '')
+    .replace(/\s*[\u2014-]\s*Namaz Dostu\s*$/u, '')
+    .replace(/\s+$/, '');
+  const full = body + HV_SHARE_SIG;
   if (navigator.share) {
-    navigator.share({ title: 'Namaz Dostu', text: text }).catch(() => {});
+    navigator.share({ title: 'Namaz Dostu', text: full }).catch(() => {});
   } else {
-    const url = 'https://wa.me/?text=' + encodeURIComponent(text);
+    const url = 'https://wa.me/?text=' + encodeURIComponent(full);
     window.open(url, '_blank');
   }
 }
@@ -1251,3 +1260,115 @@ if (document.readyState === 'loading') {
 } else {
   featuresInit();
 }
+
+/* ══════════ 30 GUNDE NAMAZA BASLANGIC (v60.9) ══════════ */
+const NAMAZ_30GUN = [
+  { g: 1, icon: '🌱', title: 'Niyet ve Karar', text: 'Namaz, kulun Rabbiyle günde beş kez buluşmasıdır. Bu yolculuğun ilk adımı büyük bilgi değil, sağlam bir karardır. Bugün kimseye söz vermene gerek yok; sadece kendine ve Rabbine \'başlıyorum\' de. Unutma, Allah az ama devamlı ameli sever.', task: 'Sessiz bir yerde iki dakika otur ve içinden \'Bugünden itibaren namaza başlıyorum, Allah\'ım bana kolaylık ver\' de.' },
+  { g: 2, icon: '💧', title: 'Abdestin Farzları', text: 'Namazın anahtarı abdesttir. Abdestin dört farzı vardır: yüzü yıkamak, kolları dirseklerle beraber yıkamak, başın dörtte birini mesh etmek, ayakları topuklarla beraber yıkamak. Bunlar eksik olursa abdest olmaz.', task: 'Uygulamadaki \'Abdest & Taharet\' bölümünü aç, abdestin farzlarını oku ve bir kez abdest al.' },
+  { g: 3, icon: '🚿', title: 'Abdesti Uygulamalı Öğren', text: 'Sünnetiyle birlikte abdest şöyledir: besmele, eller, ağız, burun, yüz, kollar, baş mesh, kulak-boyun, ayaklar. Sıra ve peş peşe yapmak sünnettir. Abdest bozan haller: tuvalet, yellenme, kan akması, derin uyku, bayılma.', task: 'Bugün en az iki kez abdest al ve sıralamayı ezberlemeye çalış.' },
+  { g: 4, icon: '🧭', title: 'Kıble ve Namaz Vakitleri', text: 'Namaz Kâbe\'ye yönelerek kılınır. Uygulamadaki pusula sana yönü gösterir. Beş vakit: Sabah, Öğle, İkindi, Akşam, Yatsı. Her vaktin başlangıç ve bitişi vardır; vakit girmeden namaz kılınmaz.', task: 'Uygulamadan kıbleni bul, evinde namaz kılacağın yeri belirle. Beş vaktin isimlerini ve bugünkü saatlerini bir kez oku.' },
+  { g: 5, icon: '📖', title: 'Sübhaneke', text: 'Namaza başlarken okunan ilk duadır. \'Sübhânekellâhümme ve bi-hamdik, ve tebârekesmük, ve teâlâ ceddük, ve lâ ilâhe ğayruk.\' Anlamı: Allah\'ım, Seni tesbih ve hamd ile anarım. Senin adın mübarektir, şanın yücedir, Senden başka ilah yoktur.', task: 'Sübhaneke\'yi 10 kez sesli tekrar et. Akşam ezberden okumaya çalış.' },
+  { g: 6, icon: '🕮', title: 'Fâtiha Sûresi (1. Bölüm)', text: 'Fâtiha her rekâtta okunur, namazın olmazsa olmazıdır. İlk yarısı: \'Bismillâhirrahmânirrahîm. Elhamdü lillâhi rabbil âlemîn. Errahmânirrahîm. Mâliki yevmiddîn.\'', task: 'İlk dört ayeti 15 kez tekrar et. Uygulamadaki Kur\'an bölümünden Fâtiha\'yı dinle.' },
+  { g: 7, icon: '🕮', title: 'Fâtiha Sûresi (2. Bölüm)', text: 'Devamı: \'İyyâke na\'büdü ve iyyâke nesteîn. İhdinâs sırâtal müstakîm. Sırâtallezîne en\'amte aleyhim, ğayril mağdûbi aleyhim ve leddâllîn.\' Anlamı: Yalnız sana kulluk eder, yalnız senden yardım isteriz. Bizi doğru yola ilet.', task: 'Fâtiha\'yı baştan sona 10 kez oku. Bugün ezberlemeyi hedefle.' },
+  { g: 8, icon: '✨', title: 'İhlâs Sûresi', text: 'Kur\'an\'ın üçte birine denk sayılan kısa ve güçlü sûre: \'Kul hüvellâhü ehad. Allâhüs samed. Lem yelid ve lem yûled. Ve lem yekün lehû küfüven ehad.\' Anlamı: De ki: O Allah birdir, hiçbir şeye muhtaç değildir, doğurmamış ve doğmamıştır, hiçbir şey O\'na denk değildir.', task: 'İhlâs sûresini ezberle. Fâtiha + İhlâs\'ı arka arkaya okumayı dene.' },
+  { g: 9, icon: '🤲', title: 'Rükû ve Secde Tesbihleri', text: 'Rükûda üç kez \'Sübhâne rabbiyel azîm\', secdede üç kez \'Sübhâne rabbiyel a\'lâ\' denir. Rükûdan doğrulurken \'Semiallâhü limen hamideh\', sonra \'Rabbenâ lekel hamd\' denir.', task: 'Bu üç cümleyi ezberle. Namazın hareketlerini (kıyam, rükû, secde, oturuş) aynada bir kez prova et.' },
+  { g: 10, icon: '🪑', title: 'Ettehiyyâtü (Tahiyyat)', text: 'Oturuşta okunur: \'Ettehiyyâtü lillâhi vessalevâtü vettayyibât. Esselâmü aleyke eyyühen-nebiyyü ve rahmetullâhi ve berekâtüh. Esselâmü aleynâ ve alâ ibâdillâhis sâlihîn. Eşhedü en lâ ilâhe illallâh ve eşhedü enne Muhammeden abdühû ve rasûlüh.\'', task: 'Tahiyyat\'ı parça parça (üç bölüme ayırarak) çalış. Bugün ilk bölümü ezberle.' },
+  { g: 11, icon: '🌸', title: 'Salli ve Bârik', text: 'Tahiyyat\'tan sonra son oturuşta okunur. \'Allâhümme salli alâ Muhammedin ve alâ âli Muhammed, kemâ salleyte alâ İbrâhîme ve alâ âli İbrâhîm, inneke hamîdün mecîd.\' Bârik duası da aynı kalıptadır, \'salli\' yerine \'bârik\' denir.', task: 'Salli ve Bârik\'i okumaya çalış. Tahiyyat\'ın kalan bölümünü tamamla.' },
+  { g: 12, icon: '🙏', title: 'Rabbenâ Duaları', text: 'Namazın sonunda okunur: \'Rabbenâ âtinâ fid-dünyâ haseneten ve fil-âhireti haseneten ve kınâ azâben nâr.\' ve \'Rabbenâğfirlî ve li-vâlideyye ve lil-mü\'minîne yevme yekûmül hisâb.\'', task: 'Bu iki duayı ezberle. Artık namazın bütün duaları elinde — tebrikler!' },
+  { g: 13, icon: '🌅', title: 'İlk Namaz: Sabahın Sünneti', text: 'Sabah namazının sünneti iki rekâttır ve en kolay başlangıçtır. Niyet et, tekbir al (Allahü ekber), Sübhaneke-Fâtiha-zamm-ı sûre oku, rükû, iki secde; ikinci rekâtta Fâtiha-sûre, rükû, secde, otur, Tahiyyat-Salli-Bârik-Rabbenâ, selam ver.', task: 'Bugün hayatındaki ilk 2 rekâtı kıl. Yanlış yapsan da kıl — Allah niyetine bakar.' },
+  { g: 14, icon: '🌄', title: 'Sabah Namazının Farzı', text: 'Farz da iki rekâttır ve sünnetle aynı şekilde kılınır; sadece niyet farkı vardır. Sabah namazı en bereketli namazdır; Peygamberimiz onu asla terk etmezdi.', task: 'Bugün sabah namazını (2 sünnet + 2 farz) tam kıl. Uygulamadan bildirimi açmayı unutma.' },
+  { g: 15, icon: '🔁', title: 'Devamlılık Günü', text: 'İlk hafta bitti, en zor kısmı geçtin. Şimdi hedef bir vakti hiç aksatmamak. Alışkanlık tekrarla oturur; bir gün kaçırırsan üzülüp bırakma, ertesi gün devam et.', task: 'Sabah namazını üç gün üst üste kılmayı hedefle. Uygulamadaki \'Namaz Takibi\' bölümünden işaretle.' },
+  { g: 16, icon: '🌊', title: 'Kevser Sûresi', text: 'Zamm-ı sûre çeşitliliği için: \'İnnâ a\'taynâkel kevser. Fesalli li-rabbike venhar. İnne şânieke hüvel ebter.\' Anlamı: Şüphesiz biz sana Kevser\'i verdik. Öyleyse Rabbin için namaz kıl ve kurban kes. Asıl soyu kesik olan sana buğzedendir.', task: 'Kevser\'i ezberle. Sabah namazının ikinci rekâtında oku.' },
+  { g: 17, icon: '🌇', title: 'Akşam Namazı (3 Rekât)', text: 'Akşam farzı üç rekâttır. İlk iki rekât normal, ikinci rekât sonunda oturulup sadece Tahiyyat okunur, kalkılır, üçüncü rekâtta sadece Fâtiha okunur, sonra son oturuş yapılır. Akşam vakti kısadır, geciktirme.', task: 'Bugün akşam namazının farzını kıl. Artık iki vakit kılıyorsun.' },
+  { g: 18, icon: '🛡️', title: 'Nâs ve Felak Sûreleri', text: 'Koruyucu iki sûre. Felak: \'Kul eûzü bi-rabbil felak...\' Nâs: \'Kul eûzü bi-rabbin-nâs...\' Her ikisi de kötülüklerden Allah\'a sığınmayı öğretir. Yatmadan önce de okunur.', task: 'İkisini de ezberlemeye başla. Yatmadan önce oku.' },
+  { g: 19, icon: '🌃', title: 'Yatsı Namazı (4 Rekât)', text: 'Yatsının farzı dört rekâttır. İlk iki rekâtta Fâtiha + sûre, son iki rekâtta sadece Fâtiha okunur. İkinci rekâtta oturulup Tahiyyat okunur.', task: 'Bugün yatsı namazının farzını kıl. Sabah, akşam, yatsı — üç vakit oldu.' },
+  { g: 20, icon: '🌙', title: 'Vitir Namazı', text: 'Yatsıdan sonra kılınan üç rekâtlık vacip namazdır. Üçüncü rekâtta Fâtiha ve sûreden sonra tekbir alınır, eller kaldırılıp bağlanır ve Kunut duaları okunur.', task: 'Vitri öğren ve yatsıdan sonra kıl. Kunut duaları için uygulamadaki dua bölümüne bak.' },
+  { g: 21, icon: '☀️', title: 'Öğle Namazı', text: 'Öğlenin farzı dört rekâttır, yatsının farzı gibi kılınır. İş veya okul arasında kılmak zor gelebilir; 10 dakikan yeter. Bir köşe ve temiz bir yer kâfidir.', task: 'Bugün öğle namazını kıl. Nerede kılabileceğini önceden planla.' },
+  { g: 22, icon: '🌤️', title: 'İkindi Namazı', text: 'İkindinin farzı dört rekâttır. Kur\'an\'da \'orta namaz\'a özellikle dikkat çekilir; müfessirlerin çoğu bunun ikindi olduğunu söyler. Vakti dar olduğu için en çok kaçırılan namazdır.', task: 'Bugün ikindi namazını kıl. Bildirimi açık tut.' },
+  { g: 23, icon: '🕔', title: 'Beş Vakit Tam', text: 'Bugün ilk kez beş vakti eksiksiz kılmayı deneyeceksin: Sabah 2+2, Öğle 4 farz, İkindi 4 farz, Akşam 3 farz, Yatsı 4 farz + 3 vitir. Sünnetleri sonra ekleyebilirsin.', task: 'Bugün beş vakti tam kıl. Uygulamada hepsini işaretle ve seriyi başlat.' },
+  { g: 24, icon: '📿', title: 'Namaz Sonrası Tesbihat', text: 'Selamdan sonra: \'Allâhümme entes-selâm ve minkes-selâm\', Ayetel Kürsi, 33 Sübhanallah, 33 Elhamdülillah, 33 Allahü ekber, sonra dua. Bu, namazın tamamlayıcısıdır.', task: 'Bir vakit namazdan sonra tam tesbihat yap. Uygulamadaki Zikirmatik\'i kullan.' },
+  { g: 25, icon: '👑', title: 'Ayetel Kürsi', text: 'Kur\'an\'ın en büyük ayeti sayılır. Her farz namazın ardından okuyanın cennete girmesine bir engel kalmadığı rivayet edilir. Uzun bir ayettir, parça parça ezberlemek en kolayıdır.', task: 'Ayetel Kürsi\'yi üç parçaya böl, ilk parçayı bugün ezberle.' },
+  { g: 26, icon: '🔄', title: 'Kaza Namazları', text: 'Geçmişte kılamadığın namazlar borç olarak kalır. Panik yapma: her gün beş vakitle birlikte bir vakit kaza kılarsan borç zamanla erir. Önemli olan başlamaktır.', task: 'Uygulamadaki \'Kaza Namazı\' bölümünü aç, tahmini borcunu gir ve bugün bir kaza namazı kıl.' },
+  { g: 27, icon: '🕌', title: 'Cemaat ve Cuma', text: 'Cemaatle namaz, tek başına kılmaktan 27 kat daha faziletlidir. Cuma namazı ise erkeklere farzdır. Camiye ilk gidişte utanma; herkes bir gün ilk kez gitmiştir.', task: 'Bir vakti camide cemaatle kıl. Mümkün değilse en yakın camiyi ve Cuma saatini öğren.' },
+  { g: 28, icon: '💗', title: 'Huşû: Kalpten Kılmak', text: 'Namaz sadece hareket değil, huzurdur. Ne okuduğunu anlamaya çalış, acele etme, her secdede biraz dur. Telefonu uzak tut. Namaz kılarken Allah\'ın seni gördüğünü düşün.', task: 'Bugün bir vakti çok yavaş, anlamını düşünerek kıl. Farkı hisset.' },
+  { g: 29, icon: '🛠️', title: 'Zorlukları Aşmak', text: 'Uyuyakalmak, iş yoğunluğu, yorgunluk, utanma... Hepsinin çaresi var: alarm + bildirim, çantada seccade, iş yerinde sessiz bir köşe, 10 dakikalık plan. Şeytanın en sevdiği cümle \'sonra kılarım\'dır.', task: 'Kendi en büyük engelini bir kâğıda yaz ve yanına çözümünü yaz. Sonra uygula.' },
+  { g: 30, icon: '🏆', title: 'Ömür Boyu Devam', text: '30 gün bitti. Artık namazı biliyorsun ve kılıyorsun. Bundan sonrası devamlılık: bir gün aksarsa bırakma, ertesi gün kaldığın yerden devam et. Namaz bir yük değil, günün beş molasıdır.', task: 'Kendine söz ver: \'Ne olursa olsun namazı bırakmayacağım.\' Uygulamadaki takip serini büyütmeye devam et.' },
+];
+
+function hv30State() {
+  const s = hvLoad('namaz30', { done: [], acik: 1 });
+  if (!Array.isArray(s.done)) s.done = [];
+  return s;
+}
+function hv30Toggle(g) {
+  const s = hv30State();
+  const i = s.done.indexOf(g);
+  if (i >= 0) s.done.splice(i, 1); else s.done.push(g);
+  hvSave('namaz30', s);
+  renderNamazProgrami();
+  if (i < 0) {
+    const kalan = 30 - s.done.length;
+    if (typeof hvToast === 'function') {
+      if (kalan === 0) hvToast('🏆 Tebrikler!', '30 günlük programı tamamladın. Allah kabul etsin.');
+      else hvToast('✅ ' + g + '. gün tamam', kalan + ' gün kaldı. Devam!');
+    }
+  }
+}
+function hv30Ac(g) {
+  const s = hv30State();
+  s.acik = (s.acik === g) ? 0 : g;
+  hvSave('namaz30', s);
+  renderNamazProgrami();
+  setTimeout(function () {
+    const el = document.getElementById('hv30-gun-' + g);
+    if (el && s.acik === g) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }, 60);
+}
+function hv30Sifirla() {
+  hvSave('namaz30', { done: [], acik: 1 });
+  renderNamazProgrami();
+  if (typeof hvToast === 'function') hvToast('🔄 Sıfırlandı', 'Program baştan başlıyor.');
+}
+function renderNamazProgrami() {
+  const c = document.getElementById('namaz-programi-content');
+  if (!c) return;
+  const s = hv30State();
+  const done = s.done.length;
+  const pct = Math.round((done / 30) * 100);
+  const sonraki = NAMAZ_30GUN.find(function (d) { return s.done.indexOf(d.g) < 0; });
+
+  let html = '';
+  html += '<div class="hv30-top">';
+  html += '<div class="hv30-ring" style="--p:' + pct + '"><span class="hv30-pct">%' + pct + '</span></div>';
+  html += '<div class="hv30-topinfo">';
+  html += '<div class="hv30-topbig">' + done + ' / 30 gün</div>';
+  html += '<div class="hv30-topsub">' + (sonraki ? 'Sıradaki: ' + sonraki.g + '. gün — ' + sonraki.title : 'Programı tamamladın, Allah kabul etsin 🤲') + '</div>';
+  html += '</div></div>';
+  html += '<div class="hv30-bar"><div class="hv30-bar-fill" style="width:' + pct + '%"></div></div>';
+  html += '<p class="hv30-intro">Namaza sıfırdan başlayanlar için 30 günlük yol haritası. Her gün küçük bir bilgi ve küçük bir görev. Aceleye gerek yok — kaçırdığın gün olursa kaldığın yerden devam et.</p>';
+
+  html += '<div class="hv30-list">';
+  NAMAZ_30GUN.forEach(function (d) {
+    const ok = s.done.indexOf(d.g) >= 0;
+    const acik = s.acik === d.g;
+    html += '<div class="hv30-item' + (ok ? ' done' : '') + (acik ? ' open' : '') + '" id="hv30-gun-' + d.g + '">';
+    html += '<div class="hv30-head" onclick="hv30Ac(' + d.g + ')">';
+    html += '<span class="hv30-num">' + d.g + '</span>';
+    html += '<span class="hv30-icon">' + d.icon + '</span>';
+    html += '<span class="hv30-title">' + d.title + '</span>';
+    html += '<span class="hv30-chev">' + (ok ? '✅' : (acik ? '▲' : '▼')) + '</span>';
+    html += '</div>';
+    if (acik) {
+      html += '<div class="hv30-body">';
+      html += '<p class="hv30-text">' + d.text + '</p>';
+      html += '<div class="hv30-task"><strong>🎯 Bugünkü görev</strong><span>' + d.task + '</span></div>';
+      html += '<button class="hv30-btn' + (ok ? ' undo' : '') + '" onclick="hv30Toggle(' + d.g + ')">' + (ok ? '↩️ İşareti kaldır' : '✅ Bu günü tamamladım') + '</button>';
+      html += '</div>';
+    }
+    html += '</div>';
+  });
+  html += '</div>';
+  html += '<button class="hv30-reset" onclick="hv30Sifirla()">🔄 Programı sıfırla</button>';
+  c.innerHTML = html;
+}
+try { if (window.FEATURE_ROUTES) window.FEATURE_ROUTES['namaz-programi'] = renderNamazProgrami; } catch (e) {}

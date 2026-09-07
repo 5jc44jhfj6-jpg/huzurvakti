@@ -17,6 +17,8 @@ const APP_STATE = {
   notifyEnabled: false,
   notifyOffset: 0,
   notifySound: 'ezan',
+  notifyBoth: false,
+  notifyCuma: true,
   qari: 'afs'
 };
 
@@ -69,6 +71,9 @@ function initApp() {
       loader.style.opacity = '0';
       setTimeout(() => { loader.style.display = 'none'; }, 500);
     }
+
+    // Puan isteme kartı (yalnızca mağazadan kurulu uygulamada)
+    try { hvMaybeAskRating(); } catch (e) {}
 
     // First time Notification Prompt
     if (!localStorage.getItem('namaz_vakti_v25_prompted')) {
@@ -161,6 +166,8 @@ function saveSettings() {
     notifyEnabled: APP_STATE.notifyEnabled,
     notifyOffset: APP_STATE.notifyOffset,
     notifySound: APP_STATE.notifySound,
+    notifyBoth: APP_STATE.notifyBoth,
+    notifyCuma: APP_STATE.notifyCuma,
     qari: APP_STATE.qari,
     timeOffsets: APP_STATE.timeOffsets || {},
     fontSize: APP_STATE.fontSize
@@ -191,6 +198,12 @@ function applyStateSettings() {
 
   const notifySound = document.getElementById('notify-sound');
   if (notifySound) notifySound.value = APP_STATE.notifySound;
+
+  const notifyBoth = document.getElementById('notify-both');
+  if (notifyBoth) notifyBoth.checked = !!APP_STATE.notifyBoth;
+
+  const notifyCuma = document.getElementById('notify-cuma');
+  if (notifyCuma) notifyCuma.checked = APP_STATE.notifyCuma !== false;
 
   const settingsQariSelect = document.getElementById('settings-qari-select');
   if (settingsQariSelect) settingsQariSelect.value = APP_STATE.qari;
@@ -477,6 +490,8 @@ function scheduleNativePrayerNotifications() {
 
   const timeOffs = getTimeOffsets();
   const early = parseInt(APP_STATE.notifyOffset, 10) || 0;   // kaç dk kala
+  const both = !!APP_STATE.notifyBoth;                        // hem önceden hem vaktinde
+  const daysCovered = new Set();
   const lat = APP_STATE.userLocation.lat;
   const lng = APP_STATE.userLocation.lng;
   const now = Date.now();
@@ -496,55 +511,95 @@ function scheduleNativePrayerNotifications() {
       const rawTime = entry.t[id];
       if (!rawTime) continue;
 
-      // kullanıcının vakit ince ayarını uygula
+      // kullanıcının vakit ince ayarını uygula → vaktin kendisi
       const adjusted = addMinutes(rawTime, parseInt(timeOffs[id], 10) || 0);
       const parts = adjusted.split(':');
-      const fireAt = new Date(day);
-      fireAt.setHours(parseInt(parts[0], 10), parseInt(parts[1], 10), 0, 0);
-      // "x dk kala" ayarını uygula
-      fireAt.setTime(fireAt.getTime() - early * 60000);
-
-      if (fireAt.getTime() <= now + 20000) continue; // geçmiş ya da çok yakın
+      const exactAt = new Date(day);
+      exactAt.setHours(parseInt(parts[0], 10), parseInt(parts[1], 10), 0, 0);
 
       let label = (typeof PRAYER_NAMES !== 'undefined' && PRAYER_NAMES[id]) ? PRAYER_NAMES[id].name : id;
       if (ramazan && id === 'Maghrib') label = 'İftar';
       if (ramazan && id === 'Fajr') label = 'İmsak';
 
-      const body = early === 0
-        ? `${label} vakti girdi.`
-        : `${label} vaktine ${early} dakika kaldı.`;
-
-      const notifId = `hv_${day.getFullYear()}${hvPad2(day.getMonth() + 1)}${hvPad2(day.getDate())}_${id}`;
-
       // Bildirim sesi: Ayarlar → Bildirim Sesi + vakit bazlı ezan tercihi
-      // "ezan"    → uygulamadaki ezan.caf (iOS 1.3+), yoksa varsayılan ses
-      // "default" → telefonun standart bildirim sesi
-      // "none"    → sessiz (yalnızca ekranda)
+      // "ezan" → uygulamadaki ezan sesi, "default" → telefon sesi, "none" → sessiz
       let sound = 'default';
       if (APP_STATE.notifySound === 'silent') sound = 'none';
       else if (APP_STATE.notifySound === 'ezan' && getPrayerAdhan(id)) sound = 'ezan';
 
-      try {
-        sched.postMessage({
-          id: notifId,
-          title: 'Namaz Dostu',
-          body: body,
-          timestamp: Math.floor(fireAt.getTime() / 1000),
+      const dayKey = `${day.getFullYear()}${hvPad2(day.getMonth() + 1)}${hvPad2(day.getDate())}`;
+
+      // Kurulacak bildirimler:
+      //  • "Hem önceden hem vaktinde" açıksa → önce hatırlatma (sessiz-ötesi kısa), sonra ezan
+      //  • kapalıysa → tek bildirim (seçilen zamanda)
+      const jobs = [];
+      if (both && early > 0) {
+        jobs.push({
+          sfx: '_pre',
+          at: new Date(exactAt.getTime() - early * 60000),
+          body: `${label} vaktine ${early} dakika kaldı.`,
+          sound: sound === 'none' ? 'none' : 'default'
+        });
+        jobs.push({ sfx: '', at: exactAt, body: `${label} vakti girdi.`, sound: sound });
+      } else {
+        jobs.push({
+          sfx: '',
+          at: new Date(exactAt.getTime() - early * 60000),
+          body: early === 0 ? `${label} vakti girdi.` : `${label} vaktine ${early} dakika kaldı.`,
           sound: sound
         });
+      }
+
+      for (const job of jobs) {
+        if (count >= HV_NOTIFY_MAX) break;
+        if (job.at.getTime() <= now + 20000) continue; // geçmiş ya da çok yakın
+        try {
+          sched.postMessage({
+            id: `hv_${dayKey}_${id}${job.sfx}`,
+            title: 'Namaz Dostu',
+            body: job.body,
+            timestamp: Math.floor(job.at.getTime() / 1000),
+            sound: job.sound
+          });
+          count++;
+          daysCovered.add(dayKey);
+        } catch (e) { console.warn('Bildirim kurulamadı:', e); }
+      }
+    }
+  }
+
+  // ── Cuma hatırlatması (sabah 09:00) ──
+  if (APP_STATE.notifyCuma !== false) {
+    for (let d = 0; d < HV_NOTIFY_DAYS && count < HV_NOTIFY_MAX + 12; d++) {
+      const day = new Date();
+      day.setHours(0, 0, 0, 0);
+      day.setDate(day.getDate() + d);
+      if (day.getDay() !== 5) continue; // 5 = Cuma
+      const at = new Date(day);
+      at.setHours(9, 0, 0, 0);
+      if (at.getTime() <= now + 20000) continue;
+      const dayKey = `${day.getFullYear()}${hvPad2(day.getMonth() + 1)}${hvPad2(day.getDate())}`;
+      try {
+        sched.postMessage({
+          id: `hv_cuma_${dayKey}`,
+          title: 'Hayırlı Cumalar 🕌',
+          body: 'Bugün Cuma. Kehf suresini okumayı ve Peygamber Efendimize salavat getirmeyi unutma.',
+          timestamp: Math.floor(at.getTime() / 1000),
+          sound: 'default'
+        });
         count++;
-      } catch (e) { console.warn('Bildirim kurulamadı:', e); }
+      } catch (e) {}
     }
   }
 
   try { localStorage.setItem('hv_notif_count', String(count)); } catch (e) {}
-  updateNotifyStatusUI(count);
+  updateNotifyStatusUI(count, daysCovered.size);
   return count;
 }
 window.scheduleNativePrayerNotifications = scheduleNativePrayerNotifications;
 
 // Ayarlar ekranındaki durum satırı
-function updateNotifyStatusUI(count) {
+function updateNotifyStatusUI(count, daysCovered) {
   const el = document.getElementById('notify-native-status');
   if (!el) return;
   if (!hvHasNativeNotifications()) {
@@ -558,12 +613,110 @@ function updateNotifyStatusUI(count) {
     return;
   }
   const n = (typeof count === 'number') ? count : parseInt(localStorage.getItem('hv_notif_count') || '0', 10);
+  const gun = (typeof daysCovered === 'number' && daysCovered > 0) ? daysCovered : HV_NOTIFY_DAYS;
   el.className = 'notify-status ok';
   el.textContent = n > 0
-    ? `✅ Arka plan bildirimi aktif — ${n} vakit için hatırlatma kuruldu (yaklaşık ${HV_NOTIFY_DAYS} gün). Uygulama kapalıyken de gelir.`
+    ? `✅ Arka plan bildirimi aktif — ${n} hatırlatma kuruldu (yaklaşık ${gun} gün). Uygulama kapalıyken de gelir.`
     : 'Vakitler yüklenince bildirimler otomatik kurulacak.';
 }
 window.updateNotifyStatusUI = updateNotifyStatusUI;
+
+// Ayarlar → Geri Bildirim Gönder (doğrudan e-posta açar)
+function hvSendFeedback() {
+  const ver = 'v60.9';
+  let ortam = 'Tarayıcı';
+  try {
+    if (window.hvIsAndroid) ortam = 'Android uygulaması';
+    else if (hvHasNativeNotifications()) ortam = 'iPhone uygulaması';
+  } catch (e) {}
+  const konu = encodeURIComponent('Namaz Dostu — Geri Bildirim');
+  const govde = encodeURIComponent(
+    'Merhaba,\n\nGörüşüm / önerim / karşılaştığım sorun:\n\n\n\n' +
+    '-----------------------------\n' +
+    'Sürüm: ' + ver + '\n' +
+    'Ortam: ' + ortam + '\n'
+  );
+  try {
+    window.location.href = 'mailto:yaldizzfahrettin@gmail.com?subject=' + konu + '&body=' + govde;
+  } catch (e) {
+    if (typeof hvShareText === 'function') hvShareText('Namaz Dostu geri bildirim: ');
+  }
+}
+window.hvSendFeedback = hvSendFeedback;
+
+/* ────────────────────────────────────────────────────────────
+   PUAN / YORUM İSTEME KARTI
+   Yalnızca App Store veya Play'den kurulmuş uygulamada görünür.
+   Tarayıcı / ana ekran kısayolu kullanıcılarına hiç çıkmaz.
+   5., 20. ve 60. açılışta bir kez sorar; "Puan ver" ya da
+   "Bir daha sorma" denince bir daha çıkmaz.
+   ──────────────────────────────────────────────────────────── */
+const HV_RATE_AT = [5, 20, 60];
+
+// Uygulama mağazadan kurulmuş mu? 'ios' | 'android' | null
+function hvNativePlatform() {
+  try { if (window.hvIsAndroid) return 'android'; } catch (e) {}
+  try { if (hvHasNativeNotifications()) return 'ios'; } catch (e) {}
+  return null;
+}
+
+function hvStoreUrl(platform) {
+  if (platform === 'ios') return 'itms-apps://itunes.apple.com/app/id6800597930?action=write-review';
+  if (platform === 'android') return 'market://details?id=com.namazdostu.app';
+  return 'https://huzurvaktinamazuygulamasi.vercel.app';
+}
+
+function hvMaybeAskRating() {
+  const platform = hvNativePlatform();
+  if (!platform) return;
+  let count = 0;
+  try {
+    if (localStorage.getItem('hv_rated') === '1') return;
+    count = (parseInt(localStorage.getItem('hv_open_count') || '0', 10) || 0) + 1;
+    localStorage.setItem('hv_open_count', String(count));
+  } catch (e) { return; }
+  if (HV_RATE_AT.indexOf(count) === -1) return;
+  setTimeout(() => { try { hvShowRatingCard(); } catch (e) {} }, 5000);
+}
+
+function hvShowRatingCard() {
+  if (document.getElementById('hv-rate-modal')) return;
+  const wrap = document.createElement('div');
+  wrap.id = 'hv-rate-modal';
+  wrap.className = 'hv-rate-backdrop';
+  wrap.innerHTML =
+    '<div class="hv-rate-card">' +
+      '<div class="hv-rate-stars">⭐️⭐️⭐️⭐️⭐️</div>' +
+      '<div class="hv-rate-title">Namaz Dostu\'nu beğendiniz mi?</div>' +
+      '<div class="hv-rate-text">Vereceğiniz puan, uygulamanın daha çok kişiye ulaşmasına yardımcı olur. Sadece 10 saniyenizi alır.</div>' +
+      '<button class="hv-rate-btn hv-rate-primary" onclick="hvGoRate()">Puan ver</button>' +
+      '<button class="hv-rate-btn hv-rate-ghost" onclick="hvCloseRate(false)">Şimdi değil</button>' +
+      '<button class="hv-rate-link" onclick="hvCloseRate(true)">Bir daha sorma</button>' +
+    '</div>';
+  document.body.appendChild(wrap);
+  requestAnimationFrame(() => wrap.classList.add('open'));
+}
+
+function hvGoRate() {
+  const platform = hvNativePlatform();
+  try { localStorage.setItem('hv_rated', '1'); } catch (e) {}
+  hvCloseRate(false);
+  setTimeout(() => {
+    try { window.location.href = hvStoreUrl(platform); } catch (e) {}
+  }, 250);
+}
+
+function hvCloseRate(never) {
+  if (never) { try { localStorage.setItem('hv_rated', '1'); } catch (e) {} }
+  const m = document.getElementById('hv-rate-modal');
+  if (!m) return;
+  m.classList.remove('open');
+  setTimeout(() => { if (m && m.parentNode) m.parentNode.removeChild(m); }, 260);
+}
+
+window.hvShowRatingCard = hvShowRatingCard;
+window.hvGoRate = hvGoRate;
+window.hvCloseRate = hvCloseRate;
 
 async function fetchMonthCalendar(lat, lng, year, month) {
   const res = await fetch(`https://api.aladhan.com/v1/calendar?latitude=${lat}&longitude=${lng}&method=13&month=${month}&year=${year}`);
@@ -1979,6 +2132,26 @@ function setupSettingsListeners() {
     saveSettings();
     // Ses tercihi değişince telefondaki bildirimleri yeni sesle yeniden kur
     setTimeout(scheduleNativePrayerNotifications, 300);
+  });
+
+  document.getElementById('notify-both')?.addEventListener('change', (e) => {
+    APP_STATE.notifyBoth = e.target.checked;
+    saveSettings();
+    setTimeout(scheduleNativePrayerNotifications, 300);
+    showToastNotification(
+      e.target.checked ? '🔔 Çift bildirim açık' : '🔔 Tek bildirim',
+      e.target.checked ? 'Hem önceden hatırlatma hem vakit girince ezan gelecek.' : 'Sadece seçtiğin zamanda bildirim gelecek.'
+    );
+  });
+
+  document.getElementById('notify-cuma')?.addEventListener('change', (e) => {
+    APP_STATE.notifyCuma = e.target.checked;
+    saveSettings();
+    setTimeout(scheduleNativePrayerNotifications, 300);
+    showToastNotification(
+      e.target.checked ? '🕌 Cuma hatırlatması açık' : '🕌 Cuma hatırlatması kapalı',
+      e.target.checked ? 'Cuma sabahı 09:00\'da hatırlatma gelecek.' : ''
+    );
   });
 
   const syncQari = (e) => {

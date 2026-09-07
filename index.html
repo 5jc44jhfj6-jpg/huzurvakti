@@ -16,17 +16,17 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Namaz Dostu">
-    <link rel="apple-touch-icon" href="apple-touch-icon.png?v=60.7.0">
-    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png?v=60.7.0">
+    <link rel="apple-touch-icon" href="apple-touch-icon.png?v=60.9.0">
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png?v=60.9.0">
     <meta name="description" content="Namaz Dostu: Namaz vakitleri, ezan, Kur'an-ı Kerim, kıble, dualar, zikirmatik ve yeni başlayanlar için adım adım namaz rehberi. Ücretsiz, reklamsız, çevrimdışı.">
 
-    <link rel="stylesheet" href="styles.css?v=60.7.0">
-    <script src="cities.js?v=60.7.0" defer></script>
-    <script src="data.js?v=60.7.0" defer></script>
-    <script src="content.js?v=60.7.0" defer></script>
-    <script src="hadisler.js?v=60.7.0" defer></script>
-    <script src="app.js?v=60.7.0" defer></script>
-    <script src="features.js?v=60.7.0" defer></script>
+    <link rel="stylesheet" href="styles.css?v=60.9.0">
+    <script src="cities.js?v=60.9.0" defer></script>
+    <script src="data.js?v=60.9.0" defer></script>
+    <script src="content.js?v=60.9.0" defer></script>
+    <script src="hadisler.js?v=60.9.0" defer></script>
+    <script src="app.js?v=60.9.0" defer></script>
+    <script src="features.js?v=60.9.0" defer></script>
 </head>
 <body class="dark-theme">
     <!-- Loading Screen -->
@@ -201,6 +201,9 @@
                     <p>Namaz, Kıble ve İbadet Takipleri</p>
                 </div>
                 <div class="hub-grid">
+                    <button class="hub-card" onclick="navigateTo('namaz-programi')">
+                        <span class="hub-icon">🌱</span><span class="hub-title">30 Günde Namaz</span><span class="hub-sub">Sıfırdan Başlangıç Programı</span>
+                    </button>
                     <button class="hub-card" onclick="navigateTo('zikirmatik')">
                         <span class="hub-icon">📿</span><span class="hub-title">Zikirmatik</span><span class="hub-sub">Dijital Tesbih</span>
                     </button>
@@ -519,6 +522,14 @@
             </div>
         </section>
 
+        <section id="page-namaz-programi" class="page-section">
+            <div class="hero-frame-box">
+                <button class="hub-back-btn" onclick="navigateTo('ibadet')">← İbadet</button>
+                <div class="page-header-title"><h2>🌱 30 Günde Namaza Başlangıç</h2><p>Sıfırdan adım adım namaz öğrenme programı</p></div>
+                <div id="namaz-programi-content"></div>
+            </div>
+        </section>
+
         <section id="page-kaza" class="page-section">
             <div class="hero-frame-box">
                 <button class="hub-back-btn" onclick="navigateTo('ibadet')">← İbadet</button>
@@ -747,7 +758,7 @@
                     <div class="kaynak-card">
                         <h3>✉️ Hata Bildirimi ve Öneri</h3>
                         <p>Bir içerik hatası, yanlış kaynak ya da eksik gördüğünüz bir bölüm varsa lütfen bildirin. İçeriklerin doğruluğu için azami özen gösterilmekle birlikte, dinî konularda nihai başvuru kaynağınız Diyanet İşleri Başkanlığı ve yetkin ilim ehli olmalıdır.</p>
-                        <div class="backup-row"><button class="gold-outline-btn" onclick="hvShareText('Namaz Dostu uygulaması için geri bildirim: ')">📝 Geri Bildirim Gönder</button></div>
+                        <div class="backup-row"><button class="gold-outline-btn" onclick="hvSendFeedback()">📝 Geri Bildirim Gönder</button></div>
                     </div>
                 </div>
             </div>
@@ -775,6 +786,7 @@
                             <div class="action-row">
                                 <button id="auto-gps-btn" class="gold-primary-btn">📍 Otomatik GPS Konumu Al</button>
                                 <div id="location-status-msg"></div>
+                                <p class="loc-note">ℹ️ GPS kullandığında vakitler <strong>tam bulunduğun noktaya</strong> göre hesaplanır. Üstte yazan ilçe adı sadece en yakın ilçenin etiketidir; mahalleler arası fark saniyeler mertebesindedir. Vakitler Diyanet İşleri Başkanlığı yöntemiyle hesaplanır.</p>
                             </div>
                         </div>
                     </div>
@@ -822,6 +834,24 @@
                                     <option value="beep">Sesli (Kısa Zil)</option>
                                     <option value="ezan">Sesli (Gerçek Ezan)</option>
                                 </select>
+                            </div>
+                            <div class="setting-row" style="display: flex; justify-content: space-between; align-items: center;">
+                                <label for="notify-both" style="margin: 0; font-weight: 600;">Hem önceden hem vaktinde
+                                    <span style="display:block;font-weight:400;font-size:.78rem;color:var(--text-sub);margin-top:3px;">Açıkken iki bildirim gelir: önce hatırlatma, sonra vakit girince ezan</span>
+                                </label>
+                                <label class="switch">
+                                    <input type="checkbox" id="notify-both">
+                                    <span class="slider round"></span>
+                                </label>
+                            </div>
+                            <div class="setting-row" style="display: flex; justify-content: space-between; align-items: center;">
+                                <label for="notify-cuma" style="margin: 0; font-weight: 600;">Cuma hatırlatması
+                                    <span style="display:block;font-weight:400;font-size:.78rem;color:var(--text-sub);margin-top:3px;">Cuma sabahı Kehf suresi ve salavat hatırlatması</span>
+                                </label>
+                                <label class="switch">
+                                    <input type="checkbox" id="notify-cuma">
+                                    <span class="slider round"></span>
+                                </label>
                             </div>
                             <div id="notify-native-status" class="notify-status"></div>
                             <div class="backup-row">
@@ -896,7 +926,7 @@
                     </div>
                     <div class="app-info-footer">
                         <div class="footer-logo">🕌</div>
-                        <div class="footer-ver">Namaz Dostu v60.7</div>
+                        <div class="footer-ver">Namaz Dostu v60.9</div>
                         <div style="font-size: 0.8rem; margin-top: 4px;">Tüm Hakları Saklıdır • Diyanet Uyumlu • Çevrimdışı Çalışır</div>
                     </div>
                 </div>
@@ -942,7 +972,7 @@
     <script>
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
-          navigator.serviceWorker.register('/sw.js?v=60.7.0')
+          navigator.serviceWorker.register('/sw.js?v=60.9.0')
             .then(reg => {
               reg.onupdatefound = () => {
                 const installingWorker = reg.installing;
