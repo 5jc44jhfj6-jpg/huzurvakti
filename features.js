@@ -1614,6 +1614,17 @@ async function hvOpenShareCard(data) {
   const toBlob = () => new Promise((res) => cv.toBlob(res, 'image/png', 0.95));
 
   document.getElementById('hv-sc-share').onclick = async () => {
+    // Android uygulaması: yerel köprü ile paylaş (WebView'de dosya paylaşımı yok)
+    try {
+      const bridge = window.webkit && window.webkit.messageHandlers
+        && window.webkit.messageHandlers['share-image'];
+      if (window.hvIsAndroid && bridge) {
+        bridge.postMessage({ data: dataUrl });
+        wrap.remove();
+        return;
+      }
+    } catch (e) { console.warn('Köprü ile paylaşılamadı:', e); }
+
     try {
       const blob = await toBlob();
       const file = new File([blob], 'namaz-dostu.png', { type: 'image/png' });
