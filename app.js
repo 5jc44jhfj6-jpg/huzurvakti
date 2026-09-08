@@ -623,7 +623,7 @@ window.updateNotifyStatusUI = updateNotifyStatusUI;
 
 // Ayarlar → Geri Bildirim Gönder (doğrudan e-posta açar)
 function hvSendFeedback() {
-  const ver = 'v61.2';
+  const ver = 'v61.3';
   let ortam = 'Tarayıcı';
   try {
     if (window.hvIsAndroid) ortam = 'Android uygulaması';
@@ -651,7 +651,7 @@ window.hvSendFeedback = hvSendFeedback;
    5., 20. ve 60. açılışta bir kez sorar; "Puan ver" ya da
    "Bir daha sorma" denince bir daha çıkmaz.
    ──────────────────────────────────────────────────────────── */
-const HV_RATE_AT = [5, 20, 60];
+const HV_RATE_AT = [4, 12, 30, 70];
 
 // Uygulama mağazadan kurulmuş mu? 'ios' | 'android' | null
 function hvNativePlatform() {
@@ -713,6 +713,22 @@ function hvCloseRate(never) {
   m.classList.remove('open');
   setTimeout(() => { if (m && m.parentNode) m.parentNode.removeChild(m); }, 260);
 }
+
+// Ayarlar → "Uygulamayı Puanla" (her zaman çalışır, mağaza yorum sayfasını açar)
+function hvRateNow() {
+  const platform = hvNativePlatform();
+  try { localStorage.setItem('hv_rated', '1'); } catch (e) {}
+  let url;
+  if (platform === 'android') {
+    url = 'market://details?id=com.namazdostu.app';
+  } else if (platform === 'ios') {
+    url = 'itms-apps://itunes.apple.com/app/id6800597930?action=write-review';
+  } else {
+    url = 'https://apps.apple.com/tr/app/id6800597930?action=write-review';
+  }
+  try { window.location.href = url; } catch (e) {}
+}
+window.hvRateNow = hvRateNow;
 
 window.hvShowRatingCard = hvShowRatingCard;
 window.hvGoRate = hvGoRate;
