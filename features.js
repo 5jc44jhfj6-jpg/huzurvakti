@@ -144,7 +144,47 @@ function shareDailyHadis(ev) {
 }
 window.shareDailyHadis = shareDailyHadis;
 
-function shareDailyVerse() {
+/* ══════════ GÜNÜN ÂYETİ (v61.8) ══════════
+   Ana ekrandaki kart. Yol gösterici 60 âyetlik havuzdan seçer;
+   üst üste aynısı gelmez, karta dokununca yenisi gelir.
+   (Hadis kartının kodu duruyor; hadisler 1000 Hadis bölümünde.) */
+function hvAyetSec() {
+  const all = (typeof DAILY_VERSES !== 'undefined') ? DAILY_VERSES : [];
+  if (!all.length) return null;
+  let son = -1;
+  try { son = parseInt(localStorage.getItem('hv_son_ayet_idx') || '-1', 10); } catch (e) {}
+  let i = Math.floor(Math.random() * all.length);
+  if (all.length > 1 && i === son) i = (i + 1 + Math.floor(Math.random() * (all.length - 1))) % all.length;
+  try { localStorage.setItem('hv_son_ayet_idx', String(i)); } catch (e) {}
+  return all[i];
+}
+function hvAyetCiz(v, animasyon) {
+  if (!v) return;
+  const kart = document.getElementById('daily-ayet-card');
+  const ar   = document.getElementById('daily-verse-arabic');
+  const tr   = document.getElementById('daily-verse-turkish');
+  const src  = document.getElementById('daily-verse-source');
+  const uygula = () => {
+    if (ar)  ar.textContent  = v.arabic || '';
+    if (tr)  tr.textContent  = '"' + (v.turkish || '') + '"';
+    if (src) src.textContent = '— ' + v.surah + ' Sûresi, ' + v.ayah + '. Âyet';
+  };
+  if (animasyon && kart) {
+    kart.classList.add('hadis-swap');
+    setTimeout(() => { uygula(); kart.classList.remove('hadis-swap'); }, 180);
+  } else uygula();
+  window._currentAyet = v;
+}
+function loadDailyAyet() { hvAyetCiz(hvAyetSec(), false); }
+window.loadDailyAyet = loadDailyAyet;
+function nextDailyAyet() {
+  hvAyetCiz(hvAyetSec(), true);
+  if (typeof hvVibrate === 'function') hvVibrate(12);
+}
+window.nextDailyAyet = nextDailyAyet;
+
+function shareDailyVerse(ev) {
+  if (ev && ev.stopPropagation) ev.stopPropagation();
   const ar = document.getElementById('daily-verse-arabic');
   const tr = document.getElementById('daily-verse-turkish');
   const src = document.getElementById('daily-verse-source');
@@ -921,30 +961,30 @@ function doAyetArama(query) {
   c.innerHTML = '<div class="info-note">🔎 Aranıyor...</div>';
   clearTimeout(_ayetAramaTimer);
   _ayetAramaTimer = setTimeout(async () => {
-    try {
-      const res = await fetch(`https://api.alquran.cloud/v1/search/${encodeURIComponent(q)}/all/tr.diyanet`);
-      const json = await res.json();
-      const ql = q.toLocaleLowerCase('tr');
-      // Sadece aranan kelimeyi GERÇEKTEN içeren ayetleri göster (API bazen alakasız sonuç döndürüyor)
-      let matches = (json && json.data && json.data.matches) ? json.data.matches.filter(m => (m.text || '').toLocaleLowerCase('tr').includes(ql)) : [];
-      const total = matches.length;
-      matches = matches.slice(0, 60);
-      if (total > 0) {
-        c.innerHTML = `<div class="bebek-count-note">"${hvEsc(q)}" için ${total} ayet bulundu${total > 60 ? ' (ilk 60 gösteriliyor)' : ''}</div>` +
-          matches.map(m => {
-            const sid = m.surah.number, aname = m.surah.name || m.surah.englishName;
-            return `<div class="ayet-result" onclick="openSurahById(${sid})">
-              <div class="ayet-ref">${hvEsc(aname)} Suresi • ${m.numberInSurah}. Ayet <span class="ayet-go">›</span></div>
-              <div class="ayet-meal">${hvHighlight(m.text, q)}</div>
-            </div>`;
-          }).join('');
-      } else {
-        c.innerHTML = '<div class="empty-note">"' + hvEsc(q) + '" kelimesini içeren ayet bulunamadı. Farklı bir kelime deneyin.</div>';
-      }
-    } catch (e) {
-      c.innerHTML = '<div class="empty-note">Arama için internet bağlantısı gerekiyor. Lütfen tekrar deneyin.</div>';
+    const hazir = await hvMealHazir();
+    if (!hazir) {
+      c.innerHTML = '<div class="empty-note">Meal dosyası yüklenemedi. İnternete bağlanıp bir kez açtıktan sonra çevrimdışı da çalışır.</div>';
+      return;
     }
-  }, 400);
+    // Arama artık uygulamanın içindeki Diyanet meâlinde — internet gerekmez
+    const ql = hvTrNorm(q);
+    const bulunan = [];
+    const idx = hvMealIndeks();
+    for (let i = 0; i < idx.length && bulunan.length < 400; i++) {
+      if (idx[i].n.indexOf(ql) >= 0) bulunan.push(idx[i]);
+    }
+    const total = bulunan.length;
+    const goster = bulunan.slice(0, 60);
+    if (total > 0) {
+      c.innerHTML = `<div class="bebek-count-note">"${hvEsc(q)}" için ${total}${total >= 400 ? '+' : ''} ayet bulundu${total > 60 ? ' (ilk 60 gösteriliyor)' : ''}</div>` +
+        goster.map(m => `<div class="ayet-result" onclick="openSurahById(${m.s})">
+              <div class="ayet-ref">${hvEsc(m.ad)} Suresi • ${hvMealEtiket(m.s, m.v)}. Ayet <span class="ayet-go">›</span></div>
+              <div class="ayet-meal">${hvHighlight(m.t, q)}</div>
+            </div>`).join('');
+    } else {
+      c.innerHTML = '<div class="empty-note">"' + hvEsc(q) + '" kelimesini içeren ayet bulunamadı. Farklı bir kelime deneyin.</div>';
+    }
+  }, 300);
 }
 
 /* ══════════ 40 HADİS (İmam Nevevî) ══════════ */
@@ -1254,7 +1294,7 @@ window.hvBackupImport = hvBackupImport;
 window.hvShareApp = hvShareApp;
 
 function featuresInit() {
-  loadDailyHadis();
+  loadDailyAyet();
 
   const esmaSearch = document.getElementById('esma-search-input');
   if (esmaSearch) esmaSearch.addEventListener('input', e => renderEsma(e.target.value));
@@ -1279,6 +1319,231 @@ function featuresInit() {
 
   const bebekSearch = document.getElementById('bebek-search-input');
   if (bebekSearch) bebekSearch.addEventListener('input', e => renderBebek(e.target.value));
+
+  try { hvKonumBaslat(); } catch (e) {}
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════
+   v61.7 — İLK AÇILIŞ KONUM SİHİRBAZI
+   Uygulamayı ilk kez açan kullanıcı Yalova/Armutlu ile karşılaşmasın:
+   ya GPS ile konumunu bulur ya da listeden şehrini seçer.
+   Daha önce şehir seçmiş kullanıcılara hiç gösterilmez.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+let hvNotifySonra = false;
+
+function hvKonumGerekli() {
+  try {
+    if (localStorage.getItem('hv_konum_kuruldu') === '1') return false;
+    // Eski kullanıcı: kayıtlı şehri varsa sihirbaza gerek yok
+    const d = localStorage.getItem('namaz_vakti_v25');
+    if (d) {
+      const parsed = JSON.parse(d);
+      if (parsed && parsed.currentCity) { localStorage.setItem('hv_konum_kuruldu', '1'); return false; }
+    }
+    // Üst üste 3 kez "sonra" derse artık rahatsız etme
+    if (parseInt(localStorage.getItem('hv_konum_atla') || '0', 10) >= 3) return false;
+    return true;
+  } catch (e) { return false; }
+}
+
+function hvKonumHavuz() {
+  const out = [];
+  try {
+    (typeof TURKEY_LOCATIONS !== 'undefined' ? TURKEY_LOCATIONS : []).forEach(p => {
+      if (p.ilceler && p.ilceler.length) p.ilceler.forEach(d => out.push({ il: p.il, ilce: d.name }));
+      else out.push({ il: p.il, ilce: 'Merkez' });
+    });
+  } catch (e) {}
+  return out;
+}
+
+const HV_POPULER_IL = ['İstanbul', 'Ankara', 'İzmir', 'Bursa', 'Antalya', 'Konya',
+                       'Adana', 'Gaziantep', 'Şanlıurfa', 'Kocaeli', 'Mersin', 'Kayseri'];
+
+function hvKonumVarsayilanListe() {
+  const havuz = hvKonumHavuz();
+  const out = [];
+  HV_POPULER_IL.forEach(il => {
+    const ilk = havuz.find(x => x.il === il);
+    if (ilk) out.push(ilk);
+  });
+  return out;
+}
+
+function hvKonumListeCiz(q) {
+  const g = document.getElementById('hv-konum-liste');
+  if (!g) return;
+  const ara = (typeof hvTrNorm === 'function') ? hvTrNorm(q) : String(q || '').toLowerCase();
+  let liste;
+  let baslik = '';
+
+  if (!ara) {
+    liste = hvKonumVarsayilanListe();
+    baslik = '<div class="kn-baslik">En çok kullanılan şehirler</div>';
+  } else {
+    const puan = x => {
+      const i = hvTrNorm(x.il), c = hvTrNorm(x.ilce);
+      if (i === ara || c === ara) return 0;      // tam isabet
+      if (i.indexOf(ara) === 0) return 1;        // il adı ile başlıyor
+      if (c.indexOf(ara) === 0) return 2;        // ilçe adı ile başlıyor
+      if (i.indexOf(ara) >= 0 || c.indexOf(ara) >= 0) return 3;
+      return 9;
+    };
+    liste = hvKonumHavuz()
+      .map(x => ({ x: x, p: puan(x) }))
+      .filter(o => o.p < 9)
+      .sort((a, b) => a.p - b.p)
+      .slice(0, 60)
+      .map(o => o.x);
+  }
+
+  if (!liste.length) {
+    g.innerHTML = '<div class="kn-yok">Bulunamadı. İl ya da ilçe adını yazmayı dene.</div>';
+    return;
+  }
+
+  g.innerHTML = baslik + liste.map(x =>
+    `<button class="kn-sat" onclick="hvKonumSec('${String(x.il).replace(/'/g, "\\'")}','${String(x.ilce).replace(/'/g, "\\'")}')">
+       <span class="kn-ilce">${x.ilce}</span>
+       <span class="kn-il">${x.il}</span>
+     </button>`).join('');
+}
+window.hvKonumListeCiz = hvKonumListeCiz;
+
+function hvKonumKapat(kuruldu) {
+  const k = document.getElementById('hv-konum-modal');
+  if (k) k.remove();
+  try {
+    if (kuruldu) localStorage.setItem('hv_konum_kuruldu', '1');
+    else {
+      const n = parseInt(localStorage.getItem('hv_konum_atla') || '0', 10) + 1;
+      localStorage.setItem('hv_konum_atla', String(n));
+    }
+  } catch (e) {}
+  if (hvNotifySonra) {
+    hvNotifySonra = false;
+    setTimeout(() => {
+      const m = document.getElementById('notify-permission-modal');
+      if (m) m.style.display = 'flex';
+    }, 450);
+  }
+}
+window.hvKonumKapat = hvKonumKapat;
+
+function hvKonumUygula(il, ilce, lat, lng) {
+  try {
+    APP_STATE.currentCity = il;
+    APP_STATE.currentDistrict = ilce;
+    APP_STATE.userLocation = { lat: lat, lng: lng };
+  } catch (e) {}
+  try { populateLocationsDropdown(); } catch (e) {}
+  try { updateLocationHeaderLabel(); } catch (e) {}
+  try { saveSettings(); } catch (e) {}
+  try { fetchPrayerTimes(lat, lng); } catch (e) {}
+  try { if (APP_STATE.currentPage === 'qibla') initQiblaCompass(); } catch (e) {}
+}
+
+function hvKonumSec(il, ilce) {
+  let c = null;
+  try { c = getSelectedCoordinates(il, ilce); } catch (e) {}
+  if (!c) return;
+  hvKonumUygula(il, ilce, c.lat, c.lng);
+  hvKonumKapat(true);
+  try { if (typeof showToast === 'function') showToast('📍 Konum: ' + ilce + ', ' + il); } catch (e) {}
+}
+window.hvKonumSec = hvKonumSec;
+
+function hvKonumGps() {
+  const d = document.getElementById('hv-konum-durum');
+  const b = document.getElementById('hv-konum-gps');
+  if (!navigator.geolocation) {
+    if (d) d.textContent = 'Cihazın konum desteği yok. Aşağıdan şehrini seçebilirsin.';
+    return;
+  }
+  if (d) { d.textContent = '📡 Konumun aranıyor…'; d.className = 'kn-durum bekle'; }
+  if (b) b.disabled = true;
+
+  navigator.geolocation.getCurrentPosition(
+    pos => {
+      const lat = pos.coords.latitude, lng = pos.coords.longitude;
+      // Önce gerçek ilçelere bak; ayarlardaki listede karşılığı olsun
+      let en = Infinity, il = '', ilce = '';
+      try {
+        (TURKEY_LOCATIONS || []).forEach(p => {
+          if (p.ilceler && p.ilceler.length) {
+            p.ilceler.forEach(x => {
+              const dd = calculateGreatCircleDistance(lat, lng, x.lat, x.lng);
+              if (dd < en) { en = dd; il = p.il; ilce = x.name; }
+            });
+          }
+        });
+        if (!il) {
+          (TURKEY_LOCATIONS || []).forEach(p => {
+            const dc = calculateGreatCircleDistance(lat, lng, p.lat, p.lng);
+            if (dc < en) { en = dc; il = p.il; ilce = 'Merkez'; }
+          });
+        }
+      } catch (e) {}
+      if (!il) { if (b) b.disabled = false; if (d) d.textContent = '⚠️ Konum eşleştirilemedi, listeden seç.'; return; }
+      hvKonumUygula(il, ilce, lat, lng);   // vakitler gerçek koordinattan hesaplanır
+      hvKonumKapat(true);
+      try { if (typeof showToast === 'function') showToast('📍 Konum bulundu: ' + ilce + ', ' + il); } catch (e) {}
+    },
+    () => {
+      if (b) b.disabled = false;
+      if (d) { d.textContent = '⚠️ Konum izni verilmedi. Aşağıdan şehrini seçebilirsin.'; d.className = 'kn-durum uyari'; }
+    },
+    { enableHighAccuracy: true, timeout: 12000 }
+  );
+}
+window.hvKonumGps = hvKonumGps;
+
+function hvKonumSihirbaziAc() {
+  if (document.getElementById('hv-konum-modal')) return;
+  const k = document.createElement('div');
+  k.id = 'hv-konum-modal';
+  k.className = 'kn-kok';
+  k.innerHTML = `
+    <div class="kn-kart">
+      <div class="kn-rozet">📍</div>
+      <h3>Nerede yaşıyorsun?</h3>
+      <p class="kn-alt">Namaz vakitlerinin doğru olması için bulunduğun yeri seç.</p>
+
+      <button id="hv-konum-gps" class="kn-gps" onclick="hvKonumGps()">📡 Konumumu Otomatik Bul</button>
+      <div id="hv-konum-durum" class="kn-durum"></div>
+
+      <div class="kn-ayrac"><span>veya şehrini seç</span></div>
+
+      <div class="kn-ara">
+        <span>🔍</span>
+        <input id="hv-konum-ara" type="search" autocomplete="off"
+               placeholder="İl ya da ilçe yaz — ör. Konya, Kadıköy"
+               oninput="hvKonumListeCiz(this.value)">
+      </div>
+      <div id="hv-konum-liste" class="kn-liste"></div>
+
+      <button class="kn-sonra" onclick="hvKonumKapat(false)">Sonra seçerim</button>
+    </div>
+  `;
+  document.body.appendChild(k);
+  hvKonumListeCiz('');
+}
+window.hvKonumSihirbaziAc = hvKonumSihirbaziAc;
+
+function hvKonumBaslat() {
+  if (!hvKonumGerekli()) return;
+  setTimeout(() => {
+    hvKonumSihirbaziAc();
+    // app.js bildirim penceresini ~1.4sn'de açıyor. Sihirbaz açıkken onu sıraya al.
+    let sayac = 0;
+    const bekci = setInterval(() => {
+      if (!document.getElementById('hv-konum-modal') || ++sayac > 40) { clearInterval(bekci); return; }
+      const m = document.getElementById('notify-permission-modal');
+      if (m && m.style.display === 'flex') { m.style.display = 'none'; hvNotifySonra = true; }
+    }, 150);
+  }, 900);
 }
 
 if (document.readyState === 'loading') {
@@ -1667,12 +1932,91 @@ window.hvBuildShareCard = hvBuildShareCard;
    Ses: her ayet ayrı dosya → okunan ayet vurgulanabiliyor.
    ═══════════════════════════════════════════════════════════════════════ */
 
+/* ═══════════════════════════════════════════════════════════════════════
+   v61.8 — DİYANET MEÂLİ (uygulamanın içinde)
+   6236 âyetin tamamı meal.js dosyasında. Dosya, meal ilk kez
+   gösterileceği zaman yüklenir; sonrası internetsiz de çalışır.
+   ═══════════════════════════════════════════════════════════════════════ */
+let hvMealSozu = null;
+function hvMealHazir() {
+  if (window.DIYANET_MEAL) return Promise.resolve(true);
+  if (hvMealSozu) return hvMealSozu;
+  hvMealSozu = new Promise(cozum => {
+    const e = document.createElement('script');
+    e.src = 'meal.js?v=' + (window.HV_SURUM || '61.8.0');
+    e.onload  = () => cozum(!!window.DIYANET_MEAL);
+    e.onerror = () => { hvMealSozu = null; cozum(false); };
+    document.head.appendChild(e);
+  });
+  return hvMealSozu;
+}
+window.hvMealHazir = hvMealHazir;
+
+function hvMeal(sure, ayet) {
+  try {
+    const a = window.DIYANET_MEAL[String(sure)];
+    return (a && a[ayet - 1]) ? a[ayet - 1] : '';
+  } catch (e) { return ''; }
+}
+window.hvMeal = hvMeal;
+
+/* Diyanet bazı âyetleri birleştirerek çevirmiştir (ör. "2, 3, 4.").
+   Bu âyet öyle bir grubun içindeyse {bas, son} döner. */
+function hvMealGrup(sure, ayet) {
+  try {
+    const g = window.DIYANET_MEAL_GRUP[String(sure)];
+    if (!g) return null;
+    for (let i = 0; i < g.length; i++) {
+      if (ayet >= g[i][0] && ayet <= g[i][1]) return { bas: g[i][0], son: g[i][1] };
+    }
+  } catch (e) {}
+  return null;
+}
+window.hvMealGrup = hvMealGrup;
+
+/* Ekranda gösterilecek âyet numarası etiketi: tek âyet "5", grup "2-4" */
+function hvMealEtiket(sure, ayet) {
+  const g = hvMealGrup(sure, ayet);
+  return g ? (g.bas + '-' + g.son) : String(ayet);
+}
+window.hvMealEtiket = hvMealEtiket;
+
+/* Grubun ilk âyeti mi? (listede metni bir kez yazmak için) */
+/* Arama için normalize edilmiş dizin — bir kez kurulur */
+let hvMealIdx = null;
+function hvMealIndeks() {
+  if (hvMealIdx) return hvMealIdx;
+  hvMealIdx = [];
+  try {
+    const adlar = (typeof ALL_114_SURAHS !== 'undefined') ? ALL_114_SURAHS : [];
+    for (let sn = 1; sn <= 114; sn++) {
+      const dizi = window.DIYANET_MEAL[String(sn)] || [];
+      const sr = adlar.find(x => Number(x.id) === sn);
+      let onceki = null;
+      for (let i = 0; i < dizi.length; i++) {
+        const metin = dizi[i];
+        if (!metin || metin === onceki) { onceki = metin; continue; }
+        onceki = metin;
+        hvMealIdx.push({ s: sn, ad: sr ? sr.name : (sn + '. Sûre'), v: i + 1, t: metin, n: hvTrNorm(metin) });
+      }
+    }
+  } catch (e) {}
+  return hvMealIdx;
+}
+window.hvMealIndeks = hvMealIndeks;
+
+function hvMealGrupIlk(sure, ayet) {
+  const g = hvMealGrup(sure, ayet);
+  return !g || g.bas === ayet;
+}
+window.hvMealGrupIlk = hvMealGrupIlk;
+
 const HV_MUSHAF_SON = 604;
 
 const HV_QARILER = [
+  { id: 'ar.husary',             ad: 'Mahmud Halil el-Husarî' },
   { id: 'ar.alafasy',            ad: 'Mishary Rashid Alafasy' },
   { id: 'ar.abdulsamad',         ad: 'Abdulbasit Abdussamed' },
-  { id: 'ar.husary',             ad: 'Mahmud Halil el-Husarî' },
   { id: 'ar.mahermuaiqly',       ad: 'Maher Al Muaiqly' },
   { id: 'ar.abdurrahmaansudais', ad: 'Abdurrahman es-Sudeys' },
   { id: 'ar.saoodshuraym',       ad: 'Suud eş-Şureym' }
@@ -1702,24 +2046,24 @@ function hvBesmeleAyir(text) {
 }
 
 /* ── Sayfa önbelleği (internetsiz okuma) ───────────────────────────── */
-const HV_MP_IDX = 'hv_mushaf_idx';
+const HV_MP_IDX = 'hv_mushaf_idx2';
 
 function hvMushafOnbellekAl(p) {
-  try { const r = localStorage.getItem('hv_mp_' + p); return r ? JSON.parse(r) : null; } catch (e) { return null; }
+  try { const r = localStorage.getItem('hv_mp2_' + p); return r ? JSON.parse(r) : null; } catch (e) { return null; }
 }
 function hvMushafOnbellekYaz(p, veri) {
   try {
-    localStorage.setItem('hv_mp_' + p, JSON.stringify(veri));
+    localStorage.setItem('hv_mp2_' + p, JSON.stringify(veri));
     let idx = [];
     try { idx = JSON.parse(localStorage.getItem(HV_MP_IDX) || '[]'); } catch (e) {}
     idx = idx.filter(x => x !== p); idx.push(p);
-    while (idx.length > 120) { const eski = idx.shift(); try { localStorage.removeItem('hv_mp_' + eski); } catch (e) {} }
+    while (idx.length > 120) { const eski = idx.shift(); try { localStorage.removeItem('hv_mp2_' + eski); } catch (e) {} }
     localStorage.setItem(HV_MP_IDX, JSON.stringify(idx));
   } catch (e) {
     // Depolama doldu → mushaf önbelleğini boşalt, uygulamanın gerisi etkilenmesin
     try {
       const idx = JSON.parse(localStorage.getItem(HV_MP_IDX) || '[]');
-      idx.forEach(x => { try { localStorage.removeItem('hv_mp_' + x); } catch (e2) {} });
+      idx.forEach(x => { try { localStorage.removeItem('hv_mp2_' + x); } catch (e2) {} });
       localStorage.setItem(HV_MP_IDX, '[]');
     } catch (e2) {}
   }
@@ -1733,12 +2077,8 @@ async function hvMushafSayfaGetir(p) {
   const arJson = await arRes.json();
   if (!arJson || !arJson.data || !Array.isArray(arJson.data.ayahs)) throw new Error('Sayfa alınamadı');
 
-  let mealHarita = {};
-  try {
-    const trRes = await fetch('https://api.alquran.cloud/v1/page/' + p + '/tr.diyanet');
-    const trJson = await trRes.json();
-    (trJson.data.ayahs || []).forEach(a => { mealHarita[a.number] = a.text; });
-  } catch (e) { /* meal gelmezse Arapça yine görünsün */ }
+  // Meal artık uygulamanın içinde (Diyanet meal.js) — internet gerekmez
+  await hvMealHazir();
 
   const veri = arJson.data.ayahs.map(a => ({
     n: a.number,
@@ -1747,7 +2087,7 @@ async function hvMushafSayfaGetir(p) {
     sar: a.surah.name,
     v: a.numberInSurah,
     ar: a.text,
-    tr: mealHarita[a.number] || ''
+    tr: hvMeal(a.surah.number, a.numberInSurah)
   }));
   hvMushafOnbellekYaz(p, veri);
   return veri;
@@ -1782,7 +2122,7 @@ function hvMvVurgula(n) {
 function hvMvCal(i) {
   if (i < 0 || i >= hvMvSira.length) { hvMvDurdur(); return; }
   hvMvKonum = i;
-  const qari = hvGet('hv_mushaf_qari', 'ar.alafasy');
+  const qari = hvGet('hv_mushaf_qari', 'ar.husary');
   const ses = hvMvSesNesnesi();
   ses.src = 'https://cdn.islamic.network/quran/audio/128/' + qari + '/' + hvMvSira[i];
   ses.play().catch(() => {});
@@ -2049,7 +2389,7 @@ async function renderMushaf(calmayaDevam) {
   const sayfa = parseInt(hvGet('hv_mushaf_page', '1'), 10);
   const mod   = hvGet('hv_mushaf_mode', 'ar');
   const font  = parseInt(hvGet('hv_mushaf_font', '30'), 10);
-  const qari  = hvGet('hv_mushaf_qari', 'ar.alafasy');
+  const qari  = hvGet('hv_mushaf_qari', 'ar.husary');
   const imler = hvMushafImler();
 
   kok.innerHTML = `
@@ -2148,10 +2488,12 @@ async function renderMushaf(calmayaDevam) {
   // ── Meal blok ──
   let trHtml = '';
   let sonSure2 = null;
-  rows.forEach(r => {
+  rows.forEach((r, i) => {
     if (r.s !== sonSure2) { sonSure2 = r.s; trHtml += `<div class="mv-meal-sure">${r.sadi} Sûresi</div>`; }
+    // Diyanet birleşik meallerinde aynı metni tekrar yazma
+    if (i > 0 && r.tr && rows[i - 1].tr === r.tr && !hvMealGrupIlk(r.s, r.v)) return;
     trHtml += `<div class="mv-meal" id="mv-m-${r.n}">
-                 <span class="mv-meal-no">${r.v}</span>${r.tr || '—'}</div>`;
+                 <span class="mv-meal-no">${hvMealEtiket(r.s, r.v)}</span>${r.tr || '—'}</div>`;
   });
 
   const govde = document.getElementById('mv-body');
@@ -2325,12 +2667,13 @@ window.hvEzTumu = hvEzTumu;
 
 /* ── Kayıt yükleme ─────────────────────────────────────────────────── */
 async function hvEzAyetleriGetir(sureNo, bas, son) {
-  const qari = hvGet('hv_mushaf_qari', 'ar.alafasy');
+  const qari = hvGet('hv_mushaf_qari', 'ar.husary');
+  await hvMealHazir();   // Türkçe meal uygulamanın içinden (Diyanet)
   const res = await fetch('https://api.alquran.cloud/v1/surah/' + sureNo +
-    '/editions/quran-uthmani,tr.transliteration,tr.diyanet,' + qari);
+    '/editions/quran-uthmani,tr.transliteration,' + qari);
   const j = await res.json();
-  if (!j || !j.data || j.data.length < 4) throw new Error('Ayetler alınamadı');
-  const ar = j.data[0].ayahs, ok = j.data[1].ayahs, tr = j.data[2].ayahs, se = j.data[3].ayahs;
+  if (!j || !j.data || j.data.length < 3) throw new Error('Ayetler alınamadı');
+  const ar = j.data[0].ayahs, ok = j.data[1].ayahs, se = j.data[2].ayahs;
   const out = [];
   ar.forEach((a, i) => {
     if (bas && (a.numberInSurah < bas || a.numberInSurah > son)) return;
@@ -2342,7 +2685,7 @@ async function hvEzAyetleriGetir(sureNo, bas, son) {
     out.push({
       ar: metin,
       ok: ok[i] ? ok[i].text : '',
-      tr: tr[i] ? tr[i].text : '',
+      tr: hvMeal(sureNo, a.numberInSurah),
       ses: se[i] ? se[i].audio : ''
     });
   });
@@ -2489,10 +2832,10 @@ window.hvKuranModu = hvKuranModu;
    ═══════════════════════════════════════════════════════════════════════ */
 
 const HV_DINLE_QARILER = [
+  { id: 'husr',   sunucu: 'server13', ad: 'Mahmud Halil el-Husarî' },
   { id: 'afs',    sunucu: 'server8',  ad: 'Mishary Rashid Alafasy' },
   { id: 'minsh',  sunucu: 'server10', ad: 'Muhammed Sıddık el-Minşâvî' },
-  { id: 'yasser', sunucu: 'server11', ad: 'Yâsir ed-Devserî' },
-  { id: 'husr',   sunucu: 'server13', ad: 'Mahmud Halil el-Husarî' }
+  { id: 'yasser', sunucu: 'server11', ad: 'Yâsir ed-Devserî' }
 ];
 
 let hvDnSes = null;
@@ -2508,7 +2851,7 @@ function hvDnSureAdi(no) {
   return no + '. Sûre';
 }
 function hvDnQari() {
-  const id = hvGet('hv_dinle_qari', 'afs');
+  const id = hvGet('hv_dinle_qari', 'husr');
   return HV_DINLE_QARILER.find(q => q.id === id) || HV_DINLE_QARILER[0];
 }
 function hvDnUrl(no) {
@@ -2913,7 +3256,7 @@ try { if (window.FEATURE_ROUTES) window.FEATURE_ROUTES['elifba'] = renderElifba;
 /* ═══════════════════════════════════════════════════════════════════════
    v61.4 — "NİÇİN MEAL?" AYET KARTI
    Kur'an'ın anlaşılmak için indirildiğini bildiren ayetler.
-   Arapça: alquran.cloud (Uthmani) • Meal: kuran.diyanet.gov.tr
+   Arapça: alquran.cloud (Osmanî/Hafs) • Meal: Diyanet İşleri Başkanlığı Kur'an-ı Kerim Meâli
    Her ayetin sûre ve numara eşleşmesi tek tek doğrulandı.
    ═══════════════════════════════════════════════════════════════════════ */
 
@@ -3122,9 +3465,10 @@ async function hvTamEkranCiz() {
   if (mod !== 'ar') {
     let trHtml = '';
     let sonSure2 = null;
-    rows.forEach(r => {
+    rows.forEach((r, i) => {
       if (r.s !== sonSure2) { sonSure2 = r.s; trHtml += `<div class="te-m-sure">${r.sadi} Sûresi</div>`; }
-      trHtml += `<div class="te-m-ayet" id="te-m-${r.n}"><span class="te-m-no">${r.v}</span>${r.tr || '—'}</div>`;
+      if (i > 0 && r.tr && rows[i - 1].tr === r.tr && !hvMealGrupIlk(r.s, r.v)) return;
+      trHtml += `<div class="te-m-ayet" id="te-m-${r.n}"><span class="te-m-no">${hvMealEtiket(r.s, r.v)}</span>${r.tr || '—'}</div>`;
     });
     const t = document.getElementById('te-meal');
     if (t) t.innerHTML = trHtml;

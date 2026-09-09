@@ -16,17 +16,18 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Namaz Dostu">
-    <link rel="apple-touch-icon" href="apple-touch-icon.png?v=61.6.0">
-    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png?v=61.6.0">
+    <link rel="apple-touch-icon" href="apple-touch-icon.png?v=61.8.0">
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png?v=61.8.0">
     <meta name="description" content="Namaz Dostu: Namaz vakitleri, ezan, Kur'an-ı Kerim, kıble, dualar, zikirmatik ve yeni başlayanlar için adım adım namaz rehberi. Ücretsiz, reklamsız, çevrimdışı.">
 
-    <link rel="stylesheet" href="styles.css?v=61.6.0">
-    <script src="cities.js?v=61.6.0" defer></script>
-    <script src="data.js?v=61.6.0" defer></script>
-    <script src="content.js?v=61.6.0" defer></script>
-    <script src="hadisler.js?v=61.6.0" defer></script>
-    <script src="app.js?v=61.6.0" defer></script>
-    <script src="features.js?v=61.6.0" defer></script>
+    <link rel="stylesheet" href="styles.css?v=61.8.0">
+    <script>window.HV_SURUM = "61.8.0";</script>
+    <script src="cities.js?v=61.8.0" defer></script>
+    <script src="data.js?v=61.8.0" defer></script>
+    <script src="content.js?v=61.8.0" defer></script>
+    <script src="hadisler.js?v=61.8.0" defer></script>
+    <script src="app.js?v=61.8.0" defer></script>
+    <script src="features.js?v=61.8.0" defer></script>
 </head>
 <body class="dark-theme">
     <!-- Loading Screen -->
@@ -140,13 +141,13 @@
                 <!-- Namaz Vakitleri -->
                 <div id="prayer-times-container" class="prayer-grid"></div>
 
-                <!-- Günün Hadisi -->
-                <div class="daily-hadis-card" id="daily-hadis-card" onclick="nextDailyHadis()" title="Yeni hadis için dokun">
-                    <div class="verse-card-title">📿 Günün Hadisi</div>
-                    <div id="daily-hadis-arabic" class="hadis-arabic"></div>
-                    <div id="daily-hadis-text" class="hadis-text">Yükleniyor...</div>
-                    <div id="daily-hadis-source" class="hadis-source"></div>
-                    <button class="mini-share-btn" onclick="shareDailyHadis(event)">📤 Paylaş</button>
+                <!-- Günün Âyeti -->
+                <div class="daily-hadis-card" id="daily-ayet-card" onclick="nextDailyAyet()" title="Yeni âyet için dokun">
+                    <div class="verse-card-title">📖 Günün Âyeti</div>
+                    <div id="daily-verse-arabic" class="hadis-arabic"></div>
+                    <div id="daily-verse-turkish" class="hadis-text">Yükleniyor...</div>
+                    <div id="daily-verse-source" class="hadis-source"></div>
+                    <button class="mini-share-btn" onclick="shareDailyVerse(event)">📤 Paylaş</button>
                 </div>
             </div>
         </section>
@@ -762,12 +763,13 @@
                     </div>
                     <div class="kaynak-card">
                         <h3>📖 Kur'an-ı Kerim ve Meal</h3>
-                        <p>Arapça metin <b>Osmanî (Hafs) mushaf</b> yazımıdır; Diyanet İşleri Başkanlığı mushafındaki metinle aynıdır. Türkçe okunuş ve <b>Diyanet İşleri Başkanlığı meali</b> Al Quran Cloud (alquran.cloud) açık veri servisinden, yedek olarak <b>Açık Kuran (acikkuran.com)</b> servisinden alınır. "Tüm Kur'an'ı İndir" ile 114 sure cihazınıza kaydedilir ve internetsiz okunabilir. Sure açıklamaları, kısa sureler ve okunuşları Diyanet yayınlarından derlenmiştir.</p>
-                        <p class="kaynak-note">ℹ️ Uygulamadaki Diyanet meali, açık veri servisinde yayımlanan <b>önceki baskıdır</b>; kuran.diyanet.gov.tr'deki güncel baskıyla arasında yazım farkları bulunabilir. Anlam bakımından Diyanet mealidir.</p>
+                        <p>Arapça metin <b>Osmanî (Hafs) mushaf</b> yazımıdır; harf ve kelime olarak Diyanet İşleri Başkanlığı mushafıyla aynıdır. Türkçe meal, <b>Diyanet İşleri Başkanlığı Kur'an-ı Kerim Meâli</b>'nin resmî yayınından alınmış olup <b>6236 âyetin tamamı uygulamanın içindedir</b>; internet olmadan da okunabilir. Türkçe okunuş (latin harfli) Al Quran Cloud (alquran.cloud) açık veri servisinden, Arapça metin aynı servisten alınır; yedek kaynak <b>Açık Kuran (acikkuran.com)</b>'dur. Sure açıklamaları ve okunuşlar Diyanet yayınlarından derlenmiştir.</p>
+                        <p class="kaynak-note">ℹ️ Diyanet meâlinde bazı âyetler birleştirilerek çevrilmiştir (ör. "1-5"). Uygulama bu âyetleri Diyanet'in yaptığı gibi tek metin hâlinde ve numara aralığıyla gösterir.</p>
                     </div>
                     <div class="kaynak-card">
                         <h3>📜 Mushaf (Sayfa Sayfa Okuma)</h3>
-                        <p>Sayfa düzeni, dünya genelinde kullanılan <b>604 sayfalık standart mushaf</b> numaralandırmasıdır; Diyanet İşleri Başkanlığı basımıyla aynı sayfa–âyet eşleşmesine sahiptir. Sayfa verileri alquran.cloud servisinden alınır ve okuduğunuz sayfalar cihazınıza kaydedilerek internetsiz de açılabilir. Âyet âyet sesli okuyuş cdn.islamic.network üzerinden sunulur.</p>
+                        <p>Sayfa düzeni, dünya genelinde kullanılan <b>604 sayfalık Medine (Osmanî) mushaf</b> numaralandırmasıdır. Sayfa verileri alquran.cloud servisinden alınır; okuduğunuz sayfalar cihazınıza kaydedilir ve internetsiz de açılır. Sûre araması, her sûrenin bu düzendeki başlangıç sayfasını verir.</p>
+                        <p class="kaynak-note">ℹ️ Diyanet İşleri Başkanlığı'nın Türkiye'de bastığı mushaf da 604 sayfadır; ancak satır ve sayfa sonları biraz farklıdır. Bu yüzden bazı bölümlerde sayfa numarası, elinizdeki basılı Diyanet mushafına göre <b>1 sayfa kayabilir</b>. Âyet metinlerinde fark yoktur.</p>
                     </div>
                     <div class="kaynak-card">
                         <h3>🎧 Kuran Dinle</h3>
@@ -970,7 +972,7 @@
                     </div>
                     <div class="app-info-footer">
                         <div class="footer-logo">🕌</div>
-                        <div class="footer-ver">Namaz Dostu v61.6</div>
+                        <div class="footer-ver">Namaz Dostu v61.8</div>
                         <div style="font-size: 0.8rem; margin-top: 4px;">Tüm Hakları Saklıdır • Diyanet Uyumlu • Çevrimdışı Çalışır</div>
                     </div>
                 </div>
@@ -1016,7 +1018,7 @@
     <script>
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
-          navigator.serviceWorker.register('/sw.js?v=61.6.0')
+          navigator.serviceWorker.register('/sw.js?v=61.8.0')
             .then(reg => {
               reg.onupdatefound = () => {
                 const installingWorker = reg.installing;

@@ -55,7 +55,7 @@ function initApp() {
   setupNavTabs();
   setupSettingsListeners();
   startClockTimer();
-  loadDailyVerse();
+  // Günün Âyeti features.js içinden yüklenir (loadDailyAyet)
   initPrayerGuideSection();
 
   // Initial prayer times fetch
@@ -626,7 +626,7 @@ window.updateNotifyStatusUI = updateNotifyStatusUI;
 
 // Ayarlar → Geri Bildirim Gönder (doğrudan e-posta açar)
 function hvSendFeedback() {
-  const ver = 'v61.6';
+  const ver = 'v61.8';
   let ortam = 'Tarayıcı';
   try {
     if (window.hvIsAndroid) ortam = 'Android uygulaması';
@@ -1608,31 +1608,25 @@ async function loadSurahDetail(id, localSurahObj) {
 async function fetchSurahVerses(id) {
   let verses = null;
 
-  // Primary API: Al Quran Cloud (Fastest global CDN with Turkish Transliteration + Diyanet translation)
+  // Türkçe meal uygulamanın içinden (Diyanet meal.js); Arapça + okunuş ağdan
+  let yerelMeal = false;
+  try { yerelMeal = await hvMealHazir(); } catch (e) {}
+
   try {
-    const res = await fetch(`https://api.alquran.cloud/v1/surah/${id}/editions/quran-uthmani,tr.transliteration,tr.diyanet`);
+    const res = await fetch(`https://api.alquran.cloud/v1/surah/${id}/editions/quran-uthmani,tr.transliteration${yerelMeal ? '' : ',tr.diyanet'}`);
     const json = await res.json();
 
-    if (json && json.data && json.data.length >= 3) {
+    if (json && json.data && json.data.length >= 2) {
       const arAyahs = json.data[0].ayahs;
       const okAyahs = json.data[1].ayahs;
-      const trAyahs = json.data[2].ayahs;
+      const trAyahs = (!yerelMeal && json.data[2]) ? json.data[2].ayahs : null;
 
       verses = arAyahs.map((a, idx) => ({
         verse_number: a.numberInSurah,
         verse: a.text,
         okunusu: okAyahs[idx] ? okAyahs[idx].text : '',
-        translation: trAyahs[idx] ? trAyahs[idx].text : ''
-      }));
-    } else if (json && json.data && json.data.length >= 2) {
-      const arAyahs = json.data[0].ayahs;
-      const trAyahs = json.data[1].ayahs;
-
-      verses = arAyahs.map((a, idx) => ({
-        verse_number: a.numberInSurah,
-        verse: a.text,
-        okunusu: '',
-        translation: trAyahs[idx] ? trAyahs[idx].text : ''
+        translation: yerelMeal ? hvMeal(id, a.numberInSurah)
+                               : (trAyahs && trAyahs[idx] ? trAyahs[idx].text : '')
       }));
     }
   } catch (e) {

@@ -10,10 +10,10 @@
      takılıp kalmaz.
    • Dış kaynaklar (font, API) çevrimdışıyken sessizce boş geçilir.
    ══════════════════════════════════════════════════════════════ */
-const CACHE_NAME = 'namaz-dostu-v61.6';
+const CACHE_NAME = 'namaz-dostu-v61.8';
 
 // Sürüm etiketli çekirdek dosyalar (sayfanın gerçekte istediği URL'ler)
-const V = '61.6.0';
+const V = '61.8.0';
 const CORE_ASSETS = [
   './',
   './index.html',
@@ -84,6 +84,22 @@ self.addEventListener('fetch', (event) => {
               caches.match('./index.html', { ignoreSearch: true }) ||
               caches.match('./', { ignoreSearch: true }))
         )
+    );
+    return;
+  }
+
+  // 1.5) meal.js (1 MB, sürüm etiketiyle sabit): önce önbellek, yoksa ağ
+  if (sameOrigin && url.pathname.endsWith('/meal.js')) {
+    event.respondWith(
+      caches.match(req, { ignoreSearch: true }).then((hit) =>
+        hit || fetch(req).then((res) => {
+          if (res && res.status === 200) {
+            const clone = res.clone();
+            caches.open(CACHE_NAME).then((c) => c.put(req, clone)).catch(() => {});
+          }
+          return res;
+        })
+      )
     );
     return;
   }
