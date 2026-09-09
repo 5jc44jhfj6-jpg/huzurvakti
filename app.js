@@ -1883,7 +1883,6 @@ async function renderQuranTools() {
     ? `<div class="qt-marks">${marks.slice(0, 12).map(m => `<button class="qt-chip" onclick="openSurahAt(${m.surah}, ${m.ayah})">⭐ ${m.name} ${m.ayah}</button>`).join('')}${marks.length > 12 ? `<span class="qt-more">+${marks.length - 12}</span>` : ''}</div>`
     : `<div class="qt-empty">Henüz yer imi yok. Ayet kartındaki ☆ ile ekleyin.</div>`;
   box.innerHTML = `
-    ${typeof hvAnlamKart === 'function' ? hvAnlamKart() : ''}
     <div class="qt-card">
       <div class="qt-row">
         <div class="qt-title">📍 Kaldığın Yer</div>

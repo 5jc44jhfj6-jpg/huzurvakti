@@ -2473,7 +2473,7 @@ body.te-modda { overflow:hidden; }
 body.te-modda #bottom-nav, body.te-modda #app-header, body.te-modda header { display:none !important; }
 
 .te-kok { position:fixed; inset:0; z-index:9999; display:none;
-  background:var(--bg-main); display:flex; flex-direction:column; }
+  flex-direction:column; background:var(--bg-main); }
 .te-kok.kagit { background:#e9e2d0; }
 
 .te-ust, .te-alt { display:flex; align-items:center; justify-content:space-between;
@@ -2490,8 +2490,9 @@ body.te-modda #bottom-nav, body.te-modda #app-header, body.te-modda header { dis
   background:rgba(212,175,55,.18); color:var(--gold-light); font-size:1rem; font-weight:700; }
 .te-kok.kagit .te-sayfa-no { background:#b39a5c; color:#fff; }
 
-.te-orta { flex:1; overflow-y:auto; padding:6px 10px 10px; -webkit-overflow-scrolling:touch; }
-.te-cerceve { min-height:100%; border:2px solid rgba(212,175,55,.55); border-radius:6px;
+.te-orta { flex:1 1 0; min-height:0; overflow-y:auto; overscroll-behavior:contain;
+  padding:6px 10px 10px; -webkit-overflow-scrolling:touch; }
+.te-cerceve { border:2px solid rgba(212,175,55,.55); border-radius:6px;
   padding:14px 10px; position:relative; }
 .te-cerceve::before { content:''; position:absolute; inset:5px; border:1px solid rgba(212,175,55,.35);
   border-radius:4px; pointer-events:none; }
@@ -2523,3 +2524,11 @@ body.te-modda #bottom-nav, body.te-modda #app-header, body.te-modda header { dis
 .te-kucuk { min-width:44px; height:44px; border-radius:22px; border:1px solid rgba(212,175,55,.4);
   background:transparent; color:var(--gold-light); font-size:.85rem; cursor:pointer; padding:0 10px; }
 .te-kok.kagit .te-yan, .te-kok.kagit .te-kucuk { color:#5f4c18; border-color:#b39a5c; }
+
+
+/* Elifbâ harf kutusu — Arapça harf ile adı birbirine girmesin */
+.el-harf { padding:14px 4px 9px; gap:6px; }
+.el-h { font-size:2.1rem; line-height:1.75; }
+.el-n { line-height:1.2; }
+.el-bicimler span, .el-harekeli span { line-height:1.9; padding-top:2px; }
+.el-buyuk { line-height:1.5; padding-top:6px; }

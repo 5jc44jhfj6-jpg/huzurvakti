@@ -1794,14 +1794,7 @@ function hvMvCal(i) {
 function hvMvSonraki() {
   if (!hvMvCalisiyor) return;
   if (hvMvKonum + 1 < hvMvSira.length) { hvMvCal(hvMvKonum + 1); return; }
-  // Sayfa bitti → sıradaki sayfaya geç ve okumaya devam et
-  const s = parseInt(hvGet('hv_mushaf_page', '1'), 10);
-  if (s < HV_MUSHAF_SON) {
-    if (hvTeAcik) { hvSet('hv_mushaf_page', s + 1); hvTamEkranCiz().then(() => { hvMvCalisiyor = true; hvMvCal(0); }); }
-    else hvMushafGit(s + 1, true);
-  } else {
-    hvMvDurdur();
-  }
+  hvMvDurdur();
 }
 
 function hvMvDurdur() {
@@ -1940,7 +1933,6 @@ async function renderMushaf(calmayaDevam) {
       <button class="on">📜 Sayfa Sayfa</button>
       <button onclick="hvKuranModu('sure')">📖 Sure Sure</button>
     </div>
-    ${typeof hvAnlamKart === 'function' ? hvAnlamKart() : ''}
 
     <div class="mv-bar">
       <button class="mv-nav" onclick="hvMushafGit(${sayfa - 1})" ${sayfa <= 1 ? 'disabled' : ''}>‹</button>
@@ -1965,13 +1957,6 @@ async function renderMushaf(calmayaDevam) {
         <span id="mv-font-val">${font}px</span>
         <button onclick="hvMushafPunto(2)">A+</button>
       </div>
-    </div>
-
-    <div class="mv-bar mv-bar3">
-      <button id="mv-play" class="mv-play" onclick="hvMvBasDurdur()">▶️ Dinle</button>
-      <select class="mv-qari" onchange="hvMushafQariDegistir(this.value)">
-        ${HV_QARILER.map(q => `<option value="${q.id}" ${q.id === qari ? 'selected' : ''}>${q.ad}</option>`).join('')}
-      </select>
     </div>
 
     <div class="mv-where">
@@ -2019,7 +2004,7 @@ async function renderMushaf(calmayaDevam) {
       const b = hvBesmeleAyir(metin);
       if (b.besmele) { arHtml += `<div class="mv-besmele">${b.besmele}</div>`; metin = b.kalan; }
     }
-    arHtml += `<span class="mv-ayah" id="mv-a-${r.n}" onclick="hvMvAyettenBasla(${r.n})">${metin}<span class="mv-num">${hvArNum(r.v)}</span></span> `;
+    arHtml += `<span class="mv-ayah" id="mv-a-${r.n}">${metin}<span class="mv-num">${hvArNum(r.v)}</span></span> `;
   });
 
   // ── Meal blok ──
@@ -2027,7 +2012,7 @@ async function renderMushaf(calmayaDevam) {
   let sonSure2 = null;
   rows.forEach(r => {
     if (r.s !== sonSure2) { sonSure2 = r.s; trHtml += `<div class="mv-meal-sure">${r.sadi} Sûresi</div>`; }
-    trHtml += `<div class="mv-meal" id="mv-m-${r.n}" onclick="hvMvAyettenBasla(${r.n})">
+    trHtml += `<div class="mv-meal" id="mv-m-${r.n}">
                  <span class="mv-meal-no">${r.v}</span>${r.tr || '—'}</div>`;
   });
 
@@ -2824,7 +2809,7 @@ async function hvTamEkranAc() {
     k.className = 'te-kok';
     document.body.appendChild(k);
   }
-  k.style.display = 'block';
+  k.style.display = 'flex';
   document.body.classList.add('te-modda');
   hvTeCubuk = true;
   await hvTamEkranCiz();
@@ -2922,7 +2907,6 @@ async function hvTamEkranCiz() {
     <div class="te-alt">
       <button class="te-yan" onclick="hvTeGit(${sayfa - 1})" ${sayfa <= 1 ? 'disabled' : ''}>‹</button>
       <button class="te-kucuk" onclick="hvMushafPunto(-2); hvTamEkranCiz();">A−</button>
-      <button id="te-play" class="te-play" onclick="hvMvBasDurdur()">${hvMvCalisiyor ? '⏸' : '▶️'}</button>
       <button class="te-kucuk" onclick="hvMushafPunto(2); hvTamEkranCiz();">A+</button>
       <button class="te-kucuk" onclick="hvTeKagit()">${kagit ? '🌙' : '📄'}</button>
       <button class="te-yan" onclick="hvTeGit(${sayfa + 1})" ${sayfa >= HV_MUSHAF_SON ? 'disabled' : ''}>›</button>
