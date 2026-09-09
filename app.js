@@ -99,7 +99,7 @@ function setupNavTabs() {
 // Maps every sub-page to its parent bottom-nav tab so the correct tab stays highlighted
 const PAGE_PARENT = {
   home: 'home',
-  kurandua: 'kurandua', quran: 'kurandua', 'dua-ogrenme': 'kurandua', esma: 'kurandua', ezkar: 'kurandua', 'gunluk-dua': 'kurandua', 'onemli-sureler': 'kurandua', 'ayet-arama': 'kurandua', 'kirk-hadis': 'kurandua', qibla: 'kurandua', guide: 'kurandua',
+  kurandua: 'kurandua', quran: 'kurandua', 'dua-ogrenme': 'kurandua', esma: 'kurandua', ezkar: 'kurandua', 'gunluk-dua': 'kurandua', 'onemli-sureler': 'kurandua', 'ayet-arama': 'kurandua', 'kirk-hadis': 'kurandua', qibla: 'kurandua', guide: 'kurandua', mushaf: 'kurandua', ezber: 'kurandua', dinle: 'kurandua', elifba: 'kurandua',
   ibadet: 'ibadet', zikirmatik: 'ibadet', 'namaz-takibi': 'ibadet', kaza: 'ibadet', hatim: 'ibadet', oruc: 'ibadet', taharet: 'ibadet', 'ozel-namaz': 'ibadet', iman: 'ibadet', peygamberler: 'ibadet', siyer: 'ibadet',
   araclar: 'araclar', zekat: 'araclar', fitre: 'araclar', quiz: 'araclar', ruya: 'araclar', bebek: 'araclar', takvim: 'araclar', paylasim: 'araclar', cuma: 'araclar', sozluk: 'araclar', imsakiye: 'araclar',
   settings: 'settings', kaynaklar: 'settings'
@@ -111,6 +111,9 @@ function navigateTo(pageId) {
   if (audioPlayer) {
     audioPlayer.pause();
   }
+  // Mushaf ve ezber seslerini de durdur (features.js)
+  try { if (typeof hvMvDurdur === 'function') hvMvDurdur(); } catch (e) {}
+  try { if (typeof hvEzSesDurdur === 'function') hvEzSesDurdur(); } catch (e) {}
 
   document.querySelectorAll('.page-section').forEach(sec => {
     sec.classList.remove('active');
@@ -623,7 +626,7 @@ window.updateNotifyStatusUI = updateNotifyStatusUI;
 
 // Ayarlar → Geri Bildirim Gönder (doğrudan e-posta açar)
 function hvSendFeedback() {
-  const ver = 'v61.3';
+  const ver = 'v61.4';
   let ortam = 'Tarayıcı';
   try {
     if (window.hvIsAndroid) ortam = 'Android uygulaması';
@@ -1520,6 +1523,17 @@ function filterSurahList(query) {
 }
 
 // Load Full Verses of Any Surah (Al Quran Cloud API + Açık Kuran API + Fallbacks)
+// Sure fazileti (eski "Önemli Sureler" içeriği artık burada gösteriliyor)
+function hvSureFazileti(id) {
+  try {
+    if (typeof ONEMLI_SURELER === 'undefined') return '';
+    const s = ONEMLI_SURELER.find(x => Number(x.id) === Number(id));
+    if (!s || !s.fazilet) return '';
+    return '<div class="sure-fazilet"><span class="sh-label">⭐ Fazileti</span>' + s.fazilet + '</div>';
+  } catch (e) { return ''; }
+}
+window.hvSureFazileti = hvSureFazileti;
+
 async function loadSurahDetail(id, localSurahObj) {
   document.getElementById('surah-list-view').style.display = 'none';
   document.getElementById('surah-detail-view').style.display = 'block';
@@ -1565,6 +1579,7 @@ async function loadSurahDetail(id, localSurahObj) {
       <div class="detail-tr-name">${localSurahObj.name} Suresi</div>
       <div class="detail-meta">${localSurahObj.verse_count} Ayet • ${localSurahObj.revelation_place}</div>
       ${aciklama ? `<div class="sure-hakkinda"><span class="sh-label">📘 Sure Hakkında</span>${aciklama}</div>` : ''}
+      ${hvSureFazileti(id)}
     `;
   }
 
@@ -1868,6 +1883,7 @@ async function renderQuranTools() {
     ? `<div class="qt-marks">${marks.slice(0, 12).map(m => `<button class="qt-chip" onclick="openSurahAt(${m.surah}, ${m.ayah})">⭐ ${m.name} ${m.ayah}</button>`).join('')}${marks.length > 12 ? `<span class="qt-more">+${marks.length - 12}</span>` : ''}</div>`
     : `<div class="qt-empty">Henüz yer imi yok. Ayet kartındaki ☆ ile ekleyin.</div>`;
   box.innerHTML = `
+    ${typeof hvAnlamKart === 'function' ? hvAnlamKart() : ''}
     <div class="qt-card">
       <div class="qt-row">
         <div class="qt-title">📍 Kaldığın Yer</div>

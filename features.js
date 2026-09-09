@@ -756,10 +756,11 @@ function renderPaylasim() {
   if (!c.dataset.built) {
     c.dataset.built = '1';
     c.innerHTML = `
-      <div class="info-note">Rastgele bir ayet veya hadis kartı oluşturun, WhatsApp ve sosyal medyada paylaşın.</div>
+      <div class="info-note">Rastgele bir ayet, hadis ya da cuma mesajı kartı oluşturun; WhatsApp ve sosyal medyada paylaşın.</div>
       <div class="share-type-switch">
         <button class="seg-btn active" id="pt-ayet" onclick="paylasimPick('ayet')">📖 Ayet</button>
         <button class="seg-btn" id="pt-hadis" onclick="paylasimPick('hadis')">📿 Hadis</button>
+        <button class="seg-btn" id="pt-cuma" onclick="paylasimPick('cuma')">🕌 Cuma</button>
       </div>
       <div id="share-card-preview" class="share-card-preview"></div>
       <div class="share-actions">
@@ -774,12 +775,17 @@ function paylasimPick(tip) {
   _paylasimTip = tip;
   document.getElementById('pt-ayet').classList.toggle('active', tip === 'ayet');
   document.getElementById('pt-hadis').classList.toggle('active', tip === 'hadis');
+  const cb = document.getElementById('pt-cuma');
+  if (cb) cb.classList.toggle('active', tip === 'cuma');
   paylasimYenile();
 }
 window.paylasimPick = paylasimPick;
 function paylasimYenile() {
   const prev = document.getElementById('share-card-preview');
-  if (_paylasimTip === 'ayet' && typeof DAILY_VERSES !== 'undefined') {
+  if (_paylasimTip === 'cuma' && typeof CUMA_MESAJLARI !== 'undefined') {
+    const m = CUMA_MESAJLARI[Math.floor(Math.random() * CUMA_MESAJLARI.length)];
+    _paylasimData = { ar: '', tr: m, src: 'Hayırlı Cumalar' };
+  } else if (_paylasimTip === 'ayet' && typeof DAILY_VERSES !== 'undefined') {
     const v = DAILY_VERSES[Math.floor(Math.random() * DAILY_VERSES.length)];
     _paylasimData = { ar: v.arabic, tr: v.turkish, src: `${v.surah} Suresi, ${v.ayah}. Ayet` };
   } else if (typeof HADITHS !== 'undefined') {
@@ -789,7 +795,7 @@ function paylasimYenile() {
   if (prev && _paylasimData) {
     prev.innerHTML = `
       <div class="scp-inner">
-        <div class="scp-badge">${_paylasimTip === 'ayet' ? '📖 Ayet-i Kerime' : '📿 Hadis-i Şerif'}</div>
+        <div class="scp-badge">${_paylasimTip === 'ayet' ? '📖 Ayet-i Kerime' : (_paylasimTip === 'cuma' ? '🕌 Cuma Mesajı' : '📿 Hadis-i Şerif')}</div>
         ${_paylasimData.ar ? `<div class="scp-ar">${_paylasimData.ar}</div>` : ''}
         <div class="scp-tr">"${hvEsc(_paylasimData.tr)}"</div>
         <div class="scp-src">— ${hvEsc(_paylasimData.src)}</div>
@@ -800,7 +806,7 @@ function paylasimYenile() {
 window.paylasimYenile = paylasimYenile;
 function paylasimPaylas() {
   if (!_paylasimData) return;
-  const emoji = _paylasimTip === 'ayet' ? '📖 Ayet-i Kerime' : '📿 Hadis-i Şerif';
+  const emoji = _paylasimTip === 'ayet' ? '📖 Ayet-i Kerime' : (_paylasimTip === 'cuma' ? '🕌 Cuma Mesajı' : '📿 Hadis-i Şerif');
   hvOpenShareCard({
     badge: emoji,
     arabic: _paylasimData.ar || '',
@@ -1653,3 +1659,1304 @@ async function hvOpenShareCard(data) {
 }
 window.hvOpenShareCard = hvOpenShareCard;
 window.hvBuildShareCard = hvBuildShareCard;
+
+/* ═══════════════════════════════════════════════════════════════════════
+   v61.4 — MUSHAF (SAYFA SAYFA KUR'AN-I KERİM)
+   Kaynak: alquran.cloud  •  Sayfa numaraları standart 604 sayfalık
+   mushaf düzenidir (Diyanet basımıyla aynı).
+   Ses: her ayet ayrı dosya → okunan ayet vurgulanabiliyor.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+const HV_MUSHAF_SON = 604;
+
+const HV_QARILER = [
+  { id: 'ar.alafasy',            ad: 'Mishary Rashid Alafasy' },
+  { id: 'ar.abdulsamad',         ad: 'Abdulbasit Abdussamed' },
+  { id: 'ar.husary',             ad: 'Mahmud Halil el-Husarî' },
+  { id: 'ar.mahermuaiqly',       ad: 'Maher Al Muaiqly' },
+  { id: 'ar.abdurrahmaansudais', ad: 'Abdurrahman es-Sudeys' },
+  { id: 'ar.saoodshuraym',       ad: 'Suud eş-Şureym' }
+];
+
+function hvGet(k, d) { try { const v = localStorage.getItem(k); return v === null ? d : v; } catch (e) { return d; } }
+function hvSet(k, v) { try { localStorage.setItem(k, String(v)); } catch (e) {} }
+
+// Arap rakamları (١٢٣)
+function hvArNum(n) { return String(n).replace(/[0-9]/g, d => '٠١٢٣٤٥٦٧٨٩'[d]); }
+
+// Ayet 1'in başındaki besmeleyi ayırır (alquran.cloud besmeleyi 1. ayete ekliyor)
+function hvBesmeleAyir(text) {
+  const hedef = 'بسماللهالرحمنالرحيم';
+  let sade = '', harita = [];
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i];
+    if (/[ؐ-ًؚ-ٰٟۖ-ۭـ\s]/.test(ch)) continue;
+    sade += (ch === 'ٱ' ? 'ا' : ch);
+    harita.push(i);
+  }
+  if (sade.indexOf(hedef) === 0 && harita.length > hedef.length) {
+    const kes = harita[hedef.length - 1] + 1;
+    return { besmele: text.slice(0, kes).trim(), kalan: text.slice(kes).trim() };
+  }
+  return { besmele: '', kalan: text };
+}
+
+/* ── Sayfa önbelleği (internetsiz okuma) ───────────────────────────── */
+const HV_MP_IDX = 'hv_mushaf_idx';
+
+function hvMushafOnbellekAl(p) {
+  try { const r = localStorage.getItem('hv_mp_' + p); return r ? JSON.parse(r) : null; } catch (e) { return null; }
+}
+function hvMushafOnbellekYaz(p, veri) {
+  try {
+    localStorage.setItem('hv_mp_' + p, JSON.stringify(veri));
+    let idx = [];
+    try { idx = JSON.parse(localStorage.getItem(HV_MP_IDX) || '[]'); } catch (e) {}
+    idx = idx.filter(x => x !== p); idx.push(p);
+    while (idx.length > 120) { const eski = idx.shift(); try { localStorage.removeItem('hv_mp_' + eski); } catch (e) {} }
+    localStorage.setItem(HV_MP_IDX, JSON.stringify(idx));
+  } catch (e) {
+    // Depolama doldu → mushaf önbelleğini boşalt, uygulamanın gerisi etkilenmesin
+    try {
+      const idx = JSON.parse(localStorage.getItem(HV_MP_IDX) || '[]');
+      idx.forEach(x => { try { localStorage.removeItem('hv_mp_' + x); } catch (e2) {} });
+      localStorage.setItem(HV_MP_IDX, '[]');
+    } catch (e2) {}
+  }
+}
+
+async function hvMushafSayfaGetir(p) {
+  const c = hvMushafOnbellekAl(p);
+  if (c && c.length) return c;
+
+  const arRes = await fetch('https://api.alquran.cloud/v1/page/' + p + '/quran-uthmani');
+  const arJson = await arRes.json();
+  if (!arJson || !arJson.data || !Array.isArray(arJson.data.ayahs)) throw new Error('Sayfa alınamadı');
+
+  let mealHarita = {};
+  try {
+    const trRes = await fetch('https://api.alquran.cloud/v1/page/' + p + '/tr.diyanet');
+    const trJson = await trRes.json();
+    (trJson.data.ayahs || []).forEach(a => { mealHarita[a.number] = a.text; });
+  } catch (e) { /* meal gelmezse Arapça yine görünsün */ }
+
+  const veri = arJson.data.ayahs.map(a => ({
+    n: a.number,
+    s: a.surah.number,
+    sadi: a.surah.englishName,
+    sar: a.surah.name,
+    v: a.numberInSurah,
+    ar: a.text,
+    tr: mealHarita[a.number] || ''
+  }));
+  hvMushafOnbellekYaz(p, veri);
+  return veri;
+}
+
+/* ── Ses ───────────────────────────────────────────────────────────── */
+let hvMvSes = null, hvMvSira = [], hvMvKonum = -1, hvMvCalisiyor = false;
+
+function hvMvSesNesnesi() {
+  if (!hvMvSes) {
+    hvMvSes = new Audio();
+    hvMvSes.preload = 'auto';
+    hvMvSes.addEventListener('ended', () => { hvMvSonraki(); });
+    // Ses gelmezse ayetleri hızla atlamak yerine dur ve haber ver
+    hvMvSes.addEventListener('error', () => {
+      hvMvDurdur();
+      try { showToastNotification('🔇 Ses yüklenemedi', 'İnternet bağlantını kontrol et ya da başka bir okuyucu seç.'); } catch (e) {}
+    });
+  }
+  return hvMvSes;
+}
+
+function hvMvVurgula(n) {
+  document.querySelectorAll('.mv-ayah.okunuyor, .mv-meal.okunuyor').forEach(el => el.classList.remove('okunuyor'));
+  if (!n) return;
+  const a = document.getElementById('mv-a-' + n);
+  const m = document.getElementById('mv-m-' + n);
+  if (a) { a.classList.add('okunuyor'); a.scrollIntoView({ block: 'center', behavior: 'smooth' }); }
+  if (m) m.classList.add('okunuyor');
+}
+
+function hvMvCal(i) {
+  if (i < 0 || i >= hvMvSira.length) { hvMvDurdur(); return; }
+  hvMvKonum = i;
+  const qari = hvGet('hv_mushaf_qari', 'ar.alafasy');
+  const ses = hvMvSesNesnesi();
+  ses.src = 'https://cdn.islamic.network/quran/audio/128/' + qari + '/' + hvMvSira[i];
+  ses.play().catch(() => {});
+  hvMvCalisiyor = true;
+  hvMvVurgula(hvMvSira[i]);
+  hvMvDugmeTazele();
+}
+
+function hvMvSonraki() {
+  if (!hvMvCalisiyor) return;
+  if (hvMvKonum + 1 < hvMvSira.length) { hvMvCal(hvMvKonum + 1); return; }
+  // Sayfa bitti → sıradaki sayfaya geç ve okumaya devam et
+  const s = parseInt(hvGet('hv_mushaf_page', '1'), 10);
+  if (s < HV_MUSHAF_SON) {
+    if (hvTeAcik) { hvSet('hv_mushaf_page', s + 1); hvTamEkranCiz().then(() => { hvMvCalisiyor = true; hvMvCal(0); }); }
+    else hvMushafGit(s + 1, true);
+  } else {
+    hvMvDurdur();
+  }
+}
+
+function hvMvDurdur() {
+  hvMvCalisiyor = false;
+  try { if (hvMvSes) hvMvSes.pause(); } catch (e) {}
+  hvMvVurgula(null);
+  hvMvDugmeTazele();
+}
+window.hvMvDurdur = hvMvDurdur;
+
+function hvMvDugmeTazele() {
+  const b = document.getElementById('mv-play');
+  if (b) b.innerHTML = hvMvCalisiyor ? '⏸ Duraklat' : '▶️ Dinle';
+  const t = document.getElementById('te-play');
+  if (t) t.innerHTML = hvMvCalisiyor ? '⏸' : '▶️';
+}
+
+function hvMvBasDurdur() {
+  if (hvMvCalisiyor) {
+    hvMvDurdur();
+  } else if (hvMvKonum >= 0 && hvMvSes && hvMvSes.src) {
+    hvMvCalisiyor = true; hvMvSes.play().catch(() => {});
+    hvMvVurgula(hvMvSira[hvMvKonum]); hvMvDugmeTazele();
+  } else {
+    hvMvCal(0);
+  }
+}
+window.hvMvBasDurdur = hvMvBasDurdur;
+
+function hvMvAyettenBasla(n) {
+  const i = hvMvSira.indexOf(n);
+  if (i >= 0) hvMvCal(i);
+}
+window.hvMvAyettenBasla = hvMvAyettenBasla;
+
+/* ── Yer imi (sayfa) ───────────────────────────────────────────────── */
+function hvMushafImler() { try { return JSON.parse(localStorage.getItem('hv_mushaf_marks') || '[]'); } catch (e) { return []; } }
+function hvMushafImDegistir() {
+  const p = parseInt(hvGet('hv_mushaf_page', '1'), 10);
+  let m = hvMushafImler();
+  m = m.indexOf(p) >= 0 ? m.filter(x => x !== p) : m.concat([p]).sort((a, b) => a - b);
+  try { localStorage.setItem('hv_mushaf_marks', JSON.stringify(m)); } catch (e) {}
+  hvMushafArayuzTazele();
+}
+window.hvMushafImDegistir = hvMushafImDegistir;
+
+/* ── Ayarlar ───────────────────────────────────────────────────────── */
+function hvMushafPunto(delta) {
+  let f = parseInt(hvGet('hv_mushaf_font', '30'), 10) + delta;
+  f = Math.max(20, Math.min(60, f));
+  hvSet('hv_mushaf_font', f);
+  const el = document.getElementById('mv-arabic');
+  if (el) el.style.fontSize = f + 'px';
+  const lbl = document.getElementById('mv-font-val');
+  if (lbl) lbl.textContent = f + 'px';
+}
+window.hvMushafPunto = hvMushafPunto;
+
+function hvMushafModDegistir(m) { hvSet('hv_mushaf_mode', m); hvMushafGit(parseInt(hvGet('hv_mushaf_page', '1'), 10)); }
+window.hvMushafModDegistir = hvMushafModDegistir;
+
+function hvMushafQariDegistir(q) {
+  hvSet('hv_mushaf_qari', q);
+  if (hvMvCalisiyor && hvMvKonum >= 0) hvMvCal(hvMvKonum);
+}
+window.hvMushafQariDegistir = hvMushafQariDegistir;
+
+/* ── Gezinme ───────────────────────────────────────────────────────── */
+function hvMushafGit(p, calmayaDevam) {
+  p = Math.max(1, Math.min(HV_MUSHAF_SON, parseInt(p, 10) || 1));
+  hvSet('hv_mushaf_page', p);
+  renderMushaf(calmayaDevam === true);
+}
+window.hvMushafGit = hvMushafGit;
+
+function hvMushafAtla() {
+  const el = document.getElementById('mv-page-input');
+  if (el) hvMushafGit(el.value);
+}
+window.hvMushafAtla = hvMushafAtla;
+
+function hvMushafArayuzTazele() {
+  const p = parseInt(hvGet('hv_mushaf_page', '1'), 10);
+  const b = document.getElementById('mv-mark');
+  if (b) {
+    const imli = hvMushafImler().indexOf(p) >= 0;
+    b.classList.toggle('on', imli);
+    b.innerHTML = imli ? '⭐' : '☆';
+  }
+}
+
+/* ── Ekran ─────────────────────────────────────────────────────────── */
+/* Parmakla sayfa çevirme — mushaf sağdan sola okunduğu için
+   parmağı sağa kaydırmak SONRAKİ, sola kaydırmak ÖNCEKİ sayfaya götürür. */
+function hvMushafKaydirmaBagla() {
+  const el = document.getElementById('mv-body');
+  if (!el || el.dataset.kaydirmaBagli === '1') return;
+  el.dataset.kaydirmaBagli = '1';
+  let x0 = 0, y0 = 0, izle = false;
+
+  el.addEventListener('touchstart', e => {
+    if (e.touches.length !== 1) { izle = false; return; }
+    x0 = e.touches[0].clientX; y0 = e.touches[0].clientY; izle = true;
+  }, { passive: true });
+
+  el.addEventListener('touchend', e => {
+    if (!izle) return;
+    izle = false;
+    const t = e.changedTouches && e.changedTouches[0];
+    if (!t) return;
+    const dx = t.clientX - x0, dy = t.clientY - y0;
+    if (Math.abs(dx) < 70 || Math.abs(dy) > 60) return;   // dikey kaydırma sayfayı çevirmesin
+    const s = parseInt(hvGet('hv_mushaf_page', '1'), 10);
+    if (dx > 0 && s < HV_MUSHAF_SON) hvMushafGit(s + 1);
+    else if (dx < 0 && s > 1) hvMushafGit(s - 1);
+  }, { passive: true });
+}
+window.hvMushafKaydirmaBagla = hvMushafKaydirmaBagla;
+
+async function renderMushaf(calmayaDevam) {
+  const kok = document.getElementById('mushaf-root');
+  if (!kok) return;
+
+  const sayfa = parseInt(hvGet('hv_mushaf_page', '1'), 10);
+  const mod   = hvGet('hv_mushaf_mode', 'ar');
+  const font  = parseInt(hvGet('hv_mushaf_font', '30'), 10);
+  const qari  = hvGet('hv_mushaf_qari', 'ar.alafasy');
+  const imler = hvMushafImler();
+
+  kok.innerHTML = `
+    <div class="page-header-title">
+      <h2>📖 Kuran-ı Kerim</h2>
+      <p>Sayfa sayfa • gerçek mushaf düzeni • 604 sayfa</p>
+    </div>
+    <div class="qmode">
+      <button class="on">📜 Sayfa Sayfa</button>
+      <button onclick="hvKuranModu('sure')">📖 Sure Sure</button>
+    </div>
+    ${typeof hvAnlamKart === 'function' ? hvAnlamKart() : ''}
+
+    <div class="mv-bar">
+      <button class="mv-nav" onclick="hvMushafGit(${sayfa - 1})" ${sayfa <= 1 ? 'disabled' : ''}>‹</button>
+      <div class="mv-page-box">
+        <input id="mv-page-input" type="number" min="1" max="604" value="${sayfa}"
+               onchange="hvMushafAtla()" inputmode="numeric">
+        <span>/ 604</span>
+      </div>
+      <button class="mv-nav" onclick="hvMushafGit(${sayfa + 1})" ${sayfa >= HV_MUSHAF_SON ? 'disabled' : ''}>›</button>
+      <button id="mv-mark" class="mv-mark ${imler.indexOf(sayfa) >= 0 ? 'on' : ''}" onclick="hvMushafImDegistir()">${imler.indexOf(sayfa) >= 0 ? '⭐' : '☆'}</button>
+      <button class="mv-mark" onclick="hvTamEkranAc()" title="Tam ekran">⛶</button>
+    </div>
+
+    <div class="mv-bar mv-bar2">
+      <div class="mv-mode">
+        <button class="${mod === 'ar' ? 'on' : ''}" onclick="hvMushafModDegistir('ar')">Arapça</button>
+        <button class="${mod === 'both' ? 'on' : ''}" onclick="hvMushafModDegistir('both')">Arapça + Meal</button>
+        <button class="${mod === 'tr' ? 'on' : ''}" onclick="hvMushafModDegistir('tr')">Meal</button>
+      </div>
+      <div class="mv-font">
+        <button onclick="hvMushafPunto(-2)">A−</button>
+        <span id="mv-font-val">${font}px</span>
+        <button onclick="hvMushafPunto(2)">A+</button>
+      </div>
+    </div>
+
+    <div class="mv-bar mv-bar3">
+      <button id="mv-play" class="mv-play" onclick="hvMvBasDurdur()">▶️ Dinle</button>
+      <select class="mv-qari" onchange="hvMushafQariDegistir(this.value)">
+        ${HV_QARILER.map(q => `<option value="${q.id}" ${q.id === qari ? 'selected' : ''}>${q.ad}</option>`).join('')}
+      </select>
+    </div>
+
+    <div class="mv-where">
+      <div class="mv-where-now" id="mv-where-now">📍 Sayfa ${sayfa}</div>
+      ${imler.length
+        ? `<div class="mv-marks">${imler.slice(0, 14).map(x =>
+            `<button class="mv-chip ${x === sayfa ? 'on' : ''}" onclick="hvMushafGit(${x})">⭐ ${x}</button>`).join('')}
+           ${imler.length > 14 ? `<span class="mv-chip-more">+${imler.length - 14}</span>` : ''}</div>`
+        : `<div class="mv-marks-empty">Sayfayı kaydetmek için yukarıdaki ☆ düğmesine dokun.</div>`}
+    </div>
+
+    <div id="mv-body" class="mv-body"><div class="mv-loading">Sayfa yükleniyor…</div></div>
+  `;
+
+  let rows;
+  try {
+    rows = await hvMushafSayfaGetir(sayfa);
+  } catch (e) {
+    document.getElementById('mv-body').innerHTML =
+      `<div class="mv-error">Sayfa yüklenemedi. İnternet bağlantını kontrol edip tekrar dene.
+       <button class="gold-outline-btn" onclick="hvMushafGit(${sayfa})">↻ Tekrar Dene</button></div>`;
+    return;
+  }
+
+  hvMvSira = rows.map(r => r.n);
+  hvMvKonum = -1;
+
+  // Sayfadaki sûre adlarını sayfanın KENDİ verisinden yaz (elle tablo yok)
+  const sureNolari = rows.map(r => r.s).filter((x, i, a) => a.indexOf(x) === i);
+  const nerede = document.getElementById('mv-where-now');
+  if (nerede) nerede.textContent = '📍 Sayfa ' + sayfa + ' • ' + sureNolari.map(hvSureAdi).join(' / ');
+
+  // ── Arapça blok ──
+  let arHtml = '';
+  let sonSure = null;
+  rows.forEach(r => {
+    if (r.s !== sonSure) {
+      sonSure = r.s;
+      if (r.v === 1) {
+        arHtml += `<div class="mv-sure-basi">${r.sar}</div>`;
+      }
+    }
+    let metin = r.ar;
+    if (r.v === 1 && r.s !== 1 && r.s !== 9) {
+      const b = hvBesmeleAyir(metin);
+      if (b.besmele) { arHtml += `<div class="mv-besmele">${b.besmele}</div>`; metin = b.kalan; }
+    }
+    arHtml += `<span class="mv-ayah" id="mv-a-${r.n}" onclick="hvMvAyettenBasla(${r.n})">${metin}<span class="mv-num">${hvArNum(r.v)}</span></span> `;
+  });
+
+  // ── Meal blok ──
+  let trHtml = '';
+  let sonSure2 = null;
+  rows.forEach(r => {
+    if (r.s !== sonSure2) { sonSure2 = r.s; trHtml += `<div class="mv-meal-sure">${r.sadi} Sûresi</div>`; }
+    trHtml += `<div class="mv-meal" id="mv-m-${r.n}" onclick="hvMvAyettenBasla(${r.n})">
+                 <span class="mv-meal-no">${r.v}</span>${r.tr || '—'}</div>`;
+  });
+
+  const govde = document.getElementById('mv-body');
+  govde.innerHTML =
+    (mod !== 'tr' ? `<div id="mv-arabic" class="mv-arabic" style="font-size:${font}px">${arHtml}</div>` : '') +
+    (mod !== 'ar' ? `<div class="mv-meal-wrap">${trHtml}</div>` : '') +
+    `<div class="mv-swipe-hint">← Sayfa çevirmek için parmağınla kaydır →</div>
+     <div class="mv-foot">— ${sayfa} —</div>`;
+
+  hvMushafArayuzTazele();
+  hvMushafKaydirmaBagla();
+  if (calmayaDevam) { hvMvCalisiyor = true; hvMvCal(0); }
+}
+window.renderMushaf = renderMushaf;
+try { if (window.FEATURE_ROUTES) window.FEATURE_ROUTES['mushaf'] = renderMushaf; } catch (e) {}
+
+
+
+/* ═══════════════════════════════════════════════════════════════════════
+   v61.4 — DUA & SURE EZBERLEME (satır satır dinle ve tekrarla)
+   Sureler ve Kur'an'dan olan dualar ayet ayet, sesiyle birlikte.
+   Kur'an dışı dualarda (Sübhaneke, Ettehiyyâtü…) hazır ses kaydı
+   olmadığı için okunuşundan tekrar edilir.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+const HV_SURE_NO = {
+  'Fâtiha Sûresi': 1, 'Fîl Sûresi': 105, 'Kureyş Sûresi': 106, 'Mâûn Sûresi': 107,
+  'Kevser Sûresi': 108, 'Kâfirûn Sûresi': 109, 'Nasr Sûresi': 110, 'Tebbet (Mesed) Sûresi': 111,
+  'İhlâs Sûresi': 112, 'Felâk Sûresi': 113, 'Nâs Sûresi': 114, 'Asr Sûresi': 103,
+  'Kadir Sûresi': 97, 'İnşirâh (Şerh) Sûresi': 94, 'Tîn Sûresi': 95, 'Zilzâl Sûresi': 99
+};
+
+// Kur'an'dan olan dualar → ayet aralığı (sesli çalışır)
+const HV_DUA_AYET = {
+  'Âyetel Kürsî': { s: 2, bas: 255, son: 255 },
+  'Âmenerrasûlü (Bakara 285-286)': { s: 2, bas: 285, son: 286 }
+};
+
+let hvEzKayit = null;   // { baslik, parcalar:[{ar,ok,tr,ses}], sesVar }
+let hvEzIdx = 0;
+let hvEzSes = null;
+let hvEzTekrar = 1, hvEzKalan = 0;
+
+function hvEzSesNesnesi() {
+  if (!hvEzSes) {
+    hvEzSes = new Audio();
+    hvEzSes.addEventListener('ended', () => {
+      if (hvEzKalan > 1) { hvEzKalan--; try { hvEzSes.currentTime = 0; hvEzSes.play(); } catch (e) {} }
+      else { hvEzDugmeTazele(false); }
+    });
+    hvEzSes.addEventListener('error', () => hvEzDugmeTazele(false));
+  }
+  return hvEzSes;
+}
+function hvEzSesDurdur() { try { if (hvEzSes) hvEzSes.pause(); } catch (e) {} hvEzKalan = 0; hvEzDugmeTazele(false); }
+window.hvEzSesDurdur = hvEzSesDurdur;
+
+function hvEzDugmeTazele(caliyor) {
+  const b = document.getElementById('ez-play');
+  if (b) b.innerHTML = caliyor ? '⏸ Durdur' : '🔊 Dinle';
+}
+
+function hvEzCal() {
+  const p = hvEzKayit && hvEzKayit.parcalar[hvEzIdx];
+  if (!p || !p.ses) return;
+  if (hvEzSes && !hvEzSes.paused) { hvEzSesDurdur(); return; }
+  const s = hvEzSesNesnesi();
+  hvEzKalan = hvEzTekrar;
+  s.src = p.ses;
+  s.play().catch(() => {});
+  hvEzDugmeTazele(true);
+}
+window.hvEzCal = hvEzCal;
+
+function hvEzTekrarAyarla(n) {
+  hvEzTekrar = parseInt(n, 10) || 1;
+  hvSet('hv_ezber_tekrar', hvEzTekrar);
+  document.querySelectorAll('.ez-rep button').forEach(b => b.classList.toggle('on', b.dataset.n === String(hvEzTekrar)));
+}
+window.hvEzTekrarAyarla = hvEzTekrarAyarla;
+
+function hvEzGit(i) {
+  if (!hvEzKayit) return;
+  hvEzSesDurdur();
+  hvEzIdx = Math.max(0, Math.min(hvEzKayit.parcalar.length - 1, i));
+  try { localStorage.setItem('hv_ezber_' + hvEzKayit.anahtar, String(hvEzIdx)); } catch (e) {}
+  hvEzParcaCiz();
+}
+window.hvEzGit = hvEzGit;
+
+function hvEzParcaCiz() {
+  const kutu = document.getElementById('ez-step');
+  if (!kutu || !hvEzKayit) return;
+  const top = hvEzKayit.parcalar.length;
+  const p = hvEzKayit.parcalar[hvEzIdx];
+  const sonuncu = hvEzIdx === top - 1;
+
+  kutu.innerHTML = `
+    <div class="ez-count">${hvEzIdx + 1} / ${top}</div>
+    <div class="ez-dots">${hvEzKayit.parcalar.map((_, i) =>
+      `<span class="ez-dot ${i === hvEzIdx ? 'on' : (i < hvEzIdx ? 'done' : '')}" onclick="hvEzGit(${i})"></span>`).join('')}</div>
+
+    <div class="ez-ar">${p.ar}</div>
+    ${p.ok ? `<div class="ez-ok">${p.ok}</div>` : ''}
+    ${p.tr ? `<div class="ez-tr">${p.tr}</div>` : ''}
+
+    <div class="ez-controls">
+      ${p.ses
+        ? `<button id="ez-play" class="ez-play" onclick="hvEzCal()">🔊 Dinle</button>
+           <div class="ez-rep">
+             <span>Tekrar:</span>
+             ${[1, 3, 5].map(n => `<button data-n="${n}" class="${hvEzTekrar === n ? 'on' : ''}" onclick="hvEzTekrarAyarla(${n})">${n}×</button>`).join('')}
+           </div>`
+        : `<div class="ez-nosound">Bu dua Kur'an'dan olmadığı için hazır ses kaydı yok — okunuşundan tekrar edin.</div>`}
+    </div>
+
+    <div class="ez-nav">
+      <button class="gold-outline-btn" onclick="hvEzGit(${hvEzIdx - 1})" ${hvEzIdx === 0 ? 'disabled' : ''}>← Önceki</button>
+      ${sonuncu
+        ? `<button class="gold-primary-btn" onclick="hvEzTumu()">✅ Tamamını Gör</button>`
+        : `<button class="gold-primary-btn" onclick="hvEzGit(${hvEzIdx + 1})">Sonraki →</button>`}
+    </div>
+    ${sonuncu ? '' : `<button class="ez-full-link" onclick="hvEzTumu()">📖 Tamamını oku</button>`}
+  `;
+}
+
+// Aynı metin her parçada tekrarlanıyorsa (dualarda Arapça ve anlam) bir kez yaz
+function hvEzTekilBirlestir(dizi) {
+  const temiz = dizi.filter(Boolean);
+  const tekil = temiz.filter((x, i) => temiz.indexOf(x) === i);
+  return tekil.join(' ');
+}
+
+function hvEzTumu() {
+  hvEzSesDurdur();
+  const kutu = document.getElementById('ez-step');
+  if (!kutu || !hvEzKayit) return;
+  kutu.innerHTML = `
+    <div class="ez-done-title">🎉 ${hvEzKayit.baslik} — tamamı</div>
+    <div class="ez-ar ez-ar-full">${hvEzTekilBirlestir(hvEzKayit.parcalar.map(p => p.ar))}</div>
+    <div class="ez-ok">${hvEzKayit.parcalar.map(p => p.ok).filter(Boolean).join(' ')}</div>
+    <div class="ez-tr">${hvEzTekilBirlestir(hvEzKayit.parcalar.map(p => p.tr))}</div>
+    <div class="ez-nav">
+      <button class="gold-outline-btn" onclick="hvEzGit(0)">↺ Baştan Başla</button>
+      <button class="gold-primary-btn" onclick="renderEzber()">← Listeye Dön</button>
+    </div>
+  `;
+}
+window.hvEzTumu = hvEzTumu;
+
+/* ── Kayıt yükleme ─────────────────────────────────────────────────── */
+async function hvEzAyetleriGetir(sureNo, bas, son) {
+  const qari = hvGet('hv_mushaf_qari', 'ar.alafasy');
+  const res = await fetch('https://api.alquran.cloud/v1/surah/' + sureNo +
+    '/editions/quran-uthmani,tr.transliteration,tr.diyanet,' + qari);
+  const j = await res.json();
+  if (!j || !j.data || j.data.length < 4) throw new Error('Ayetler alınamadı');
+  const ar = j.data[0].ayahs, ok = j.data[1].ayahs, tr = j.data[2].ayahs, se = j.data[3].ayahs;
+  const out = [];
+  ar.forEach((a, i) => {
+    if (bas && (a.numberInSurah < bas || a.numberInSurah > son)) return;
+    let metin = a.text;
+    if (a.numberInSurah === 1 && sureNo !== 1 && sureNo !== 9) {
+      const b = hvBesmeleAyir(metin);
+      if (b.besmele) metin = b.kalan;
+    }
+    out.push({
+      ar: metin,
+      ok: ok[i] ? ok[i].text : '',
+      tr: tr[i] ? tr[i].text : '',
+      ses: se[i] ? se[i].audio : ''
+    });
+  });
+  return out;
+}
+
+// Okunuşu ezberlenebilir parçalara ayırır.
+// Önce cümle sonlarından, olmazsa "ve" bağlaçlarından böler.
+function hvEzCumleBol(metin) {
+  if (!metin) return [];
+  let p = metin.split(/(?<=[.!?])\s+/).map(x => x.trim()).filter(Boolean);
+  if (p.length < 2) {
+    p = metin.split(/\s+(?=ve\s)/i).map(x => x.trim()).filter(Boolean);
+  }
+  // Çok uzun parçaları ikiye böl, çok kısa olanları öncekine ekle
+  const son = [];
+  p.forEach(x => {
+    if (son.length && x.length < 12) { son[son.length - 1] += ' ' + x; return; }
+    son.push(x);
+  });
+  return son.length ? son : [metin];
+}
+
+async function hvEzAc(tur, ad) {
+  const kok = document.getElementById('ezber-root');
+  if (!kok) return;
+  hvEzSesDurdur();
+  hvEzTekrar = parseInt(hvGet('hv_ezber_tekrar', '1'), 10) || 1;
+
+  kok.innerHTML = `
+    <div class="page-header-title"><h2>🧠 ${ad}</h2><p>Parça parça dinle ve tekrarla</p></div>
+    <button class="gold-outline-btn" onclick="renderEzber()">← Listeye Dön</button>
+    <div id="ez-step" class="ez-step"><div class="mv-loading">Yükleniyor…</div></div>
+  `;
+
+  try {
+    let parcalar = [];
+    if (tur === 'sure') {
+      parcalar = await hvEzAyetleriGetir(HV_SURE_NO[ad], 0, 0);
+    } else if (tur === 'kurandua') {
+      const a = HV_DUA_AYET[ad];
+      parcalar = await hvEzAyetleriGetir(a.s, a.bas, a.son);
+    } else {
+      const d = (typeof DUA_LEARN !== 'undefined' ? DUA_LEARN : []).find(x => x.title === ad);
+      if (!d) throw new Error('Dua bulunamadı');
+      // Arapça metni parçalamıyoruz — bütünlüğü bozulmasın diye her adımda
+      // tamamı üstte durur; altında o adımın okunuşu ve duanın anlamı gösterilir.
+      const okP = hvEzCumleBol(d.okunusu);
+      parcalar = okP.map(o => ({ ar: d.arabic, ok: o, tr: d.turkish, ses: '' }));
+      if (!parcalar.length) parcalar = [{ ar: d.arabic, ok: d.okunusu, tr: d.turkish, ses: '' }];
+    }
+
+    hvEzKayit = { baslik: ad, parcalar: parcalar, anahtar: (tur + '_' + ad).replace(/\s+/g, '_') };
+    let kaldigi = 0;
+    try { kaldigi = parseInt(localStorage.getItem('hv_ezber_' + hvEzKayit.anahtar) || '0', 10) || 0; } catch (e) {}
+    hvEzIdx = Math.max(0, Math.min(parcalar.length - 1, kaldigi));
+    hvEzParcaCiz();
+  } catch (e) {
+    const s = document.getElementById('ez-step');
+    if (s) s.innerHTML = `<div class="mv-error">Yüklenemedi. İnternet bağlantını kontrol et.
+      <button class="gold-outline-btn" onclick="hvEzAc('${tur}','${ad.replace(/'/g, "\\'")}')">↻ Tekrar Dene</button></div>`;
+  }
+}
+window.hvEzAc = hvEzAc;
+
+function renderEzber() {
+  const kok = document.getElementById('ezber-root');
+  if (!kok) return;
+  hvEzSesDurdur();
+
+  const sureler = Object.keys(HV_SURE_NO);
+  const kuranDua = Object.keys(HV_DUA_AYET);
+  const digerDua = (typeof DUA_LEARN !== 'undefined' ? DUA_LEARN : [])
+    .map(d => d.title).filter(t => !HV_DUA_AYET[t]);
+
+  const kart = (tur, ad, alt, sesli) => `
+    <button class="ez-card" onclick="hvEzAc('${tur}','${ad.replace(/'/g, "\\'")}')">
+      <span class="ez-card-t">${ad}</span>
+      <span class="ez-card-s">${alt}</span>
+      ${sesli ? '<span class="ez-badge">🔊 Sesli</span>' : '<span class="ez-badge muted">Okunuşlu</span>'}
+    </button>`;
+
+  kok.innerHTML = `
+    <div class="page-header-title">
+      <h2>🧠 Dua & Sure Ezberle</h2>
+      <p>Parça parça dinle, tekrarla, ezberle</p>
+    </div>
+    <div class="ez-info">Her metin küçük parçalara ayrılır. Bir parçayı dinle, kendin tekrar et, hazır olunca sonrakine geç. Kaldığın yer hatırlanır.</div>
+
+    <div class="ez-group-title">📖 Kısa Sureler</div>
+    <div class="ez-grid">${sureler.map(s => kart('sure', s, 'Ayet ayet', true)).join('')}</div>
+
+    <div class="ez-group-title">🤲 Kur'an'dan Dualar</div>
+    <div class="ez-grid">${kuranDua.map(s => kart('kurandua', s, 'Ayet ayet', true)).join('')}</div>
+
+    <div class="ez-group-title">🕌 Namaz Duaları</div>
+    <div class="ez-grid">${digerDua.map(s => kart('dua', s, 'Satır satır', false)).join('')}</div>
+  `;
+}
+window.renderEzber = renderEzber;
+try { if (window.FEATURE_ROUTES) window.FEATURE_ROUTES['ezber'] = renderEzber; } catch (e) {}
+
+/* ── Sure adı / kaldığın yer ────────────────────────────────────── */
+function hvSureAdi(no) {
+  try {
+    const l = (typeof ALL_114_SURAHS !== 'undefined') ? ALL_114_SURAHS : [];
+    const s = l.find(x => Number(x.id) === Number(no));
+    if (s && s.name) return s.name + ' Sûresi';
+  } catch (e) {}
+  return no + '. Sûre';
+}
+
+
+// Sure sure ↔ sayfa sayfa geçişi
+function hvKuranModu(mod) {
+  if (mod === 'sayfa') { navigateTo('mushaf'); return; }
+  const liste = document.getElementById('surah-list-view');
+  const detay = document.getElementById('surah-detail-view');
+  if (liste) liste.style.display = 'block';
+  if (detay) detay.style.display = 'none';
+  navigateTo('quran');
+}
+window.hvKuranModu = hvKuranModu;
+
+/* ═══════════════════════════════════════════════════════════════════════
+   v61.4 — KURAN DİNLE
+   Sure sure kesintisiz dinleme. Uygulamanın başka bölümlerine geçsen de
+   çalmaya devam eder; kilit ekranından da yönetilebilir.
+   Kaynak: mp3quran.net (uygulamada zaten kullanılan sunucu)
+   ═══════════════════════════════════════════════════════════════════════ */
+
+const HV_DINLE_QARILER = [
+  { id: 'afs',   sunucu: 'server8',  ad: 'Mishary Rashid Alafasy' },
+  { id: 'basit', sunucu: 'server7',  ad: 'Abdulbasit Abdussamed' },
+  { id: 'maher', sunucu: 'server12', ad: 'Maher Al Muaiqly' },
+  { id: 's_gmd', sunucu: 'server7',  ad: 'Saad El Ghamidi' }
+];
+
+let hvDnSes = null;
+let hvDnSure = 0;          // 0 = seçilmemiş
+let hvDnCaliyor = false;
+
+function hvDnSureAdi(no) {
+  try {
+    const l = (typeof ALL_114_SURAHS !== 'undefined') ? ALL_114_SURAHS : [];
+    const s = l.find(x => Number(x.id) === Number(no));
+    if (s && s.name) return s.name;
+  } catch (e) {}
+  return no + '. Sûre';
+}
+function hvDnQari() {
+  const id = hvGet('hv_dinle_qari', 'afs');
+  return HV_DINLE_QARILER.find(q => q.id === id) || HV_DINLE_QARILER[0];
+}
+function hvDnUrl(no) {
+  const q = hvDnQari();
+  return 'https://' + q.sunucu + '.mp3quran.net/' + q.id + '/' + String(no).padStart(3, '0') + '.mp3';
+}
+function hvDnSure2(sn) { const m = Math.floor(sn / 60), s = Math.floor(sn % 60); return m + ':' + (s < 10 ? '0' : '') + s; }
+
+function hvDnNesne() {
+  if (hvDnSes) return hvDnSes;
+  hvDnSes = new Audio();
+  hvDnSes.preload = 'metadata';
+
+  hvDnSes.addEventListener('timeupdate', () => {
+    const c = document.getElementById('dn-cizgi');
+    const g = document.getElementById('dn-gecen');
+    const t = document.getElementById('dn-toplam');
+    if (c && hvDnSes.duration) c.value = (hvDnSes.currentTime / hvDnSes.duration) * 100;
+    if (g) g.textContent = hvDnSure2(hvDnSes.currentTime || 0);
+    if (t) t.textContent = hvDnSes.duration ? hvDnSure2(hvDnSes.duration) : '--:--';
+    if (hvDnSure) { try { localStorage.setItem('hv_dinle_pos', String(Math.floor(hvDnSes.currentTime))); } catch (e) {} }
+  });
+
+  hvDnSes.addEventListener('ended', () => {
+    const surekli = hvGet('hv_dinle_surekli', '1') === '1';
+    if (surekli && hvDnSure < 114) { hvDnCal(hvDnSure + 1); }
+    else { hvDnCaliyor = false; hvDnTazele(); }
+  });
+
+  hvDnSes.addEventListener('error', () => {
+    hvDnCaliyor = false; hvDnTazele();
+    try { showToastNotification('🔇 Ses yüklenemedi', 'İnternet bağlantını kontrol et ya da başka bir okuyucu seç.'); } catch (e) {}
+  });
+
+  hvDnSes.addEventListener('play',  () => { hvDnCaliyor = true;  hvDnTazele(); });
+  hvDnSes.addEventListener('pause', () => { hvDnCaliyor = false; hvDnTazele(); });
+  return hvDnSes;
+}
+
+// Kilit ekranı / kulaklık düğmeleri
+function hvDnMedyaBilgisi() {
+  try {
+    if (!('mediaSession' in navigator)) return;
+    navigator.mediaSession.metadata = new MediaMetadata({
+      title: hvDnSureAdi(hvDnSure) + ' Sûresi',
+      artist: hvDnQari().ad,
+      album: 'Kur\'an-ı Kerim — Namaz Dostu'
+    });
+    navigator.mediaSession.setActionHandler('play',  () => hvDnBasDurdur());
+    navigator.mediaSession.setActionHandler('pause', () => hvDnBasDurdur());
+    navigator.mediaSession.setActionHandler('previoustrack', () => hvDnAtla(-1));
+    navigator.mediaSession.setActionHandler('nexttrack',     () => hvDnAtla(1));
+  } catch (e) {}
+}
+
+function hvDnCal(no, baslangicSn) {
+  no = Math.max(1, Math.min(114, parseInt(no, 10) || 1));
+  hvDnSure = no;
+  hvSet('hv_dinle_sure', no);
+  const s = hvDnNesne();
+  s.src = hvDnUrl(no);
+  s.load();
+  if (baslangicSn) {
+    const atla = () => { try { s.currentTime = baslangicSn; } catch (e) {} s.removeEventListener('loadedmetadata', atla); };
+    s.addEventListener('loadedmetadata', atla);
+  } else {
+    try { localStorage.setItem('hv_dinle_pos', '0'); } catch (e) {}
+  }
+  s.play().catch(() => {});
+  hvDnMedyaBilgisi();
+  hvDnTazele();
+}
+window.hvDnCal = hvDnCal;
+
+function hvDnBasDurdur() {
+  const s = hvDnNesne();
+  if (!hvDnSure) { hvDnCal(parseInt(hvGet('hv_dinle_sure', '1'), 10)); return; }
+  if (s.paused) { if (!s.src) { hvDnCal(hvDnSure); return; } s.play().catch(() => {}); }
+  else s.pause();
+}
+window.hvDnBasDurdur = hvDnBasDurdur;
+
+function hvDnAtla(yon) {
+  const y = hvDnSure + yon;
+  if (y < 1 || y > 114) return;
+  hvDnCal(y);
+}
+window.hvDnAtla = hvDnAtla;
+
+function hvDnSar(deger) {
+  const s = hvDnNesne();
+  if (s.duration) { try { s.currentTime = (deger / 100) * s.duration; } catch (e) {} }
+}
+window.hvDnSar = hvDnSar;
+
+function hvDnQariDegistir(id) {
+  hvSet('hv_dinle_qari', id);
+  if (hvDnSure) {
+    const kaldi = hvDnSes ? hvDnSes.currentTime : 0;
+    const caliyordu = hvDnCaliyor;
+    hvDnCal(hvDnSure, kaldi);
+    if (!caliyordu && hvDnSes) hvDnSes.pause();
+  }
+  hvDnTazele();
+}
+window.hvDnQariDegistir = hvDnQariDegistir;
+
+function hvDnSurekliDegistir(el) { hvSet('hv_dinle_surekli', el.checked ? '1' : '0'); }
+window.hvDnSurekliDegistir = hvDnSurekliDegistir;
+
+function hvDnTazele() {
+  const b = document.getElementById('dn-play');
+  if (b) b.innerHTML = hvDnCaliyor ? '⏸' : '▶️';
+  const ad = document.getElementById('dn-simdi');
+  if (ad) ad.textContent = hvDnSure ? (hvDnSureAdi(hvDnSure) + ' Sûresi') : 'Bir sûre seçin';
+  const q = document.getElementById('dn-qari-ad');
+  if (q) q.textContent = hvDnQari().ad;
+  document.querySelectorAll('.dn-sure').forEach(el => {
+    el.classList.toggle('caliyor', Number(el.dataset.no) === hvDnSure);
+  });
+}
+
+function hvDnAra(q) {
+  const t = (q || '').toLocaleLowerCase('tr').trim();
+  document.querySelectorAll('.dn-sure').forEach(el => {
+    const ad = (el.dataset.ad || '').toLocaleLowerCase('tr');
+    el.style.display = (!t || ad.includes(t) || el.dataset.no === t) ? '' : 'none';
+  });
+}
+window.hvDnAra = hvDnAra;
+
+function renderDinle() {
+  const kok = document.getElementById('dinle-root');
+  if (!kok) return;
+  const qari = hvGet('hv_dinle_qari', 'afs');
+  const surekli = hvGet('hv_dinle_surekli', '1') === '1';
+  const kayitli = parseInt(hvGet('hv_dinle_sure', '0'), 10) || 0;
+  const kayitliSn = parseInt(hvGet('hv_dinle_pos', '0'), 10) || 0;
+  const liste = (typeof ALL_114_SURAHS !== 'undefined') ? ALL_114_SURAHS : [];
+
+  kok.innerHTML = `
+    <div class="page-header-title">
+      <h2>🎧 Kuran Dinle</h2>
+      <p>Kesintisiz dinle • uygulamada gezerken de çalar</p>
+    </div>
+
+    <div class="dn-player">
+      <div id="dn-simdi" class="dn-simdi">${hvDnSure ? hvDnSureAdi(hvDnSure) + ' Sûresi' : (kayitli ? hvDnSureAdi(kayitli) + ' Sûresi' : 'Bir sûre seçin')}</div>
+      <div id="dn-qari-ad" class="dn-qari-ad">${hvDnQari().ad}</div>
+
+      <input id="dn-cizgi" class="dn-cizgi" type="range" min="0" max="100" value="0"
+             oninput="hvDnSar(this.value)">
+      <div class="dn-zaman"><span id="dn-gecen">0:00</span><span id="dn-toplam">--:--</span></div>
+
+      <div class="dn-btns">
+        <button class="dn-yan" onclick="hvDnAtla(-1)">⏮</button>
+        <button id="dn-play" class="dn-play" onclick="hvDnBasDurdur()">${hvDnCaliyor ? '⏸' : '▶️'}</button>
+        <button class="dn-yan" onclick="hvDnAtla(1)">⏭</button>
+      </div>
+
+      ${kayitli && !hvDnSure ? `<button class="dn-devam" onclick="hvDnCal(${kayitli}, ${kayitliSn})">📍 Kaldığın yerden devam et — ${hvDnSureAdi(kayitli)} ${kayitliSn ? '(' + hvDnSure2(kayitliSn) + ')' : ''}</button>` : ''}
+    </div>
+
+    <div class="dn-ayar">
+      <select class="mv-qari" onchange="hvDnQariDegistir(this.value)">
+        ${HV_DINLE_QARILER.map(q => `<option value="${q.id}" ${q.id === qari ? 'selected' : ''}>${q.ad}</option>`).join('')}
+      </select>
+      <label class="dn-switch">
+        <input type="checkbox" ${surekli ? 'checked' : ''} onchange="hvDnSurekliDegistir(this)">
+        <span>Bitince sıradaki sûre</span>
+      </label>
+    </div>
+
+    <div class="quran-search-bar">
+      <span class="search-icon-fixed">🔍</span>
+      <input type="text" class="search-input-field" placeholder="Sûre ara (ör. Yasin)..." oninput="hvDnAra(this.value)">
+    </div>
+
+    <div class="dn-liste">
+      ${liste.map(s => `
+        <button class="dn-sure ${Number(s.id) === hvDnSure ? 'caliyor' : ''}" data-no="${s.id}" data-ad="${s.name}"
+                onclick="hvDnCal(${s.id})">
+          <span class="dn-no">${s.id}</span>
+          <span class="dn-ad">${s.name} Sûresi</span>
+          <span class="dn-ayet">${s.verse_count} ayet</span>
+        </button>`).join('')}
+    </div>
+  `;
+  hvDnTazele();
+}
+window.renderDinle = renderDinle;
+try { if (window.FEATURE_ROUTES) window.FEATURE_ROUTES['dinle'] = renderDinle; } catch (e) {}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   v61.4 — ELİFBÂ (Kur'an okumayı öğrenme)
+   28 harf • yazılış biçimleri • harekeler • tanıma alıştırması
+   Harflerin başta/ortada/sonda biçimleri ZWJ (birleştirici) ile
+   otomatik oluşturulur; elle glif yazılmaz, yanlış harf riski yoktur.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+const HV_ELIFBA = [
+  { h: 'ا', ad: 'Elif',  ok: 'Kendi sesi yoktur; uzatma harfidir.', nokta: 0, birlesir: false, ses: '', kalin: false },
+  { h: 'ب', ad: 'Be',    ok: 'B sesi verir.', nokta: 1, birlesir: true, ses: 'b', kalin: false },
+  { h: 'ت', ad: 'Te',    ok: 'İnce T sesi verir.', nokta: 2, birlesir: true, ses: 't', kalin: false },
+  { h: 'ث', ad: 'Se',    ok: 'Peltek S — dil ucu ön dişlere değer.', nokta: 3, birlesir: true, ses: 's', kalin: false },
+  { h: 'ج', ad: 'Cim',   ok: 'C sesi verir.', nokta: 1, birlesir: true, ses: 'c', kalin: false },
+  { h: 'ح', ad: 'Ha',    ok: 'Boğazdan gelen ince H sesi.', nokta: 0, birlesir: true, ses: 'h', kalin: false },
+  { h: 'خ', ad: 'Hı',    ok: 'Hırıltılı, kalın H sesi.', nokta: 1, birlesir: true, ses: 'h', kalin: true },
+  { h: 'د', ad: 'Dal',   ok: 'D sesi verir.', nokta: 0, birlesir: false, ses: 'd', kalin: false },
+  { h: 'ذ', ad: 'Zel',   ok: 'Peltek Z — dil ucu ön dişlere değer.', nokta: 1, birlesir: false, ses: 'z', kalin: false },
+  { h: 'ر', ad: 'Ra',    ok: 'R sesi verir.', nokta: 0, birlesir: false, ses: 'r', kalin: false },
+  { h: 'ز', ad: 'Ze',    ok: 'Z sesi verir.', nokta: 1, birlesir: false, ses: 'z', kalin: false },
+  { h: 'س', ad: 'Sin',   ok: 'S sesi verir.', nokta: 0, birlesir: true, ses: 's', kalin: false },
+  { h: 'ش', ad: 'Şın',   ok: 'Ş sesi verir.', nokta: 3, birlesir: true, ses: 'ş', kalin: false },
+  { h: 'ص', ad: 'Sad',   ok: 'Kalın S sesi.', nokta: 0, birlesir: true, ses: 's', kalin: true },
+  { h: 'ض', ad: 'Dad',   ok: 'Kalın D sesi.', nokta: 1, birlesir: true, ses: 'd', kalin: true },
+  { h: 'ط', ad: 'Tı',    ok: 'Kalın T sesi.', nokta: 0, birlesir: true, ses: 't', kalin: true },
+  { h: 'ظ', ad: 'Zı',    ok: 'Kalın, peltek Z sesi.', nokta: 1, birlesir: true, ses: 'z', kalin: true },
+  { h: 'ع', ad: 'Ayn',   ok: 'Boğazın ortasından çıkan A sesi.', nokta: 0, birlesir: true, ses: '', kalin: false, harekeli: ['a', 'i', 'u'] },
+  { h: 'غ', ad: 'Ğayn',  ok: 'Gırtlaktan gelen Ğ sesi.', nokta: 1, birlesir: true, ses: 'ğ', kalin: true },
+  { h: 'ف', ad: 'Fe',    ok: 'F sesi verir.', nokta: 1, birlesir: true, ses: 'f', kalin: false },
+  { h: 'ق', ad: 'Kaf',   ok: 'Dil kökünden çıkan kalın K sesi.', nokta: 2, birlesir: true, ses: 'k', kalin: true },
+  { h: 'ك', ad: 'Kef',   ok: 'İnce K sesi.', nokta: 0, birlesir: true, ses: 'k', kalin: false },
+  { h: 'ل', ad: 'Lam',   ok: 'L sesi verir.', nokta: 0, birlesir: true, ses: 'l', kalin: false },
+  { h: 'م', ad: 'Mim',   ok: 'M sesi verir.', nokta: 0, birlesir: true, ses: 'm', kalin: false },
+  { h: 'ن', ad: 'Nun',   ok: 'N sesi verir.', nokta: 1, birlesir: true, ses: 'n', kalin: false },
+  { h: 'و', ad: 'Vav',   ok: 'V sesi verir; uzatma harfi de olur.', nokta: 0, birlesir: false, ses: 'v', kalin: false },
+  { h: 'ه', ad: 'He',    ok: 'Yumuşak H sesi.', nokta: 0, birlesir: true, ses: 'h', kalin: false },
+  { h: 'ي', ad: 'Ye',    ok: 'Y sesi verir; uzatma harfi de olur.', nokta: 2, birlesir: true, ses: 'y', kalin: false },
+];
+
+const HV_HAREKELER = [
+  { ad: 'Üstün (Fetha)', im: 'َ', anlat: 'Harfin üstüne çizilir, harfe "e / a" sesi verir.', ornek: 'be' },
+  { ad: 'Esre (Kesra)',  im: 'ِ', anlat: 'Harfin altına çizilir, harfe "i" sesi verir.', ornek: 'bi' },
+  { ad: 'Ötre (Damme)',  im: 'ُ', anlat: 'Harfin üstüne konur, harfe "u / ü" sesi verir.', ornek: 'bü' },
+  { ad: 'Cezim (Sükûn)', im: 'ْ', anlat: 'Harf harekesizdir; kendinden önceki sese bağlanır.', ornek: 'b' },
+  { ad: 'Şedde',         im: 'ّ', anlat: 'Harfin iki kez okunduğunu gösterir.', ornek: 'bb' }
+];
+
+const HV_ZWJ = '‍';
+
+// Harfin başta / ortada / sonda biçimini üretir
+function hvElifbaBicim(harf, yer, birlesir) {
+  if (yer === 'tek') return harf;
+  if (!birlesir) {
+    // Bu harfler kendinden sonrakine bağlanmaz
+    if (yer === 'bas') return harf;
+    return HV_ZWJ + harf;
+  }
+  if (yer === 'bas')  return harf + HV_ZWJ;
+  if (yer === 'orta') return HV_ZWJ + harf + HV_ZWJ;
+  return HV_ZWJ + harf;
+}
+
+let hvElIdx = -1;
+
+function hvElifbaAc(i) {
+  hvElIdx = i;
+  const d = HV_ELIFBA[i];
+  const kutu = document.getElementById('el-detay');
+  if (!kutu || !d) return;
+  const noktaYazi = d.nokta === 0 ? 'Noktasız' : (d.nokta + ' nokta');
+  kutu.innerHTML = `
+    <div class="el-detay-kart">
+      <div class="el-buyuk">${d.h}</div>
+      <div class="el-ad">${d.ad}</div>
+      <div class="el-ok">${d.ok}</div>
+      <div class="el-etiket">${noktaYazi}${d.birlesir ? '' : ' • sonraki harfe bağlanmaz'}</div>
+
+      <div class="el-bolum">Yazılış biçimleri</div>
+      <div class="el-bicimler">
+        <div><span>${hvElifbaBicim(d.h, 'tek', d.birlesir)}</span><em>Tek başına</em></div>
+        <div><span>${hvElifbaBicim(d.h, 'bas', d.birlesir)}</span><em>Başta</em></div>
+        <div><span>${hvElifbaBicim(d.h, 'orta', d.birlesir)}</span><em>Ortada</em></div>
+        <div><span>${hvElifbaBicim(d.h, 'son', d.birlesir)}</span><em>Sonda</em></div>
+      </div>
+
+      ${d.ad === 'Elif' ? '' : `
+      <div class="el-bolum">Harekeli okunuşu</div>
+      <div class="el-harekeli">
+        <div><span>${d.h}َ</span><em>${d.harekeli ? d.harekeli[0] : d.ses + (d.kalin ? 'a' : 'e')}</em></div>
+        <div><span>${d.h}ِ</span><em>${d.harekeli ? d.harekeli[1] : d.ses + (d.kalin ? 'ı' : 'i')}</em></div>
+        <div><span>${d.h}ُ</span><em>${d.harekeli ? d.harekeli[2] : d.ses + (d.kalin ? 'u' : 'ü')}</em></div>
+      </div>
+      <div class="el-hareke-not">${d.harekeli ? 'Boğaz harfidir; sesi gırtlaktan çıkar.' : (d.kalin ? 'Kalın harftir; harekeler kalın okunur.' : 'İnce harftir; harekeler ince okunur.')}</div>`}
+
+      <div class="el-nav">
+        <button class="gold-outline-btn" onclick="hvElifbaAc(${i - 1})" ${i === 0 ? 'disabled' : ''}>← Önceki</button>
+        <button class="gold-primary-btn" onclick="hvElifbaAc(${i + 1})" ${i === HV_ELIFBA.length - 1 ? 'disabled' : ''}>Sonraki →</button>
+      </div>
+    </div>`;
+  kutu.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+  document.querySelectorAll('.el-harf').forEach((el, k) => el.classList.toggle('secili', k === i));
+}
+window.hvElifbaAc = hvElifbaAc;
+
+/* ── Tanıma alıştırması ── */
+let hvElSoru = null, hvElDogru = 0, hvElToplam = 0;
+
+function hvElifbaSoruUret() {
+  const dogru = Math.floor(Math.random() * HV_ELIFBA.length);
+  const secenekler = [dogru];
+  while (secenekler.length < 4) {
+    const r = Math.floor(Math.random() * HV_ELIFBA.length);
+    if (secenekler.indexOf(r) === -1) secenekler.push(r);
+  }
+  secenekler.sort(() => Math.random() - 0.5);
+  hvElSoru = { dogru: dogru, secenekler: secenekler };
+  const k = document.getElementById('el-test');
+  if (!k) return;
+  k.innerHTML = `
+    <div class="el-test-skor">Doğru: ${hvElDogru} / ${hvElToplam}</div>
+    <div class="el-test-harf">${HV_ELIFBA[dogru].h}</div>
+    <div class="el-test-soru">Bu harfin adı nedir?</div>
+    <div class="el-test-secenekler">
+      ${secenekler.map(s => `<button class="el-secenek" data-i="${s}" onclick="hvElifbaCevap(${s}, this)">${HV_ELIFBA[s].ad}</button>`).join('')}
+    </div>`;
+}
+window.hvElifbaSoruUret = hvElifbaSoruUret;
+
+function hvElifbaCevap(secilen, btn) {
+  if (!hvElSoru || btn.disabled) return;
+  hvElToplam++;
+  const dogru = hvElSoru.dogru;
+  document.querySelectorAll('.el-secenek').forEach(b => {
+    b.disabled = true;
+    if (Number(b.dataset.i) === dogru) b.classList.add('dogru');
+  });
+  if (secilen === dogru) { hvElDogru++; }
+  else { btn.classList.add('yanlis'); }
+  const skor = document.querySelector('.el-test-skor');
+  if (skor) skor.textContent = 'Doğru: ' + hvElDogru + ' / ' + hvElToplam;
+  const k = document.getElementById('el-test');
+  const bar = document.createElement('button');
+  bar.className = 'gold-primary-btn el-sonraki';
+  bar.textContent = 'Sonraki soru →';
+  bar.onclick = hvElifbaSoruUret;
+  k.appendChild(bar);
+}
+window.hvElifbaCevap = hvElifbaCevap;
+
+/* ── Ekran ── */
+let hvElSekme = 'harfler';
+function hvElifbaSekme(s) { hvElSekme = s; renderElifba(); }
+window.hvElifbaSekme = hvElifbaSekme;
+
+function renderElifba() {
+  const kok = document.getElementById('elifba-root');
+  if (!kok) return;
+
+  const sekmeler = `
+    <div class="qmode el-sekme">
+      <button class="${hvElSekme === 'harfler' ? 'on' : ''}" onclick="hvElifbaSekme('harfler')">🔤 Harfler</button>
+      <button class="${hvElSekme === 'hareke' ? 'on' : ''}" onclick="hvElifbaSekme('hareke')">◌َ Harekeler</button>
+      <button class="${hvElSekme === 'test' ? 'on' : ''}" onclick="hvElifbaSekme('test')">✍️ Alıştırma</button>
+    </div>`;
+
+  let govde = '';
+  if (hvElSekme === 'harfler') {
+    govde = `
+      <div class="el-info">28 harfe dokunarak adını, okunuşunu ve kelime içinde nasıl yazıldığını gör.</div>
+      <div class="el-uyari">ℹ️ Bu bölüm genel elifbâ bilgisidir, Diyanet İşleri Başkanlığı kaynaklı değildir. Kur'an okumayı bir hocadan ya da Kur'an kursundan öğrenmen, telaffuzun doğru oturması için gereklidir.</div>
+      <div class="el-grid">
+        ${HV_ELIFBA.map((d, i) => `
+          <button class="el-harf" onclick="hvElifbaAc(${i})">
+            <span class="el-h">${d.h}</span><span class="el-n">${d.ad}</span>
+          </button>`).join('')}
+      </div>
+      <div id="el-detay"></div>`;
+  } else if (hvElSekme === 'hareke') {
+    govde = `
+      <div class="el-info">Harfler tek başına sessizdir. Hareke, harfe hangi sesle okunacağını söyler.</div>
+      ${HV_HAREKELER.map(x => `
+        <div class="el-hareke-kart">
+          <div class="el-hareke-ust">
+            <span class="el-hareke-im">ب${x.im}</span>
+            <div>
+              <div class="el-hareke-ad">${x.ad}</div>
+              <div class="el-hareke-ornek">be harfi → <b>${x.ornek}</b></div>
+            </div>
+          </div>
+          <div class="el-hareke-anlat">${x.anlat}</div>
+        </div>`).join('')}`;
+  } else {
+    govde = `<div class="el-info">Ekranda çıkan harfin adını seç. Yanlış yaparsan doğrusu yeşil görünür.</div>
+             <div id="el-test" class="el-test"></div>`;
+  }
+
+  kok.innerHTML = `
+    <div class="page-header-title">
+      <h2>🔤 Elifbâ</h2>
+      <p>Kur'an okumayı sıfırdan öğren</p>
+    </div>
+    ${sekmeler}
+    ${govde}`;
+
+  if (hvElSekme === 'test') hvElifbaSoruUret();
+}
+window.renderElifba = renderElifba;
+try { if (window.FEATURE_ROUTES) window.FEATURE_ROUTES['elifba'] = renderElifba; } catch (e) {}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   v61.4 — "NİÇİN MEAL?" AYET KARTI
+   Kur'an'ın anlaşılmak için indirildiğini bildiren ayetler.
+   Arapça: alquran.cloud (Uthmani) • Meal: kuran.diyanet.gov.tr
+   Her ayetin sûre ve numara eşleşmesi tek tek doğrulandı.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+const HV_ANLAM_AYETLERI = [
+  {
+    ar: 'إِنَّآ أَنزَلْنَٰهُ قُرْءَٰنًا عَرَبِيًّۭا لَّعَلَّكُمْ تَعْقِلُونَ',
+    tr: 'Biz onu, akıl erdiresiniz diye Arapça bir Kur\'an olarak indirdik.',
+    kaynak: 'Yûsuf sûresi, 2. âyet'
+  },
+  {
+    ar: 'كِتَٰبٌ أَنزَلْنَٰهُ إِلَيْكَ مُبَٰرَكٌۭ لِّيَدَّبَّرُوٓا۟ ءَايَٰتِهِۦ وَلِيَتَذَكَّرَ أُو۟لُوا۟ ٱلْأَلْبَٰبِ',
+    tr: 'Bu Kur\'an, âyetlerini düşünsünler ve akıl sahipleri öğüt alsınlar diye sana indirdiğimiz mübarek bir kitaptır.',
+    kaynak: 'Sâd sûresi, 29. âyet'
+  },
+  {
+    ar: 'أَفَلَا يَتَدَبَّرُونَ ٱلْقُرْءَانَ أَمْ عَلَىٰ قُلُوبٍ أَقْفَالُهَآ',
+    tr: 'Onlar Kur\'an\'ı düşünmüyorlar mı? Yoksa kalplerin üzerinde kilitleri mi var?',
+    kaynak: 'Muhammed sûresi, 24. âyet'
+  },
+  {
+    ar: 'وَلَقَدْ يَسَّرْنَا ٱلْقُرْءَانَ لِلذِّكْرِ فَهَلْ مِن مُّدَّكِرٍۢ',
+    tr: 'Andolsun biz, Kur\'an\'ı düşünüp öğüt almak için kolaylaştırdık. Var mı düşünüp öğüt alan?',
+    kaynak: 'Kamer sûresi, 17. âyet'
+  }
+];
+
+let hvAnlamIdx = Math.floor(Math.random() * HV_ANLAM_AYETLERI.length);
+
+function hvAnlamKart() {
+  const a = HV_ANLAM_AYETLERI[hvAnlamIdx];
+  return `
+    <div class="anlam-kart" onclick="hvAnlamSonraki()">
+      <div class="anlam-ust">📖 Kur'an niçin indirildi?</div>
+      <div class="anlam-ar">${a.ar}</div>
+      <div class="anlam-tr">${a.tr}</div>
+      <div class="anlam-kaynak">— ${a.kaynak} <span class="anlam-ipucu">• dokun, sonraki âyet</span></div>
+    </div>`;
+}
+window.hvAnlamKart = hvAnlamKart;
+
+function hvAnlamSonraki() {
+  hvAnlamIdx = (hvAnlamIdx + 1) % HV_ANLAM_AYETLERI.length;
+  document.querySelectorAll('.anlam-kart').forEach(el => {
+    const yeni = document.createElement('div');
+    yeni.innerHTML = hvAnlamKart();
+    el.replaceWith(yeni.firstElementChild);
+  });
+}
+window.hvAnlamSonraki = hvAnlamSonraki;
+
+/* ═══════════════════════════════════════════════════════════════════════
+   v61.4 — TAM EKRAN OKUMA MODU
+   Sadece mushaf sayfası. Üstte sayfa no ve yer imi, altta ses çubuğu.
+   Ortaya dokununca çubuklar gizlenir; parmakla sayfa çevrilir.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+let hvTeAcik = false, hvTeKilit = null, hvTeCubuk = true;
+
+async function hvTamEkranAc() {
+  if (hvTeAcik) return;
+  hvTeAcik = true;
+  let k = document.getElementById('mv-full');
+  if (!k) {
+    k = document.createElement('div');
+    k.id = 'mv-full';
+    k.className = 'te-kok';
+    document.body.appendChild(k);
+  }
+  k.style.display = 'block';
+  document.body.classList.add('te-modda');
+  hvTeCubuk = true;
+  await hvTamEkranCiz();
+  hvTeKaydirmaBagla();
+  hvTeEkraniAcikTut();
+}
+window.hvTamEkranAc = hvTamEkranAc;
+
+function hvTamEkranKapat() {
+  hvTeAcik = false;
+  const k = document.getElementById('mv-full');
+  if (k) k.style.display = 'none';
+  document.body.classList.remove('te-modda');
+  try { if (hvTeKilit) { hvTeKilit.release(); hvTeKilit = null; } } catch (e) {}
+  renderMushaf();
+}
+window.hvTamEkranKapat = hvTamEkranKapat;
+
+// Okurken ekran sönmesin
+async function hvTeEkraniAcikTut() {
+  try {
+    if ('wakeLock' in navigator && !hvTeKilit) hvTeKilit = await navigator.wakeLock.request('screen');
+  } catch (e) {}
+}
+
+function hvTeCubukDegistir() {
+  hvTeCubuk = !hvTeCubuk;
+  const k = document.getElementById('mv-full');
+  if (k) k.classList.toggle('cubuksuz', !hvTeCubuk);
+}
+window.hvTeCubukDegistir = hvTeCubukDegistir;
+
+function hvTeKagit() {
+  const y = hvGet('hv_te_kagit', '1') === '1' ? '0' : '1';
+  hvSet('hv_te_kagit', y);
+  hvTamEkranCiz();
+}
+window.hvTeKagit = hvTeKagit;
+
+function hvTeGit(p) {
+  p = Math.max(1, Math.min(HV_MUSHAF_SON, parseInt(p, 10) || 1));
+  hvSet('hv_mushaf_page', p);
+  hvTamEkranCiz();
+}
+window.hvTeGit = hvTeGit;
+
+function hvTeKaydirmaBagla() {
+  const k = document.getElementById('mv-full');
+  if (!k || k.dataset.bagli === '1') return;
+  k.dataset.bagli = '1';
+  let x0 = 0, y0 = 0, izle = false;
+  k.addEventListener('touchstart', e => {
+    if (e.touches.length !== 1) { izle = false; return; }
+    x0 = e.touches[0].clientX; y0 = e.touches[0].clientY; izle = true;
+  }, { passive: true });
+  k.addEventListener('touchend', e => {
+    if (!izle) return; izle = false;
+    const t = e.changedTouches && e.changedTouches[0];
+    if (!t) return;
+    const dx = t.clientX - x0, dy = t.clientY - y0;
+    if (Math.abs(dx) < 70 || Math.abs(dy) > 60) return;
+    const s = parseInt(hvGet('hv_mushaf_page', '1'), 10);
+    if (dx > 0 && s < HV_MUSHAF_SON) hvTeGit(s + 1);
+    else if (dx < 0 && s > 1) hvTeGit(s - 1);
+  }, { passive: true });
+}
+
+async function hvTamEkranCiz() {
+  const k = document.getElementById('mv-full');
+  if (!k) return;
+  const sayfa = parseInt(hvGet('hv_mushaf_page', '1'), 10);
+  const font  = parseInt(hvGet('hv_mushaf_font', '30'), 10);
+  const kagit = hvGet('hv_te_kagit', '1') === '1';
+  const imli  = hvMushafImler().indexOf(sayfa) >= 0;
+
+  k.classList.toggle('kagit', kagit);
+  k.classList.toggle('cubuksuz', !hvTeCubuk);
+  k.innerHTML = `
+    <div class="te-ust">
+      <button class="te-yuvarlak" onclick="hvTamEkranKapat()">✕</button>
+      <div class="te-sayfa-no">${sayfa}</div>
+      <button class="te-yuvarlak" onclick="hvMushafImDegistir(); hvTamEkranCiz();">${imli ? '⭐' : '☆'}</button>
+    </div>
+
+    <div class="te-orta" onclick="hvTeCubukDegistir()">
+      <div class="te-cerceve">
+        <div class="te-baslik" id="te-baslik">Sayfa ${sayfa}</div>
+        <div id="te-metin" class="te-metin" style="font-size:${font}px">
+          <div class="mv-loading">Sayfa yükleniyor…</div>
+        </div>
+        <div class="te-alt-no">${hvArNum(sayfa)}</div>
+      </div>
+    </div>
+
+    <div class="te-alt">
+      <button class="te-yan" onclick="hvTeGit(${sayfa - 1})" ${sayfa <= 1 ? 'disabled' : ''}>‹</button>
+      <button class="te-kucuk" onclick="hvMushafPunto(-2); hvTamEkranCiz();">A−</button>
+      <button id="te-play" class="te-play" onclick="hvMvBasDurdur()">${hvMvCalisiyor ? '⏸' : '▶️'}</button>
+      <button class="te-kucuk" onclick="hvMushafPunto(2); hvTamEkranCiz();">A+</button>
+      <button class="te-kucuk" onclick="hvTeKagit()">${kagit ? '🌙' : '📄'}</button>
+      <button class="te-yan" onclick="hvTeGit(${sayfa + 1})" ${sayfa >= HV_MUSHAF_SON ? 'disabled' : ''}>›</button>
+    </div>
+  `;
+
+  let rows;
+  try {
+    rows = await hvMushafSayfaGetir(sayfa);
+  } catch (e) {
+    const m = document.getElementById('te-metin');
+    if (m) m.innerHTML = `<div class="mv-error">Sayfa yüklenemedi.<button class="gold-outline-btn" onclick="hvTamEkranCiz()">↻ Tekrar Dene</button></div>`;
+    return;
+  }
+
+  hvMvSira = rows.map(r => r.n);
+  hvMvKonum = -1;
+
+  const sureler = rows.map(r => r.s).filter((x, i, a) => a.indexOf(x) === i);
+  const bas = document.getElementById('te-baslik');
+  if (bas) bas.textContent = sureler.map(hvSureAdi).join(' / ');
+
+  let html = '';
+  let sonSure = null;
+  rows.forEach(r => {
+    if (r.s !== sonSure) { sonSure = r.s; if (r.v === 1) html += `<div class="mv-sure-basi">${r.sar}</div>`; }
+    let metin = r.ar;
+    if (r.v === 1 && r.s !== 1 && r.s !== 9) {
+      const b = hvBesmeleAyir(metin);
+      if (b.besmele) { html += `<div class="mv-besmele">${b.besmele}</div>`; metin = b.kalan; }
+    }
+    html += `<span class="mv-ayah" id="mv-a-${r.n}">${metin}<span class="mv-num">${hvArNum(r.v)}</span></span> `;
+  });
+  const m = document.getElementById('te-metin');
+  if (m) m.innerHTML = html;
+}
+window.hvTamEkranCiz = hvTamEkranCiz;
