@@ -2912,13 +2912,18 @@ function hvTeKaydirmaBagla() {
   }, { passive: true });
 }
 
+function hvTeMod(m) { hvSet('hv_mushaf_mode', m); hvTamEkranCiz(); }
+window.hvTeMod = hvTeMod;
+
 async function hvTamEkranCiz() {
   const k = document.getElementById('mv-full');
   if (!k) return;
-  const sayfa = parseInt(hvGet('hv_mushaf_page', '1'), 10);
-  const font  = parseInt(hvGet('hv_mushaf_font', '30'), 10);
-  const kagit = hvGet('hv_te_kagit', '1') === '1';
-  const imli  = hvMushafImler().indexOf(sayfa) >= 0;
+  const sayfa  = parseInt(hvGet('hv_mushaf_page', '1'), 10);
+  const font   = parseInt(hvGet('hv_mushaf_font', '30'), 10);
+  const kagit  = hvGet('hv_te_kagit', '1') === '1';
+  const mod    = hvGet('hv_mushaf_mode', 'ar');
+  const imli   = hvMushafImler().indexOf(sayfa) >= 0;
+  const trFont = Math.max(15, Math.min(26, Math.round(font * 0.6)));
 
   k.classList.toggle('kagit', kagit);
   k.classList.toggle('cubuksuz', !hvTeCubuk);
@@ -2929,11 +2934,21 @@ async function hvTamEkranCiz() {
       <button class="te-yuvarlak" onclick="hvMushafImDegistir(); hvTamEkranCiz();">${imli ? '⭐' : '☆'}</button>
     </div>
 
+    <div class="te-mod">
+      <button class="${mod === 'ar' ? 'on' : ''}" onclick="hvTeMod('ar')">Arapça</button>
+      <button class="${mod === 'both' ? 'on' : ''}" onclick="hvTeMod('both')">Arapça + Meal</button>
+      <button class="${mod === 'tr' ? 'on' : ''}" onclick="hvTeMod('tr')">Meal</button>
+    </div>
+
     <div class="te-orta" onclick="hvTeCubukDegistir()">
       <div class="te-cerceve">
         <div class="te-baslik" id="te-baslik">Sayfa ${sayfa}</div>
-        <div id="te-metin" class="te-metin" style="font-size:${font}px">
+        <div id="te-metin" class="te-metin" style="font-size:${font}px${mod === 'tr' ? ';display:none' : ''}">
           <div class="mv-loading">Sayfa yükleniyor…</div>
+        </div>
+        <div id="te-meal" class="te-meal${mod === 'both' ? ' ayrac' : ''}"
+             style="font-size:${trFont}px${mod === 'ar' ? ';display:none' : ''}">
+          ${mod === 'ar' ? '' : '<div class="mv-loading">Meal yükleniyor…</div>'}
         </div>
         <div class="te-alt-no">${hvArNum(sayfa)}</div>
       </div>
@@ -2953,7 +2968,10 @@ async function hvTamEkranCiz() {
     rows = await hvMushafSayfaGetir(sayfa);
   } catch (e) {
     const m = document.getElementById('te-metin');
-    if (m) m.innerHTML = `<div class="mv-error">Sayfa yüklenemedi.<button class="gold-outline-btn" onclick="hvTamEkranCiz()">↻ Tekrar Dene</button></div>`;
+    const t = document.getElementById('te-meal');
+    const hata = `<div class="mv-error">Sayfa yüklenemedi.<button class="gold-outline-btn" onclick="hvTamEkranCiz()">↻ Tekrar Dene</button></div>`;
+    if (m) m.innerHTML = hata;
+    if (t) t.innerHTML = '';
     return;
   }
 
@@ -2964,6 +2982,7 @@ async function hvTamEkranCiz() {
   const bas = document.getElementById('te-baslik');
   if (bas) bas.textContent = sureler.map(hvSureAdi).join(' / ');
 
+  // ── Arapça ──
   let html = '';
   let sonSure = null;
   rows.forEach(r => {
@@ -2977,5 +2996,17 @@ async function hvTamEkranCiz() {
   });
   const m = document.getElementById('te-metin');
   if (m) m.innerHTML = html;
+
+  // ── Meal ──
+  if (mod !== 'ar') {
+    let trHtml = '';
+    let sonSure2 = null;
+    rows.forEach(r => {
+      if (r.s !== sonSure2) { sonSure2 = r.s; trHtml += `<div class="te-m-sure">${r.sadi} Sûresi</div>`; }
+      trHtml += `<div class="te-m-ayet" id="te-m-${r.n}"><span class="te-m-no">${r.v}</span>${r.tr || '—'}</div>`;
+    });
+    const t = document.getElementById('te-meal');
+    if (t) t.innerHTML = trHtml;
+  }
 }
 window.hvTamEkranCiz = hvTamEkranCiz;

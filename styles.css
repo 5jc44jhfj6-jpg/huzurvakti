@@ -2548,3 +2548,34 @@ body.te-modda #bottom-nav, body.te-modda #app-header, body.te-modda header { dis
 .ez-card.ogrenildi .ez-card-t { color:#ffeccf; }
 .ez-card.ogrenildi .ez-card-s { color:rgba(255,255,255,.72); }
 .ez-sayac { color:#8ee0b0; font-size:.8rem; margin-bottom:8px; }
+
+/* ── v61.5 — Tam ekran okuma modunda MEAL (Türkçe sayfa sayfa) ───────── */
+.te-mod { display:flex; gap:6px; justify-content:center; padding:0 14px 8px;
+  transition:opacity .2s, transform .2s; }
+.te-mod button { padding:7px 12px; border-radius:16px; cursor:pointer;
+  border:1px solid rgba(212,175,55,.4); background:transparent;
+  color:var(--gold-light); font-size:.76rem; white-space:nowrap; }
+.te-mod button.on { background:var(--gold); color:#1a0e05;
+  border-color:var(--gold); font-weight:700; }
+.te-kok.cubuksuz .te-mod { opacity:0; transform:translateY(-100%); pointer-events:none; }
+.te-kok.kagit .te-mod button { color:#5f4c18; border-color:#b39a5c; }
+.te-kok.kagit .te-mod button.on { background:#8c7231; color:#fff; border-color:#8c7231; }
+
+.te-meal { direction:ltr; text-align:left; color:var(--text-primary);
+  line-height:1.85; padding:4px 6px 12px; }
+.te-meal.ayrac { margin-top:12px; padding-top:14px;
+  border-top:1px solid rgba(212,175,55,.35); }
+.te-m-sure { text-align:center; color:var(--gold); font-weight:600;
+  font-size:.86em; margin:14px 0 10px; }
+.te-m-sure:first-child { margin-top:0; }
+.te-m-ayet { margin:0 0 13px; }
+.te-m-no { display:inline-block; min-width:24px; height:24px; line-height:24px;
+  text-align:center; margin-right:8px; border-radius:50%; vertical-align:2px;
+  background:rgba(212,175,55,.18); color:var(--gold-light);
+  font-size:.7em; font-weight:700; font-family:inherit; }
+.te-m-ayet.okunuyor { background:rgba(212,175,55,.12); border-radius:8px;
+  padding:6px 8px; margin:-6px -8px 7px; }
+.te-kok.kagit .te-meal { color:#1d1a12; }
+.te-kok.kagit .te-meal.ayrac { border-top-color:#c9b47a; }
+.te-kok.kagit .te-m-sure { color:#7a6220; }
+.te-kok.kagit .te-m-no { background:#b39a5c; color:#fff; }
