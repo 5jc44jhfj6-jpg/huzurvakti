@@ -1889,30 +1889,158 @@ function hvMushafArayuzTazele() {
 /* ── Ekran ─────────────────────────────────────────────────────────── */
 /* Parmakla sayfa çevirme — mushaf sağdan sola okunduğu için
    parmağı sağa kaydırmak SONRAKİ, sola kaydırmak ÖNCEKİ sayfaya götürür. */
-function hvMushafKaydirmaBagla() {
-  const el = document.getElementById('mv-body');
+/* Parmakla sayfa çevirme — ortak yardımcı.
+   SOLA kaydır  = sonraki sayfa
+   SAĞA kaydır  = önceki sayfa
+   (iOS'ta ekran kenarından sağa kaydırma "geri" hareketi olduğu için
+    ileri gitmek sola kaydırmaya bağlandı.) */
+function hvSayfaKaydirmaBagla(el, git) {
   if (!el || el.dataset.kaydirmaBagli === '1') return;
   el.dataset.kaydirmaBagli = '1';
-  let x0 = 0, y0 = 0, izle = false;
+  let x0 = 0, y0 = 0, xs = 0, ys = 0, izle = false;
+
+  const basla = (x, y) => { x0 = xs = x; y0 = ys = y; izle = true; };
+  const surdur = (x, y) => { xs = x; ys = y; };
+  const bitir = () => {
+    if (!izle) return;
+    izle = false;
+    const dx = xs - x0, dy = ys - y0;
+    if (Math.abs(dx) < 55) return;                    // çok kısa dokunuş
+    if (Math.abs(dx) < Math.abs(dy) * 1.4) return;    // dikey kaydırma sayfayı çevirmesin
+    const s = parseInt(hvGet('hv_mushaf_page', '1'), 10);
+    if (dx < 0 && s < HV_MUSHAF_SON) git(s + 1);      // sola  → ileri
+    else if (dx > 0 && s > 1) git(s - 1);             // sağa  → geri
+  };
 
   el.addEventListener('touchstart', e => {
     if (e.touches.length !== 1) { izle = false; return; }
-    x0 = e.touches[0].clientX; y0 = e.touches[0].clientY; izle = true;
+    basla(e.touches[0].clientX, e.touches[0].clientY);
   }, { passive: true });
-
+  el.addEventListener('touchmove', e => {
+    if (!izle || e.touches.length !== 1) return;
+    surdur(e.touches[0].clientX, e.touches[0].clientY);
+  }, { passive: true });
   el.addEventListener('touchend', e => {
-    if (!izle) return;
-    izle = false;
     const t = e.changedTouches && e.changedTouches[0];
-    if (!t) return;
-    const dx = t.clientX - x0, dy = t.clientY - y0;
-    if (Math.abs(dx) < 70 || Math.abs(dy) > 60) return;   // dikey kaydırma sayfayı çevirmesin
-    const s = parseInt(hvGet('hv_mushaf_page', '1'), 10);
-    if (dx > 0 && s < HV_MUSHAF_SON) hvMushafGit(s + 1);
-    else if (dx < 0 && s > 1) hvMushafGit(s - 1);
+    if (t) surdur(t.clientX, t.clientY);
+    bitir();
   }, { passive: true });
+  el.addEventListener('touchcancel', () => { izle = false; }, { passive: true });
+
+  // Fare / kalem (masaüstü ve bazı WebView'ler)
+  el.addEventListener('pointerdown', e => {
+    if (e.pointerType === 'touch') return;
+    basla(e.clientX, e.clientY);
+  });
+  el.addEventListener('pointerup', e => {
+    if (e.pointerType === 'touch') return;
+    surdur(e.clientX, e.clientY); bitir();
+  });
+}
+window.hvSayfaKaydirmaBagla = hvSayfaKaydirmaBagla;
+
+function hvMushafKaydirmaBagla() {
+  hvSayfaKaydirmaBagla(document.getElementById('mv-body'), hvMushafGit);
 }
 window.hvMushafKaydirmaBagla = hvMushafKaydirmaBagla;
+
+/* ═══════════════════════════════════════════════════════════════════════
+   v61.6 — SÛRE ARAMA (sayfa sayfa mushafta doğrudan sûreye atlama)
+   Sûre → başlangıç sayfası tablosu. 114'ünün tamamı
+   api.alquran.cloud/v1/surah/{n}/quran-uthmani ile tek tek doğrulandı.
+   ═══════════════════════════════════════════════════════════════════════ */
+const HV_SURE_SAYFA = [1,2,50,77,106,128,151,177,187,208,221,235,249,255,262,267,282,293,305,312,322,332,342,350,359,367,377,385,396,404,411,415,418,428,434,440,446,453,458,467,477,483,489,496,499,502,507,511,515,518,520,523,526,528,531,534,537,542,545,549,551,553,554,556,558,560,562,564,566,568,570,572,574,575,577,578,580,582,583,585,586,587,587,589,590,591,591,592,593,594,595,595,596,596,597,597,598,598,599,599,600,600,601,601,601,602,602,602,603,603,603,604,604,604];
+
+function hvSureSayfasi(no) {
+  const p = HV_SURE_SAYFA[Number(no) - 1];
+  return p ? p : 1;
+}
+window.hvSureSayfasi = hvSureSayfasi;
+
+/* Türkçe arama: şapka, ı/i, ş/s… hepsini sadeleştir */
+function hvTrNorm(x) {
+  return String(x || '')
+    .toLocaleLowerCase('tr')
+    .replace(/[âäàá]/g, 'a').replace(/[îïìí]/g, 'i').replace(/[ûüùú]/g, 'u')
+    .replace(/[ôöòó]/g, 'o').replace(/[êëèé]/g, 'e')
+    .replace(/ı/g, 'i').replace(/ş/g, 's').replace(/ğ/g, 'g').replace(/ç/g, 'c')
+    .replace(/[^a-z0-9]/g, '');
+}
+window.hvTrNorm = hvTrNorm;
+
+function hvSureListesi() {
+  try { return (typeof ALL_114_SURAHS !== 'undefined') ? ALL_114_SURAHS : []; } catch (e) { return []; }
+}
+
+function hvMushafAraGit(sayfa) {
+  hvMushafAraKapat();
+  hvMushafGit(sayfa);
+  try { window.scrollTo({ top: 0, behavior: 'smooth' }); } catch (e) {}
+}
+window.hvMushafAraGit = hvMushafAraGit;
+
+function hvMushafAraKapat() {
+  const g = document.getElementById('mv-ara-sonuc');
+  const i = document.getElementById('mv-ara-input');
+  if (g) { g.innerHTML = ''; g.classList.remove('acik'); }
+  if (i) i.value = '';
+  const t = document.getElementById('mv-ara-temizle');
+  if (t) t.style.display = 'none';
+}
+window.hvMushafAraKapat = hvMushafAraKapat;
+
+function hvMushafAraCiz(q) {
+  const g = document.getElementById('mv-ara-sonuc');
+  if (!g) return;
+  const t = document.getElementById('mv-ara-temizle');
+  if (t) t.style.display = q ? 'block' : 'none';
+
+  const ara = hvTrNorm(q);
+  const liste = hvSureListesi();
+  let html = '';
+
+  // Sayfa numarası yazıldıysa önce onu öner
+  const say = parseInt(q, 10);
+  if (q && /^\d+$/.test(q.trim()) && say >= 1 && say <= HV_MUSHAF_SON) {
+    html += `<button class="mv-ara-sat sayfa" onclick="hvMushafAraGit(${say})">
+               <span class="mv-ara-no">📄</span>
+               <span class="mv-ara-ad">${say}. sayfayı aç</span>
+             </button>`;
+  }
+
+  const bulunan = liste.filter(s => {
+    if (!ara) return true;
+    if (String(s.id) === q.trim()) return true;
+    return hvTrNorm(s.name).indexOf(ara) >= 0;
+  });
+
+  if (!bulunan.length && !html) {
+    g.innerHTML = '<div class="mv-ara-yok">Sûre bulunamadı. Örnek: Cuma, Yâsîn, Kehf, 36</div>';
+    g.classList.add('acik');
+    return;
+  }
+
+  html += bulunan.map(s => {
+    const p = hvSureSayfasi(s.id);
+    return `<button class="mv-ara-sat" onclick="hvMushafAraGit(${p})">
+              <span class="mv-ara-no">${s.id}</span>
+              <span class="mv-ara-ad">${s.name} Sûresi</span>
+              <span class="mv-ara-sy">sayfa ${p}</span>
+            </button>`;
+  }).join('');
+
+  g.innerHTML = html;
+  g.classList.add('acik');
+}
+
+function hvMushafAraYaz(q) { hvMushafAraCiz(q); }
+window.hvMushafAraYaz = hvMushafAraYaz;
+
+function hvMushafAraAc() {
+  const i = document.getElementById('mv-ara-input');
+  hvMushafAraCiz(i ? i.value : '');
+}
+window.hvMushafAraAc = hvMushafAraAc;
 
 async function renderMushaf(calmayaDevam) {
   const kok = document.getElementById('mushaf-root');
@@ -1933,6 +2061,16 @@ async function renderMushaf(calmayaDevam) {
       <button class="on">📜 Sayfa Sayfa</button>
       <button onclick="hvKuranModu('sure')">📖 Sure Sure</button>
     </div>
+
+    <div class="mv-ara">
+      <span class="mv-ara-ikon">🔍</span>
+      <input id="mv-ara-input" type="search" autocomplete="off"
+             placeholder="Sûre ara — ör. Cuma, Yâsîn, Kehf ya da 36"
+             oninput="hvMushafAraYaz(this.value)" onfocus="hvMushafAraAc()">
+      <button id="mv-ara-temizle" class="mv-ara-x" style="display:none"
+              onclick="hvMushafAraKapat()">✕</button>
+    </div>
+    <div id="mv-ara-sonuc" class="mv-ara-sonuc"></div>
 
     <div class="mv-bar">
       <button class="mv-nav" onclick="hvMushafGit(${sayfa - 1})" ${sayfa <= 1 ? 'disabled' : ''}>‹</button>
@@ -2020,7 +2158,7 @@ async function renderMushaf(calmayaDevam) {
   govde.innerHTML =
     (mod !== 'tr' ? `<div id="mv-arabic" class="mv-arabic" style="font-size:${font}px">${arHtml}</div>` : '') +
     (mod !== 'ar' ? `<div class="mv-meal-wrap">${trHtml}</div>` : '') +
-    `<div class="mv-swipe-hint">← Sayfa çevirmek için parmağınla kaydır →</div>
+    `<div class="mv-swipe-hint">← Sola kaydır: sonraki sayfa · Sağa kaydır: önceki →</div>
      <div class="mv-foot">— ${sayfa} —</div>`;
 
   hvMushafArayuzTazele();
@@ -2351,10 +2489,10 @@ window.hvKuranModu = hvKuranModu;
    ═══════════════════════════════════════════════════════════════════════ */
 
 const HV_DINLE_QARILER = [
-  { id: 'afs',   sunucu: 'server8',  ad: 'Mishary Rashid Alafasy' },
-  { id: 'basit', sunucu: 'server7',  ad: 'Abdulbasit Abdussamed' },
-  { id: 'maher', sunucu: 'server12', ad: 'Maher Al Muaiqly' },
-  { id: 's_gmd', sunucu: 'server7',  ad: 'Saad El Ghamidi' }
+  { id: 'afs',    sunucu: 'server8',  ad: 'Mishary Rashid Alafasy' },
+  { id: 'minsh',  sunucu: 'server10', ad: 'Muhammed Sıddık el-Minşâvî' },
+  { id: 'yasser', sunucu: 'server11', ad: 'Yâsir ed-Devserî' },
+  { id: 'husr',   sunucu: 'server13', ad: 'Mahmud Halil el-Husarî' }
 ];
 
 let hvDnSes = null;
@@ -2505,7 +2643,7 @@ window.hvDnAra = hvDnAra;
 function renderDinle() {
   const kok = document.getElementById('dinle-root');
   if (!kok) return;
-  const qari = hvGet('hv_dinle_qari', 'afs');
+  const qari = hvDnQari().id;   // kayıtlı seçim listede yoksa ilk hafıza döner
   const surekli = hvGet('hv_dinle_surekli', '1') === '1';
   const kayitli = parseInt(hvGet('hv_dinle_sure', '0'), 10) || 0;
   const kayitliSn = parseInt(hvGet('hv_dinle_pos', '0'), 10) || 0;
@@ -2892,24 +3030,7 @@ function hvTeGit(p) {
 window.hvTeGit = hvTeGit;
 
 function hvTeKaydirmaBagla() {
-  const k = document.getElementById('mv-full');
-  if (!k || k.dataset.bagli === '1') return;
-  k.dataset.bagli = '1';
-  let x0 = 0, y0 = 0, izle = false;
-  k.addEventListener('touchstart', e => {
-    if (e.touches.length !== 1) { izle = false; return; }
-    x0 = e.touches[0].clientX; y0 = e.touches[0].clientY; izle = true;
-  }, { passive: true });
-  k.addEventListener('touchend', e => {
-    if (!izle) return; izle = false;
-    const t = e.changedTouches && e.changedTouches[0];
-    if (!t) return;
-    const dx = t.clientX - x0, dy = t.clientY - y0;
-    if (Math.abs(dx) < 70 || Math.abs(dy) > 60) return;
-    const s = parseInt(hvGet('hv_mushaf_page', '1'), 10);
-    if (dx > 0 && s < HV_MUSHAF_SON) hvTeGit(s + 1);
-    else if (dx < 0 && s > 1) hvTeGit(s - 1);
-  }, { passive: true });
+  hvSayfaKaydirmaBagla(document.getElementById('mv-full'), hvTeGit);
 }
 
 function hvTeMod(m) { hvSet('hv_mushaf_mode', m); hvTamEkranCiz(); }

@@ -2579,3 +2579,43 @@ body.te-modda #bottom-nav, body.te-modda #app-header, body.te-modda header { dis
 .te-kok.kagit .te-meal.ayrac { border-top-color:#c9b47a; }
 .te-kok.kagit .te-m-sure { color:#7a6220; }
 .te-kok.kagit .te-m-no { background:#b39a5c; color:#fff; }
+
+/* ── v61.5 — Sayfa çevirme hareketi (yatay kaydırma tarayıcıya kaptırılmasın) ── */
+.mv-body, .te-kok, .te-orta {
+  touch-action: pan-y;            /* yatay hareketi tarayıcı "geri git" sanmasın */
+  overscroll-behavior-x: none;
+}
+.mv-body, .mv-arabic, .mv-meal-wrap, .te-orta, .te-metin, .te-meal {
+  overflow-x: hidden;             /* metin yatayda kayıp parmağı yutmasın */
+}
+
+/* ── v61.6 — Mushafta sûre arama ─────────────────────────────────────── */
+.mv-ara { display:flex; align-items:center; gap:8px; margin:10px 0 0;
+  padding:0 12px; height:46px; border-radius:23px;
+  background:var(--bg-card); border:1px solid var(--border-light); }
+.mv-ara:focus-within { border-color:var(--gold); }
+.mv-ara-ikon { font-size:1rem; opacity:.75; flex:0 0 auto; }
+.mv-ara input { flex:1 1 auto; min-width:0; height:44px; border:none; outline:none;
+  background:transparent; color:var(--text-primary); font-size:.95rem;
+  font-family:inherit; -webkit-appearance:none; }
+.mv-ara input::-webkit-search-cancel-button { display:none; }
+.mv-ara input::placeholder { color:var(--text-muted); }
+.mv-ara-x { flex:0 0 auto; width:30px; height:30px; border-radius:50%; cursor:pointer;
+  border:none; background:rgba(212,175,55,.18); color:var(--gold-light); font-size:.8rem; }
+
+.mv-ara-sonuc { display:none; margin-top:8px; max-height:300px; overflow-y:auto;
+  -webkit-overflow-scrolling:touch; border-radius:14px;
+  background:var(--bg-card); border:1px solid var(--border-light); }
+.mv-ara-sonuc.acik { display:block; }
+.mv-ara-sat { display:flex; align-items:center; gap:10px; width:100%; cursor:pointer;
+  padding:11px 13px; background:transparent; border:none;
+  border-bottom:1px solid var(--border-light); text-align:left; font-family:inherit; }
+.mv-ara-sat:last-child { border-bottom:none; }
+.mv-ara-sat:active { background:rgba(212,175,55,.14); }
+.mv-ara-no { flex:0 0 auto; min-width:28px; height:28px; line-height:28px; text-align:center;
+  border-radius:50%; background:rgba(212,175,55,.16); color:var(--gold-light);
+  font-size:.75rem; font-weight:700; }
+.mv-ara-ad { flex:1 1 auto; color:var(--text-primary); font-size:.92rem; }
+.mv-ara-sy { flex:0 0 auto; color:var(--gold); font-size:.78rem; font-weight:600; }
+.mv-ara-sat.sayfa .mv-ara-ad { color:var(--gold-light); font-weight:600; }
+.mv-ara-yok { padding:14px 13px; color:var(--text-muted); font-size:.86rem; text-align:center; }
