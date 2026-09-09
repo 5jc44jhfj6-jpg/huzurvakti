@@ -148,8 +148,21 @@ window.shareDailyHadis = shareDailyHadis;
    Ana ekrandaki kart. Yol gösterici 60 âyetlik havuzdan seçer;
    üst üste aynısı gelmez, karta dokununca yenisi gelir.
    (Hadis kartının kodu duruyor; hadisler 1000 Hadis bölümünde.) */
+/* Ana ekran kartına çıkacak âyetler — elle seçildi.
+   Ölçüt: tek başına anlaşılır (öncesi/sonrası gerekmez), yol gösterici,
+   paylaşmaya uygun ve karta sığacak uzunlukta.
+   Havuzun tamamı (60 âyet) DAILY_VERSES içinde durmaya devam eder. */
+const HV_KART_AYET = [
+  '16:90', '2:152', '3:139', '94:5', '13:28', '14:7', '39:53', '67:1',
+  '23:1', '10:62', '20:14', '31:17', '73:8', '25:74', '59:22', '42:19',
+  '2:153', '6:160', '7:31', '7:199', '8:46', '11:114', '16:97', '16:128',
+  '17:37', '17:53', '20:114', '22:77', '23:96', '31:18', '41:34', '42:40',
+  '53:39', '55:60', '64:16', '93:9'
+];
 function hvAyetSec() {
-  const all = (typeof DAILY_VERSES !== 'undefined') ? DAILY_VERSES : [];
+  const hepsi = (typeof DAILY_VERSES !== 'undefined') ? DAILY_VERSES : [];
+  let all = hepsi.filter(v => HV_KART_AYET.indexOf(v.surahNumber + ':' + v.ayah) >= 0);
+  if (all.length < 10) all = hepsi;
   if (!all.length) return null;
   let son = -1;
   try { son = parseInt(localStorage.getItem('hv_son_ayet_idx') || '-1', 10); } catch (e) {}
@@ -165,7 +178,10 @@ function hvAyetCiz(v, animasyon) {
   const tr   = document.getElementById('daily-verse-turkish');
   const src  = document.getElementById('daily-verse-source');
   const uygula = () => {
-    if (ar)  ar.textContent  = v.arabic || '';
+    // Uzun âyetlerde Arapça kutuyu şişirip düzeni bozuyor; kartta yalnızca
+    // kısa olanlarda gösterilir. Paylaşım kartında Arapça her zaman vardır.
+    const kisaAr = (v.arabic || '').length <= 95;
+    if (ar) { ar.textContent = kisaAr ? v.arabic : ''; ar.style.display = kisaAr ? '' : 'none'; }
     if (tr)  tr.textContent  = '"' + (v.turkish || '') + '"';
     if (src) src.textContent = '— ' + v.surah + ' Sûresi, ' + v.ayah + '. Âyet';
   };
@@ -185,16 +201,18 @@ window.nextDailyAyet = nextDailyAyet;
 
 function shareDailyVerse(ev) {
   if (ev && ev.stopPropagation) ev.stopPropagation();
-  const ar = document.getElementById('daily-verse-arabic');
+  const v = window._currentAyet;
   const tr = document.getElementById('daily-verse-turkish');
   const src = document.getElementById('daily-verse-source');
-  const arEl = document.getElementById('daily-verse-arabic');
+  const metin  = v ? v.turkish : (tr ? (tr.textContent || '').replace(/^"|"$/g, '').trim() : '');
+  const kaynak = v ? (v.surah + ' Sûresi, ' + v.ayah + '. Âyet')
+                   : (src ? (src.textContent || '').replace(/^[\s—-]+/, '').trim() : '');
   hvOpenShareCard({
-    badge: '📖 Günün Ayeti',
-    arabic: arEl ? (arEl.textContent || '').trim() : '',
-    text: tr ? (tr.textContent || '').trim() : '',
-    source: src ? (src.textContent || '').replace(/^[\s—-]+/, '').trim() : '',
-    fallbackText: `📖 Günün Ayeti\n\n${tr ? tr.textContent : ''}\n${src ? src.textContent : ''}`
+    badge: '📖 Günün Âyeti',
+    arabic: v ? v.arabic : '',   // paylaşımda Arapça her zaman tam
+    text: metin,
+    source: kaynak,
+    fallbackText: `📖 Günün Âyeti\n\n"${metin}"\n— ${kaynak}`
   });
 }
 window.shareDailyVerse = shareDailyVerse;

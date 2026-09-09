@@ -2674,3 +2674,15 @@ body.te-modda #bottom-nav, body.te-modda #app-header, body.te-modda header { dis
 .kn-sonra { margin-top:12px; padding:10px 16px; border:none; background:transparent;
   color:var(--text-muted); font-size:.82rem; cursor:pointer;
   text-decoration:underline; font-family:inherit; }
+
+/* ── v61.9 — Günün Âyeti kartı sabit boy (âyet değişince zıplamasın) ──
+   Yükseklik havuzdaki en uzun âyete göre sabitlendi; kısa âyette metin
+   dikeyde ortalanır, uzun âyette kırpılmaz. */
+.daily-hadis-card, .warm-home .daily-hadis-card {
+  display: flex; flex-direction: column; justify-content: center;
+  min-height: 300px;
+}
+.daily-hadis-card > * { flex: 0 0 auto; }   /* metin sıkışıp kırpılmasın */
+@media (max-width: 389px) {
+  .daily-hadis-card, .warm-home .daily-hadis-card { min-height: 326px; }
+}
