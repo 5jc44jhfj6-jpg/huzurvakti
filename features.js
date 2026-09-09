@@ -2095,6 +2095,27 @@ function hvEzTekrarAyarla(n) {
 }
 window.hvEzTekrarAyarla = hvEzTekrarAyarla;
 
+/* Öğrendim işaretleri */
+function hvEzOgrenilenler() {
+  try { return JSON.parse(localStorage.getItem('hv_ezber_ogrenildi') || '[]'); } catch (e) { return []; }
+}
+function hvEzOgrenildiMi(anahtar) { return hvEzOgrenilenler().indexOf(anahtar) >= 0; }
+
+function hvEzOgrendimDegistir() {
+  if (!hvEzKayit) return;
+  let l = hvEzOgrenilenler();
+  const a = hvEzKayit.anahtar;
+  l = l.indexOf(a) >= 0 ? l.filter(x => x !== a) : l.concat([a]);
+  try { localStorage.setItem('hv_ezber_ogrenildi', JSON.stringify(l)); } catch (e) {}
+  const b = document.getElementById('ez-ogrendim');
+  if (b) {
+    const on = l.indexOf(a) >= 0;
+    b.classList.toggle('on', on);
+    b.innerHTML = on ? '✓ Öğrendim' : '○ Öğrendim';
+  }
+}
+window.hvEzOgrendimDegistir = hvEzOgrendimDegistir;
+
 function hvEzGit(i) {
   if (!hvEzKayit) return;
   hvEzSesDurdur();
@@ -2215,7 +2236,10 @@ async function hvEzAc(tur, ad) {
 
   kok.innerHTML = `
     <div class="page-header-title"><h2>🧠 ${ad}</h2><p>Parça parça dinle ve tekrarla</p></div>
-    <button class="gold-outline-btn" onclick="renderEzber()">← Listeye Dön</button>
+    <div class="ez-ust-satir">
+      <button class="gold-outline-btn" onclick="renderEzber()">← Listeye Dön</button>
+      <button id="ez-ogrendim" class="ez-ogrendim" onclick="hvEzOgrendimDegistir()">○ Öğrendim</button>
+    </div>
     <div id="ez-step" class="ez-step"><div class="mv-loading">Yükleniyor…</div></div>
   `;
 
@@ -2240,6 +2264,12 @@ async function hvEzAc(tur, ad) {
     let kaldigi = 0;
     try { kaldigi = parseInt(localStorage.getItem('hv_ezber_' + hvEzKayit.anahtar) || '0', 10) || 0; } catch (e) {}
     hvEzIdx = Math.max(0, Math.min(parcalar.length - 1, kaldigi));
+    const ob = document.getElementById('ez-ogrendim');
+    if (ob) {
+      const on = hvEzOgrenildiMi(hvEzKayit.anahtar);
+      ob.classList.toggle('on', on);
+      ob.innerHTML = on ? '✓ Öğrendim' : '○ Öğrendim';
+    }
     hvEzParcaCiz();
   } catch (e) {
     const s = document.getElementById('ez-step');
@@ -2259,18 +2289,23 @@ function renderEzber() {
   const digerDua = (typeof DUA_LEARN !== 'undefined' ? DUA_LEARN : [])
     .map(d => d.title).filter(t => !HV_DUA_AYET[t]);
 
-  const kart = (tur, ad, alt, sesli) => `
-    <button class="ez-card" onclick="hvEzAc('${tur}','${ad.replace(/'/g, "\\'")}')">
-      <span class="ez-card-t">${ad}</span>
+  const kart = (tur, ad, alt, sesli) => {
+    const anahtar = (tur + '_' + ad).replace(/\s+/g, '_');
+    const ogr = hvEzOgrenildiMi(anahtar);
+    return `
+    <button class="ez-card ${ogr ? 'ogrenildi' : ''}" onclick="hvEzAc('${tur}','${ad.replace(/'/g, "\\'")}')">
+      <span class="ez-card-t">${ogr ? '✓ ' : ''}${ad}</span>
       <span class="ez-card-s">${alt}</span>
       ${sesli ? '<span class="ez-badge">🔊 Sesli</span>' : '<span class="ez-badge muted">Okunuşlu</span>'}
     </button>`;
+  };
 
   kok.innerHTML = `
     <div class="page-header-title">
       <h2>🧠 Dua & Sure Ezberle</h2>
       <p>Parça parça dinle, tekrarla, ezberle</p>
     </div>
+    ${hvEzOgrenilenler().length ? `<div class="ez-sayac">✓ ${hvEzOgrenilenler().length} metin öğrenildi olarak işaretli</div>` : ''}
     <div class="ez-info">Her metin küçük parçalara ayrılır. Bir parçayı dinle, kendin tekrar et, hazır olunca sonrakine geç. Kaldığın yer hatırlanır.</div>
 
     <div class="ez-group-title">📖 Kısa Sureler</div>

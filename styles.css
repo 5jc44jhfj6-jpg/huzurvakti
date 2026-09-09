@@ -2532,3 +2532,19 @@ body.te-modda #bottom-nav, body.te-modda #app-header, body.te-modda header { dis
 .el-n { line-height:1.2; }
 .el-bicimler span, .el-harekeli span { line-height:1.9; padding-top:2px; }
 .el-buyuk { line-height:1.5; padding-top:6px; }
+
+/* Elifbâ alıştırma — harf alttaki yazıyı kapatmasın */
+.el-test-harf { line-height:1.55; padding:10px 0 4px; margin:0 0 4px; }
+.el-test-soru { margin-top:6px; }
+
+/* Ezber — öğrendim işareti */
+.ez-ust-satir { display:flex; gap:8px; align-items:center; }
+.ez-ust-satir .gold-outline-btn { flex:1; }
+.ez-ogrendim { background:transparent; border:1px solid var(--border-light); border-radius:10px;
+  padding:9px 14px; color:var(--text-muted); font-size:.84rem; font-weight:600;
+  cursor:pointer; font-family:inherit; white-space:nowrap; }
+.ez-ogrendim.on { background:rgba(60,180,110,.22); border-color:#3cb46e; color:#8ee0b0; }
+.ez-card.ogrenildi { background:rgba(212,175,55,.16); border-color:rgba(212,175,55,.55); }
+.ez-card.ogrenildi .ez-card-t { color:#ffeccf; }
+.ez-card.ogrenildi .ez-card-s { color:rgba(255,255,255,.72); }
+.ez-sayac { color:#8ee0b0; font-size:.8rem; margin-bottom:8px; }
