@@ -2680,9 +2680,9 @@ body.te-modda #bottom-nav, body.te-modda #app-header, body.te-modda header { dis
    dikeyde ortalanır, uzun âyette kırpılmaz. */
 .daily-hadis-card, .warm-home .daily-hadis-card {
   display: flex; flex-direction: column; justify-content: center;
-  min-height: 300px;
+  min-height: 322px;
 }
 .daily-hadis-card > * { flex: 0 0 auto; }   /* metin sıkışıp kırpılmasın */
-@media (max-width: 389px) {
-  .daily-hadis-card, .warm-home .daily-hadis-card { min-height: 326px; }
+@media (min-width: 400px) {
+  .daily-hadis-card, .warm-home .daily-hadis-card { min-height: 296px; }
 }
