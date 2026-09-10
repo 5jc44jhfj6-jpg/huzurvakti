@@ -1101,6 +1101,143 @@ function renderSozluk(filter) {
     </div>`).join('');
 }
 
+
+/* ══════════ TARİH ÇEVİRİCİ (Hicri ↔ Miladi) ══════════
+   Çeviri, telefonun kendi Ümmü'l-Kura takvimiyle (Intl) yapılır —
+   internet gerekmez. Hicri→Miladi yönünde ikili arama kullanılır.
+   ────────────────────────────────────────────────────── */
+const HV_HICRI_AYLAR = ['Muharrem','Safer','Rebiülevvel','Rebiülahir','Cemaziyelevvel','Cemaziyelahir','Recep','Şaban','Ramazan','Şevval','Zilkade','Zilhicce'];
+const HV_MILADI_AYLAR = ['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'];
+const HV_GUNLER = ['Pazar','Pazartesi','Salı','Çarşamba','Perşembe','Cuma','Cumartesi'];
+
+// Miladi Date → {g, a, y} hicri
+function hvHicriParcala(d) {
+  try {
+    const pr = new Intl.DateTimeFormat('en-u-ca-islamic-umalqura',
+      { day:'numeric', month:'numeric', year:'numeric', timeZone:'UTC' }).formatToParts(d);
+    let g=0,a=1,y=0;
+    pr.forEach(x=>{ if(x.type==='day')g=parseInt(x.value,10);
+      if(x.type==='month')a=parseInt(x.value,10);
+      if(x.type==='year')y=parseInt(String(x.value).replace(/[^0-9]/g,''),10); });
+    if(!g||!y) return null;
+    return { g:g, a:a, y:y };
+  } catch(e) { return null; }
+}
+
+// Hicri {g,a,y} → Miladi Date (ikili arama)
+function hvHicridenMiladi(g, a, y) {
+  // Kaba başlangıç: hicri yıl ≈ 354.367 gün
+  const yaklasik = Date.UTC(622, 6, 16) + Math.round(((y - 1) * 354.367 + (a - 1) * 29.53 + (g - 1)) * 86400000);
+  let alt = yaklasik - 60 * 86400000, ust = yaklasik + 60 * 86400000;
+  const anahtar = (y * 10000) + (a * 100) + g;
+  for (let i = 0; i < 40 && alt <= ust; i++) {
+    const orta = alt + Math.floor((ust - alt) / 2 / 86400000) * 86400000;
+    const h = hvHicriParcala(new Date(orta));
+    if (!h) return null;
+    const k = (h.y * 10000) + (h.a * 100) + h.g;
+    if (k === anahtar) return new Date(orta);
+    if (k < anahtar) alt = orta + 86400000; else ust = orta - 86400000;
+  }
+  return null;
+}
+
+function hvCevYaz(id, html) { const e = document.getElementById(id); if (e) e.innerHTML = html; }
+function hvCevSayi(id, varsayilan) {
+  const e = document.getElementById(id);
+  const v = e ? parseInt(e.value, 10) : NaN;
+  return isNaN(v) ? varsayilan : v;
+}
+
+/* Ümmü'l-Kura takvimi yalnızca bu aralıkta tanımlıdır */
+const HV_CEV_M_ALT = 1883, HV_CEV_M_UST = 2173;
+const HV_CEV_H_ALT = 1301, HV_CEV_H_UST = 1599;
+
+function hvCevMiladiden() {
+  const g = hvCevSayi('cev-m-gun', 1), a = hvCevSayi('cev-m-ay', 1), y = hvCevSayi('cev-m-yil', 2000);
+  if (g < 1 || g > 31 || a < 1 || a > 12) {
+    hvCevYaz('cev-m-sonuc', '<div class="cev-uyari">Geçerli bir tarih girin.</div>'); return;
+  }
+  if (y < HV_CEV_M_ALT || y > HV_CEV_M_UST) {
+    hvCevYaz('cev-m-sonuc', '<div class="cev-uyari">Bu araç <b>' + HV_CEV_M_ALT + ' – ' + HV_CEV_M_UST +
+      '</b> yılları arasını çevirebilir. Ümmü\'l-Kura takvimi bu aralık dışında tanımlı değildir.</div>'); return;
+  }
+  const d = new Date(Date.UTC(y, a - 1, g));
+  if (d.getUTCDate() !== g || d.getUTCMonth() !== a - 1) {
+    hvCevYaz('cev-m-sonuc', '<div class="cev-uyari">Böyle bir gün yok (' + HV_MILADI_AYLAR[a-1] + ' ayı için kontrol edin).</div>'); return;
+  }
+  const h = hvHicriParcala(d);
+  if (!h) { hvCevYaz('cev-m-sonuc', '<div class="cev-uyari">Bu cihaz Hicri takvimi desteklemiyor.</div>'); return; }
+  hvCevYaz('cev-m-sonuc',
+    '<div class="cev-sonuc"><div class="cev-sonuc-ust">Hicri karşılığı</div>' +
+    '<div class="cev-sonuc-buyuk">' + h.g + ' ' + HV_HICRI_AYLAR[(h.a - 1 + 12) % 12] + ' ' + h.y + '</div>' +
+    '<div class="cev-sonuc-alt">' + HV_GUNLER[d.getUTCDay()] + '</div></div>');
+}
+
+function hvCevHicriden() {
+  const g = hvCevSayi('cev-h-gun', 1), a = hvCevSayi('cev-h-ay', 1), y = hvCevSayi('cev-h-yil', 1440);
+  if (g < 1 || g > 30 || a < 1 || a > 12) {
+    hvCevYaz('cev-h-sonuc', '<div class="cev-uyari">Geçerli bir tarih girin.</div>'); return;
+  }
+  if (y < HV_CEV_H_ALT || y > HV_CEV_H_UST) {
+    hvCevYaz('cev-h-sonuc', '<div class="cev-uyari">Bu araç <b>' + HV_CEV_H_ALT + ' – ' + HV_CEV_H_UST +
+      '</b> Hicri yılları arasını çevirebilir. Ümmü\'l-Kura takvimi bu aralık dışında tanımlı değildir.</div>'); return;
+  }
+  const d = hvHicridenMiladi(g, a, y);
+  if (!d) { hvCevYaz('cev-h-sonuc', '<div class="cev-uyari">Bu tarih çevrilemedi. Gün sayısını kontrol edin (bazı aylar 29 gündür).</div>'); return; }
+  hvCevYaz('cev-h-sonuc',
+    '<div class="cev-sonuc"><div class="cev-sonuc-ust">Miladi karşılığı</div>' +
+    '<div class="cev-sonuc-buyuk">' + d.getUTCDate() + ' ' + HV_MILADI_AYLAR[d.getUTCMonth()] + ' ' + d.getUTCFullYear() + '</div>' +
+    '<div class="cev-sonuc-alt">' + HV_GUNLER[d.getUTCDay()] + '</div></div>');
+}
+
+function hvCevBugun() {
+  const n = new Date();
+  const sg = document.getElementById('cev-m-gun'), sa = document.getElementById('cev-m-ay'), sy = document.getElementById('cev-m-yil');
+  if (sg) sg.value = n.getDate();
+  if (sa) sa.value = n.getMonth() + 1;
+  if (sy) sy.value = n.getFullYear();
+  hvCevMiladiden();
+}
+
+function renderCevirici() {
+  const c = document.getElementById('cevirici-content');
+  if (!c) return;
+  const n = new Date();
+  const h = hvHicriParcala(new Date(Date.UTC(n.getFullYear(), n.getMonth(), n.getDate()))) || { g:1, a:1, y:1448 };
+  const ayOpt = (liste, secili) => liste.map((ad, i) =>
+    '<option value="' + (i + 1) + '"' + ((i + 1) === secili ? ' selected' : '') + '>' + ad + '</option>').join('');
+
+  c.innerHTML =
+    '<div class="cev-blok">' +
+      '<div class="cev-baslik">📆 Miladi → Hicri</div>' +
+      '<div class="cev-satir">' +
+        '<input class="cev-in" id="cev-m-gun" type="number" inputmode="numeric" min="1" max="31" value="' + n.getDate() + '" aria-label="Gün">' +
+        '<select class="cev-in cev-ay" id="cev-m-ay" aria-label="Ay">' + ayOpt(HV_MILADI_AYLAR, n.getMonth() + 1) + '</select>' +
+        '<input class="cev-in" id="cev-m-yil" type="number" inputmode="numeric" min="' + HV_CEV_M_ALT + '" max="' + HV_CEV_M_UST + '" value="' + n.getFullYear() + '" aria-label="Yıl">' +
+      '</div>' +
+      '<button class="cev-btn" onclick="hvCevMiladiden()">Çevir</button>' +
+      '<button class="cev-btn cev-btn-ikincil" onclick="hvCevBugun()">Bugünü getir</button>' +
+      '<div id="cev-m-sonuc"></div>' +
+    '</div>' +
+    '<div class="cev-blok">' +
+      '<div class="cev-baslik">🌙 Hicri → Miladi</div>' +
+      '<div class="cev-satir">' +
+        '<input class="cev-in" id="cev-h-gun" type="number" inputmode="numeric" min="1" max="30" value="' + h.g + '" aria-label="Gün">' +
+        '<select class="cev-in cev-ay" id="cev-h-ay" aria-label="Ay">' + ayOpt(HV_HICRI_AYLAR, h.a) + '</select>' +
+        '<input class="cev-in" id="cev-h-yil" type="number" inputmode="numeric" min="' + HV_CEV_H_ALT + '" max="' + HV_CEV_H_UST + '" value="' + h.y + '" aria-label="Yıl">' +
+      '</div>' +
+      '<button class="cev-btn" onclick="hvCevHicriden()">Çevir</button>' +
+      '<div id="cev-h-sonuc"></div>' +
+    '</div>' +
+    '<div class="info-note">Çeviri, telefonunuzun Ümmü\'l-Kura takvimiyle yapılır ve internet gerektirmez. Hicri ay başları ülkeden ülkeye bir gün değişebilir; resmî günler için Diyanet takvimini esas alın.</div>';
+
+  hvCevMiladiden();
+  hvCevHicriden();
+}
+window.hvCevMiladiden = hvCevMiladiden;
+window.hvCevHicriden = hvCevHicriden;
+window.hvCevBugun = hvCevBugun;
+
 /* ══════════ RAMAZAN İMSAKİYESİ ══════════ */
 /* O ay için cihazda Diyanet verisi varsa tabloya o vakitler basılır. */
 function hvImsakiyeDiyanet(loc, year, month) {
@@ -1260,6 +1397,7 @@ window.FEATURE_ROUTES = {
   'quiz': () => { if (!_quiz) renderQuizIntro(); },
   'ruya': () => renderRuya(document.getElementById('ruya-search-input') ? document.getElementById('ruya-search-input').value : ''),
   'bebek': () => renderBebek(document.getElementById('bebek-search-input') ? document.getElementById('bebek-search-input').value : ''),
+  'cevirici': renderCevirici,
   'takvim': renderTakvim,
   'paylasim': renderPaylasim,
   'cuma': renderCuma,
@@ -2763,7 +2901,7 @@ async function renderMushaf(calmayaDevam) {
   let trHtml = '';
   let sonSure2 = null;
   rows.forEach((r, i) => {
-    if (r.s !== sonSure2) { sonSure2 = r.s; trHtml += `<div class="mv-meal-sure">${r.sadi} Sûresi</div>`; }
+    if (r.s !== sonSure2) { sonSure2 = r.s; trHtml += `<div class="mv-meal-sure">${hvSureAdi(r.s)}</div>`; }
     // Diyanet birleşik meallerinde aynı metni tekrar yazma
     if (i > 0 && r.tr && rows[i - 1].tr === r.tr && !hvMealGrupIlk(r.s, r.v)) return;
     trHtml += `<div class="mv-meal" id="mv-m-${r.n}">
@@ -4074,7 +4212,7 @@ async function hvTamEkranCiz(calmayaDevam) {
     let trHtml = '';
     let sonSure2 = null;
     rows.forEach((r, i) => {
-      if (r.s !== sonSure2) { sonSure2 = r.s; trHtml += `<div class="te-m-sure">${r.sadi} Sûresi</div>`; }
+      if (r.s !== sonSure2) { sonSure2 = r.s; trHtml += `<div class="te-m-sure">${hvSureAdi(r.s)}</div>`; }
       if (i > 0 && r.tr && rows[i - 1].tr === r.tr && !hvMealGrupIlk(r.s, r.v)) return;
       trHtml += `<div class="te-m-ayet" id="te-m-${r.n}"><span class="te-m-no">${hvMealEtiket(r.s, r.v)}</span>${r.tr || '—'}</div>`;
     });

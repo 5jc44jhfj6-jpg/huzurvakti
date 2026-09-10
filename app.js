@@ -636,7 +636,7 @@ window.updateNotifyStatusUI = updateNotifyStatusUI;
 
 // Ayarlar → Geri Bildirim Gönder (doğrudan e-posta açar)
 function hvSendFeedback() {
-  const ver = 'v62.6';
+  const ver = 'v62.9';
   let ortam = 'Tarayıcı';
   try {
     if (window.hvIsAndroid) ortam = 'Android uygulaması';
