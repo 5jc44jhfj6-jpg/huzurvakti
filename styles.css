@@ -2747,3 +2747,61 @@ body.te-modda #bottom-nav, body.te-modda #app-header, body.te-modda header { dis
 .te-metin .mv-ayah.okunuyor { background:rgba(212,175,55,.22); border-radius:6px; }
 .te-m-ayet.okunuyor { background:rgba(212,175,55,.14); border-radius:8px;
   padding:6px 8px; margin:-6px -8px 7px; }
+
+/* ── v62.4 — Okurken ilerleyen vurgu, süre çubuğu, âyet atlama ───────── */
+
+/* Vurgu satır aralığına taşmasın; her satır ayrı boyansın */
+.mv-ayah.okunuyor, .te-metin .mv-ayah.okunuyor {
+  background:none !important;
+  box-shadow:none !important;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+  border-radius:4px;
+  /* Sağdan sola, hocanın okuduğu kadar dolar */
+  background-image: linear-gradient(to left,
+      rgba(212,175,55,.30) 0%,
+      rgba(212,175,55,.30) var(--hv-oran, 0%),
+      rgba(212,175,55,.10) var(--hv-oran, 0%),
+      rgba(212,175,55,.10) 100%) !important;
+  padding:0 2px;
+}
+body.green-theme .mv-ayah.okunuyor, body.green-theme .te-metin .mv-ayah.okunuyor {
+  background-image: linear-gradient(to left,
+      rgba(200,162,90,.32) 0%,
+      rgba(200,162,90,.32) var(--hv-oran, 0%),
+      rgba(200,162,90,.10) var(--hv-oran, 0%),
+      rgba(200,162,90,.10) 100%) !important;
+}
+
+/* Ses çubuğu */
+.mv-ses { display:flex; align-items:center; gap:8px; margin:8px 0 6px; }
+.mv-ses-yan { flex:0 0 auto; width:44px; height:44px; border-radius:22px; cursor:pointer;
+  border:1px solid var(--border-light); background:var(--bg-card);
+  color:var(--gold-light); font-size:1rem; }
+.mv-ses2 { display:flex; align-items:center; gap:8px; margin:0 0 10px; }
+.mv-ses2 > span { flex:0 0 auto; min-width:34px; color:var(--text-muted);
+  font-size:.72rem; font-variant-numeric:tabular-nums; }
+.mv-cizgi { flex:1 1 auto; min-width:0; height:26px; -webkit-appearance:none;
+  appearance:none; background:transparent; }
+.mv-cizgi::-webkit-slider-runnable-track { height:5px; border-radius:3px;
+  background:rgba(255,255,255,.14); }
+.mv-cizgi::-webkit-slider-thumb { -webkit-appearance:none; width:15px; height:15px;
+  margin-top:-5px; border-radius:50%; background:var(--gold); border:none; }
+.mv-cizgi::-moz-range-track { height:5px; border-radius:3px; background:rgba(255,255,255,.14); }
+.mv-cizgi::-moz-range-thumb { width:15px; height:15px; border:none; border-radius:50%; background:var(--gold); }
+.mv-ses2 .mv-qari { flex:0 1 38%; min-width:0; height:36px; border-radius:18px; padding:0 10px;
+  background:var(--bg-card); color:var(--text-primary); font-family:inherit; font-size:.74rem;
+  border:1px solid var(--border-light); }
+
+/* Tam ekran süre satırı */
+.te-sure { display:flex; align-items:center; justify-content:center; gap:8px;
+  padding:0 14px 6px; color:var(--text-muted); font-size:.78rem;
+  font-variant-numeric:tabular-nums; transition:opacity .2s, transform .2s; }
+.te-sure-ayrac { opacity:.5; }
+.te-mini { width:38px; height:34px; border-radius:17px; cursor:pointer;
+  border:1px solid rgba(212,175,55,.35); background:transparent;
+  color:var(--gold-light); font-size:.85rem; }
+.te-kok.cubuksuz .te-sure { opacity:0; transform:translateY(100%); pointer-events:none; }
+.te-kok.kagit .te-mini { color:#5f4c18; border-color:#b39a5c; }
+.te-kok.kagit .te-sure { color:#6b5a2a; }
+.dn-ses-sec { max-width:62%; height:36px; border-radius:18px; padding:0 10px; font-size:.76rem; }
