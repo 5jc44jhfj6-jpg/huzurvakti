@@ -2150,12 +2150,29 @@ function hvSure2(sn) {
 }
 
 /* Okurken âyetin üstünde yavaşça ilerleyen vurgu + süre göstergesi */
+/* Âyeti kelimelere ayır (bir kez) — vurgu kelime kelime ilerlesin */
+function hvMvKelimele(el) {
+  if (!el || el.dataset.kelimeli === '1') return;
+  const num = el.querySelector('.mv-num');
+  const numHtml = num ? num.outerHTML : '';
+  if (num) num.remove();
+  const txt = (el.textContent || '').trim();
+  if (!txt) { el.dataset.kelimeli = '1'; return; }
+  el.innerHTML = txt.split(/\s+/).filter(Boolean)
+    .map(k => '<span class="mv-w">' + hvEsc(k) + '</span>').join(' ') + numHtml;
+  el.dataset.kelimeli = '1';
+}
+
 function hvMvIlerleme() {
   const s = hvMvSes;
   if (!s) return;
   const oran = (s.duration && isFinite(s.duration)) ? Math.min(1, s.currentTime / s.duration) : 0;
   document.querySelectorAll('.mv-ayah.okunuyor').forEach(el => {
     el.style.setProperty('--hv-oran', (oran * 100).toFixed(1) + '%');
+    const ks = el.querySelectorAll('.mv-w');
+    if (!ks.length) return;
+    const k = Math.round(oran * ks.length);
+    for (let i = 0; i < ks.length; i++) ks[i].classList.toggle('gecti', i < k);
   });
   const g = document.getElementById('mv-gecen'), t = document.getElementById('mv-toplam');
   const c = document.getElementById('mv-cizgi');
@@ -2206,7 +2223,11 @@ function hvMvKaydirilabilir(el) {
 
 function hvMvVurgula(n) {
   document.querySelectorAll('.mv-ayah.okunuyor, .mv-meal.okunuyor, .te-m-ayet.okunuyor')
-    .forEach(el => el.classList.remove('okunuyor'));
+    .forEach(el => {
+      el.classList.remove('okunuyor');
+      el.style.removeProperty('--hv-oran');
+      el.querySelectorAll('.mv-w.gecti').forEach(w => w.classList.remove('gecti'));
+    });
   if (!n) return;
 
   // Tam ekran açıksa oradaki kopyayı hedefle (aynı id iki yerde bulunuyor)
@@ -2218,8 +2239,11 @@ function hvMvVurgula(n) {
   const m = kok.querySelector('#mv-m-' + n) || kok.querySelector('#te-m-' + n)
             || document.getElementById('mv-m-' + n) || document.getElementById('te-m-' + n);
   if (m) m.classList.add('okunuyor');
+  const rr = hvMvRef[n];
+  if (rr) hvSureSeritYaz(rr[0]);
   if (!a) return;
   a.classList.add('okunuyor');
+  hvMvKelimele(a);
 
   const kap = hvMvKaydirilabilir(a);
   if (!kap) { try { a.scrollIntoView({ block: 'center', behavior: 'smooth' }); } catch (e) {} return; }
@@ -2427,6 +2451,47 @@ function hvSayfaKaydirmaBagla(el, git) {
 window.hvSayfaKaydirmaBagla = hvSayfaKaydirmaBagla;
 
 /* Mushaf sesi: hafız seçimi Kuran Dinle ile ortak */
+/* Okuma alanının üstünde duran sûre adı şeridi */
+function hvSureSeritYaz(sure) {
+  const e = document.getElementById('mv-sure-serit');
+  if (e && sure) e.textContent = hvSureAdi(sure);
+  const t = document.getElementById('te-sure-serit');
+  if (t && sure) t.textContent = hvSureAdi(sure);
+}
+window.hvSureSeritYaz = hvSureSeritYaz;
+
+/* Ekranda en üstte görünen âyetin sûresini bul, şeride yaz */
+function hvSureSeritTazele() {
+  const tam = document.getElementById('mv-full');
+  const tamAcik = tam && getComputedStyle(tam).display !== 'none';
+  const kok = tamAcik ? tam : document.getElementById('mv-body');
+  if (!kok) return;
+  const kap = tamAcik ? tam.querySelector('.te-orta') : hvMvKaydirilabilir(kok.querySelector('.mv-ayah'));
+  const ust = kap ? kap.getBoundingClientRect().top + 60 : 120;
+  const hepsi = kok.querySelectorAll('.mv-ayah');
+  let secili = null;
+  for (let i = 0; i < hepsi.length; i++) {
+    const r = hepsi[i].getBoundingClientRect();
+    if (r.bottom >= ust) { secili = hepsi[i]; break; }
+  }
+  if (!secili && hepsi.length) secili = hepsi[0];
+  if (!secili) return;
+  const n = parseInt((secili.id || '').replace('mv-a-', ''), 10);
+  const r2 = hvMvRef[n];
+  if (r2) hvSureSeritYaz(r2[0]);
+}
+window.hvSureSeritTazele = hvSureSeritTazele;
+
+let hvSeritZaman = null;
+function hvSureSeritBagla(kap) {
+  if (!kap || kap.dataset.seritBagli === '1') return;
+  kap.dataset.seritBagli = '1';
+  kap.addEventListener('scroll', () => {
+    if (hvSeritZaman) return;
+    hvSeritZaman = setTimeout(() => { hvSeritZaman = null; hvSureSeritTazele(); }, 120);
+  }, { passive: true });
+}
+
 function hvMushafSesQari(id) {
   hvSet('hv_dinle_qari', id);
   if (hvMvCalisiyor && hvMvKonum >= 0) hvMvCal(hvMvKonum);
@@ -2615,6 +2680,7 @@ async function renderMushaf(calmayaDevam) {
         ${HV_DINLE_QARILER.map(q => `<option value="${q.id}" ${q.id === hvDnQari().id ? 'selected' : ''}>${q.ad}</option>`).join('')}
       </select>
     </div>
+    ${mod !== 'ar' ? `<div class="mv-tts-not">🔊 Meâli telefonunun Türkçe sesi okur.${hvTtsTurkceVarMi() ? '' : ' <b>Bu cihazda Türkçe konuşma sesi bulunamadı</b> — meâl sesli okunamaz.'}</div>` : ''}
 
     <div class="mv-ilerleme">
       <div class="mv-il-ust">
@@ -2634,7 +2700,10 @@ async function renderMushaf(calmayaDevam) {
         : `<div class="mv-marks-empty">Sayfayı kaydetmek için yukarıdaki ☆ düğmesine dokun.</div>`}
     </div>
 
-    <div id="mv-body" class="mv-body"><div class="mv-loading">Sayfa yükleniyor…</div></div>
+    <div id="mv-body" class="mv-body">
+      <div id="mv-sure-serit" class="mv-sure-serit">Sayfa yükleniyor…</div>
+      <div class="mv-loading">Sayfa yükleniyor…</div>
+    </div>
   `;
 
   let rows;
@@ -2688,7 +2757,9 @@ async function renderMushaf(calmayaDevam) {
   hvMvRef = {}; rows.forEach(r => { hvMvRef[r.n] = [r.s, r.v]; });
 
   const govde = document.getElementById('mv-body');
+  const ilkSure = rows.length ? rows[0].s : 0;
   govde.innerHTML =
+    `<div id="mv-sure-serit" class="mv-sure-serit">${ilkSure ? hvSureAdi(ilkSure) : ''}</div>` +
     (mod !== 'tr' ? `<div id="mv-arabic" class="mv-arabic" style="font-size:${font}px">${arHtml}</div>` : '') +
     (mod !== 'ar' ? `<div class="mv-meal-wrap">${trHtml}</div>` : '') +
     `<div class="mv-swipe-hint">← Sola kaydır: sonraki sayfa · Sağa kaydır: önceki →</div>
@@ -2696,6 +2767,7 @@ async function renderMushaf(calmayaDevam) {
 
   hvMushafArayuzTazele();
   hvMushafKaydirmaBagla();
+  try { hvSureSeritBagla(hvMvKaydirilabilir(govde.querySelector('.mv-ayah'))); hvSureSeritTazele(); } catch (e) {}
   if (calmayaDevam) { hvMvCalisiyor = true; hvMvCal(0); }
 }
 window.renderMushaf = renderMushaf;
@@ -3524,7 +3596,13 @@ function renderDinle() {
       </div>
     </div>
     ${hvTtsTurkceVarMi() ? '' : `<div class="dn-not uyari">⚠️ Bu cihazda Türkçe konuşma sesi bulunamadı. Meâl sesli okunamaz; ekranda gösterilip sıradaki âyete geçilir. Telefon ayarlarından Türkçe konuşma sesini yükleyebilirsin.</div>`}
-    <div class="dn-not">🔊 Meâli telefonunun kendi Türkçe sesi okur. iPhone'da <b>Ayarlar → Erişilebilirlik → Konuşulan İçerik → Sesler → Türkçe</b> bölümünden "Geliştirilmiş" sesi indirirsen çok daha doğal olur.</div>
+    <div class="dn-not">
+      🔊 Meâli <b>telefonunun kendi Türkçe sesi</b> okur, bu yüzden kalite cihazdan cihaza değişir.
+      Sesi belirgin şekilde iyileştirmek için ücretsiz "gelişmiş" sesi indir:<br>
+      <b>iPhone:</b> Ayarlar → Erişilebilirlik → Konuşulan İçerik → Sesler → Türkçe → <b>Yelda (Gelişmiş)</b><br>
+      <b>Android:</b> Ayarlar → Erişilebilirlik → Metin okuma → Google Metin Okuma → Sesi yükle → Türkçe
+      <br>İndirdikten sonra uygulamayı kapatıp açman yeterli; yukarıdaki listeden yeni sesi seçebilirsin.
+    </div>
     ` : ''}
 
     <div class="quran-search-bar">
@@ -3909,7 +3987,7 @@ async function hvTamEkranCiz(calmayaDevam) {
 
     <div class="te-orta" onclick="hvTeCubukDegistir()">
       <div class="te-cerceve">
-        <div class="te-baslik" id="te-baslik">Sayfa ${sayfa}</div>
+        <div class="te-baslik" id="te-sure-serit">Sayfa ${sayfa}</div>
         <div id="te-metin" class="te-metin" style="font-size:${font}px${mod === 'tr' ? ';display:none' : ''}">
           <div class="mv-loading">Sayfa yükleniyor…</div>
         </div>
@@ -3954,8 +4032,9 @@ async function hvTamEkranCiz(calmayaDevam) {
   hvMvKonum = -1;
 
   const sureler = rows.map(r => r.s).filter((x, i, a) => a.indexOf(x) === i);
-  const bas = document.getElementById('te-baslik');
-  if (bas) bas.textContent = sureler.map(hvSureAdi).join(' / ');
+  const bas = document.getElementById('te-sure-serit');
+  if (bas) bas.textContent = hvSureAdi(sureler[0]);
+  try { hvSureSeritBagla(document.querySelector('#mv-full .te-orta')); } catch (e) {}
 
   // ── Arapça ──
   let html = '';
