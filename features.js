@@ -3087,6 +3087,24 @@ function hvEzTumu() {
 window.hvEzTumu = hvEzTumu;
 
 /* ── Kayıt yükleme ─────────────────────────────────────────────────── */
+/* Kaynak transliterasyon akademik diakritikler kullanıyor (ḳ, ḥ, ẕ, ŝ…).
+   Türkçe okunuş için sadeleştirilir; tire, asimile olan harften sonraya
+   kaydırılır (mine-l'ûlâ → minel-ûlâ) ve cümle başları büyütülür. */
+const HV_OK_HARF = {
+  'ḍ':'d','ḥ':'h','ḫ':'h','ḣ':'h','ṣ':'s','ṡ':'s','ṭ':'t','ṫ':'t',
+  'ẓ':'z','ż':'z','ẕ':'z','ẑ':'z','ŝ':'s','š':'ş','ḳ':'k','ḵ':'k',
+  'ġ':'ğ','ǧ':'ğ','ḡ':'ğ','ʿ':"'",'`':"'",'ʾ':"'",'ʼ':"'",'ñ':'n','ṇ':'n','ṛ':'r','ḷ':'l'
+};
+function hvOkunusSadelestir(metin) {
+  let t = String(metin || '');
+  if (!t) return '';
+  t = t.split('').map(c => (HV_OK_HARF[c] !== undefined ? HV_OK_HARF[c] : c)).join('');
+  t = t.replace(/-\s*([a-zçğıöşüâîû])'?/gi, (m, h) => h + '-');
+  t = t.replace(/-\s+/g, ' ').replace(/\s+/g, ' ').trim();
+  t = t.replace(/(^|[.!?]\s+)('?)([a-zçğıöşü])/g, (m, o, k, c) => o + k + c.toLocaleUpperCase('tr'));
+  return t;
+}
+
 async function hvEzAyetleriGetir(sureNo, bas, son) {
   await hvMealHazir();   // Türkçe meal uygulamanın içinden (Diyanet)
   // Ses everyayah.com'dan alınır (Kuran Oku ile aynı kaynak) — eski CDN
@@ -3106,7 +3124,7 @@ async function hvEzAyetleriGetir(sureNo, bas, son) {
     }
     out.push({
       ar: metin,
-      ok: ok[i] ? ok[i].text : '',
+      ok: ok[i] ? hvOkunusSadelestir(ok[i].text) : '',
       tr: hvMeal(sureNo, a.numberInSurah),
       ses: hvAaUrl(sureNo, a.numberInSurah)
     });
@@ -3131,6 +3149,19 @@ function hvEzCumleBol(metin) {
   return son.length ? son : [metin];
 }
 
+/* Liste ↔ detay geçişinde önceki kaydırma konumu kalıyordu; içerik kısa
+   olunca ekran yarım görünüyordu. Her geçişte başa sar. */
+function hvEzBasaSar() {
+  const kok = document.getElementById('ezber-root');
+  const kap = kok ? hvMvKaydirilabilir(kok) : null;
+  try {
+    if (kap) kap.scrollTo({ top: 0, behavior: 'auto' });
+    else window.scrollTo({ top: 0, behavior: 'auto' });
+  } catch (e) {
+    if (kap) kap.scrollTop = 0; else window.scrollTo(0, 0);
+  }
+}
+
 async function hvEzAc(tur, ad) {
   const kok = document.getElementById('ezber-root');
   if (!kok) return;
@@ -3145,6 +3176,7 @@ async function hvEzAc(tur, ad) {
     </div>
     <div id="ez-step" class="ez-step"><div class="mv-loading">Yükleniyor…</div></div>
   `;
+  hvEzBasaSar();
 
   try {
     let parcalar = [];
@@ -3174,6 +3206,7 @@ async function hvEzAc(tur, ad) {
       ob.innerHTML = on ? '✓ Öğrendim' : '○ Öğrendim';
     }
     hvEzParcaCiz();
+    hvEzBasaSar();
   } catch (e) {
     const s = document.getElementById('ez-step');
     if (s) s.innerHTML = `<div class="mv-error">Yüklenemedi. İnternet bağlantını kontrol et.
@@ -3229,6 +3262,7 @@ function renderEzber() {
     <div class="ez-group-title">🕌 Namaz Duaları</div>
     <div class="ez-grid">${digerDua.map(s => kart('dua', s, 'Satır satır', false)).join('')}</div>
   `;
+  hvEzBasaSar();
 }
 window.renderEzber = renderEzber;
 try { if (window.FEATURE_ROUTES) window.FEATURE_ROUTES['ezber'] = renderEzber; } catch (e) {}
