@@ -639,7 +639,7 @@ window.updateNotifyStatusUI = updateNotifyStatusUI;
 
 // Ayarlar → Geri Bildirim Gönder (doğrudan e-posta açar)
 function hvSendFeedback() {
-  const ver = 'v64.1';
+  const ver = 'v64.2';
   let ortam = 'Tarayıcı';
   try {
     if (window.hvIsAndroid) ortam = 'Android uygulaması';
@@ -1409,21 +1409,22 @@ function hvPusulaUyariSeridi(goster) {
   let e = document.getElementById('kible-izin-serit');
   if (!goster) { if (e) e.remove(); return; }
   if (e) return;
-  const kap = document.querySelector('#page-qibla .qibla-wrapper') ||
-              document.querySelector('#page-qibla .hero-frame-box');
-  if (!kap) return;
+  // Ekranın ortasında, kullanıcının önüne çıkan pencere olarak gösterilir —
+  // sayfanın üstündeki bir şeridi yaşlı kullanıcılar fark etmiyordu.
   e = document.createElement('div');
   e.id = 'kible-izin-serit';
-  e.className = 'kible-izin-bildirim';
+  e.className = 'kible-izin-katman';
   e.innerHTML =
-    '<div class="kib-ikon">🕋</div>' +
-    '<div class="kib-metin"><b>Kâbe yönü için izin gerekiyor</b>' +
-    '<span>Pusulanın çalışması için telefonun yön sensörüne erişim izni verin.</span></div>' +
-    '<div class="kib-dugmeler">' +
-      '<button class="kib-evet">✅ Evet, izin ver</button>' +
-      '<button class="kib-hayir">Şimdilik geç</button>' +
+    '<div class="kible-izin-bildirim" role="dialog" aria-modal="true">' +
+      '<div class="kib-ikon">🕋</div>' +
+      '<div class="kib-metin"><b>Kâbe yönü için izin gerekiyor</b>' +
+      '<span>Pusulanın doğru çalışması için telefonunuzun yön sensörüne erişim izni vermeniz gerekiyor.</span></div>' +
+      '<div class="kib-dugmeler">' +
+        '<button class="kib-evet">✅ EVET, İZİN VER</button>' +
+        '<button class="kib-hayir">Hayır</button>' +
+      '</div>' +
     '</div>';
-  kap.insertBefore(e, kap.firstChild);
+  document.body.appendChild(e);
   e.querySelector('.kib-evet').addEventListener('click', requestQiblaPermissionFlow);
   e.querySelector('.kib-hayir').addEventListener('click', () => {
     hvPusulaUyariSeridi(false);
