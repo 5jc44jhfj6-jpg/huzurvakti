@@ -1548,41 +1548,47 @@ body.dark-theme[data-tod="Fajr"] .horizon-glow, body.dark-theme[data-tod="Sunris
 .oruc-day.today{ box-shadow:0 0 0 2px var(--gold); }
 
 /* ══════════ YEŞİL TEMA (Lüks Gece) ══════════ */
+/* Çam teması — Denge tasarımının renkleri
+   Çam: #0F2E25 · Hero: #153A2F→#0F2E25→#0C261F
+   Pirinç: #C8A25A (açık #D3AF66) · Gece zemin: #0A1B16 · Panel: #11261F */
 body.dark-theme.green-theme{
-  --t1:#123f33; --t2:#0b2a22; --t3:#061813; --t4:#030c09;
-  --bg-card: rgba(10,32,25,0.82); --bg-card-hover: rgba(16,45,36,0.95);
-  --gold:#d4af37; --gold-light:#f7e8a1;
-  --gold-gradient: linear-gradient(180deg,#ffffff 0%,#fff3be 35%,#d4af37 75%,#9e791b 100%);
-  --border-gold:#d4af37; --border-light: rgba(212,175,55,0.35);
-  --text-main:#ffffff; --text-sub: rgba(255,255,255,0.88); --text-muted: rgba(255,255,255,0.55);
-  --shadow-glow: 0 0 30px rgba(212,175,55,0.5);
+  --bg-main:#0A1B16;
+  --bg-gradient: radial-gradient(130% 82% at 50% 30%, #265B4B 0%, #153C31 34%, #08221A 66%, #051510 100%);
+  --t1:#265B4B; --t2:#153C31; --t3:#08221A; --t4:#051510;
+  --bg-card: rgba(17,38,31,0.74); --bg-card-hover: rgba(23,52,42,0.92);
+  --gold:#C8A25A; --gold-light:#D3AF66;
+  --gold-gradient: linear-gradient(180deg,#F5EAD2 0%,#E0C489 45%,#C8A25A 100%);
+  --border-gold:#C8A25A; --border-light: rgba(200,162,90,0.16);
+  --text-main:#F7F3E8; --text-sub: rgba(247,243,232,0.82); --text-muted: rgba(247,243,232,0.55);
+  --shadow-glow: 0 0 30px rgba(200,162,90,0.42);
 }
-body.dark-theme.green-theme[data-tod="Fajr"], body.dark-theme.green-theme[data-tod="Sunrise"]{ --t1:#1c604c; --t2:#113d30; --t3:#08241c; --t4:#04130e; }
-body.dark-theme.green-theme[data-tod="Dhuhr"]{ --t1:#175040; --t2:#0e3429; --t3:#071d16; --t4:#03100c; }
-body.dark-theme.green-theme[data-tod="Asr"]{ --t1:#123f33; --t2:#0b2a22; --t3:#061813; --t4:#030c09; }
-body.dark-theme.green-theme[data-tod="Maghrib"]{ --t1:#0e3128; --t2:#08201a; --t3:#04130e; --t4:#020806; }
-body.dark-theme.green-theme[data-tod="Isha"]{ --t1:#0a241d; --t2:#061712; --t3:#030d0a; --t4:#010504; }
-body.green-theme #app-header{ background:rgba(4,13,10,.95); border-bottom-color:rgba(212,175,55,.6); }
+body.dark-theme.green-theme[data-tod="Fajr"], body.dark-theme.green-theme[data-tod="Sunrise"]{ --t1:#27594A; --t2:#16392F; --t3:#0B211B; --t4:#05140F; }
+body.dark-theme.green-theme[data-tod="Sunrise"]{ --t1:#388C74; --t2:#235C4C; --t3:#11392D; --t4:#08221A; }
+body.dark-theme.green-theme[data-tod="Dhuhr"]{ --t1:#2F7964; --t2:#1B4E3F; --t3:#0D3026; --t4:#061B15; }
+body.dark-theme.green-theme[data-tod="Asr"]{ --t1:#265B4B; --t2:#153C31; --t3:#08221A; --t4:#051510; }
+body.dark-theme.green-theme[data-tod="Maghrib"]{ --t1:#1C493C; --t2:#0F2D24; --t3:#061A14; --t4:#030F0B; }
+body.dark-theme.green-theme[data-tod="Isha"]{ --t1:#10352A; --t2:#092019; --t3:#04120E; --t4:#020A08; }
+body.green-theme #app-header{ background:rgba(10,27,22,.95); border-bottom-color:rgba(200,162,90,.6); }
 body.green-theme .brand-hijri{ color:var(--gold-light); }
-body.green-theme .hub-card{ background:linear-gradient(160deg, rgba(20,62,50,.92), rgba(8,28,22,.94)); }
-body.green-theme .zikir-display{ background:radial-gradient(circle at 50% 30%, rgba(13,40,32,.92), rgba(4,13,10,.96)); }
-body.green-theme .hijri-today-card, body.green-theme .quiz-intro, body.green-theme .quiz-result{ background:radial-gradient(circle at 50% 20%, rgba(13,40,32,.92), rgba(4,13,10,.96)); }
-body.green-theme #bottom-nav{ background:linear-gradient(180deg, rgba(8,26,20,.97), rgba(3,12,9,.98)); border-top-color:rgba(212,175,55,.45); }
-body.green-theme .cd-prog{ stroke:url(#goldGradRing); filter:drop-shadow(0 0 9px rgba(212,175,55,.9)); }
-body.green-theme .cd-track{ stroke:rgba(247,232,161,.10); }
-body.green-theme .cd-ticks{ background:repeating-conic-gradient(from -90deg, rgba(247,232,161,.55) 0 .7deg, transparent .7deg 6deg); }
-body.green-theme .cd-ezan{ color:#050d0b; background:linear-gradient(180deg,#fff3be,#d4af37); }
-body.green-theme .mosque{ fill:#020c08; }
-body.green-theme .horizon-glow{ background:radial-gradient(ellipse at 50% 100%, rgba(212,175,55,.5) 0%, rgba(212,175,55,.18) 42%, transparent 70%); }
-body.green-theme .warm-home .prayer-card.active{ background:linear-gradient(135deg,#f7e8a1 0%,#d4af37 100%); border-color:#fff3be; box-shadow:0 4px 16px rgba(212,175,55,.45); }
-body.green-theme .warm-home .prayer-card.active .prayer-name{ color:#4a3608; }
-body.green-theme .warm-home .prayer-card.active .prayer-time{ color:#1a1303; }
-body.green-theme .warm-home .daily-hadis-card{ background:linear-gradient(180deg, rgba(17,50,40,.6), rgba(6,20,15,.78)); border-color:rgba(212,175,55,.5); }
-body.green-theme .ip.remain{ background:linear-gradient(135deg, rgba(212,175,55,.3), rgba(18,48,38,.6)); border-color:rgba(212,175,55,.45); }
-body.green-theme .oruc-day.on{ color:#1a1303; }
-body.green-theme .sheet-time, body.green-theme .sheet-btn.primary{ background-color:#1f7a5c; border-color:#1f7a5c; }
-body.green-theme .sheet-time{ background:none; color:#1f7a5c; }
-body.green-theme .sheet input:checked + .toggle-slider{ background:#1f7a5c; }
+body.green-theme .hub-card{ background:linear-gradient(160deg, rgba(21,58,47,.92), rgba(12,38,31,.94)); }
+body.green-theme .zikir-display{ background:radial-gradient(circle at 50% 30%, rgba(15,46,37,.92), rgba(10,27,22,.96)); }
+body.green-theme .hijri-today-card, body.green-theme .quiz-intro, body.green-theme .quiz-result{ background:radial-gradient(circle at 50% 20%, rgba(15,46,37,.92), rgba(10,27,22,.96)); }
+body.green-theme #bottom-nav{ background:linear-gradient(180deg, rgba(15,46,37,.97), rgba(10,27,22,.98)); border-top-color:rgba(200,162,90,.45); }
+body.green-theme .cd-prog{ stroke:#C8A25A; filter:drop-shadow(0 0 10px rgba(200,162,90,.85)); }
+body.green-theme .cd-track{ stroke:rgba(211,175,102,.10); }
+body.green-theme .cd-ticks{ background:repeating-conic-gradient(from -90deg, rgba(211,175,102,.55) 0 .7deg, transparent .7deg 6deg); }
+body.green-theme .cd-ezan{ color:#0A1B16; background:linear-gradient(180deg,#E0C489,#C8A25A); }
+body.green-theme .mosque{ fill:#061210; }
+body.green-theme .horizon-glow{ background:radial-gradient(ellipse at 50% 100%, rgba(200,162,90,.5) 0%, rgba(200,162,90,.18) 42%, transparent 70%); }
+body.green-theme .warm-home .prayer-card.active{ background:linear-gradient(135deg,#D3AF66 0%,#C8A25A 100%); border-color:#E0C489; box-shadow:0 4px 16px rgba(200,162,90,.45); }
+body.green-theme .warm-home .prayer-card.active .prayer-name{ color:#0F2E25; }
+body.green-theme .warm-home .prayer-card.active .prayer-time{ color:#0A1B16; }
+body.green-theme .warm-home .daily-hadis-card{ background:linear-gradient(180deg, rgba(15,46,37,.6), rgba(10,27,22,.78)); border-color:rgba(200,162,90,.5); }
+body.green-theme .ip.remain{ background:linear-gradient(135deg, rgba(200,162,90,.3), rgba(15,46,37,.6)); border-color:rgba(200,162,90,.45); }
+body.green-theme .oruc-day.on{ color:#0A1B16; }
+body.green-theme .sheet-time, body.green-theme .sheet-btn.primary{ background-color:#0F2E25; border-color:#0F2E25; }
+body.green-theme .sheet-time{ background:none; color:#0F2E25; }
+body.green-theme .sheet input:checked + .toggle-slider{ background:#0F2E25; }
 
 /* ═══════════════════════════════════════════════════════════
    v58 — Çevrimdışı vakitler, Ramazan/Çevrimdışı rozetleri,
@@ -1642,8 +1648,8 @@ body.green-theme .sheet input:checked + .toggle-slider{ background:#1f7a5c; }
 .ruya-note{ text-align:left; }
 
 /* Yeşil tema uyarlamaları */
-body.green-theme .hv-badge-ramazan{ background:rgba(212,175,55,.2); color:#f7e8a1; border-color:rgba(212,175,55,.5); }
-body.green-theme .hv-badge-offline{ color:#d9e8dc; border-color:rgba(217,232,220,.3); }
+body.green-theme .hv-badge-ramazan{ background:rgba(200,162,90,.2); color:#D3AF66; border-color:rgba(200,162,90,.5); }
+body.green-theme .hv-badge-offline{ color:#F7F3E8; border-color:rgba(247,243,232,.3); }
 /* v58.1 — ayar kartı içi boşluk düzeltmeleri */
 .settings-card-box > .offset-hint, .settings-card-box > .backup-row, .settings-card-box > .backup-status{ padding-left:14px; padding-right:14px; }
 .settings-card-box > .offset-hint{ padding-top:12px; }
@@ -1656,8 +1662,8 @@ body.green-theme .hv-badge-offline{ color:#d9e8dc; border-color:rgba(217,232,220
 /* v59.1 — ayet kartı sıcak ton (eski yeşil "nth-child(even)" düzeltmesi) */
 body.dark-theme .ayah-card{ background:rgba(40,22,12,0.62); border-color:rgba(212,175,55,.24); }
 body.dark-theme .ayah-card:nth-child(even){ background:rgba(58,33,18,0.55); }
-body.dark-theme.green-theme .ayah-card{ background:rgba(10,32,25,0.62); border-color:var(--border-gold); }
-body.dark-theme.green-theme .ayah-card:nth-child(even){ background:rgba(18,38,33,0.72); }
+body.dark-theme.green-theme .ayah-card{ background:rgba(17,38,31,0.62); border-color:var(--border-gold); }
+body.dark-theme.green-theme .ayah-card:nth-child(even){ background:rgba(23,52,42,0.72); }
 
 /* v59.2 — konum çipi sıcak bakır ton (eski yeşil düzeltmesi) */
 body.dark-theme .location-chip{
@@ -1693,7 +1699,7 @@ body.dark-theme .notify-status.ok{ color:#a8e6c0; }
   100%{ transform:scale(1.1); opacity:1; filter:drop-shadow(0 0 16px rgba(242,189,142,.9)); }
 }
 .loading-title{ background:linear-gradient(180deg,#ffe9d3 0%,#f2bd8e 60%,#cf8f5f 100%); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; }
-body.green-theme #loading-screen{ background:#040d0a; }
+body.green-theme #loading-screen{ background:#0A1B16; }
 body.green-theme .loading-crescent{ box-shadow:12px 12px 0 0 var(--gold); }
 
 /* ═══════════════════════════════════════════════════════════
@@ -1756,8 +1762,8 @@ body.green-theme .loading-crescent{ box-shadow:12px 12px 0 0 var(--gold); }
 }
 
 /* yeşil temada zerreler altın tonda */
-body.green-theme .mote{ background:rgba(247,232,161,.95); box-shadow:0 0 8px 2px rgba(212,175,55,.55); }
-body.green-theme .cloud{ background:radial-gradient(ellipse at center, rgba(212,175,55,.22) 0%, rgba(212,175,55,.08) 45%, rgba(212,175,55,0) 72%); }
+body.green-theme .mote{ background:rgba(211,175,102,.95); box-shadow:0 0 8px 2px rgba(200,162,90,.55); }
+body.green-theme .cloud{ background:radial-gradient(ellipse at center, rgba(200,162,90,.22) 0%, rgba(200,162,90,.08) 45%, rgba(200,162,90,0) 72%); }
 
 /* hareket azaltma tercihi */
 @media (prefers-reduced-motion: reduce){
@@ -1979,9 +1985,9 @@ body.dark-theme[data-tod="Isha"] .horizon-glow{
 .horizon-glow{ animation-duration:4.5s; }
 
 /* yeşil temada altın tonlar */
-body.green-theme .rays{ background:repeating-conic-gradient(from 0deg, rgba(212,175,55,0) 0deg 8deg, rgba(212,175,55,.12) 10deg 13deg, rgba(212,175,55,0) 15deg 22deg); }
-body.green-theme .aurora{ background:linear-gradient(90deg, rgba(212,175,55,0) 0%, rgba(212,175,55,.2) 28%, rgba(240,210,110,.3) 50%, rgba(212,175,55,.2) 72%, rgba(212,175,55,0) 100%); }
-body.green-theme .shooting{ background:linear-gradient(90deg, rgba(247,232,161,0), rgba(247,232,161,.98) 60%, rgba(247,232,161,0)); }
+body.green-theme .rays{ background:repeating-conic-gradient(from 0deg, rgba(200,162,90,0) 0deg 8deg, rgba(200,162,90,.12) 10deg 13deg, rgba(200,162,90,0) 15deg 22deg); }
+body.green-theme .aurora{ background:linear-gradient(90deg, rgba(200,162,90,0) 0%, rgba(200,162,90,.2) 28%, rgba(224,196,137,.3) 50%, rgba(200,162,90,.2) 72%, rgba(200,162,90,0) 100%); }
+body.green-theme .shooting{ background:linear-gradient(90deg, rgba(211,175,102,0), rgba(211,175,102,.98) 60%, rgba(211,175,102,0)); }
 
 @media (prefers-reduced-motion: reduce){
   .rays, .aurora, .shooting{ animation:none !important; }
@@ -2000,7 +2006,7 @@ body.green-theme .shooting{ background:linear-gradient(90deg, rgba(247,232,161,0
   margin-bottom:5px;
 }
 .cd-time{ text-shadow:0 2px 4px rgba(0,0,0,.45), 0 0 18px rgba(0,0,0,.25); }
-body.green-theme .cd-lbl{ color:#fff6d6; }
+body.green-theme .cd-lbl{ color:#F3E6C6; }
 
 /* ── Günün Hadisi: daha büyük punto, kartı doldursun ── */
 .warm-home .daily-hadis-card{
@@ -2686,3 +2692,58 @@ body.te-modda #bottom-nav, body.te-modda #app-header, body.te-modda header { dis
 @media (min-width: 400px) {
   .daily-hadis-card, .warm-home .daily-hadis-card { min-height: 296px; }
 }
+
+/* ── v62.1 — Kuran Dinle: mod seçici, âyet kutusu, meal okuma hızı ──── */
+.dn-mod { display:flex; gap:6px; justify-content:center; margin:8px 0 10px; }
+.dn-mod button { flex:1 1 0; min-width:0; padding:9px 6px; border-radius:18px; cursor:pointer;
+  border:1px solid rgba(212,175,55,.4); background:transparent;
+  color:var(--gold-light); font-size:.78rem; font-family:inherit; white-space:nowrap; }
+.dn-mod button.on { background:var(--gold); color:#1a0e05; border-color:var(--gold); font-weight:700; }
+
+.dn-ayet-kutu { margin:10px 0 12px; padding:12px 14px; border-radius:14px;
+  background:rgba(0,0,0,.18); border:1px solid var(--border-light);
+  min-height:118px; display:flex; flex-direction:column; justify-content:center; }
+.dn-ayet-ust { display:flex; align-items:center; justify-content:space-between; gap:8px;
+  color:var(--gold); font-size:.78rem; font-weight:700; margin-bottom:7px; }
+.dn-ayet-sayac { color:var(--text-muted); font-weight:600; font-size:.72rem; }
+.dn-ayet-meal { color:var(--text-primary); font-size:.95rem; line-height:1.55; }
+.dn-ayet-bos { color:var(--text-muted); font-size:.86rem; text-align:center; }
+
+.dn-hiz-satir { display:flex; align-items:center; justify-content:space-between; gap:10px;
+  margin:10px 0 6px; color:var(--text-muted); font-size:.8rem; }
+.dn-hiz { display:flex; gap:6px; }
+.dn-hiz button { padding:7px 12px; border-radius:16px; cursor:pointer; font-family:inherit;
+  border:1px solid rgba(212,175,55,.4); background:transparent;
+  color:var(--gold-light); font-size:.76rem; }
+.dn-hiz button.on { background:var(--gold); color:#1a0e05; border-color:var(--gold); font-weight:700; }
+.dn-not { margin:4px 0 12px; padding:10px 12px; border-radius:12px;
+  background:rgba(212,175,55,.08); border:1px solid rgba(212,175,55,.22);
+  color:var(--text-muted); font-size:.76rem; line-height:1.5; }
+
+/* ── v62.2 — Kuran Oku: hafız sesi + ilerleme şeridi ─────────────────── */
+.mv-ses { display:flex; align-items:center; gap:8px; margin:8px 0 10px; }
+.mv-play { flex:1 1 auto; height:44px; border-radius:22px; border:none; cursor:pointer;
+  background:var(--gold-gradient); color:#1a0e05; font-size:.9rem; font-weight:700;
+  font-family:inherit; }
+.mv-ses .mv-qari { flex:0 1 46%; min-width:0; height:44px; border-radius:22px; padding:0 12px;
+  background:var(--bg-card); color:var(--text-primary); font-family:inherit; font-size:.8rem;
+  border:1px solid var(--border-light); }
+
+.mv-ilerleme { margin:0 0 10px; padding:11px 13px; border-radius:14px;
+  background:var(--bg-card); border:1px solid var(--border-light); }
+.mv-il-ust { display:flex; align-items:center; justify-content:space-between; gap:8px;
+  color:var(--text-muted); font-size:.78rem; margin-bottom:8px; }
+.mv-il-ust b { color:var(--gold-light); font-size:.86rem; }
+.mv-il-cubuk { height:7px; border-radius:4px; overflow:hidden;
+  background:rgba(255,255,255,.09); }
+.mv-il-dolu { height:100%; border-radius:4px; background:var(--gold-gradient);
+  transition:width .35s ease; }
+.mv-il-btn { width:100%; margin-top:9px; padding:9px 10px; border-radius:12px; cursor:pointer;
+  border:1px solid rgba(212,175,55,.4); background:transparent;
+  color:var(--gold-light); font-size:.78rem; font-family:inherit; }
+.mv-il-btn:active { background:rgba(212,175,55,.14); }
+
+/* Okunan âyet vurgusu — tam ekranda da */
+.te-metin .mv-ayah.okunuyor { background:rgba(212,175,55,.22); border-radius:6px; }
+.te-m-ayet.okunuyor { background:rgba(212,175,55,.14); border-radius:8px;
+  padding:6px 8px; margin:-6px -8px 7px; }

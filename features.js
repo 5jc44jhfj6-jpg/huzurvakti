@@ -192,7 +192,10 @@ function hvAyetCiz(v, animasyon) {
     // kısa olanlarda gösterilir. Paylaşım kartında Arapça her zaman vardır.
     const kisaAr = (v.arabic || '').length <= 70;
     if (ar) { ar.textContent = kisaAr ? v.arabic : ''; ar.style.display = kisaAr ? '' : 'none'; }
-    if (tr)  tr.textContent  = '"' + (v.turkish || '') + '"';
+    // Diyanet metni zaten tırnakla başlıyorsa ikinci tırnağı ekleme
+    const met = (v.turkish || '').trim();
+    const tirnakli = /[“”"«»]/.test(met);   // metinde zaten tırnak varsa ekleme
+    if (tr)  tr.textContent  = tirnakli ? met : ('"' + met + '"');
     if (src) src.textContent = '— ' + v.surah + ' Sûresi, ' + v.ayah + '. Âyet';
   };
   if (animasyon && kart) {
@@ -2138,21 +2141,52 @@ function hvMvSesNesnesi() {
   return hvMvSes;
 }
 
-function hvMvVurgula(n) {
-  document.querySelectorAll('.mv-ayah.okunuyor, .mv-meal.okunuyor').forEach(el => el.classList.remove('okunuyor'));
-  if (!n) return;
-  const a = document.getElementById('mv-a-' + n);
-  const m = document.getElementById('mv-m-' + n);
-  if (a) { a.classList.add('okunuyor'); a.scrollIntoView({ block: 'center', behavior: 'smooth' }); }
-  if (m) m.classList.add('okunuyor');
+/* Okunan âyeti bul, vurgula ve kapsayıcıyı yavaşça ortala */
+function hvMvKaydirilabilir(el) {
+  let p = el && el.parentElement;
+  while (p && p !== document.documentElement) {
+    const oy = getComputedStyle(p).overflowY;
+    if ((oy === 'auto' || oy === 'scroll') && p.scrollHeight - p.clientHeight > 8) return p;
+    p = p.parentElement;
+  }
+  return null;
 }
+
+function hvMvVurgula(n) {
+  document.querySelectorAll('.mv-ayah.okunuyor, .mv-meal.okunuyor, .te-m-ayet.okunuyor')
+    .forEach(el => el.classList.remove('okunuyor'));
+  if (!n) return;
+
+  // Tam ekran açıksa oradaki kopyayı hedefle (aynı id iki yerde bulunuyor)
+  const tam = document.getElementById('mv-full');
+  const tamAcik = tam && getComputedStyle(tam).display !== 'none';
+  const kok = tamAcik ? tam : document;
+
+  const a = kok.querySelector('#mv-a-' + n) || document.getElementById('mv-a-' + n);
+  const m = kok.querySelector('#mv-m-' + n) || kok.querySelector('#te-m-' + n)
+            || document.getElementById('mv-m-' + n) || document.getElementById('te-m-' + n);
+  if (m) m.classList.add('okunuyor');
+  if (!a) return;
+  a.classList.add('okunuyor');
+
+  const kap = hvMvKaydirilabilir(a);
+  if (!kap) { try { a.scrollIntoView({ block: 'center', behavior: 'smooth' }); } catch (e) {} return; }
+  const k = kap.getBoundingClientRect(), r = a.getBoundingClientRect();
+  const hedef = kap.scrollTop + (r.top - k.top) - (k.height / 2) + (r.height / 2);
+  const son = Math.max(0, Math.min(kap.scrollHeight - kap.clientHeight, hedef));
+  try { kap.scrollTo({ top: son, behavior: 'smooth' }); } catch (e) { kap.scrollTop = son; }
+}
+
+/* Sayfadaki âyetlerin sûre/âyet karşılığı — ses adresi için gerekir */
+let hvMvRef = {};
 
 function hvMvCal(i) {
   if (i < 0 || i >= hvMvSira.length) { hvMvDurdur(); return; }
   hvMvKonum = i;
-  const qari = hvGet('hv_mushaf_qari', 'ar.husary');
   const ses = hvMvSesNesnesi();
-  ses.src = 'https://cdn.islamic.network/quran/audio/128/' + qari + '/' + hvMvSira[i];
+  const r = hvMvRef[hvMvSira[i]];
+  ses.src = r ? hvAaUrl(r[0], r[1])
+              : 'https://cdn.islamic.network/quran/audio/128/ar.husary/' + hvMvSira[i];
   ses.play().catch(() => {});
   hvMvCalisiyor = true;
   hvMvVurgula(hvMvSira[i]);
@@ -2306,6 +2340,23 @@ function hvSayfaKaydirmaBagla(el, git) {
   });
 }
 window.hvSayfaKaydirmaBagla = hvSayfaKaydirmaBagla;
+
+/* Mushaf sesi: hafız seçimi Kuran Dinle ile ortak */
+function hvMushafSesQari(id) {
+  hvSet('hv_dinle_qari', id);
+  if (hvMvCalisiyor && hvMvKonum >= 0) hvMvCal(hvMvKonum);
+}
+window.hvMushafSesQari = hvMushafSesQari;
+
+/* Bu sayfayı hatim ilerlemesi olarak işaretle */
+function hvMushafHatimIsaretle(sayfa) {
+  try {
+    hvSave('hatim_page', Math.max(0, Math.min(604, parseInt(sayfa, 10) || 0)));
+    if (typeof renderHatim === 'function') renderHatim();
+    if (typeof hvToast === 'function') hvToast('✓ Hatim güncellendi', sayfa + '. sayfaya kadar okundu olarak işaretlendi.');
+  } catch (e) {}
+}
+window.hvMushafHatimIsaretle = hvMushafHatimIsaretle;
 
 function hvMushafKaydirmaBagla() {
   hvSayfaKaydirmaBagla(document.getElementById('mv-body'), hvMushafGit);
@@ -2465,8 +2516,24 @@ async function renderMushaf(calmayaDevam) {
       </div>
     </div>
 
+    <div class="mv-ses">
+      <button id="mv-play" class="mv-play" onclick="hvMvBasDurdur()">${hvMvCalisiyor ? '⏸ Duraklat' : '▶️ Dinle'}</button>
+      <select class="mv-qari" onchange="hvMushafSesQari(this.value)">
+        ${HV_DINLE_QARILER.map(q => `<option value="${q.id}" ${q.id === hvDnQari().id ? 'selected' : ''}>${q.ad}</option>`).join('')}
+      </select>
+    </div>
+
+    <div class="mv-ilerleme">
+      <div class="mv-il-ust">
+        <span>📖 Sayfa <b>${sayfa}</b> / 604</span>
+        <span>${Math.min(30, Math.max(1, Math.ceil(sayfa / 20.14)))}. cüz</span>
+        <span><b>%${Math.round((sayfa / 604) * 100)}</b></span>
+      </div>
+      <div class="mv-il-cubuk"><div class="mv-il-dolu" style="width:${Math.round((sayfa / 604) * 100)}%"></div></div>
+      <button class="mv-il-btn" onclick="hvMushafHatimIsaretle(${sayfa})">✓ Hatimde buraya kadar okudum</button>
+    </div>
+
     <div class="mv-where">
-      <div class="mv-where-now" id="mv-where-now">📍 Sayfa ${sayfa}</div>
       ${imler.length
         ? `<div class="mv-marks">${imler.slice(0, 14).map(x =>
             `<button class="mv-chip ${x === sayfa ? 'on' : ''}" onclick="hvMushafGit(${x})">⭐ ${x}</button>`).join('')}
@@ -2523,6 +2590,9 @@ async function renderMushaf(calmayaDevam) {
     trHtml += `<div class="mv-meal" id="mv-m-${r.n}">
                  <span class="mv-meal-no">${hvMealEtiket(r.s, r.v)}</span>${r.tr || '—'}</div>`;
   });
+
+  hvMvSira = rows.map(r => r.n);
+  hvMvRef = {}; rows.forEach(r => { hvMvRef[r.n] = [r.s, r.v]; });
 
   const govde = document.getElementById('mv-body');
   govde.innerHTML =
@@ -2936,6 +3006,7 @@ function hvDnMedyaBilgisi() {
 }
 
 function hvDnCal(no, baslangicSn) {
+  if (hvDnMod() !== 'ar') { hvAaCal(no, 0); return; }
   no = Math.max(1, Math.min(114, parseInt(no, 10) || 1));
   hvDnSure = no;
   hvSet('hv_dinle_sure', no);
@@ -2955,6 +3026,7 @@ function hvDnCal(no, baslangicSn) {
 window.hvDnCal = hvDnCal;
 
 function hvDnBasDurdur() {
+  if (hvDnMod() !== 'ar') { hvAaBasDurdur(); return; }
   const s = hvDnNesne();
   if (!hvDnSure) { hvDnCal(parseInt(hvGet('hv_dinle_sure', '1'), 10)); return; }
   if (s.paused) { if (!s.src) { hvDnCal(hvDnSure); return; } s.play().catch(() => {}); }
@@ -2963,6 +3035,7 @@ function hvDnBasDurdur() {
 window.hvDnBasDurdur = hvDnBasDurdur;
 
 function hvDnAtla(yon) {
+  if (hvDnMod() !== 'ar') { hvAaAtlaAyet(yon); return; }   // âyet âyet modda âyet atlar
   const y = hvDnSure + yon;
   if (y < 1 || y > 114) return;
   hvDnCal(y);
@@ -2977,6 +3050,13 @@ window.hvDnSar = hvDnSar;
 
 function hvDnQariDegistir(id) {
   hvSet('hv_dinle_qari', id);
+  if (hvDnMod() !== 'ar') {
+    const devam = hvAaCaliyor;
+    hvAaDurdur();
+    if (devam && hvAaSure) hvAaCal(hvAaSure, hvAaIdx);
+    hvDnTazele();
+    return;
+  }
   if (hvDnSure) {
     const kaldi = hvDnSes ? hvDnSes.currentTime : 0;
     const caliyordu = hvDnCaliyor;
@@ -2991,14 +3071,16 @@ function hvDnSurekliDegistir(el) { hvSet('hv_dinle_surekli', el.checked ? '1' : 
 window.hvDnSurekliDegistir = hvDnSurekliDegistir;
 
 function hvDnTazele() {
+  const ayetMod = hvDnMod() !== 'ar';
   const b = document.getElementById('dn-play');
-  if (b) b.innerHTML = hvDnCaliyor ? '⏸' : '▶️';
+  if (b) b.innerHTML = (ayetMod ? hvAaCaliyor : hvDnCaliyor) ? '⏸' : '▶️';
   const ad = document.getElementById('dn-simdi');
-  if (ad) ad.textContent = hvDnSure ? (hvDnSureAdi(hvDnSure) + ' Sûresi') : 'Bir sûre seçin';
+  const aktif = ayetMod ? hvAaSure : hvDnSure;
+  if (ad) ad.textContent = aktif ? (hvDnSureAdi(aktif) + ' Sûresi') : 'Bir sûre seçin';
   const q = document.getElementById('dn-qari-ad');
   if (q) q.textContent = hvDnQari().ad;
   document.querySelectorAll('.dn-sure').forEach(el => {
-    el.classList.toggle('caliyor', Number(el.dataset.no) === hvDnSure);
+    el.classList.toggle('caliyor', Number(el.dataset.no) === aktif);
   });
 }
 
@@ -3011,10 +3093,245 @@ function hvDnAra(q) {
 }
 window.hvDnAra = hvDnAra;
 
+/* ═══════════════════════════════════════════════════════════════════════
+   v62.1 — KURAN DİNLE: ÂYET ÂYET ARAPÇA + TÜRKÇE MEÂL
+   Üç mod: Arapça (tam sûre kaydı) · Arapça + Meal · Sadece Meal
+   Meâli telefonun kendi Türkçe sesi okur (Web Speech). Cihazda en iyi
+   Türkçe ses otomatik seçilir; hız ve ton meal okumaya göre ayarlanır.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* everyayah.com âyet âyet kayıtları — dördü de doğrulandı */
+const HV_AA_KLASOR = {
+  husr:   'Husary_128kbps',
+  afs:    'Alafasy_128kbps',
+  minsh:  'Minshawy_Murattal_128kbps',
+  yasser: 'Yasser_Ad-Dussary_128kbps'
+};
+function hvAaUrl(sure, ayet) {
+  const q = hvDnQari();
+  const k = HV_AA_KLASOR[q.id] || HV_AA_KLASOR.husr;
+  const p3 = n => String(n).padStart(3, '0');
+  return 'https://everyayah.com/data/' + k + '/' + p3(sure) + p3(ayet) + '.mp3';
+}
+
+function hvDnMod() { return hvGet('hv_dinle_mod', 'ar'); }
+function hvDnModDegistir(m) {
+  hvAaDurdur(); hvDnDurdurTam();
+  hvSet('hv_dinle_mod', m);
+  renderDinle();
+}
+window.hvDnModDegistir = hvDnModDegistir;
+
+/* ── Türkçe ses (Web Speech) ───────────────────────────────────────── */
+let hvTtsSecili = null;
+function hvTtsSesler() {
+  try { return window.speechSynthesis ? speechSynthesis.getVoices() : []; } catch (e) { return []; }
+}
+function hvTtsVar() { return !!window.speechSynthesis; }
+function hvTtsTurkceSes() {
+  if (hvTtsSecili) return hvTtsSecili;
+  const hepsi = hvTtsSesler().filter(v => /^tr(-|_|$)/i.test(v.lang || ''));
+  if (!hepsi.length) return null;
+  // Önce "geliştirilmiş/premium" sesler, sonra cihazın kendi sesi
+  const puan = v => {
+    const ad = (v.name || '').toLowerCase();
+    let p = 0;
+    if (/premium|enhanced|geliştir|neural|natural/.test(ad)) p += 10;
+    if (/yelda|filiz|tolga|emel/.test(ad)) p += 4;
+    if (v.localService) p += 2;
+    return p;
+  };
+  hepsi.sort((a, b) => puan(b) - puan(a));
+  hvTtsSecili = hepsi[0];
+  return hvTtsSecili;
+}
+try {
+  if (window.speechSynthesis && typeof speechSynthesis.addEventListener === 'function') {
+    speechSynthesis.addEventListener('voiceschanged', () => { hvTtsSecili = null; hvTtsTurkceSes(); });
+  }
+} catch (e) {}
+
+function hvTtsHiz() { return parseFloat(hvGet('hv_tts_hiz', '0.9')) || 0.9; }
+function hvTtsHizDegistir(v) { hvSet('hv_tts_hiz', v); document.querySelectorAll('.dn-hiz button').forEach(b => b.classList.toggle('on', b.dataset.h === String(v))); }
+window.hvTtsHizDegistir = hvTtsHizDegistir;
+
+/* Uzun meâli cümlelere böl — robot tınısını azaltır, iOS'ta kesilmeyi önler */
+function hvTtsParcala(metin) {
+  const t = String(metin || '').replace(/\s+/g, ' ').trim();
+  if (!t) return [];
+  const p = t.match(/[^.!?;:]+[.!?;:]*\s*/g) || [t];
+  const out = []; let biriktir = '';
+  p.forEach(x => {
+    if ((biriktir + x).length < 90) { biriktir += x; }
+    else { if (biriktir.trim()) out.push(biriktir.trim()); biriktir = x; }
+  });
+  if (biriktir.trim()) out.push(biriktir.trim());
+  return out;
+}
+
+function hvTtsDurdur() { try { speechSynthesis.cancel(); } catch (e) {} }
+
+function hvTtsOku(metin, bitince) {
+  if (!hvTtsVar()) { if (bitince) bitince(false); return; }
+  const parcalar = hvTtsParcala(metin);
+  if (!parcalar.length) { if (bitince) bitince(true); return; }
+  const ses = hvTtsTurkceSes();
+  try { speechSynthesis.cancel(); } catch (e) {}
+  let i = 0, nobet = null;
+  const temizle = () => { if (nobet) { clearTimeout(nobet); nobet = null; } };
+  const sonraki = () => {
+    temizle();
+    if (!hvAaCaliyor) return;
+    if (i >= parcalar.length) { if (bitince) bitince(true); return; }
+    const metinParca = parcalar[i++];
+    const u = new SpeechSynthesisUtterance(metinParca);
+    u.lang = 'tr-TR';
+    if (ses) u.voice = ses;
+    u.rate = hvTtsHiz();
+    u.pitch = 1.0;
+    u.volume = 1.0;
+    let bitti = false;
+    const bir = ok => { if (bitti) return; bitti = true; temizle(); ok ? sonraki() : (bitince && bitince(false)); };
+    u.onend = () => bir(true);
+    u.onerror = () => bir(false);
+    // Emniyet: bazı cihazlarda onend hiç gelmez → tahmini süre + 3sn sonra devam
+    const tahmin = Math.max(2500, (metinParca.length * 95) / Math.max(0.5, hvTtsHiz()) + 3000);
+    nobet = setTimeout(() => bir(true), tahmin);
+    try { speechSynthesis.speak(u); } catch (e) { bir(false); }
+  };
+  sonraki();
+}
+
+/* Cihazda Türkçe ses var mı? (yoksa kullanıcıya söylenir) */
+function hvTtsTurkceVarMi() { return !!(hvTtsVar() && hvTtsTurkceSes()); }
+window.hvTtsTurkceVarMi = hvTtsTurkceVarMi;
+
+/* ── Âyet âyet çalar ───────────────────────────────────────────────── */
+let hvAaSure = 0, hvAaIdx = 0, hvAaCaliyor = false, hvAaSes = null, hvAaListe = [];
+
+function hvAaSesNesnesi() {
+  if (!hvAaSes) {
+    hvAaSes = new Audio();
+    hvAaSes.preload = 'auto';
+    hvAaSes.addEventListener('ended', () => {
+      if (!hvAaCaliyor) return;
+      if (hvDnMod() === 'both') hvAaMealOku();
+      else hvAaSonraki();
+    });
+    hvAaSes.addEventListener('error', () => {
+      if (!hvAaCaliyor) return;
+      if (hvDnMod() === 'both') hvAaMealOku(); else hvAaSonraki();
+    });
+  }
+  return hvAaSes;
+}
+
+function hvAaListeKur(sure) {
+  const liste = (typeof ALL_114_SURAHS !== 'undefined') ? ALL_114_SURAHS : [];
+  const s = liste.find(x => Number(x.id) === Number(sure));
+  const adet = s ? Number(s.verse_count) : 0;
+  const out = [];
+  let oncekiMeal = null;
+  for (let v = 1; v <= adet; v++) {
+    const tr = (typeof hvMeal === 'function') ? hvMeal(sure, v) : '';
+    // Diyanet birleşik meâllerinde metin bir kez okunur
+    const tekrar = (tr && tr === oncekiMeal);
+    oncekiMeal = tr;
+    out.push({ v: v, tr: tr, okuma: !tekrar });
+  }
+  return out;
+}
+
+async function hvAaCal(sure, baslaIdx) {
+  await hvMealHazir();
+  hvAaSure = Math.max(1, Math.min(114, parseInt(sure, 10) || 1));
+  hvAaListe = hvAaListeKur(hvAaSure);
+  hvAaIdx = Math.max(0, Math.min(hvAaListe.length - 1, parseInt(baslaIdx, 10) || 0));
+  hvAaCaliyor = true;
+  hvSet('hv_dinle_sure', hvAaSure);
+  hvAaOynat();
+}
+window.hvAaCal = hvAaCal;
+
+function hvAaOynat() {
+  if (!hvAaCaliyor) return;
+  if (hvAaIdx >= hvAaListe.length) {   // sûre bitti
+    if (hvGet('hv_dinle_surekli', '1') === '1' && hvAaSure < 114) { hvAaCal(hvAaSure + 1, 0); return; }
+    hvAaIdx = Math.max(0, hvAaListe.length - 1);   // son âyet ekranda kalsın
+    hvAaDurdur(); return;
+  }
+  hvAaEkran();
+  const mod = hvDnMod();
+  if (mod === 'tr') { hvAaMealOku(); return; }
+  const s = hvAaSesNesnesi();
+  s.src = hvAaUrl(hvAaSure, hvAaListe[hvAaIdx].v);
+  s.play().catch(() => { if (hvAaCaliyor) { if (mod === 'both') hvAaMealOku(); else hvAaSonraki(); } });
+}
+
+function hvAaMealOku() {
+  const p = hvAaListe[hvAaIdx];
+  if (!p || !p.okuma || !p.tr) { hvAaSonraki(); return; }
+  if (!hvTtsTurkceVarMi()) {
+    // Türkçe ses yoksa meâli sadece ekranda göster, 6 sn bekleyip geç
+    setTimeout(() => { if (hvAaCaliyor) hvAaSonraki(); }, 6000);
+    return;
+  }
+  hvTtsOku(p.tr, () => { if (hvAaCaliyor) hvAaSonraki(); });
+}
+
+function hvAaSonraki() {
+  hvAaIdx++;
+  hvAaOynat();
+}
+
+function hvAaAtlaAyet(yon) {
+  if (!hvAaListe.length) return;
+  hvTtsDurdur();
+  try { if (hvAaSes) hvAaSes.pause(); } catch (e) {}
+  hvAaIdx = Math.max(0, Math.min(hvAaListe.length - 1, hvAaIdx + yon));
+  if (hvAaCaliyor) hvAaOynat(); else hvAaEkran();
+}
+window.hvAaAtlaAyet = hvAaAtlaAyet;
+
+function hvAaDurdur() {
+  hvAaCaliyor = false;
+  hvTtsDurdur();
+  try { if (hvAaSes) hvAaSes.pause(); } catch (e) {}
+  hvAaEkran();
+  hvDnTazele();
+}
+window.hvAaDurdur = hvAaDurdur;
+
+function hvAaBasDurdur() {
+  if (hvAaCaliyor) { hvAaDurdur(); return; }
+  const sure = hvAaSure || parseInt(hvGet('hv_dinle_sure', '1'), 10) || 1;
+  hvAaCal(sure, hvAaIdx);
+}
+window.hvAaBasDurdur = hvAaBasDurdur;
+
+function hvAaEkran() {
+  const k = document.getElementById('dn-ayet-kutu');
+  if (!k) return;
+  const p = hvAaListe[hvAaIdx];
+  if (!p) { k.innerHTML = '<div class="dn-ayet-bos">Bir sûre seçip ▶️ tuşuna bas.</div>'; return; }
+  k.innerHTML = `
+    <div class="dn-ayet-ust">${hvDnSureAdi(hvAaSure)} Sûresi • ${p.v}. âyet <span class="dn-ayet-sayac">${hvAaIdx + 1}/${hvAaListe.length}</span></div>
+    <div class="dn-ayet-meal">${hvEsc(p.tr || '—')}</div>`;
+  const b = document.getElementById('dn-play');
+  if (b) b.innerHTML = hvAaCaliyor ? '⏸' : '▶️';
+  const ad = document.getElementById('dn-simdi');
+  if (ad) ad.textContent = hvDnSureAdi(hvAaSure) + ' Sûresi';
+}
+
+function hvDnDurdurTam() { try { if (hvDnSes) hvDnSes.pause(); } catch (e) {} }
+
 function renderDinle() {
   const kok = document.getElementById('dinle-root');
   if (!kok) return;
   const qari = hvDnQari().id;   // kayıtlı seçim listede yoksa ilk hafıza döner
+  const mod = hvDnMod();
+  const ayetMod = mod !== 'ar';
+  const hiz = hvGet('hv_tts_hiz', '0.9');
   const surekli = hvGet('hv_dinle_surekli', '1') === '1';
   const kayitli = parseInt(hvGet('hv_dinle_sure', '0'), 10) || 0;
   const kayitliSn = parseInt(hvGet('hv_dinle_pos', '0'), 10) || 0;
@@ -3026,18 +3343,25 @@ function renderDinle() {
       <p>Kesintisiz dinle • uygulamada gezerken de çalar</p>
     </div>
 
+    <div class="dn-mod">
+      <button class="${mod === 'ar' ? 'on' : ''}" onclick="hvDnModDegistir('ar')">Arapça</button>
+      <button class="${mod === 'both' ? 'on' : ''}" onclick="hvDnModDegistir('both')">Arapça + Meal</button>
+      <button class="${mod === 'tr' ? 'on' : ''}" onclick="hvDnModDegistir('tr')">Sadece Meal</button>
+    </div>
+
     <div class="dn-player">
       <div id="dn-simdi" class="dn-simdi">${hvDnSure ? hvDnSureAdi(hvDnSure) + ' Sûresi' : (kayitli ? hvDnSureAdi(kayitli) + ' Sûresi' : 'Bir sûre seçin')}</div>
       <div id="dn-qari-ad" class="dn-qari-ad">${hvDnQari().ad}</div>
 
-      <input id="dn-cizgi" class="dn-cizgi" type="range" min="0" max="100" value="0"
+      ${ayetMod ? `<div id="dn-ayet-kutu" class="dn-ayet-kutu"><div class="dn-ayet-bos">Aşağıdan bir sûre seç.</div></div>`
+                : `<input id="dn-cizgi" class="dn-cizgi" type="range" min="0" max="100" value="0"
              oninput="hvDnSar(this.value)">
-      <div class="dn-zaman"><span id="dn-gecen">0:00</span><span id="dn-toplam">--:--</span></div>
+      <div class="dn-zaman"><span id="dn-gecen">0:00</span><span id="dn-toplam">--:--</span></div>`}
 
       <div class="dn-btns">
-        <button class="dn-yan" onclick="hvDnAtla(-1)">⏮</button>
-        <button id="dn-play" class="dn-play" onclick="hvDnBasDurdur()">${hvDnCaliyor ? '⏸' : '▶️'}</button>
-        <button class="dn-yan" onclick="hvDnAtla(1)">⏭</button>
+        <button class="dn-yan" onclick="hvDnAtla(-1)" title="${ayetMod ? 'Önceki âyet' : 'Önceki sûre'}">⏮</button>
+        <button id="dn-play" class="dn-play" onclick="hvDnBasDurdur()">${(ayetMod ? hvAaCaliyor : hvDnCaliyor) ? '⏸' : '▶️'}</button>
+        <button class="dn-yan" onclick="hvDnAtla(1)" title="${ayetMod ? 'Sonraki âyet' : 'Sonraki sûre'}">⏭</button>
       </div>
 
       ${kayitli && !hvDnSure ? `<button class="dn-devam" onclick="hvDnCal(${kayitli}, ${kayitliSn})">📍 Kaldığın yerden devam et — ${hvDnSureAdi(kayitli)} ${kayitliSn ? '(' + hvDnSure2(kayitliSn) + ')' : ''}</button>` : ''}
@@ -3053,6 +3377,19 @@ function renderDinle() {
       </label>
     </div>
 
+    ${ayetMod ? `
+    <div class="dn-hiz-satir">
+      <span>Meal okuma hızı</span>
+      <div class="dn-hiz">
+        <button class="${hiz === '0.75' ? 'on' : ''}" data-h="0.75" onclick="hvTtsHizDegistir('0.75')">Yavaş</button>
+        <button class="${hiz === '0.9' ? 'on' : ''}"  data-h="0.9"  onclick="hvTtsHizDegistir('0.9')">Normal</button>
+        <button class="${hiz === '1.05' ? 'on' : ''}" data-h="1.05" onclick="hvTtsHizDegistir('1.05')">Hızlı</button>
+      </div>
+    </div>
+    ${hvTtsTurkceVarMi() ? '' : `<div class="dn-not uyari">⚠️ Bu cihazda Türkçe konuşma sesi bulunamadı. Meâl sesli okunamaz; ekranda gösterilip sıradaki âyete geçilir. Telefon ayarlarından Türkçe konuşma sesini yükleyebilirsin.</div>`}
+    <div class="dn-not">🔊 Meâli telefonunun kendi Türkçe sesi okur. iPhone'da <b>Ayarlar → Erişilebilirlik → Konuşulan İçerik → Sesler → Türkçe</b> bölümünden "Geliştirilmiş" sesi indirirsen çok daha doğal olur.</div>
+    ` : ''}
+
     <div class="quran-search-bar">
       <span class="search-icon-fixed">🔍</span>
       <input type="text" class="search-input-field" placeholder="Sûre ara (ör. Yasin)..." oninput="hvDnAra(this.value)">
@@ -3061,7 +3398,7 @@ function renderDinle() {
     <div class="dn-liste">
       ${liste.map(s => `
         <button class="dn-sure ${Number(s.id) === hvDnSure ? 'caliyor' : ''}" data-no="${s.id}" data-ad="${s.name}"
-                onclick="hvDnCal(${s.id})">
+                onclick="${ayetMod ? `hvAaCal(${s.id},0)` : `hvDnCal(${s.id})`}">
           <span class="dn-no">${s.id}</span>
           <span class="dn-ad">${s.name} Sûresi</span>
           <span class="dn-ayet">${s.verse_count} ayet</span>
@@ -3069,6 +3406,7 @@ function renderDinle() {
     </div>
   `;
   hvDnTazele();
+  if (ayetMod) { hvMealHazir().then(() => { if (!hvAaListe.length && hvAaSure) hvAaListe = hvAaListeKur(hvAaSure); hvAaEkran(); }); }
 }
 window.renderDinle = renderDinle;
 try { if (window.FEATURE_ROUTES) window.FEATURE_ROUTES['dinle'] = renderDinle; } catch (e) {}
@@ -3449,6 +3787,7 @@ async function hvTamEkranCiz() {
     <div class="te-alt">
       <button class="te-yan" onclick="hvTeGit(${sayfa - 1})" ${sayfa <= 1 ? 'disabled' : ''}>‹</button>
       <button class="te-kucuk" onclick="hvMushafPunto(-2); hvTamEkranCiz();">A−</button>
+      <button id="te-play" class="te-play" onclick="hvMvBasDurdur()">${hvMvCalisiyor ? '⏸' : '▶️'}</button>
       <button class="te-kucuk" onclick="hvMushafPunto(2); hvTamEkranCiz();">A+</button>
       <button class="te-kucuk" onclick="hvTeKagit()">${kagit ? '🌙' : '📄'}</button>
       <button class="te-yan" onclick="hvTeGit(${sayfa + 1})" ${sayfa >= HV_MUSHAF_SON ? 'disabled' : ''}>›</button>
@@ -3468,6 +3807,7 @@ async function hvTamEkranCiz() {
   }
 
   hvMvSira = rows.map(r => r.n);
+  hvMvRef = {}; rows.forEach(r => { hvMvRef[r.n] = [r.s, r.v]; });
   hvMvKonum = -1;
 
   const sureler = rows.map(r => r.s).filter((x, i, a) => a.indexOf(x) === i);
