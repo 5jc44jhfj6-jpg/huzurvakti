@@ -2938,10 +2938,13 @@ try { if (window.FEATURE_ROUTES) window.FEATURE_ROUTES['mushaf'] = renderMushaf;
    ═══════════════════════════════════════════════════════════════════════ */
 
 const HV_SURE_NO = {
-  'Fâtiha Sûresi': 1, 'Fîl Sûresi': 105, 'Kureyş Sûresi': 106, 'Mâûn Sûresi': 107,
-  'Kevser Sûresi': 108, 'Kâfirûn Sûresi': 109, 'Nasr Sûresi': 110, 'Tebbet (Mesed) Sûresi': 111,
-  'İhlâs Sûresi': 112, 'Felâk Sûresi': 113, 'Nâs Sûresi': 114, 'Asr Sûresi': 103,
-  'Kadir Sûresi': 97, 'İnşirâh (Şerh) Sûresi': 94, 'Tîn Sûresi': 95, 'Zilzâl Sûresi': 99
+  'Fâtiha Sûresi': 1,
+  'Duhâ Sûresi': 93, 'İnşirâh (Şerh) Sûresi': 94, 'Tîn Sûresi': 95, 'Alak Sûresi': 96,
+  'Kadir Sûresi': 97, 'Beyyine Sûresi': 98, 'Zilzâl Sûresi': 99, 'Âdiyât Sûresi': 100,
+  'Kâria Sûresi': 101, 'Tekâsür Sûresi': 102, 'Asr Sûresi': 103, 'Hümeze Sûresi': 104,
+  'Fîl Sûresi': 105, 'Kureyş Sûresi': 106, 'Mâûn Sûresi': 107, 'Kevser Sûresi': 108,
+  'Kâfirûn Sûresi': 109, 'Nasr Sûresi': 110, 'Tebbet (Mesed) Sûresi': 111,
+  'İhlâs Sûresi': 112, 'Felâk Sûresi': 113, 'Nâs Sûresi': 114
 };
 
 // Kur'an'dan olan dualar → ayet aralığı (sesli çalışır)
@@ -3085,13 +3088,14 @@ window.hvEzTumu = hvEzTumu;
 
 /* ── Kayıt yükleme ─────────────────────────────────────────────────── */
 async function hvEzAyetleriGetir(sureNo, bas, son) {
-  const qari = hvGet('hv_mushaf_qari', 'ar.husary');
   await hvMealHazir();   // Türkçe meal uygulamanın içinden (Diyanet)
+  // Ses everyayah.com'dan alınır (Kuran Oku ile aynı kaynak) — eski CDN
+  // aralıklı 502 dönüyordu. Böylece tek ses editionu indirmeye de gerek kalmaz.
   const res = await fetch('https://api.alquran.cloud/v1/surah/' + sureNo +
-    '/editions/quran-uthmani,tr.transliteration,' + qari);
+    '/editions/quran-uthmani,tr.transliteration');
   const j = await res.json();
-  if (!j || !j.data || j.data.length < 3) throw new Error('Ayetler alınamadı');
-  const ar = j.data[0].ayahs, ok = j.data[1].ayahs, se = j.data[2].ayahs;
+  if (!j || !j.data || j.data.length < 2) throw new Error('Ayetler alınamadı');
+  const ar = j.data[0].ayahs, ok = j.data[1].ayahs;
   const out = [];
   ar.forEach((a, i) => {
     if (bas && (a.numberInSurah < bas || a.numberInSurah > son)) return;
@@ -3104,7 +3108,7 @@ async function hvEzAyetleriGetir(sureNo, bas, son) {
       ar: metin,
       ok: ok[i] ? ok[i].text : '',
       tr: hvMeal(sureNo, a.numberInSurah),
-      ses: se[i] ? se[i].audio : ''
+      ses: hvAaUrl(sureNo, a.numberInSurah)
     });
   });
   return out;
@@ -3183,10 +3187,19 @@ function renderEzber() {
   if (!kok) return;
   hvEzSesDurdur();
 
-  const sureler = Object.keys(HV_SURE_NO);
-  const kuranDua = Object.keys(HV_DUA_AYET);
-  const digerDua = (typeof DUA_LEARN !== 'undefined' ? DUA_LEARN : [])
-    .map(d => d.title).filter(t => !HV_DUA_AYET[t]);
+  // Öğrenilmiş olanlar listenin altına iner; çalışılacaklar üstte kalır.
+  // Kendi içlerinde özgün sıra korunur (kararlı sıralama).
+  const ogrenilmisMi = (tur, ad) => hvEzOgrenildiMi((tur + '_' + ad).replace(/\s+/g, '_'));
+  const altaAl = (tur, liste) => {
+    const kalan = [], bitmis = [];
+    liste.forEach(ad => (ogrenilmisMi(tur, ad) ? bitmis : kalan).push(ad));
+    return kalan.concat(bitmis);
+  };
+
+  const sureler = altaAl('sure', Object.keys(HV_SURE_NO));
+  const kuranDua = altaAl('kurandua', Object.keys(HV_DUA_AYET));
+  const digerDua = altaAl('dua', (typeof DUA_LEARN !== 'undefined' ? DUA_LEARN : [])
+    .map(d => d.title).filter(t => !HV_DUA_AYET[t]));
 
   const kart = (tur, ad, alt, sesli) => {
     const anahtar = (tur + '_' + ad).replace(/\s+/g, '_');
@@ -3207,7 +3220,7 @@ function renderEzber() {
     ${hvEzOgrenilenler().length ? `<div class="ez-sayac">✓ ${hvEzOgrenilenler().length} metin öğrenildi olarak işaretli</div>` : ''}
     <div class="ez-info">Her metin küçük parçalara ayrılır. Bir parçayı dinle, kendin tekrar et, hazır olunca sonrakine geç. Kaldığın yer hatırlanır.</div>
 
-    <div class="ez-group-title">📖 Kısa Sureler</div>
+    <div class="ez-group-title">📖 Sûreler</div>
     <div class="ez-grid">${sureler.map(s => kart('sure', s, 'Ayet ayet', true)).join('')}</div>
 
     <div class="ez-group-title">🤲 Kur'an'dan Dualar</div>
