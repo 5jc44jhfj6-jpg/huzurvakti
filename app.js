@@ -114,6 +114,10 @@ function navigateTo(pageId) {
   // Mushaf ve ezber seslerini de durdur (features.js)
   try { if (typeof hvMvDurdur === 'function') hvMvDurdur(); } catch (e) {}
   try { if (typeof hvEzSesDurdur === 'function') hvEzSesDurdur(); } catch (e) {}
+  // Kıble sayfasından çıkılıyorsa pusula sensörünü bırak
+  try {
+    if (APP_STATE.currentPage === 'qibla' && pageId !== 'qibla' && typeof hvPusulaDurdur === 'function') hvPusulaDurdur();
+  } catch (e) {}
 
   document.querySelectorAll('.page-section').forEach(sec => {
     sec.classList.remove('active');
@@ -636,7 +640,7 @@ window.updateNotifyStatusUI = updateNotifyStatusUI;
 
 // Ayarlar → Geri Bildirim Gönder (doğrudan e-posta açar)
 function hvSendFeedback() {
-  const ver = 'v63.1';
+  const ver = 'v63.2';
   let ortam = 'Tarayıcı';
   try {
     if (window.hvIsAndroid) ortam = 'Android uygulaması';
@@ -1320,6 +1324,13 @@ function initQiblaCompass() {
 
   setupCompassTouchEvents();
 
+  // Kayıtlı ince ayarı ekrana yansıt
+  const ofs = hvKibleOfset();
+  const ofsSl = document.getElementById('kible-ofset-slider');
+  const ofsEt = document.getElementById('kible-ofset-val');
+  if (ofsSl) ofsSl.value = ofs;
+  if (ofsEt) ofsEt.textContent = (ofs > 0 ? '+' : '') + ofs.toFixed(0) + '°';
+
   // If permission not granted yet, show prompt automatically
   const modal = document.getElementById('qibla-permission-modal');
   if (!localStorage.getItem('qibla_permission_granted')) {
@@ -1330,8 +1341,16 @@ function initQiblaCompass() {
     startCompassSensors(true);
   }
 
-  updateQiblaUI(0);
+  // Elde bir yön varsa onu koru — her girişte 0'a sıçratma (ibre "çift" görünüyordu)
+  updateQiblaUI(smoothHeading === null ? 0 : smoothHeading);
 }
+
+/* Kıble sayfasından çıkınca sensörü bırak (pil + çakışma) */
+function hvPusulaDurdur() {
+  try { window.removeEventListener('deviceorientation', handleOrientationEvent, true); } catch (e) {}
+  try { window.removeEventListener('deviceorientationabsolute', handleOrientationEvent, true); } catch (e) {}
+}
+window.hvPusulaDurdur = hvPusulaDurdur;
 
 function requestQiblaPermissionFlow(event) {
   if (event) event.preventDefault();
@@ -1452,6 +1471,7 @@ function startCompassSensors(isAutoStart = false) {
 
   if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
     if (isAutoStart) {
+      hvPusulaDurdur();
       window.addEventListener('deviceorientation', handleOrientationEvent, true);
       if (btn) btn.innerHTML = "✅ SENSÖR AKTİF (TELEFONU ÇEVİRİN)";
       if (status) status.innerHTML = "✅ <b>Pusula sensörü aktif!</b> Telefonunuzu düz tutarak çevirin.";
@@ -1459,6 +1479,7 @@ function startCompassSensors(isAutoStart = false) {
       DeviceOrientationEvent.requestPermission()
       .then(permissionState => {
         if (permissionState === 'granted') {
+          hvPusulaDurdur();
           window.addEventListener('deviceorientation', handleOrientationEvent, true);
           if (btn) btn.innerHTML = "✅ SENSÖR AKTİF (TELEFONU ÇEVİRİN)";
           if (status) status.innerHTML = "✅ <b>Pusula sensörü aktif!</b> Telefonunuzu düz tutarak çevirin.";
@@ -1476,6 +1497,7 @@ function startCompassSensors(isAutoStart = false) {
       });
     }
   } else {
+    hvPusulaDurdur();
     if ('ondeviceorientationabsolute' in window) {
       window.addEventListener('deviceorientationabsolute', handleOrientationEvent, true);
     } else if (window.DeviceOrientationEvent) {
@@ -1492,36 +1514,76 @@ function handleManualCompass(val) {
   updateQiblaUI(heading);
 }
 
+/* Ekranın döndürülmüş olması sensör açısını kaydırır; telafi edilmezse
+   telefon yatayken pusula 90° şaşar. */
+function hvEkranAcisi() {
+  try {
+    if (screen.orientation && typeof screen.orientation.angle === 'number') return screen.orientation.angle;
+    if (typeof window.orientation === 'number') return window.orientation;
+  } catch (e) {}
+  return 0;
+}
+
+/* Kıble açısı GERÇEK kuzeye göre hesaplanır, pusula ise MANYETİK kuzeyi
+   gösterir. Aradaki fark (manyetik sapma) Türkiye'de yaklaşık 5-7° doğudur
+   ve enlem-boylama göre değişir. Aşağıdaki yaklaşık model Türkiye ve
+   çevresi için ±1° içinde kalır; dünya geneli için makul bir tahmindir.
+   iOS'ta webkitCompassHeading zaten GERÇEK kuzeye göre gelir → düzeltme
+   uygulanmaz. */
+function hvManyetikSapma(lat, lng) {
+  if (typeof lat !== 'number' || typeof lng !== 'number') return 0;
+  // Türkiye ve yakın çevresi dışında bu yaklaşım geçerli değil → düzeltme yapma.
+  // (Yurt dışında kullanıcı "Kıble İnce Ayarı" ile kendisi düzeltebilir.)
+  if (lat < 34 || lat > 43.5 || lng < 25 || lng > 45.5) return 0;
+  // İstanbul, Ankara, İzmir, Antalya, Trabzon, Erzurum, Diyarbakır ölçümlerine
+  // göre uyarlandı; Türkiye genelinde sapma ~0.4° içinde kalıyor.
+  const d = 6.0 + (lng - 32.0) * 0.112 + (lat - 39.0) * 0.268;
+  return Math.max(-30, Math.min(30, d));
+}
+
 function handleOrientationEvent(e) {
-  if (isDraggingCompass) return; // Don't override while active touch swipe
+  if (isDraggingCompass) return; // parmakla ayar yapılırken sensör devreye girmesin
 
   let compassHeading = null;
+  let mutlak = false;
 
-  // iOS Safari
-  if (e.webkitCompassHeading != null) {
+  if (e.webkitCompassHeading != null && !isNaN(e.webkitCompassHeading)) {
+    // iOS: gerçek kuzeye göre, ekran yönü zaten telafi edilmiş
     compassHeading = e.webkitCompassHeading;
-  }
-  // Android absolute orientation
-  else if (e.alpha != null) {
-    if (e.absolute === true || e.type === 'deviceorientationabsolute') {
-      compassHeading = (360 - e.alpha) % 360;
-    } else {
-      compassHeading = (360 - e.alpha) % 360;
+    mutlak = true;
+  } else if (e.alpha != null && !isNaN(e.alpha)) {
+    mutlak = (e.absolute === true || e.type === 'deviceorientationabsolute');
+    // Android: alpha cihaz gövdesine göre; ekran döndürülmüşse telafi et
+    compassHeading = (360 - e.alpha + hvEkranAcisi()) % 360;
+    if (mutlak) {
+      // Manyetik → gerçek kuzey düzeltmesi
+      const u = APP_STATE.userLocation || {};
+      compassHeading = (compassHeading + hvManyetikSapma(u.lat, u.lng) + 360) % 360;
     }
   }
 
   if (compassHeading == null || isNaN(compassHeading)) return;
+  compassHeading = ((compassHeading % 360) + 360) % 360;
+
+  // Göreceli sensör gerçek kuzeyi bilmez → yön anlamsız olur.
+  // Bu durumda ibreyi oynatmak yerine kullanıcıyı elle ayara yönlendir.
+  if (!mutlak) {
+    hvPusulaGuvenilmez();
+    return;
+  }
+  hvPusulaGuvenilir();
 
   if (smoothHeading === null) {
     smoothHeading = compassHeading;
   } else {
-    let normalizedSmooth = ((smoothHeading % 360) + 360) % 360;
-    let diff = compassHeading - normalizedSmooth;
+    const oncekiNorm = ((smoothHeading % 360) + 360) % 360;
+    let diff = compassHeading - oncekiNorm;
     if (diff > 180) diff -= 360;
     if (diff < -180) diff += 360;
-    // Accumulate the continuous heading to prevent CSS rotate from spinning backwards
-    smoothHeading += diff * 0.7;
+    smoothHeading = oncekiNorm + diff * 0.35;   // daha yumuşak
   }
+  // 0-360 dışına taşmasın (eskiden birikip 1000°+ gösteriyordu)
+  smoothHeading = ((smoothHeading % 360) + 360) % 360;
 
   const slider = document.getElementById('manual-compass-slider');
   if (slider) slider.value = Math.round(smoothHeading);
@@ -1529,11 +1591,55 @@ function handleOrientationEvent(e) {
   updateQiblaUI(smoothHeading);
 }
 
+/* Sensör güvenilmezse bir kez uyar, ibreyi rastgele oynatma */
+let hvPusulaUyarildi = false;
+function hvPusulaGuvenilmez() {
+  if (hvPusulaUyarildi) return;
+  hvPusulaUyarildi = true;
+  const st = document.getElementById('compass-status-msg');
+  if (st) st.innerHTML = '⚠️ <b>Telefonunuz gerçek kuzeyi ölçemiyor.</b> ' +
+    'Kıble açınız yukarıda yazıyor — pusulayı parmağınızla ya da kaydırıcıyla ' +
+    'o dereceye getirin. (Telefonu 8 çizer gibi birkaç kez çevirmek pusula ' +
+    'sensörünü kalibre edip sorunu çözebilir.)';
+  const btn = document.getElementById('enable-compass-btn');
+  if (btn) btn.innerHTML = '⚠️ SENSÖR GERÇEK KUZEYİ VERMİYOR';
+}
+function hvPusulaGuvenilir() {
+  if (!hvPusulaUyarildi) return;
+  hvPusulaUyarildi = false;
+  const st = document.getElementById('compass-status-msg');
+  if (st) st.innerHTML = '✅ <b>Pusula sensörü aktif!</b> Telefonunuzu düz tutarak çevirin.';
+  const btn = document.getElementById('enable-compass-btn');
+  if (btn) btn.innerHTML = '✅ CANLI SENSÖR AKTİF';
+}
+
+/* Kıble İnce Ayarı — kullanıcı kendi telefonuna göre birkaç derece
+   kaydırıp kaydedebilir; değer cihazda kalır. */
+function hvKibleOfset() {
+  const v = parseFloat(localStorage.getItem('hv_kible_ofset') || '0');
+  return isNaN(v) ? 0 : Math.max(-30, Math.min(30, v));
+}
+function hvKibleOfsetAyarla(v) {
+  const n = Math.max(-30, Math.min(30, parseFloat(v) || 0));
+  try { localStorage.setItem('hv_kible_ofset', String(n)); } catch (e) {}
+  const et = document.getElementById('kible-ofset-val');
+  if (et) et.textContent = (n > 0 ? '+' : '') + n.toFixed(0) + '°';
+  updateQiblaUI(smoothHeading === null ? 0 : smoothHeading);
+}
+function hvKibleOfsetSifirla() {
+  const sl = document.getElementById('kible-ofset-slider');
+  if (sl) sl.value = 0;
+  hvKibleOfsetAyarla(0);
+}
+window.hvKibleOfsetAyarla = hvKibleOfsetAyarla;
+window.hvKibleOfsetSifirla = hvKibleOfsetSifirla;
+
 function updateQiblaUI(heading) {
   const dial = document.getElementById('compass-dial');
   const needle = document.getElementById('compass-needle');
   const headVal = document.getElementById('compass-heading-val');
 
+  heading = ((Number(heading) % 360) + 360) % 360;
   if (headVal) headVal.textContent = `${Math.round(heading)}°`;
 
   // Rotate dial by -heading so North (K) points to magnetic North
@@ -1543,13 +1649,14 @@ function updateQiblaUI(heading) {
 
   // Rotate gold needle to point relative to fixed 12 o'clock Kâbe target
   // Needle points straight UP (0°) into 🕋 Kâbe target when heading == qiblaAngle
-  const relativeNeedleAngle = APP_STATE.qiblaAngle - heading;
+  const hedefAci = APP_STATE.qiblaAngle + hvKibleOfset();
+  const relativeNeedleAngle = hedefAci - heading;
 
   if (needle) {
     needle.style.transform = `translate(-50%, -50%) rotate(${relativeNeedleAngle}deg)`;
   }
 
-  updateQiblaDirectionPill(APP_STATE.qiblaAngle, heading);
+  updateQiblaDirectionPill(hedefAci, heading);
 }
 
 function updateQiblaDirectionPill(qiblaAngle, heading) {

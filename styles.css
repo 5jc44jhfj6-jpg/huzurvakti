@@ -2921,3 +2921,46 @@ body.green-theme .mv-ayah.okunuyor .mv-w.gecti {
   .cev-in{ padding: 11px 6px; font-size: .98rem; }
   .cev-sonuc-buyuk{ font-size: 1.25rem; }
 }
+
+/* ══════════ KIBLE İNCE AYARI ══════════ */
+.kible-ofset{
+  margin-top: 14px; padding: 14px 14px 12px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-light);
+  border-radius: 16px;
+}
+.kible-ofset-ust{
+  display: flex; justify-content: space-between; align-items: center;
+  font-size: .95rem; font-weight: 700;
+  color: var(--gold-light);
+  margin-bottom: 10px; gap: 10px;
+}
+.kible-ofset-deger{
+  min-width: 56px; text-align: center;
+  background: rgba(0,0,0,.28);
+  border: 1px solid var(--border-gold);
+  border-radius: 10px;
+  padding: 4px 8px;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-main);
+}
+#kible-ofset-slider{ width: 100%; margin: 2px 0 8px; }
+.kible-ofset-alt{
+  display: flex; justify-content: space-between; align-items: center;
+  gap: 8px; font-size: .8rem; color: var(--text-muted);
+}
+.kible-ofset-sifirla{
+  background: transparent;
+  border: 1px solid var(--border-gold);
+  color: var(--gold-light);
+  border-radius: 10px;
+  padding: 6px 12px;
+  font-size: .82rem; font-weight: 600;
+  font-family: inherit; cursor: pointer;
+}
+.kible-ofset-sifirla:active{ transform: scale(.97); }
+.kible-ofset-not{
+  margin-top: 9px;
+  font-size: .82rem; line-height: 1.45;
+  color: var(--text-muted);
+}
