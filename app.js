@@ -64,13 +64,12 @@ function initApp() {
   // Initialize Quran Surah list immediately with all 114 Surahs
   initQuranSection();
 
-  // Dismiss Loading screen with smooth fade out
+  // Açılış ekranı kaldırıldı: telefonun kendi açılış görselinden sonra
+  // ikinci bir "Namaz Dostu" ekranı gösterilmiyor, doğrudan ana sayfa açılıyor.
+  const loader = document.getElementById('loading-screen');
+  if (loader) loader.style.display = 'none';
+
   setTimeout(() => {
-    const loader = document.getElementById('loading-screen');
-    if (loader) {
-      loader.style.opacity = '0';
-      setTimeout(() => { loader.style.display = 'none'; }, 500);
-    }
 
     // Puan isteme kartı (yalnızca mağazadan kurulu uygulamada)
     try { hvMaybeAskRating(); } catch (e) {}
@@ -83,7 +82,7 @@ function initApp() {
         if (notifyModal) notifyModal.style.display = 'flex';
       }, 600); // Wait a bit after loader is hidden
     }
-  }, 800);
+  }, 250);
 }
 
 // Navigation Tab Handler
@@ -640,7 +639,7 @@ window.updateNotifyStatusUI = updateNotifyStatusUI;
 
 // Ayarlar → Geri Bildirim Gönder (doğrudan e-posta açar)
 function hvSendFeedback() {
-  const ver = 'v64.0';
+  const ver = 'v64.1';
   let ortam = 'Tarayıcı';
   try {
     if (window.hvIsAndroid) ortam = 'Android uygulaması';
@@ -1413,12 +1412,25 @@ function hvPusulaUyariSeridi(goster) {
   const kap = document.querySelector('#page-qibla .qibla-wrapper') ||
               document.querySelector('#page-qibla .hero-frame-box');
   if (!kap) return;
-  e = document.createElement('button');
+  e = document.createElement('div');
   e.id = 'kible-izin-serit';
-  e.className = 'kible-izin-serit';
-  e.innerHTML = '🕋 <b>Kâbe yönünün net bulunması için dokunup izin verin</b>';
-  e.addEventListener('click', requestQiblaPermissionFlow);
+  e.className = 'kible-izin-bildirim';
+  e.innerHTML =
+    '<div class="kib-ikon">🕋</div>' +
+    '<div class="kib-metin"><b>Kâbe yönü için izin gerekiyor</b>' +
+    '<span>Pusulanın çalışması için telefonun yön sensörüne erişim izni verin.</span></div>' +
+    '<div class="kib-dugmeler">' +
+      '<button class="kib-evet">✅ Evet, izin ver</button>' +
+      '<button class="kib-hayir">Şimdilik geç</button>' +
+    '</div>';
   kap.insertBefore(e, kap.firstChild);
+  e.querySelector('.kib-evet').addEventListener('click', requestQiblaPermissionFlow);
+  e.querySelector('.kib-hayir').addEventListener('click', () => {
+    hvPusulaUyariSeridi(false);
+    const st = document.getElementById('compass-status-msg');
+    if (st) st.innerHTML = '👆 Pusulayı başlatmak için <b>⚡ PUSULAYI BAŞLAT</b> düğmesine dokunun.';
+  });
+  requestAnimationFrame(() => e.classList.add('acik'));
   // Pusulanın kendisine dokunmak da izni başlatsın
   const kutu = document.getElementById('compass-interactive-box');
   if (kutu && !kutu.dataset.izinBagli) {
