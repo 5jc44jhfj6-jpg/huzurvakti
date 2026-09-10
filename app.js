@@ -640,7 +640,7 @@ window.updateNotifyStatusUI = updateNotifyStatusUI;
 
 // Ayarlar → Geri Bildirim Gönder (doğrudan e-posta açar)
 function hvSendFeedback() {
-  const ver = 'v63.7';
+  const ver = 'v63.9';
   let ortam = 'Tarayıcı';
   try {
     if (window.hvIsAndroid) ortam = 'Android uygulaması';
@@ -1380,14 +1380,13 @@ function initQiblaCompass() {
     // iOS, bu açılışta izin zaten alındı
     startCompassSensors(true);
   } else {
-    // iOS, izin bir dokunuş gerektiriyor → engelleyici modal yerine
-    // sayfadaki düğmeyi öne çıkar
+    // iPhone: izin yalnızca kullanıcı dokunuşuyla alınabiliyor.
+    // Sayfaya girer girmez onay penceresini aç ki tek dokunuşla bitsin.
     const btn = document.getElementById('enable-compass-btn');
     const st = document.getElementById('compass-status-msg');
     if (btn) { btn.innerHTML = '⚡ PUSULAYI BAŞLAT'; btn.classList.add('vurgu'); }
-    if (st) st.innerHTML = localStorage.getItem('qibla_permission_granted')
-      ? '👆 <b>Pusulayı başlatmak için yukarıdaki düğmeye dokunun.</b> iPhone, her uygulama açılışında tek bir dokunuş ister.'
-      : '👆 <b>Pusulayı başlatmak için yukarıdaki düğmeye dokunun.</b> Yön sensörüne erişim izni istenecek.';
+    if (st) st.innerHTML = '👆 <b>Pusulayı başlatmak için dokunun.</b> iPhone, her uygulama açılışında tek bir dokunuş ister.';
+    if (modal) modal.style.display = 'flex';
   }
 
   // Elde bir yön varsa onu koru — her girişte 0'a sıçratma (ibre "çift" görünüyordu)
@@ -1690,9 +1689,11 @@ function updateQiblaUI(heading) {
   heading = ((Number(heading) % 360) + 360) % 360;
   if (headVal) headVal.textContent = `${Math.round(heading)}°`;
 
-  // Rotate dial by -heading so North (K) points to magnetic North
+  /* Kadran SABİT durur — dönen tek şey altın ibredir.
+     Böylece kırmızı K harfi her zaman tepede, "HEDEF KÂBE" simgesinin
+     tam altında kalır; kullanıcı telefonu çevirip ibreyi oraya getirir. */
   if (dial) {
-    dial.style.transform = `rotate(${-heading}deg)`;
+    dial.style.transform = 'none';
   }
 
   // Rotate gold needle to point relative to fixed 12 o'clock Kâbe target

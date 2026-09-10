@@ -188,10 +188,10 @@ function hvAyetCiz(v, animasyon) {
   const tr   = document.getElementById('daily-verse-turkish');
   const src  = document.getElementById('daily-verse-source');
   const uygula = () => {
-    // Uzun âyetlerde Arapça kutuyu şişirip düzeni bozuyor; kartta yalnızca
-    // kısa olanlarda gösterilir. Paylaşım kartında Arapça her zaman vardır.
-    const kisaAr = (v.arabic || '').length <= 70;
-    if (ar) { ar.textContent = kisaAr ? v.arabic : ''; ar.style.display = kisaAr ? '' : 'none'; }
+    // Kartta yalnızca Türkçe meâl gösterilir. (Önceden kısa âyetlerde Arapça
+    // da çıkıyordu; bazı âyette var bazısında yok görünümü oluşuyordu.)
+    // Paylaşım kartında Arapça her zaman yer alır.
+    if (ar) { ar.textContent = ''; ar.style.display = 'none'; }
     // Diyanet metni zaten tırnakla başlıyorsa ikinci tırnağı ekleme
     const met = (v.turkish || '').trim();
     const tirnakli = /[“”"«»]/.test(met);   // metinde zaten tırnak varsa ekleme
