@@ -402,8 +402,17 @@ function getCachedDay(lat, lng, dateObj) {
 function getTimeOffsets() {
   return Object.assign({}, DEFAULT_TIME_OFFSETS, APP_STATE.timeOffsets || {});
 }
-function applyOffsets(raw) {
-  const off = getTimeOffsets();
+/* Kaynak farkındalıklı düzeltme:
+   Diyanet'in kendi tablosundan gelen vakitler (s === 'd') zaten kesindir;
+   onlara varsayılan +1 dk düzeltmesi UYGULANMAZ, yalnızca kullanıcının
+   Ayarlar > Vakit İnce Ayarı değerleri uygulanır. */
+const HV_SIFIR_OFSET = { Fajr: 0, Sunrise: 0, Dhuhr: 0, Asr: 0, Maghrib: 0, Isha: 0 };
+function hvKaynakOfset(kaynak) {
+  if (kaynak === 'd') return Object.assign({}, HV_SIFIR_OFSET, APP_STATE.timeOffsets || {});
+  return getTimeOffsets();
+}
+function applyOffsets(raw, kaynak) {
+  const off = hvKaynakOfset(kaynak);
   const out = {};
   Object.keys(raw).forEach(k => { out[k] = raw[k]; });
   ['Fajr', 'Sunrise', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'].forEach(k => {
@@ -415,7 +424,8 @@ function applyOffsets(raw) {
 function applyDayTimings(entry) {
   if (!entry || !entry.t) return;
   APP_STATE.rawTimes = entry.t;
-  const t = applyOffsets(entry.t);
+  APP_STATE.rawKaynak = entry.s || '';
+  const t = applyOffsets(entry.t, entry.s);
   APP_STATE.prayerTimes = t;
   if (entry.h) { APP_STATE.hijriDateText = entry.h; updateHijriDateDisplay(entry.h); }
   renderPrayerCards(t);
@@ -424,7 +434,7 @@ function applyDayTimings(entry) {
 // Ayarlardan offset değişince mevcut ham vakitlere yeniden uygula
 function reapplyTimeOffsets() {
   if (!APP_STATE.rawTimes) return;
-  const t = applyOffsets(APP_STATE.rawTimes);
+  const t = applyOffsets(APP_STATE.rawTimes, APP_STATE.rawKaynak);
   APP_STATE.prayerTimes = t;
   renderPrayerCards(t);
   updatePrayerCountdown();
@@ -491,7 +501,6 @@ function scheduleNativePrayerNotifications() {
   const sched = hvNativeHandler('schedule-local-notification');
   if (!sched) { updateNotifyStatusUI(0); return 0; }
 
-  const timeOffs = getTimeOffsets();
   const early = parseInt(APP_STATE.notifyOffset, 10) || 0;   // kaç dk kala
   const both = !!APP_STATE.notifyBoth;                        // hem önceden hem vaktinde
   const daysCovered = new Set();
@@ -507,6 +516,7 @@ function scheduleNativePrayerNotifications() {
 
     const entry = getCachedDay(lat, lng, day);
     if (!entry || !entry.t) continue;
+    const timeOffs = hvKaynakOfset(entry.s);
     const ramazan = /ramazan|ramadan/i.test(entry.h || '');
 
     for (const id of HV_NOTIFY_PRAYERS) {
@@ -626,7 +636,7 @@ window.updateNotifyStatusUI = updateNotifyStatusUI;
 
 // Ayarlar → Geri Bildirim Gönder (doğrudan e-posta açar)
 function hvSendFeedback() {
-  const ver = 'v62.5';
+  const ver = 'v62.6';
   let ortam = 'Tarayıcı';
   try {
     if (window.hvIsAndroid) ortam = 'Android uygulaması';
@@ -737,6 +747,109 @@ window.hvShowRatingCard = hvShowRatingCard;
 window.hvGoRate = hvGoRate;
 window.hvCloseRate = hvCloseRate;
 
+/* ────────────────────────────────────────────────────────────
+   DİYANET VAKİTLERİ (birebir resmî tablo)
+   Diyanet'in yayımladığı gerçek namaz vakti tabloları çekilir ve
+   mevcut aylık önbelleğe (hv_cal_*) 's:"d"' işaretiyle yazılır.
+   Böylece vakitler hesaplanmaz, doğrudan Diyanet'ten gelir.
+   Servis ~32 günlük veri döndürür; elde 10 günden az kalınca
+   arka planda sessizce tazelenir. Erişilemezse Aladhan'a düşülür.
+   ──────────────────────────────────────────────────────────── */
+const HV_DIYANET_KOK = 'https://ezanvakti.emushaf.net';
+const HV_DIYANET_ESIK = 10;   // elde bu kadar günden az kalınca tazele
+
+// Seçili il/ilçenin Diyanet ilçe kimliği (yoksa null)
+function hvDiyanetId() {
+  try {
+    if (typeof TURKEY_LOCATIONS === 'undefined') return null;
+    const prov = TURKEY_LOCATIONS.find(p => p.il === APP_STATE.currentCity);
+    if (!prov || !prov.ilceler) return null;
+    const dist = prov.ilceler.find(d => d.name === APP_STATE.currentDistrict) || prov.ilceler[0];
+    if (!dist || !dist.d) return null;
+    // Konum gerçekten bu ilçeye yakın mı? (yurt dışı/GPS kayması koruması)
+    const u = APP_STATE.userLocation;
+    if (u && typeof calculateGreatCircleDistance === 'function') {
+      const uzak = calculateGreatCircleDistance(u.lat, u.lng, dist.lat, dist.lng);
+      if (isFinite(uzak) && uzak > 60) return null;
+    }
+    return dist.d;
+  } catch (e) { return null; }
+}
+
+// "04.09.2026" → "2026-09-04"
+function hvDiyanetTarih(t) {
+  const p = String(t || '').split('.');
+  if (p.length !== 3) return '';
+  return p[2] + '-' + p[1] + '-' + p[0];
+}
+
+// Elde bugünden itibaren kaç günlük Diyanet verisi var?
+function hvDiyanetKapsam(lat, lng) {
+  let n = 0;
+  const g = new Date(); g.setHours(0, 0, 0, 0);
+  for (let i = 0; i < 40; i++) {
+    const e = getCachedDay(lat, lng, g);
+    if (!e || !e.t || e.s !== 'd') break;
+    n++;
+    g.setDate(g.getDate() + 1);
+  }
+  return n;
+}
+
+// Diyanet satırlarını mevcut aylık önbellek biçimine yazar
+function hvDiyanetSakla(lat, lng, satirlar) {
+  const aylar = {};
+  satirlar.forEach(r => {
+    const tarih = hvDiyanetTarih(r.MiladiTarihKisa);
+    if (!tarih || !r.Imsak) return;
+    const ay = tarih.slice(0, 7);
+    (aylar[ay] = aylar[ay] || []).push({
+      date: tarih,
+      t: {
+        Fajr: r.Imsak, Sunrise: r.Gunes, Dhuhr: r.Ogle,
+        Asr: r.Ikindi, Maghrib: r.Aksam, Isha: r.Yatsi, Imsak: r.Imsak
+      },
+      h: r.HicriTarihUzun || '',
+      s: 'd'
+    });
+  });
+  let yazilan = 0;
+  Object.keys(aylar).forEach(ay => {
+    const yil = parseInt(ay.slice(0, 4), 10);
+    const no = parseInt(ay.slice(5, 7), 10);
+    const anahtar = calCacheKey(lat, lng, yil, no);
+    let mevcut = [];
+    try { mevcut = JSON.parse(localStorage.getItem(anahtar) || '[]') || []; } catch (e) { mevcut = []; }
+    const harita = {};
+    mevcut.forEach(x => { if (x && x.date) harita[x.date] = x; });
+    aylar[ay].forEach(x => { harita[x.date] = x; });   // Diyanet verisi üste yazar
+    const birlesik = Object.keys(harita).sort().map(k => harita[k]);
+    try { localStorage.setItem(anahtar, JSON.stringify(birlesik)); yazilan += aylar[ay].length; } catch (e) {}
+  });
+  try {
+    const keys = Object.keys(localStorage).filter(k => k.startsWith('hv_cal_')).sort();
+    while (keys.length > 3) localStorage.removeItem(keys.shift());
+  } catch (e) {}
+  return yazilan;
+}
+
+// Diyanet servisinden vakitleri çeker (başarılıysa true)
+async function hvDiyanetCek(ilceId, lat, lng) {
+  const ctrl = (typeof AbortController !== 'undefined') ? new AbortController() : null;
+  const zaman = ctrl ? setTimeout(() => ctrl.abort(), 12000) : null;
+  try {
+    const res = await fetch(HV_DIYANET_KOK + '/vakitler/' + ilceId, ctrl ? { signal: ctrl.signal } : undefined);
+    if (!res.ok) return false;
+    const veri = await res.json();
+    if (!Array.isArray(veri) || !veri.length) return false;
+    return hvDiyanetSakla(lat, lng, veri) > 0;
+  } catch (e) {
+    return false;
+  } finally {
+    if (zaman) clearTimeout(zaman);
+  }
+}
+
 async function fetchMonthCalendar(lat, lng, year, month) {
   const res = await fetch(`https://api.aladhan.com/v1/calendar?latitude=${lat}&longitude=${lng}&method=13&month=${month}&year=${year}`);
   const json = await res.json();
@@ -753,6 +866,32 @@ async function fetchPrayerTimes(lat, lng) {
   const cached = getCachedDay(lat, lng, today);
   if (cached) applyDayTimings(cached);
   setOfflineBadge(typeof navigator !== 'undefined' && navigator.onLine === false);
+
+  // 1.5) Türkiye içi → Diyanet'in resmî tablosu (birebir aynı vakitler)
+  const dId = hvDiyanetId();
+  if (dId) {
+    const kapsam = hvDiyanetKapsam(lat, lng);
+    if (kapsam > HV_DIYANET_ESIK) {
+      // Elde yeterli Diyanet verisi var → ağa hiç çıkma
+      try { scheduleNativePrayerNotifications(); } catch (e) {}
+      return;
+    }
+    const oldu = await hvDiyanetCek(dId, lat, lng);
+    if (oldu) {
+      setOfflineBadge(false);
+      const taze = getCachedDay(lat, lng, today);
+      if (taze) applyDayTimings(taze);
+      try { scheduleNativePrayerNotifications(); } catch (e) { console.warn('Bildirim kurulum hatası:', e); }
+      return;
+    }
+    if (kapsam > 0) {
+      // Servise ulaşılamadı ama elde Diyanet verisi var → onu kullan
+      setOfflineBadge(typeof navigator !== 'undefined' && navigator.onLine === false);
+      try { scheduleNativePrayerNotifications(); } catch (e) {}
+      return;
+    }
+    console.info('Diyanet vakitleri alınamadı → Aladhan yedeğine geçiliyor.');
+  }
 
   // 2) Ağdan aylık takvimi al, önbelleği tazele
   try {

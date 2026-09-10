@@ -1101,7 +1101,18 @@ function renderSozluk(filter) {
     </div>`).join('');
 }
 
-/* ══════════ RAMAZAN İMSAKİYESİ (Aladhan Calendar API) ══════════ */
+/* ══════════ RAMAZAN İMSAKİYESİ ══════════ */
+/* O ay için cihazda Diyanet verisi varsa tabloya o vakitler basılır. */
+function hvImsakiyeDiyanet(loc, year, month) {
+  try {
+    if (typeof calCacheKey !== 'function') return {};
+    const raw = localStorage.getItem(calCacheKey(loc.lat, loc.lng, year, month));
+    if (!raw) return {};
+    const m = {};
+    (JSON.parse(raw) || []).forEach(e => { if (e && e.s === 'd' && e.t) m[e.date] = e.t; });
+    return m;
+  } catch (e) { return {}; }
+}
 let _imsakiyeDate = new Date();
 function imsakiyeNav(delta) {
   _imsakiyeDate = new Date(_imsakiyeDate.getFullYear(), _imsakiyeDate.getMonth() + delta, 1);
@@ -1131,9 +1142,15 @@ async function renderImsakiye() {
     if (json && json.data && json.data.length) {
       const todayKey = hvTodayKey();
       const strip = t => (t || '').split(' ')[0];
+      const dmap = hvImsakiyeDiyanet(loc, year, month);
+      let diyanetGun = 0;
       const rows = json.data.map(d => {
-        const g = d.date.gregorian, t = d.timings;
+        const g = d.date.gregorian;
         const dateKey = `${g.year}-${String(g.month.number).padStart(2, '0')}-${String(g.day).padStart(2, '0')}`;
+        // Diyanet'in resmî vakti varsa onu kullan
+        const dv = dmap[dateKey];
+        if (dv) diyanetGun++;
+        const t = dv || d.timings;
         const isToday = dateKey === todayKey;
         return `<tr class="${isToday ? 'imsak-today' : ''}">
           <td class="im-day">${g.day}<span class="im-wd">${trWeekdayShort(g.weekday.en)}</span></td>
