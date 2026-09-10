@@ -640,7 +640,7 @@ window.updateNotifyStatusUI = updateNotifyStatusUI;
 
 // Ayarlar → Geri Bildirim Gönder (doğrudan e-posta açar)
 function hvSendFeedback() {
-  const ver = 'v63.9';
+  const ver = 'v64.0';
   let ortam = 'Tarayıcı';
   try {
     if (window.hvIsAndroid) ortam = 'Android uygulaması';
@@ -1385,8 +1385,8 @@ function initQiblaCompass() {
     const btn = document.getElementById('enable-compass-btn');
     const st = document.getElementById('compass-status-msg');
     if (btn) { btn.innerHTML = '⚡ PUSULAYI BAŞLAT'; btn.classList.add('vurgu'); }
-    if (st) st.innerHTML = '👆 <b>Pusulayı başlatmak için dokunun.</b> iPhone, her uygulama açılışında tek bir dokunuş ister.';
-    if (modal) modal.style.display = 'flex';
+    if (st) st.innerHTML = '👆 <b>Pusulayı başlatmak için dokunun.</b>';
+    hvPusulaUyariSeridi(true);
   }
 
   // Elde bir yön varsa onu koru — her girişte 0'a sıçratma (ibre "çift" görünüyordu)
@@ -1403,6 +1403,32 @@ window.hvPusulaDurdur = hvPusulaDurdur;
 /* Düğmeye dokunuş = kullanıcı hareketi → iOS izni tam burada istenebilir.
    Eskiden burada sadece bir onay penceresi açılıyordu; o pencere fazladan
    bir adımdı ve Android'de hiç gerekmiyordu. */
+/* Kendi onay penceremiz kaldırıldı; yerine sayfanın içinde tek bir uyarı
+   şeridi var. Böylece kullanıcı yalnızca iPhone'un kendi izin penceresini
+   görür (iki üst üste onay yerine tek onay). */
+function hvPusulaUyariSeridi(goster) {
+  let e = document.getElementById('kible-izin-serit');
+  if (!goster) { if (e) e.remove(); return; }
+  if (e) return;
+  const kap = document.querySelector('#page-qibla .qibla-wrapper') ||
+              document.querySelector('#page-qibla .hero-frame-box');
+  if (!kap) return;
+  e = document.createElement('button');
+  e.id = 'kible-izin-serit';
+  e.className = 'kible-izin-serit';
+  e.innerHTML = '🕋 <b>Kâbe yönünün net bulunması için dokunup izin verin</b>';
+  e.addEventListener('click', requestQiblaPermissionFlow);
+  kap.insertBefore(e, kap.firstChild);
+  // Pusulanın kendisine dokunmak da izni başlatsın
+  const kutu = document.getElementById('compass-interactive-box');
+  if (kutu && !kutu.dataset.izinBagli) {
+    kutu.dataset.izinBagli = '1';
+    kutu.addEventListener('click', () => {
+      if (!hvPusulaBuOturumdaVerildi && hvPusulaIzinGerekli()) requestQiblaPermissionFlow();
+    });
+  }
+}
+
 function requestQiblaPermissionFlow(event) {
   if (event) event.preventDefault();
   try { localStorage.setItem('qibla_permission_granted', 'true'); } catch (e) {}
@@ -1525,6 +1551,7 @@ function startCompassSensors(isAutoStart = false) {
       .then(permissionState => {
         if (permissionState === 'granted') {
           hvPusulaBuOturumdaVerildi = true;
+          hvPusulaUyariSeridi(false);
           try { localStorage.setItem('qibla_permission_granted', 'true'); } catch (e) {}
           hvPusulaDurdur();
           window.addEventListener('deviceorientation', handleOrientationEvent, true);
@@ -1720,11 +1747,14 @@ function updateQiblaDirectionPill(qiblaAngle, heading) {
   // Eskiden 5° ve altı doğrudan "tam kıble" sayılıyordu; bu yüzden
   // 5-4-3-2-1 dereceleri hiç görünmüyordu. Artık yalnızca 1° ve altı
   // "tam", 2-5° arası "az kaldı" olarak gösterilir.
-  // İbre tam Kâbe'ye oturduğunda ışıldasın
+  // İbre ve kadran halkası tam Kâbe'ye oturduğunda ışıldasın
+  const tamMi = (absDiff === 0);
   const needleEl = document.getElementById('compass-needle');
-  if (needleEl) needleEl.classList.toggle('kible-tam', absDiff <= 1);
+  if (needleEl) needleEl.classList.toggle('kible-tam', tamMi);
+  const ringEl = document.querySelector('.compass-dial-ring');
+  if (ringEl) ringEl.classList.toggle('kible-tam', tamMi);
 
-  if (absDiff <= 1) {
+  if (absDiff === 0) {
     if (guidePill) {
       guidePill.className = 'qibla-pill aligned';
       guidePill.innerHTML = `✨ 🕋 TAM KIBLE YÖNÜNDESİNİZ! ✨`;

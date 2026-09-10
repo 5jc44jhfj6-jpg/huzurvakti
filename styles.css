@@ -3015,7 +3015,7 @@ body.green-theme .mv-ayah.okunuyor .mv-w.gecti {
 /* 240px'lik küçük kadran varyantı için ölçek */
 @media (max-width: 360px){
   .cp-ticks .cp-tick{ transform-origin: 50% 104px; }
-  .cp-ticks .cp-num{ transform-origin: 50% 90px; }
+  .cp-ticks .cp-num{ transform-origin: 50% calc(var(--cp-r) - 26px); }
 }
 
 /* ══════════ PUSULA — BÜYÜTÜLMÜŞ VE ÖLÇEKLENEBİLİR KADRAN ══════════
@@ -3032,7 +3032,7 @@ body.green-theme .mv-ayah.okunuyor .mv-w.gecti {
 .compass-inner-dial{ inset: var(--cp-ic); }
 
 .cp-ticks .cp-tick{ transform-origin: 50% var(--cp-r); }
-.cp-ticks .cp-num{ transform-origin: 50% calc(var(--cp-r) - 16px); }
+.cp-ticks .cp-num{ transform-origin: 50% calc(var(--cp-r) - 30px); }
 .cp-ticks .cp-tick        { height: 7px; }
 .cp-ticks .cp-tick.orta   { height: 11px; }
 .cp-ticks .cp-tick.buyuk  { height: 16px; }
@@ -3203,3 +3203,57 @@ body.green-theme .mv-ayah.okunuyor .mv-w.gecti {
 /* Kaynak satırı metnin hemen altında, paylaş düğmesi kartın en altında */
 .daily-hadis-card #daily-verse-source{ margin-top: 10px; }
 .daily-hadis-card .mini-share-btn{ margin-top: auto; align-self: flex-end; }
+
+/* ══════════ TAM KIBLE — HALKA IŞILTISI ══════════ */
+.compass-dial-ring.kible-tam{
+  border-color: #fff3c4 !important;
+  box-shadow:
+    0 0 0 2px rgba(255,243,196,.55),
+    0 0 26px rgba(255,238,180,.95),
+    0 0 60px rgba(212,175,55,.75),
+    inset 0 0 30px rgba(212,175,55,.30) !important;
+  animation: hvHalkaNabiz 1.35s ease-in-out infinite;
+}
+@keyframes hvHalkaNabiz{
+  0%,100%{ box-shadow: 0 0 0 2px rgba(255,243,196,.45),
+                       0 0 20px rgba(255,238,180,.75),
+                       0 0 44px rgba(212,175,55,.55),
+                       inset 0 0 24px rgba(212,175,55,.22); }
+  50%    { box-shadow: 0 0 0 3px rgba(255,243,196,.75),
+                       0 0 34px rgba(255,245,210,1),
+                       0 0 78px rgba(212,175,55,.9),
+                       inset 0 0 38px rgba(212,175,55,.38); }
+}
+@media (prefers-reduced-motion: reduce){
+  .compass-dial-ring.kible-tam{ animation: none; }
+}
+
+/* ══════════ TEK İZİN — UYARI ŞERİDİ ══════════ */
+.kible-izin-serit{
+  display: block; width: 100%;
+  margin: 0 0 12px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1.5px solid var(--border-gold);
+  background: linear-gradient(180deg, rgba(212,175,55,.22), rgba(212,175,55,.10));
+  color: var(--text-main);
+  font-family: inherit; font-size: .86rem; line-height: 1.45;
+  text-align: center; cursor: pointer;
+  animation: hvSeritNabiz 2s ease-in-out infinite;
+}
+.kible-izin-serit b{ color: var(--gold-light); }
+.kible-izin-serit:active{ transform: scale(.985); }
+@keyframes hvSeritNabiz{
+  0%,100%{ box-shadow: 0 0 0 0 rgba(212,175,55,.45); }
+  70%    { box-shadow: 0 0 0 12px rgba(212,175,55,0); }
+}
+@media (prefers-reduced-motion: reduce){ .kible-izin-serit{ animation: none; } }
+
+/* Tam kıblede ibrenin ucu K harfinin üzerine geliyordu.
+   K'yi halkanın hemen içine, ibre ucunun üstüne al. */
+.compass-point.n{ top: -6px !important; }
+.cp-ticks .cp-tick.buyuk{ height: 14px; }
+
+/* İbrenin ucu, tepedeki K harfinin altında kalsın (üstünü kapatmasın) */
+.dynamic-compass-needle{ padding-top: 46px !important; }
+.dynamic-compass-needle .needle-stem{ height: calc(var(--cp-r) * 0.66); }
