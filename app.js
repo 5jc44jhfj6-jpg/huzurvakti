@@ -640,7 +640,7 @@ window.updateNotifyStatusUI = updateNotifyStatusUI;
 
 // Ayarlar → Geri Bildirim Gönder (doğrudan e-posta açar)
 function hvSendFeedback() {
-  const ver = 'v63.2';
+  const ver = 'v63.7';
   let ortam = 'Tarayıcı';
   try {
     if (window.hvIsAndroid) ortam = 'Android uygulaması';
@@ -1309,7 +1309,39 @@ let isDraggingCompass = false;
 let startTouchAngle = 0;
 let startHeadingAngle = 0;
 
+/* Yalnızca iOS'ta DeviceOrientationEvent.requestPermission vardır ve
+   her uygulama açılışında BİR KULLANICI DOKUNUŞU ister. Android ve
+   masaüstünde hiç izin gerekmez → onay ekranı gösterilmemeli. */
+function hvPusulaIzinGerekli() {
+  return typeof DeviceOrientationEvent !== 'undefined' &&
+         typeof DeviceOrientationEvent.requestPermission === 'function';
+}
+let hvPusulaBuOturumdaVerildi = false;
+
+/* Kadran çizgileri: her 5° küçük, her 10° orta, her 30° rakamlı.
+   Kadranın içine bir kez çizilir, kadranla birlikte döner. */
+function hvKadranCiz() {
+  const dial = document.getElementById('compass-dial');
+  if (!dial || dial.dataset.cizildi === '1') return;
+  let html = '<div class="cp-ticks">';
+  for (let a = 0; a < 360; a += 5) {
+    const buyuk = (a % 30 === 0);
+    const orta = (!buyuk && a % 10 === 0);
+    const sinif = buyuk ? 'cp-tick buyuk' : (orta ? 'cp-tick orta' : 'cp-tick');
+    html += '<i class="' + sinif + '" style="transform:rotate(' + a + 'deg)"></i>';
+  }
+  for (let a = 0; a < 360; a += 30) {
+    if (a % 90 === 0) continue;            // K/D/G/B harfleri zaten var
+    html += '<span class="cp-num" style="transform:rotate(' + a + 'deg)">' +
+            '<b style="transform:rotate(' + (-a) + 'deg)">' + a + '</b></span>';
+  }
+  html += '</div>';
+  dial.insertAdjacentHTML('afterbegin', html);
+  dial.dataset.cizildi = '1';
+}
+
 function initQiblaCompass() {
+  hvKadranCiz();
   const { lat, lng } = APP_STATE.userLocation;
   APP_STATE.qiblaAngle = calculateQiblaBearing(lat, lng);
   const dist = calculateGreatCircleDistance(lat, lng, 21.4225, 39.8262);
@@ -1324,6 +1356,13 @@ function initQiblaCompass() {
 
   setupCompassTouchEvents();
 
+  // Başlat düğmesini JS ile de bağla (satır içi onclick tek başına yeterli olmayabilir)
+  const baslatBtn = document.getElementById('enable-compass-btn');
+  if (baslatBtn && !baslatBtn.dataset.hvBagli) {
+    baslatBtn.dataset.hvBagli = '1';
+    baslatBtn.addEventListener('click', requestQiblaPermissionFlow);
+  }
+
   // Kayıtlı ince ayarı ekrana yansıt
   const ofs = hvKibleOfset();
   const ofsSl = document.getElementById('kible-ofset-slider');
@@ -1331,14 +1370,24 @@ function initQiblaCompass() {
   if (ofsSl) ofsSl.value = ofs;
   if (ofsEt) ofsEt.textContent = (ofs > 0 ? '+' : '') + ofs.toFixed(0) + '°';
 
-  // If permission not granted yet, show prompt automatically
   const modal = document.getElementById('qibla-permission-modal');
-  if (!localStorage.getItem('qibla_permission_granted')) {
-    if (modal) modal.style.display = 'flex';
-  } else {
-    if (modal) modal.style.display = 'none';
-    // Already granted in a previous session, try to start sensors
+  if (modal) modal.style.display = 'none';
+
+  if (!hvPusulaIzinGerekli()) {
+    // Android / masaüstü → izin yok, doğrudan başlat
     startCompassSensors(true);
+  } else if (hvPusulaBuOturumdaVerildi) {
+    // iOS, bu açılışta izin zaten alındı
+    startCompassSensors(true);
+  } else {
+    // iOS, izin bir dokunuş gerektiriyor → engelleyici modal yerine
+    // sayfadaki düğmeyi öne çıkar
+    const btn = document.getElementById('enable-compass-btn');
+    const st = document.getElementById('compass-status-msg');
+    if (btn) { btn.innerHTML = '⚡ PUSULAYI BAŞLAT'; btn.classList.add('vurgu'); }
+    if (st) st.innerHTML = localStorage.getItem('qibla_permission_granted')
+      ? '👆 <b>Pusulayı başlatmak için yukarıdaki düğmeye dokunun.</b> iPhone, her uygulama açılışında tek bir dokunuş ister.'
+      : '👆 <b>Pusulayı başlatmak için yukarıdaki düğmeye dokunun.</b> Yön sensörüne erişim izni istenecek.';
   }
 
   // Elde bir yön varsa onu koru — her girişte 0'a sıçratma (ibre "çift" görünüyordu)
@@ -1352,10 +1401,15 @@ function hvPusulaDurdur() {
 }
 window.hvPusulaDurdur = hvPusulaDurdur;
 
+/* Düğmeye dokunuş = kullanıcı hareketi → iOS izni tam burada istenebilir.
+   Eskiden burada sadece bir onay penceresi açılıyordu; o pencere fazladan
+   bir adımdı ve Android'de hiç gerekmiyordu. */
 function requestQiblaPermissionFlow(event) {
   if (event) event.preventDefault();
+  try { localStorage.setItem('qibla_permission_granted', 'true'); } catch (e) {}
   const modal = document.getElementById('qibla-permission-modal');
-  if (modal) modal.style.display = 'flex';
+  if (modal) modal.style.display = 'none';
+  startCompassSensors(false);
 }
 
 function acceptQiblaPermissionFlow() {
@@ -1379,7 +1433,8 @@ function acceptQiblaPermissionFlow() {
     );
   }
 
-  startQiblaSensor();
+  // Bu fonksiyon kullanıcının dokunuşuyla çalışır → iOS izni burada istenebilir
+  startCompassSensors(false);
 }
 
 function closeQiblaPermissionModal() {
@@ -1431,22 +1486,11 @@ function setupCompassTouchEvents() {
   window.addEventListener('mouseup', handleEnd);
 }
 
-function requestQiblaPermissionFlow(event) {
-  if (event) event.preventDefault();
-  const modal = document.getElementById('qibla-permission-modal');
-  if (modal) modal.style.display = 'flex';
-}
+/* (Bu iki fonksiyonun eski kopyası kaldırıldı — güncel tanımları yukarıda.
+   Aynı isim iki kez tanımlanınca sonraki öncekini eziyordu ve pusula her
+   girişte eski onay penceresini açıyordu.) */
 
-function acceptQiblaPermissionFlow() {
-  localStorage.setItem('qibla_permission_granted', 'true');
-  closeQiblaPermissionModal();
-  startCompassSensors(false);
-}
 
-function closeQiblaPermissionModal() {
-  const modal = document.getElementById('qibla-permission-modal');
-  if (modal) modal.style.display = 'none';
-}
 
 function startCompassSensors(isAutoStart = false) {
   if (navigator.geolocation) {
@@ -1470,30 +1514,34 @@ function startCompassSensors(isAutoStart = false) {
   const status = document.getElementById('compass-status-msg');
 
   if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
-    if (isAutoStart) {
+    if (isAutoStart && hvPusulaBuOturumdaVerildi) {
       hvPusulaDurdur();
       window.addEventListener('deviceorientation', handleOrientationEvent, true);
-      if (btn) btn.innerHTML = "✅ SENSÖR AKTİF (TELEFONU ÇEVİRİN)";
+      if (btn) { btn.innerHTML = "✅ SENSÖR AKTİF (TELEFONU ÇEVİRİN)"; btn.classList.remove('vurgu'); }
       if (status) status.innerHTML = "✅ <b>Pusula sensörü aktif!</b> Telefonunuzu düz tutarak çevirin.";
+    } else if (isAutoStart) {
+      if (btn) { btn.innerHTML = "⚡ PUSULAYI BAŞLAT"; btn.classList.add('vurgu'); }
     } else {
       DeviceOrientationEvent.requestPermission()
       .then(permissionState => {
         if (permissionState === 'granted') {
+          hvPusulaBuOturumdaVerildi = true;
+          try { localStorage.setItem('qibla_permission_granted', 'true'); } catch (e) {}
           hvPusulaDurdur();
           window.addEventListener('deviceorientation', handleOrientationEvent, true);
-          if (btn) btn.innerHTML = "✅ SENSÖR AKTİF (TELEFONU ÇEVİRİN)";
+          if (btn) { btn.innerHTML = "✅ SENSÖR AKTİF (TELEFONU ÇEVİRİN)"; btn.classList.remove('vurgu'); }
           if (status) status.innerHTML = "✅ <b>Pusula sensörü aktif!</b> Telefonunuzu düz tutarak çevirin.";
         } else {
-          if (btn) btn.innerHTML = "⚡ SENSÖR İZNİ VER & BAŞLAT";
-          if (status) status.innerHTML = "⚠️ Sensör izni reddedildi. İzin vermelisiniz.";
-          localStorage.removeItem('qibla_permission_granted'); // Reset if denied
+          if (btn) btn.innerHTML = "⚡ PUSULAYI BAŞLAT";
+          if (status) status.innerHTML = "⚠️ Yön sensörü izni verilmedi. Pusulayı kullanmak için düğmeye tekrar dokunup izin verin — ya da kıble açınızı kaydırıcıyla elle ayarlayın.";
         }
       })
       .catch(err => {
-        console.warn('Compass permission error:', err);
-        // iOS requires user interaction, if it fails, reset
-        localStorage.removeItem('qibla_permission_granted');
-        if (btn) btn.innerHTML = "⚡ SENSÖR İZNİ VER & BAŞLAT";
+        // iOS izni yalnızca kullanıcı dokunuşu içinde ister; dokunuş dışında
+        // çağrılırsa hata verir. Kayıtlı izni SİLME — sadece düğmeyi göster.
+        console.info('Pusula izni dokunuş bekliyor:', err && err.message);
+        if (btn) { btn.innerHTML = "⚡ PUSULAYI BAŞLAT"; btn.classList.add('vurgu'); }
+        if (status) status.innerHTML = "👆 <b>Pusulayı başlatmak için düğmeye dokunun.</b>";
       });
     }
   } else {
@@ -1668,7 +1716,14 @@ function updateQiblaDirectionPill(qiblaAngle, heading) {
 
   const absDiff = Math.abs(Math.round(diff));
 
-  if (absDiff <= 5) {
+  // Eskiden 5° ve altı doğrudan "tam kıble" sayılıyordu; bu yüzden
+  // 5-4-3-2-1 dereceleri hiç görünmüyordu. Artık yalnızca 1° ve altı
+  // "tam", 2-5° arası "az kaldı" olarak gösterilir.
+  // İbre tam Kâbe'ye oturduğunda ışıldasın
+  const needleEl = document.getElementById('compass-needle');
+  if (needleEl) needleEl.classList.toggle('kible-tam', absDiff <= 1);
+
+  if (absDiff <= 1) {
     if (guidePill) {
       guidePill.className = 'qibla-pill aligned';
       guidePill.innerHTML = `✨ 🕋 TAM KIBLE YÖNÜNDESİNİZ! ✨`;
@@ -1681,6 +1736,21 @@ function updateQiblaDirectionPill(qiblaAngle, heading) {
     const now = Date.now();
     if (now - lastVibrateTime > 1500 && navigator.vibrate) {
       navigator.vibrate([150, 80, 150]);
+      lastVibrateTime = now;
+    }
+  } else if (absDiff <= 5) {
+    // Son birkaç derece — yön okunu koru ama "çok az kaldı" hissi ver
+    if (guidePill) {
+      guidePill.className = 'qibla-pill yaklasti';
+      guidePill.innerHTML = (diff > 0 ? '➡️' : '⬅️') + ` Çok az kaldı — ${absDiff}°`;
+    }
+    if (statusMsg && !isDraggingCompass) {
+      statusMsg.innerHTML = `🔸 <b>Çok az kaldı!</b> ${absDiff}° daha ${diff > 0 ? 'sağa' : 'sola'} dönün.`;
+      statusMsg.style.color = "";
+    }
+    const now = Date.now();
+    if (now - lastVibrateTime > 900 && navigator.vibrate) {
+      navigator.vibrate(25);
       lastVibrateTime = now;
     }
   } else if (diff > 0) {

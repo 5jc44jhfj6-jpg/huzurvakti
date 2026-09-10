@@ -2964,3 +2964,220 @@ body.green-theme .mv-ayah.okunuyor .mv-w.gecti {
   font-size: .82rem; line-height: 1.45;
   color: var(--text-muted);
 }
+
+/* Pusula başlat düğmesi — izin bekleyen durumda dikkat çeksin */
+#enable-compass-btn.vurgu{
+  animation: hvPusulaNabiz 1.9s ease-in-out infinite;
+  box-shadow: 0 0 0 0 rgba(212,175,55,.55);
+}
+@keyframes hvPusulaNabiz{
+  0%   { box-shadow: 0 0 0 0 rgba(212,175,55,.55); }
+  70%  { box-shadow: 0 0 0 14px rgba(212,175,55,0); }
+  100% { box-shadow: 0 0 0 0 rgba(212,175,55,0); }
+}
+@media (prefers-reduced-motion: reduce){
+  #enable-compass-btn.vurgu{ animation: none; }
+}
+
+/* Kıbleye çok az kaldı durumu — tam hizalanma ile normal yön arası */
+.qibla-pill.yaklasti{
+  background: linear-gradient(180deg, rgba(212,175,55,.30), rgba(212,175,55,.16));
+  border-color: var(--border-gold);
+  color: var(--text-main);
+}
+
+/* ══════════ PUSULA KADRAN ÇİZGİLERİ ══════════ */
+.cp-ticks{ position:absolute; inset:0; border-radius:50%; pointer-events:none; }
+.cp-ticks .cp-tick{
+  position:absolute; left:50%; top:0;
+  width:1px; height:6px;
+  margin-left:-.5px;
+  transform-origin: 50% 124px;      /* kadran yarıçapı (248px iç çap) */
+  background: rgba(212,175,55,.34);
+}
+.cp-ticks .cp-tick.orta{ height:9px; width:1.5px; margin-left:-.75px; background: rgba(212,175,55,.5); }
+.cp-ticks .cp-tick.buyuk{ height:13px; width:2px; margin-left:-1px; background: rgba(212,175,55,.8); }
+.cp-ticks .cp-num{
+  position:absolute; left:50%; top:16px;
+  width:0; height:0;
+  transform-origin: 50% 108px;
+  display:block;
+}
+.cp-ticks .cp-num b{
+  position:absolute; left:50%; top:50%;
+  transform-origin:center;
+  translate:-50% -50%;
+  font-size:.58rem; font-weight:700;
+  color: rgba(212,175,55,.62);
+  letter-spacing:.02em;
+  white-space:nowrap;
+}
+/* 240px'lik küçük kadran varyantı için ölçek */
+@media (max-width: 360px){
+  .cp-ticks .cp-tick{ transform-origin: 50% 104px; }
+  .cp-ticks .cp-num{ transform-origin: 50% 90px; }
+}
+
+/* ══════════ PUSULA — BÜYÜTÜLMÜŞ VE ÖLÇEKLENEBİLİR KADRAN ══════════
+   Kadran artık ekran genişliğine göre büyür. Çizgilerin dönme merkezi
+   de aynı değişkenden hesaplanır, böylece her boyutta hizalı kalır. */
+.compass-container{
+  --cp-size: min(86vw, 330px);
+  --cp-ic: 16px;                                   /* iç kadran kenar boşluğu */
+  --cp-r: calc((var(--cp-size) - var(--cp-ic) * 2) / 2);
+  width: var(--cp-size);
+  height: var(--cp-size);
+  margin: 88px auto 22px;                          /* üstte Kâbe hedefi için yer */
+}
+.compass-inner-dial{ inset: var(--cp-ic); }
+
+.cp-ticks .cp-tick{ transform-origin: 50% var(--cp-r); }
+.cp-ticks .cp-num{ transform-origin: 50% calc(var(--cp-r) - 16px); }
+.cp-ticks .cp-tick        { height: 7px; }
+.cp-ticks .cp-tick.orta   { height: 11px; }
+.cp-ticks .cp-tick.buyuk  { height: 16px; }
+.cp-ticks .cp-num b{ font-size: .66rem; }
+
+/* Yön harfleri biraz büyüsün, çizgilerle çakışmasın */
+.compass-point{ font-size: 1.05rem; }
+.compass-point.n{ font-size: 1.25rem; }
+.compass-point.n { top: 18px; }
+.compass-point.s { bottom: 18px; }
+.compass-point.e { right: 18px; }
+.compass-point.w { left: 18px; }
+
+/* Hedef Kâbe — daha büyük ve kadranın TAMAMEN dışına taşınmış
+   (eskiden rozet kadranın üstüne biniyor, K harfini kapatıyordu) */
+.fixed-top-qibla-target{ top: -84px; }
+.qibla-target-kaaba{ font-size: 3.1rem; line-height: 1; }
+.qibla-target-badge{ font-size: .68rem; margin-top: 2px; }
+
+/* İbre kadranla birlikte büyüsün */
+.dynamic-compass-needle .needle-stem{ height: calc(var(--cp-r) * 0.74); }
+
+@media (max-width: 340px){
+  .compass-container{ --cp-size: min(90vw, 280px); margin-top: 76px; }
+  .qibla-target-kaaba{ font-size: 2.6rem; }
+  .fixed-top-qibla-target{ top: -72px; }
+  .cp-ticks .cp-num b{ font-size: .6rem; }
+}
+
+/* ══════════ TAM KIBLE — İBRE IŞILTISI ══════════
+   İbre Kâbe hedefine oturduğunda çubuk beyaz-altın parlar ve
+   üzerinden bir ışık dalgası geçer. */
+.dynamic-compass-needle.kible-tam .needle-stem{
+  background: linear-gradient(180deg, #ffffff 0%, #fff6d0 25%, #ffd76a 60%, rgba(255,215,106,0) 100%);
+  box-shadow: 0 0 22px rgba(255,235,170,.95), 0 0 44px rgba(212,175,55,.7);
+  animation: hvIbreIsilti 1.25s ease-in-out infinite;
+}
+.dynamic-compass-needle.kible-tam .needle-stem::after{
+  content: '';
+  position: absolute; left: 50%; top: 0;
+  width: 13px; height: 100%;
+  margin-left: -6.5px;
+  border-radius: 7px;
+  background: linear-gradient(180deg, rgba(255,255,255,0) 0%, rgba(255,255,255,.95) 50%, rgba(255,255,255,0) 100%);
+  filter: blur(2.5px);
+  animation: hvIbreDalga 1.25s linear infinite;
+  pointer-events: none;
+}
+.dynamic-compass-needle .needle-stem{ position: relative; }
+
+.dynamic-compass-needle.kible-tam .needle-gold-head{
+  color: #ffffff;
+  filter: drop-shadow(0 0 16px #fff3c4) drop-shadow(0 0 30px var(--gold));
+}
+.dynamic-compass-needle.kible-tam .needle-pivot{
+  box-shadow: 0 0 16px rgba(255,240,190,.95);
+}
+
+@keyframes hvIbreIsilti{
+  0%, 100% { box-shadow: 0 0 18px rgba(255,235,170,.75), 0 0 34px rgba(212,175,55,.5); }
+  50%      { box-shadow: 0 0 30px rgba(255,245,205,1),  0 0 60px rgba(212,175,55,.85); }
+}
+@keyframes hvIbreDalga{
+  0%   { transform: translateY(-100%); opacity: 0; }
+  25%  { opacity: 1; }
+  75%  { opacity: 1; }
+  100% { transform: translateY(100%); opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce){
+  .dynamic-compass-needle.kible-tam .needle-stem{ animation: none; }
+  .dynamic-compass-needle.kible-tam .needle-stem::after{ animation: none; opacity: .45; }
+}
+
+/* ══════════ KIBLE SAYFASI — TEMAYA UYUMLU KADRAN ══════════
+   Kadran rengi sabit yeşildi; artık aktif temanın tonlarını kullanıyor
+   (kehribar temada bakır, yeşil temada çam). */
+.compass-dial-ring{
+  background: radial-gradient(circle at 50% 42%, var(--t2) 0%, var(--t3) 55%, var(--t4) 100%) !important;
+  border-color: var(--border-gold) !important;
+  box-shadow: 0 0 26px rgba(0,0,0,.55), inset 0 0 22px rgba(0,0,0,.55),
+              inset 0 0 44px rgba(212,175,55,.10) !important;
+}
+.compass-dial-ring::before{ border-color: var(--border-light) !important; }
+.compass-dial-ring::after { border-color: rgba(212,175,55,.18) !important; }
+
+
+/* Hedef rozeti ve "tam kıble" rozeti de temaya bağlansın
+   (ikisi de sabit yeşildi; kehribar temada yamalı duruyordu) */
+.qibla-target-badge{
+  background: var(--t4) !important;
+  color: var(--gold-light) !important;
+  border-color: var(--border-gold) !important;
+}
+.qibla-pill.aligned{
+  background: var(--gold-gradient) !important;
+  border: 2px solid #fff3c4 !important;
+  color: #2a1a08 !important;
+  text-shadow: 0 1px 0 rgba(255,255,255,.35);
+  box-shadow: 0 0 28px rgba(212,175,55,.85), 0 4px 16px rgba(0,0,0,.45) !important;
+}
+@keyframes pulseAligned{
+  0%   { transform: scale(1);    filter: drop-shadow(0 0 10px rgba(212,175,55,.75)); }
+  100% { transform: scale(1.05); filter: drop-shadow(0 0 26px rgba(255,240,190,.95)); }
+}
+
+/* ══════════ KIBLE SAYFASI — CAMİ ARKA PLANI ══════════
+   Uygulama açılışındaki cami görseli kıble sayfasında da görünsün.
+   Tema tonuyla harmanlanır, kadranın okunmasını engellemez. */
+#page-qibla .hero-frame-box{
+  position: relative;
+  background:
+    radial-gradient(circle at 50% 28%, color-mix(in srgb, var(--t2) 78%, transparent) 0%,
+                                        color-mix(in srgb, var(--t4) 92%, transparent) 88%);
+}
+#page-qibla .hero-frame-box::before{
+  content: '';
+  position: absolute; inset: 0;
+  border-radius: inherit;
+  background-image: url('bg-mosque.jpg');
+  background-size: cover;
+  background-position: center 18%;
+  opacity: .40;
+  z-index: 0;
+  pointer-events: none;
+}
+/* Cami görselinin üstüne tema perdesi — kontrast korunsun */
+#page-qibla .hero-frame-box::after{
+  content: '';
+  position: absolute; inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(180deg,
+    color-mix(in srgb, var(--t3) 42%, transparent) 0%,
+    color-mix(in srgb, var(--t4) 72%, transparent) 100%);
+  z-index: 0;
+  pointer-events: none;
+}
+/* Tüm içerik bu iki katmanın üstünde kalsın */
+#page-qibla .hero-frame-box > *{ position: relative; z-index: 2; }
+
+/* Yön harfleri (K/D/G/B) derece çizgilerinin üstünde dursun —
+   çizgiler harflerin üzerinden geçip okunmasını zorlaştırıyordu */
+.cp-ticks{ z-index: 1; }
+.compass-point{ z-index: 3; }
+.compass-point.n{
+  text-shadow: 0 0 8px rgba(0,0,0,.85), 0 1px 3px rgba(0,0,0,.9);
+}
+/* İbre en üstte kalsın ama rakamları tamamen yutmasın */
+.dynamic-compass-needle{ z-index: 6; }
