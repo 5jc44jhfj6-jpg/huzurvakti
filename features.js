@@ -855,7 +855,7 @@ function paylasimYenile() {
   const prev = document.getElementById('share-card-preview');
   if (_paylasimTip === 'cuma' && typeof CUMA_MESAJLARI !== 'undefined') {
     const m = CUMA_MESAJLARI[Math.floor(Math.random() * CUMA_MESAJLARI.length)];
-    _paylasimData = { ar: '', tr: m, src: 'Hayırlı Cumalar' };
+    _paylasimData = { ar: '', tr: m, src: '' };
   } else if (_paylasimTip === 'ayet' && typeof DAILY_VERSES !== 'undefined') {
     const v = DAILY_VERSES[Math.floor(Math.random() * DAILY_VERSES.length)];
     _paylasimData = { ar: v.arabic, tr: v.turkish, src: `${v.surah} Suresi, ${v.ayah}. Ayet` };
@@ -869,7 +869,7 @@ function paylasimYenile() {
         <div class="scp-badge">${_paylasimTip === 'ayet' ? '📖 Ayet-i Kerime' : (_paylasimTip === 'cuma' ? '🕌 Cuma Mesajı' : '📿 Hadis-i Şerif')}</div>
         ${_paylasimData.ar ? `<div class="scp-ar">${_paylasimData.ar}</div>` : ''}
         <div class="scp-tr">"${hvEsc(_paylasimData.tr)}"</div>
-        <div class="scp-src">— ${hvEsc(_paylasimData.src)}</div>
+        ${_paylasimData.src ? `<div class="scp-src">— ${hvEsc(_paylasimData.src)}</div>` : ''}
         <div class="scp-brand">🌙 Namaz Dostu</div>
       </div>`;
   }
@@ -883,7 +883,7 @@ function paylasimPaylas() {
     arabic: _paylasimData.ar || '',
     text: _paylasimData.tr,
     source: _paylasimData.src,
-    fallbackText: `${emoji}\n\n"${_paylasimData.tr}"\n— ${_paylasimData.src}`
+    fallbackText: `${emoji}\n\n"${_paylasimData.tr}"` + (_paylasimData.src ? `\n— ${_paylasimData.src}` : '')
   });
 }
 window.paylasimPaylas = paylasimPaylas;
@@ -903,7 +903,7 @@ function renderCuma() {
       </div>`).join('');
 }
 function cumaPaylas(i) {
-  hvOpenShareCard({ badge: '🕌 Hayırlı Cumalar', text: CUMA_MESAJLARI[i], source: '', fallbackText: CUMA_MESAJLARI[i] });
+  hvOpenShareCard({ badge: '🕌 Cuma Mesajı', text: CUMA_MESAJLARI[i], source: '', fallbackText: '🕌 Cuma Mesajı\n\n' + CUMA_MESAJLARI[i] });
 }
 window.cumaPaylas = cumaPaylas;
 function cumaKopyala(i) {
@@ -4319,6 +4319,53 @@ function hvSdOgrendimDugme() {
   b.innerHTML = on ? '✓ Öğrendim' : '○ Öğrendim';
 }
 
+/* ── Hece hece (yeni öğrenenler için) ──
+   Okunuş Türkçe imlâyla yazıldığı için Türkçe heceleme kuralı uygulanır:
+   her hecede bir ünlü; iki ünlü arasındaki tek ünsüz sonraki heceye,
+   iki ünsüzden ilki önceki heceye gider. Kesme (') ve tire korunur. */
+const HV_HECE_UNLU = 'aeıioöuüâêîôûAEIİOÖUÜÂÊÎÔÛ';
+function hvHeceUnluMu(c) { return HV_HECE_UNLU.indexOf(c) >= 0; }
+function hvHeceKelime(k) {
+  const harf = k.split('');
+  const heceler = []; let bas = 0;
+  const unluIdx = [];
+  harf.forEach((c, i) => { if (hvHeceUnluMu(c)) unluIdx.push(i); });
+  if (unluIdx.length <= 1) return [k];
+  for (let u = 0; u < unluIdx.length - 1; u++) {
+    const a = unluIdx[u], b = unluIdx[u + 1];
+    // a ile b arasındaki ünsüz sayısı (kesme işareti ünsüz sayılmaz, önceki heceye yapışır)
+    let arasi = [];
+    for (let i = a + 1; i < b; i++) if (harf[i] !== "'" && harf[i] !== '\u2019') arasi.push(i);
+    let kes;
+    if (arasi.length === 0) kes = b;                 // iki ünlü yan yana: ünlüden önce
+    else if (arasi.length === 1) kes = arasi[0];      // tek ünsüz sonraki heceye
+    else kes = arasi[arasi.length - 1];               // son ünsüz sonraki heceye
+    heceler.push(k.slice(bas, kes)); bas = kes;
+  }
+  heceler.push(k.slice(bas));
+  return heceler.filter(Boolean);
+}
+function hvHeceBol(metin) {
+  // tire ile bağlı parçalar (fid-dünyâ) ayrı kelime gibi hecelenir
+  return String(metin || '').split(/(\s+|-)/).map(par => {
+    if (!par || /^\s+$/.test(par) || par === '-') return par;
+    return hvHeceKelime(par).join('\u00b7');
+  }).join('');
+}
+function hvHeceHtml(metin) {
+  const parcalar = hvHeceBol(metin).split(/(\s+)/);
+  return parcalar.map(p => {
+    if (/^\s+$/.test(p)) return p;
+    return p.split('\u00b7').map(h => '<span class="sd-hece">' + hvSdEsc(h) + '</span>').join('<span class="sd-hece-ayrac">-</span>');
+  }).join('');
+}
+function hvSdHeceMi() { return hvGet('hv_sd_hece', '0') === '1'; }
+function hvSdHeceDegistir() {
+  hvSet('hv_sd_hece', hvSdHeceMi() ? '0' : '1');
+  hvSdSayfaCiz();
+}
+window.hvSdHeceDegistir = hvSdHeceDegistir;
+
 /* Cümle bölücü (lookbehind kullanmadan — eski Safari uyumu) */
 function hvSdCumleler(metin) {
   const m = String(metin || '').match(/[^.!?]+[.!?]*/g) || [];
@@ -4441,6 +4488,7 @@ function hvSdSayfaCiz() {
       <span class="sd-punto-deger" id="sd-punto-deger">${Math.round(hvSdPunto() * 100)}%</span>
       <button class="sd-punto-btn" onclick="hvSdPuntoAyarla(0.1)" aria-label="Yazıyı büyüt">A+</button>
       ${sesVar ? `<button class="sd-ses-btn" id="sd-ses" onclick="hvSdSesCal()">🔊 Dinle</button>` : ''}
+      <button class="sd-hece-btn${hvSdHeceMi() ? ' on' : ''}" onclick="hvSdHeceDegistir()" title="Yeni öğrenenler için hece hece">${hvSdHeceMi() ? '✓ ' : ''}Hece hece</button>
       <button id="sd-ogrendim" class="ez-ogrendim" onclick="hvSdOgrendimDegistir()">○ Öğrendim</button>
     </div>
     <div class="sd-gecis">
@@ -4464,7 +4512,7 @@ function hvSdSatirlarHtml(s) {
     else if (s.tur === 'kdua' && r.no) etiket = `<span class="sd-no">${r.no}</span>`;
     return `<div class="sd-satir${r.besmele ? ' sd-besmele' : ''}" data-i="${i}">
       <div class="sd-ar" dir="rtl" lang="ar">${hvSdEsc(r.ar)}</div>
-      <div class="sd-ok-satir">${etiket}<span class="sd-ok">${hvSdEsc(r.ok)}</span></div>
+      <div class="sd-ok-satir">${etiket}<span class="sd-ok">${hvSdHeceMi() ? hvHeceHtml(r.ok) : hvSdEsc(r.ok)}</span></div>
       ${r.not ? `<div class="sd-not">${hvSdEsc(r.not)}</div>` : ''}
     </div>`;
   }).join('');

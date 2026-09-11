@@ -471,18 +471,30 @@ const KANDIL_GUNLERI = [
 
 /* ══════════ CUMA MESAJLARI ══════════ */
 const CUMA_MESAJLARI = [
-  "Cuma; kalplerin arındığı, duaların kabul olduğu berekelli gündür. Hayırlı Cumalar. 🕌",
-  "Rabbim bu mübarek Cuma hürmetine gönüllerinizi ferah, dualarınızı makbul eylesin. Hayırlı Cumalar. 🤲",
-  "Bir Cuma sabahı daha... Kalbiniz huzurla, gönlünüz imanla dolsun. Hayırlı Cumalar. 🌸",
-  "Salât ve selamların en güzeli Efendimize olsun. Bu Cuma rahmet olsun üzerinize. Hayırlı Cumalar. 🕌",
-  "Duaların göklere yükseldiği bu güzel günde adınız hayırla anılsın. Hayırlı Cumalar. ✨",
-  "Cuma; bereketin, rahmetin ve mağfiretin günüdür. Allah dualarınızı kabul etsin. Hayırlı Cumalar. 🤲",
-  "Gönlünüzden geçen tüm güzel dilekler kabul olsun. Bu Cuma yüzünüz gülsün. Hayırlı Cumalar. 🌷",
-  "Rahmet kapılarının ardına kadar açıldığı bu günde Rabbim sizi affetsin. Hayırlı Cumalar. 🕋",
-  "Kalbi Allah sevgisiyle dolu olanlara ne mutlu. Bu Cuma huzur bulasınız. Hayırlı Cumalar. 💚",
-  "Bugün Cuma; tövbelerin kabul, günahların aff, duaların makbul olduğu gün. Hayırlı Cumalar. 🤲",
-  "Allah'ım! Bu Cuma hürmetine hastalarımıza şifa, dertlilere derman, dualarımıza kabul nasip eyle. Amin. 🕌",
-  "Selam olsun imanla yaşayanlara, hayırlı Cumalar dileyenlere ve gönlü güzel insanlara. 🌙"
+  "Cuma; kalplerin arındığı, duaların kabul olduğu bereketli gündür. Hayırlı Cumalar.",
+  "Rabbim bu mübarek Cuma hürmetine gönüllerinizi ferah, dualarınızı makbul eylesin. Hayırlı Cumalar.",
+  "Bir Cuma sabahı daha... Kalbiniz huzurla, gönlünüz imanla dolsun. Hayırlı Cumalar.",
+  "Salât ve selamların en güzeli Efendimize olsun. Bu Cuma rahmet olsun üzerinize. Hayırlı Cumalar.",
+  "Duaların göklere yükseldiği bu güzel günde adınız hayırla anılsın. Hayırlı Cumalar.",
+  "Cuma; bereketin, rahmetin ve mağfiretin günüdür. Allah dualarınızı kabul etsin. Hayırlı Cumalar.",
+  "Gönlünüzden geçen tüm güzel dilekler kabul olsun. Bu Cuma yüzünüz gülsün. Hayırlı Cumalar.",
+  "Rahmet kapılarının ardına kadar açıldığı bu günde Rabbim sizi affetsin. Hayırlı Cumalar.",
+  "Kalbi Allah sevgisiyle dolu olanlara ne mutlu. Bu Cuma huzur bulasınız. Hayırlı Cumalar.",
+  "Bugün Cuma; tövbelerin kabul, günahların af, duaların makbul olduğu gün. Hayırlı Cumalar.",
+  "Allah'ım! Bu Cuma hürmetine hastalarımıza şifa, dertlilere derman, dualarımıza kabul nasip eyle. Âmin. Hayırlı Cumalar.",
+  "Selam olsun imanla yaşayanlara ve gönlü güzel insanlara. Hayırlı Cumalar.",
+  "Rabbim, bu mübarek günde evinize bereket, sofranıza bolluk, kalbinize huzur versin. Hayırlı Cumalar.",
+  "Ellerin semaya açıldığı, gönüllerin Rabbe yöneldiği bu güzel günde dualarınız kabul olsun. Hayırlı Cumalar.",
+  "Cuma günü bir bayramdır; kalbi kırık olanların gönlü onarılsın, umudu tükenenlerin umudu yeşersin. Hayırlı Cumalar.",
+  "Allah bu Cuma hürmetine sizi sevdiklerinizden ayırmasın, ömrünüze bereket katsın. Hayırlı Cumalar.",
+  "Sevgili Peygamberimiz buyurdu: Günlerinizin en faziletlisi Cuma günüdür. Bu güzel günde salavatla anılın. Hayırlı Cumalar.",
+  "Rabbim gönlünüzdeki hüznü sevince, sıkıntıyı ferahlığa çevirsin. Hayırlı Cumalar.",
+  "Bu Cuma, geçmişin yüklerini bırakıp yeni bir sayfa açma günü olsun. Allah kolaylık versin. Hayırlı Cumalar.",
+  "Sabrınız kabule, umudunuz nasibe, dualarınız icabete dönüşsün. Hayırlı Cumalar.",
+  "Anne babanızın, sevdiklerinizin ve tüm Müslümanların günahları affolsun. Hayırlı Cumalar.",
+  "Rabbim, rızkınızı helalinden bol, ömrünüzü hayırla uzun eylesin. Hayırlı Cumalar.",
+  "Her Cuma bir başlangıçtır. Bu hafta kalbiniz ferah, işleriniz rast gitsin. Hayırlı Cumalar.",
+  "Rabbimiz, ahirete göçen yakınlarımıza rahmet, geride kalanlara sabır ve huzur versin. Hayırlı Cumalar."
 ];
 
 /* ══════════ İSLAMİ BİLGİ QUİZİ (50 Soru) ══════════ */

@@ -1024,7 +1024,7 @@ input:checked + .toggle-slider::before { transform: translateX(20px); }
 .fc-tr { font-size: 0.85rem; color: var(--text-sub); line-height: 1.5; }
 .fc-note { font-size: 0.78rem; color: var(--text-muted); margin-top: 8px; padding: 6px 10px; background: rgba(0,0,0,0.2); border-radius: 6px; border: 1px dashed rgba(212,175,55,0.25); }
 .count-badge { background: var(--gold-gradient); color: #050d0b; font-size: 0.72rem; font-weight: 800; padding: 2px 8px; border-radius: 12px; }
-.empty-note, .info-note { text-align: center; color: var(--text-muted); font-size: 0.82rem; padding: 12px; background: rgba(10,32,25,0.5); border: 1px solid rgba(212,175,55,0.2); border-radius: var(--radius-md); margin-bottom: 10px; line-height: 1.5; }
+.empty-note, .info-note { text-align: center; color: var(--text-muted); font-size: 0.82rem; padding: 12px; background: rgba(42,23,12,0.55); border: 1px solid rgba(212,175,55,0.2); border-radius: var(--radius-md); margin-bottom: 10px; line-height: 1.5; }
 .section-mini-title { font-size: 0.9rem; font-weight: 700; color: var(--gold-light); margin: 12px 0 8px; padding-bottom: 5px; border-bottom: 1px solid rgba(212,175,55,0.3); }
 
 /* ── ÖNEMLİ SURELER ── */
@@ -1162,7 +1162,7 @@ input:checked + .toggle-slider::before { transform: translateX(20px); }
 
 /* ── PAYLAŞIM KARTLARI ── */
 .share-card-preview { margin: 14px 0; }
-.scp-inner { background: linear-gradient(160deg, #0d2820 0%, #061511 100%); border: 2px solid var(--gold); border-radius: var(--radius-lg); padding: 22px 18px; text-align: center; box-shadow: var(--shadow-glow); position: relative; }
+.scp-inner { background: radial-gradient(circle at 50% 30%, #5C3B25 0%, #2A170C 55%, #160B04 100%); border: 2px solid var(--gold); border-radius: var(--radius-lg); padding: 22px 18px; text-align: center; box-shadow: var(--shadow-glow); position: relative; }
 .scp-badge { display: inline-block; font-size: 0.72rem; font-weight: 700; color: #050d0b; background: var(--gold-gradient); padding: 4px 14px; border-radius: 14px; margin-bottom: 14px; }
 .scp-ar { font-family: var(--font-ar); font-size: 1.5rem; color: var(--gold-light); direction: rtl; line-height: 1.8; margin-bottom: 12px; }
 .scp-tr { font-size: 1rem; color: var(--text-main); line-height: 1.6; font-weight: 500; font-style: italic; margin-bottom: 10px; }
@@ -3313,7 +3313,18 @@ body.green-theme .mv-ayah.okunuyor .mv-w.gecti {
 .sd-satir { border:1px solid var(--border-light); border-radius:var(--radius-md); padding:12px 12px 10px;
   background:rgba(255,255,255,.03); transition:background .25s, border-color .25s; }
 .sd-satir.sd-besmele { background:rgba(212,175,55,.07); border-color:var(--border-gold); }
-.sd-satir.sd-caliyor { background:rgba(212,175,55,.16); border-color:var(--gold-light); box-shadow:0 0 0 2px rgba(212,175,55,.25) inset; }
+.sd-satir.sd-caliyor { background:linear-gradient(135deg, rgba(212,175,55,.34), rgba(212,175,55,.18)); border:2px solid #f2d27a;
+  box-shadow:0 0 0 3px rgba(242,210,122,.28), 0 0 22px rgba(242,210,122,.45); transform:scale(1.015); position:relative; }
+.sd-satir.sd-caliyor::before { content:'🔊'; position:absolute; top:6px; left:8px; font-size:.9rem; animation:hvSdNabiz 1s ease-in-out infinite; }
+.sd-satir.sd-caliyor .sd-ar { color:#fff3c4; text-shadow:0 0 12px rgba(242,210,122,.6); }
+.sd-satir.sd-caliyor .sd-ok { color:#fff; }
+@keyframes hvSdNabiz { 0%,100%{ opacity:.55; transform:scale(1);} 50%{ opacity:1; transform:scale(1.25);} }
+.sd-hece-btn { height:40px; border-radius:20px; border:1px solid var(--border-light); background:transparent; color:var(--text-main);
+  padding:0 12px; font-size:.82rem; font-weight:700; cursor:pointer; font-family:inherit; white-space:nowrap; }
+.sd-hece-btn.on { border-color:var(--gold-light); color:var(--gold-light); background:rgba(212,175,55,.14); }
+.sd-hece { display:inline-block; padding:0 2px; }
+.sd-hece:nth-child(odd) { color:var(--gold-light); }
+.sd-hece-ayrac { opacity:.45; font-weight:400; margin:0 1px; }
 .sd-ar { font-family:var(--font-ar); font-size:calc(2.1rem * var(--sd-olcek)); line-height:1.9; color:var(--gold-light);
   direction:rtl; text-align:right; word-spacing:.12em; }
 .sd-ok-satir { display:flex; align-items:flex-start; gap:8px; margin-top:6px; }
