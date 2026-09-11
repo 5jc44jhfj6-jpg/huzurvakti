@@ -4504,6 +4504,12 @@ function hvSdSayfaCiz() {
   if (!s.satirlar && s.tur === 'kdua') hvSdKuranDuasiYukle(s);
 }
 
+/* Kuran Oku'daki gibi: Arapça kelimelere ayrılır, ses ilerledikçe kelime kelime dolar */
+function hvSdKelimele(metin) {
+  return String(metin || '').trim().split(/\s+/).filter(Boolean)
+    .map(k => '<span class="sd-w">' + hvSdEsc(k) + '</span>').join(' ');
+}
+
 function hvSdSatirlarHtml(s) {
   return s.satirlar.map((r, i) => {
     let etiket = '';
@@ -4511,7 +4517,7 @@ function hvSdSatirlarHtml(s) {
     else if (s.tur === 'sure' && r.no) etiket = `<span class="sd-no">${r.no}</span>`;
     else if (s.tur === 'kdua' && r.no) etiket = `<span class="sd-no">${r.no}</span>`;
     return `<div class="sd-satir${r.besmele ? ' sd-besmele' : ''}" data-i="${i}">
-      <div class="sd-ar" dir="rtl" lang="ar">${hvSdEsc(r.ar)}</div>
+      <div class="sd-ar" dir="rtl" lang="ar">${hvSdKelimele(r.ar)}</div>
       <div class="sd-ok-satir">${etiket}<span class="sd-ok">${hvSdHeceMi() ? hvHeceHtml(r.ok) : hvSdEsc(r.ok)}</span></div>
       ${r.not ? `<div class="sd-not">${hvSdEsc(r.not)}</div>` : ''}
     </div>`;
@@ -4617,28 +4623,51 @@ function hvSdSesNesnesi() {
     hvSdSes.addEventListener('error', () => hvSdSesDurdur());
     // Dua sayfalarında tek ses dosyası birden çok satırı kapsar:
     // süreyi satırların Arapça uzunluğuna orantılı bölüp sırayla işaretleriz.
-    hvSdSes.addEventListener('timeupdate', () => {
-      if (!hvSdCaliyor || !hvSdSegSatirlar || !hvSdSegSatirlar.length) return;
-      const sure = hvSdSes.duration;
-      if (!sure || !isFinite(sure)) return;
-      const oran = Math.min(hvSdSes.currentTime / sure, 0.999);
-      const top = hvSdSegSatirlar.reduce((t, x) => t + x.w, 0) || 1;
-      let birikim = 0, secilen = hvSdSegSatirlar[0].i;
-      for (const x of hvSdSegSatirlar) {
-        birikim += x.w;
-        if (oran < birikim / top) { secilen = x.i; break; }
-        secilen = x.i;
-      }
-      const el = document.querySelector('.sd-satir[data-i="' + secilen + '"]');
-      if (el && !el.classList.contains('sd-caliyor')) {
-        document.querySelectorAll('.sd-satir.sd-caliyor').forEach(e => e.classList.remove('sd-caliyor'));
-        el.classList.add('sd-caliyor');
-        try { el.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); } catch (e) {}
-      }
-    });
+    hvSdSes.addEventListener('timeupdate', hvSdKelimeIlerle);
   }
   return hvSdSes;
 }
+/* Ses ilerledikçe: hangi satır okunuyor (sd-caliyor) + o satırın/satır grubunun
+   kelimeleri soldan sağa (Arapça'da sağdan sola) dolar (gecti) — Kuran Oku ile aynı mantık */
+function hvSdKelimeIlerle() {
+  if (!hvSdCaliyor || !hvSdSes) return;
+  const sayfa = hvSdSayfalar && hvSdSayfalar[hvSdIdx];
+  if (!sayfa || !sayfa.satirlar) return;
+  const sure = hvSdSes.duration;
+  const oran = (sure && isFinite(sure)) ? Math.min(hvSdSes.currentTime / sure, 1) : 0;
+
+  // Bu ses parçasına ait satırlar
+  let satirIdx = [];
+  if (hvSdSegSatirlar && hvSdSegSatirlar.length) satirIdx = hvSdSegSatirlar.map(x => x.i);
+  else {
+    const url = hvSdSesListe[hvSdSesSira];
+    const i = sayfa.satirlar.findIndex(r => r.ses === url);
+    if (i >= 0) satirIdx = [i];
+  }
+  if (!satirIdx.length) return;
+
+  const kelimeler = [];
+  satirIdx.forEach(i => {
+    const el = document.querySelector('.sd-satir[data-i="' + i + '"]');
+    if (el) el.querySelectorAll('.sd-w').forEach(w => kelimeler.push({ w, i }));
+  });
+  if (!kelimeler.length) return;
+  const k = Math.round(oran * kelimeler.length);
+  kelimeler.forEach((x, n) => x.w.classList.toggle('gecti', n < k));
+
+  // Okunan satır: son dolan kelimenin satırı
+  const aktif = kelimeler[Math.max(0, Math.min(k, kelimeler.length) - 1)].i;
+  const onceki = document.querySelector('.sd-satir.sd-caliyor');
+  if (!onceki || onceki.dataset.i !== String(aktif)) {
+    document.querySelectorAll('.sd-satir.sd-caliyor').forEach(e => e.classList.remove('sd-caliyor'));
+    const el = document.querySelector('.sd-satir[data-i="' + aktif + '"]');
+    if (el) {
+      el.classList.add('sd-caliyor');
+      try { el.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); } catch (e) {}
+    }
+  }
+}
+
 function hvSdSesParcaCal() {
   const ses = hvSdSesNesnesi();
   const sayfa = hvSdSayfalar && hvSdSayfalar[hvSdIdx];
@@ -4649,6 +4678,7 @@ function hvSdSesParcaCal() {
       .filter(x => x.seg === hvSdSesSira);
     if (!hvSdSegSatirlar.length) hvSdSegSatirlar = null;
   }
+  document.querySelectorAll('.sd-w.gecti').forEach(w => w.classList.remove('gecti'));
   ses.src = hvSdSesListe[hvSdSesSira];
   ses.play().catch(() => hvSdSesDurdur());
   if (!hvSdSegSatirlar) hvSdSatirVurgula(hvSdSesListe[hvSdSesSira]);
@@ -4685,5 +4715,6 @@ function hvSdSesDurdur() {
   const b = document.getElementById('sd-ses');
   if (b) { b.innerHTML = '🔊 Dinle'; b.classList.remove('on'); }
   document.querySelectorAll('.sd-satir.sd-caliyor').forEach(el => el.classList.remove('sd-caliyor'));
+  document.querySelectorAll('.sd-w.gecti').forEach(w => w.classList.remove('gecti'));
 }
 window.hvSdSesDurdur = hvSdSesDurdur;
