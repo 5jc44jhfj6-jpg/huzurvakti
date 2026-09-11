@@ -1119,3 +1119,238 @@ const SURE_ACIKLAMA = {
   114: "Nâs; insan ve cin şeytanlarının vesvesesinden insanların Rabbine sığınma."
 };
 
+
+/* ══════════════════════════════════════════════════════════════
+   0'DAN DUA ÖĞREN — satır satır Arapça + okunuş (anlam yok)
+   Her sayfa: { ad, alt, satirlar:[{ar, ok, not?}], ses?:[{s,a}] }
+   ses: everyayah'tan çalınacak Kur'an âyetleri (sûre, âyet)
+   ══════════════════════════════════════════════════════════════ */
+const SIFIRDAN_NAMAZ_DUALARI = [
+  {
+    ad: "Eûzü – Besmele", alt: "Namaza ve okumaya başlarken",
+    satirlar: [
+      { ar: "أَعُوذُ بِاللَّهِ مِنَ الشَّيْطَانِ الرَّجِيمِ", ok: "Eûzü billâhi mineş-şeytânir-racîm" },
+      { ar: "بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ", ok: "Bismillâhir-rahmânir-rahîm" }
+    ],
+    ses: [{ s: 1, a: 1 }]
+  },
+  {
+    ad: "Sübhâneke", alt: "İftitah tekbirinden sonra",
+    satirlar: [
+      { ar: "سُبْحَانَكَ اللَّهُمَّ", ok: "Sübhânekellâhümme" },
+      { ar: "وَبِحَمْدِكَ", ok: "ve bihamdik" },
+      { ar: "وَتَبَارَكَ اسْمُكَ", ok: "ve tebârakesmük" },
+      { ar: "وَتَعَالَى جَدُّكَ", ok: "ve teâlâ ceddük" },
+      { ar: "وَجَلَّ ثَنَاؤُكَ", ok: "ve celle senâük", not: "Yalnız cenaze namazında okunur" },
+      { ar: "وَلَا إِلَهَ غَيْرُكَ", ok: "ve lâ ilâhe ğayruk" }
+    ]
+  },
+  {
+    ad: "Rükû – Secde Tesbihleri", alt: "Rükûda, kalkarken ve secdede",
+    satirlar: [
+      { ar: "سُبْحَانَ رَبِّيَ الْعَظِيمِ", ok: "Sübhâne rabbiyel-azîm", not: "Rükûda 3 kere" },
+      { ar: "سَمِعَ اللَّهُ لِمَنْ حَمِدَهُ", ok: "Semiallâhü limen hamideh", not: "Rükûdan kalkarken" },
+      { ar: "رَبَّنَا لَكَ الْحَمْدُ", ok: "Rabbenâ lekel-hamd", not: "Doğrulunca" },
+      { ar: "سُبْحَانَ رَبِّيَ الْأَعْلَى", ok: "Sübhâne rabbiyel-a'lâ", not: "Secdede 3 kere" },
+      { ar: "اَلسَّلَامُ عَلَيْكُمْ وَرَحْمَةُ اللَّهِ", ok: "Esselâmü aleyküm ve rahmetullâh", not: "Selam verirken sağa ve sola" }
+    ]
+  },
+  {
+    ad: "Ettehiyyâtü", alt: "Oturuşlarda (ka'de)",
+    satirlar: [
+      { ar: "التَّحِيَّاتُ لِلَّهِ وَالصَّلَوَاتُ وَالطَّيِّبَاتُ", ok: "Ettehiyyâtü lillâhi vessalevâtü vettayyibât" },
+      { ar: "السَّلَامُ عَلَيْكَ أَيُّهَا النَّبِيُّ", ok: "Esselâmü aleyke eyyühen-nebiyyü" },
+      { ar: "وَرَحْمَةُ اللَّهِ وَبَرَكَاتُهُ", ok: "ve rahmetullâhi ve berakâtüh" },
+      { ar: "السَّلَامُ عَلَيْنَا وَعَلَى عِبَادِ اللَّهِ الصَّالِحِينَ", ok: "Esselâmü aleynâ ve alâ ibâdillâhis-sâlihîn" },
+      { ar: "أَشْهَدُ أَنْ لَا إِلَهَ إِلَّا اللَّهُ", ok: "Eşhedü en lâ ilâhe illallâh" },
+      { ar: "وَأَشْهَدُ أَنَّ مُحَمَّدًا عَبْدُهُ وَرَسُولُهُ", ok: "ve eşhedü enne Muhammeden abdühû ve rasûlüh" }
+    ]
+  },
+  {
+    ad: "Allâhümme Salli", alt: "Son oturuşta Ettehiyyâtü'den sonra",
+    satirlar: [
+      { ar: "اللَّهُمَّ صَلِّ عَلَى مُحَمَّدٍ وَعَلَى آلِ مُحَمَّدٍ", ok: "Allâhümme salli alâ Muhammediv ve alâ âli Muhammed" },
+      { ar: "كَمَا صَلَّيْتَ عَلَى إِبْرَاهِيمَ وَعَلَى آلِ إِبْرَاهِيمَ", ok: "kemâ salleyte alâ İbrâhîme ve alâ âli İbrâhîm" },
+      { ar: "إِنَّكَ حَمِيدٌ مَجِيدٌ", ok: "inneke hamîdüm mecîd" }
+    ]
+  },
+  {
+    ad: "Allâhümme Bârik", alt: "Allâhümme Salli'den sonra",
+    satirlar: [
+      { ar: "اللَّهُمَّ بَارِكْ عَلَى مُحَمَّدٍ وَعَلَى آلِ مُحَمَّدٍ", ok: "Allâhümme bârik alâ Muhammediv ve alâ âli Muhammed" },
+      { ar: "كَمَا بَارَكْتَ عَلَى إِبْرَاهِيمَ وَعَلَى آلِ إِبْرَاهِيمَ", ok: "kemâ bârekte alâ İbrâhîme ve alâ âli İbrâhîm" },
+      { ar: "إِنَّكَ حَمِيدٌ مَجِيدٌ", ok: "inneke hamîdüm mecîd" }
+    ]
+  },
+  {
+    ad: "Rabbenâ Âtinâ", alt: "Salli-Bârik'ten sonra (Bakara 201)",
+    satirlar: [
+      { ar: "رَبَّنَا آتِنَا فِي الدُّنْيَا حَسَنَةً", ok: "Rabbenâ âtinâ fid-dünyâ haseneten" },
+      { ar: "وَفِي الْآخِرَةِ حَسَنَةً", ok: "ve fil-âhirati haseneten" },
+      { ar: "وَقِنَا عَذَابَ النَّارِ", ok: "ve kınâ azâben-nâr" }
+    ],
+    ses: [{ s: 2, a: 201 }]
+  },
+  {
+    ad: "Rabbenâğfirlî", alt: "Rabbenâ Âtinâ'dan sonra (İbrâhîm 41)",
+    satirlar: [
+      { ar: "رَبَّنَا اغْفِرْ لِي وَلِوَالِدَيَّ", ok: "Rabbenâğfir lî ve li-vâlideyye" },
+      { ar: "وَلِلْمُؤْمِنِينَ يَوْمَ يَقُومُ الْحِسَابُ", ok: "ve lil-mü'minîne yevme yekûmül-hisâb" }
+    ],
+    ses: [{ s: 14, a: 41 }]
+  },
+  {
+    ad: "Kunut Duası (1)", alt: "Vitir namazının 3. rekâtında",
+    satirlar: [
+      { ar: "اللَّهُمَّ إِنَّا نَسْتَعِينُكَ", ok: "Allâhümme innâ nesteînüke" },
+      { ar: "وَنَسْتَغْفِرُكَ وَنَسْتَهْدِيكَ", ok: "ve nestağfiruke ve nestehdîk" },
+      { ar: "وَنُؤْمِنُ بِكَ وَنَتُوبُ إِلَيْكَ", ok: "ve nü'minü bike ve netûbü ileyk" },
+      { ar: "وَنَتَوَكَّلُ عَلَيْكَ", ok: "ve netevekkelü aleyk" },
+      { ar: "وَنُثْنِي عَلَيْكَ الْخَيْرَ كُلَّهُ", ok: "ve nüsnî aleykel-hayra küllehû" },
+      { ar: "نَشْكُرُكَ وَلَا نَكْفُرُكَ", ok: "neşküruke ve lâ nekfüruk" },
+      { ar: "وَنَخْلَعُ وَنَتْرُكُ مَنْ يَفْجُرُكَ", ok: "ve nahleu ve netrukü men yefcüruk" }
+    ]
+  },
+  {
+    ad: "Kunut Duası (2)", alt: "Birinci Kunut'un devamı",
+    satirlar: [
+      { ar: "اللَّهُمَّ إِيَّاكَ نَعْبُدُ", ok: "Allâhümme iyyâke na'büdü" },
+      { ar: "وَلَكَ نُصَلِّي وَنَسْجُدُ", ok: "ve leke nusallî ve nescüdü" },
+      { ar: "وَإِلَيْكَ نَسْعَى وَنَحْفِدُ", ok: "ve ileyke nes'â ve nahfidü" },
+      { ar: "نَرْجُو رَحْمَتَكَ", ok: "nercû rahmeteke" },
+      { ar: "وَنَخْشَى عَذَابَكَ", ok: "ve nahşâ azâbeke" },
+      { ar: "إِنَّ عَذَابَكَ بِالْكُفَّارِ مُلْحِقٌ", ok: "inne azâbeke bil-küffâri mülhık" }
+    ]
+  },
+  {
+    ad: "Âyetel Kürsî", alt: "Bakara 255 — namazlardan sonra",
+    satirlar: [
+      { ar: "اَللّٰهُ لَٓا اِلٰهَ اِلَّا هُوَۚ اَلْحَىُّ الْقَيُّومُۚ", ok: "Allâhü lâ ilâhe illâ hüvel-hayyül-kayyûm" },
+      { ar: "لَا تَاْخُذُهُ سِنَةٌ وَلَا نَوْمٌۜ", ok: "Lâ te'huzühû sinetün ve lâ nevm" },
+      { ar: "لَهُ مَا فِى السَّمٰوَاتِ وَمَا فِى الْاَرْضِۜ", ok: "Lehû mâ fis-semâvâti ve mâ fil-ard" },
+      { ar: "مَنْ ذَا الَّذٖى يَشْفَعُ عِنْدَهُٓ اِلَّا بِاِذْنِهٖۜ", ok: "Men zellezî yeşfeu indehû illâ bi-iznih" },
+      { ar: "يَعْلَمُ مَا بَيْنَ اَيْدٖيهِمْ وَمَا خَلْفَهُمْۚ", ok: "Ya'lemü mâ beyne eydîhim ve mâ halfehüm" },
+      { ar: "وَلَا يُحٖيطُونَ بِشَىْءٍ مِنْ عِلْمِهٖٓ اِلَّا بِمَا شَٓاءَۚ", ok: "Ve lâ yühîtûne bi-şey'in min ilmihî illâ bimâ şâ'" },
+      { ar: "وَسِعَ كُرْسِيُّهُ السَّمٰوَاتِ وَالْاَرْضَۚ", ok: "Vesia kürsiyyühüs-semâvâti vel-ard" },
+      { ar: "وَلَا يَؤُ۫دُهُ حِفْظُهُمَاۚ وَهُوَ الْعَلِىُّ الْعَظٖيمُ", ok: "Ve lâ yeûdühû hıfzuhümâ ve hüvel-aliyyül-azîm" }
+    ],
+    ses: [{ s: 2, a: 255 }]
+  },
+  {
+    ad: "Âmenerrasûlü", alt: "Bakara 285-286 — yatsıdan sonra",
+    satirlar: [
+      { ar: "اٰمَنَ الرَّسُولُ بِمَٓا اُنْزِلَ اِلَيْهِ مِنْ رَبِّهٖ وَالْمُؤْمِنُونَؕ", ok: "Âmener-rasûlü bimâ ünzile ileyhi min rabbihî vel-mü'minûn" },
+      { ar: "كُلٌّ اٰمَنَ بِاللّٰهِ وَمَلٰٓئِكَتِهٖ وَكُتُبِهٖ وَرُسُلِهٖؕ", ok: "Küllün âmene billâhi ve melâiketihî ve kütübihî ve rusülih" },
+      { ar: "لَا نُفَرِّقُ بَيْنَ اَحَدٍ مِنْ رُسُلِهٖࣞ", ok: "Lâ nüferriku beyne ehadin min rusülih" },
+      { ar: "وَقَالُوا سَمِعْنَا وَاَطَعْنَا غُفْرَانَكَ رَبَّنَا وَاِلَيْكَ الْمَصٖيرُ", ok: "Ve kâlû semi'nâ ve eta'nâ ğufrâneke rabbenâ ve ileykel-masîr" },
+      { ar: "لَا يُكَلِّفُ اللّٰهُ نَفْسًا اِلَّا وُسْعَهَاۜ", ok: "Lâ yükellifullâhü nefsen illâ vüs'ahâ" },
+      { ar: "لَهَا مَا كَسَبَتْ وَعَلَيْهَا مَا اكْتَسَبَتْۜ", ok: "Lehâ mâ kesebet ve aleyhâ mektesebet" },
+      { ar: "رَبَّنَا لَا تُؤَاخِذْنَٓا اِنْ نَسٖينَٓا اَوْ اَخْطَاْنَاۚ", ok: "Rabbenâ lâ tüâhiznâ in nesînâ ev ahta'nâ" },
+      { ar: "رَبَّنَا وَلَا تَحْمِلْ عَلَيْنَٓا اِصْرًا كَمَا حَمَلْتَهُ عَلَى الَّذٖينَ مِنْ قَبْلِنَاۚ", ok: "Rabbenâ ve lâ tahmil aleynâ ısran kemâ hameltehû alellezîne min kablinâ" },
+      { ar: "رَبَّنَا وَلَا تُحَمِّلْنَا مَا لَا طَاقَةَ لَنَا بِهٖۚ", ok: "Rabbenâ ve lâ tühammilnâ mâ lâ tâkate lenâ bih" },
+      { ar: "وَاعْفُ عَنَّا۠ وَاغْفِرْ لَنَا۠ وَارْحَمْنَا۠", ok: "Va'fü annâ vağfir lenâ verhamnâ" },
+      { ar: "اَنْتَ مَوْلٰينَا فَانْصُرْنَا عَلَى الْقَوْمِ الْكَافِرٖينَ", ok: "Ente mevlânâ fensurnâ alel-kavmil-kâfirîn" }
+    ],
+    ses: [{ s: 2, a: 285 }, { s: 2, a: 286 }]
+  },
+  {
+    ad: "Namaz Tesbihâtı", alt: "Selamdan sonra",
+    satirlar: [
+      { ar: "سُبْحَانَ اللَّهِ", ok: "Sübhânallâh", not: "33 kere" },
+      { ar: "اَلْحَمْدُ لِلَّهِ", ok: "Elhamdülillâh", not: "33 kere" },
+      { ar: "اَللَّهُ أَكْبَرُ", ok: "Allâhü ekber", not: "33 kere" },
+      { ar: "لَا إِلَهَ إِلَّا اللَّهُ وَحْدَهُ لَا شَرِيكَ لَهُ", ok: "Lâ ilâhe illallâhü vahdehû lâ şerîke leh" },
+      { ar: "لَهُ الْمُلْكُ وَلَهُ الْحَمْدُ", ok: "lehül-mülkü ve lehül-hamdü" },
+      { ar: "وَهُوَ عَلَى كُلِّ شَيْءٍ قَدِيرٌ", ok: "ve hüve alâ külli şey'in kadîr" }
+    ]
+  },
+  {
+    ad: "Kelime-i Tevhîd", alt: "",
+    satirlar: [
+      { ar: "لَا إِلَهَ إِلَّا اللَّهُ", ok: "Lâ ilâhe illallâh" },
+      { ar: "مُحَمَّدٌ رَسُولُ اللَّهِ", ok: "Muhammedün rasûlullâh" }
+    ]
+  },
+  {
+    ad: "Kelime-i Şehâdet", alt: "",
+    satirlar: [
+      { ar: "أَشْهَدُ أَنْ لَا إِلَهَ إِلَّا اللَّهُ", ok: "Eşhedü en lâ ilâhe illallâh" },
+      { ar: "وَأَشْهَدُ أَنَّ مُحَمَّدًا عَبْدُهُ وَرَسُولُهُ", ok: "ve eşhedü enne Muhammeden abdühû ve rasûlüh" }
+    ]
+  }
+];
+
+/* KISA_SURELER'de okunuş cümle cümle; iki sûrede cümle sayısı âyet
+   sayısıyla uyuşmuyor. Buradaki listeler âyet âyet doğru bölünmüş hâli. */
+const SIFIRDAN_SURE_OKUNUS = {
+  "Alak Sûresi": [
+    "İkra' bismi rabbikel-lezî halek.", "Halekal-insâne min 'alak.", "İkra' verabbükel-ekram.",
+    "Ellezî 'alleme bilkalem.", "'Allemel-insâne mâ lem ya'lem.", "Kellâ innel-insâne leyatgâ.",
+    "Er raâhüs-tagnâ.", "İnne ilâ rabbiker-ruc'â.", "Era'eytel-lezî yenhâ.", "'Abden izâ sallâ.",
+    "Era'eyte in kâne 'alel-hüdâ.", "Ev emera bittakvâ.", "Era'eyte in kezzebe vetevellâ.",
+    "Elem ya'lem biennel-lâhe yerâ.", "Kellâ leil lem yentehi lenesfe'am binnâsiyeh.",
+    "Nâsiyetin kâzibetin hâtieh.", "Felyed'u nâdiyeh.", "Sened'uz-zebâniyeh.",
+    "Kellâ, lâ tüti'hü vescüd vakterib."
+  ],
+  "Beyyine Sûresi": [
+    "Lem yekünil-lezîne keferû min ehlil-kitâbi velmüşrikîne münfekkîne hattâ te'tiyehümül-beyyineh.",
+    "Rasûlüm minel-lâhi yetlû suhufem mütahherah.",
+    "Fîhâ kütübün kayyimeh.",
+    "Vemâ teferrakal-lezîne ûtül-kitâbe illâ mim ba'di mâ câethümül-beyyineh.",
+    "Vemâ ümirû illâ liya'büdül-lâhe muhlisîne lehüd-dîne hunefâe veyükîmus-salâte veyü'tüz-zekâte vezâlike dînül-kayyimeh.",
+    "İnnel-lezîne keferû min ehlil-kitâbi velmüşrikîne fî nâri cehenneme hâlidîne fîhâ, ülâike hüm şerrul-beriyyeh.",
+    "İnnel-lezîne âmenû ve'amilus-sâlihâti ülâike hüm hayrul-beriyyeh.",
+    "Cezâühüm 'inde rabbihim cennâtü 'adnin tecrî min tahtihel-enhâru hâlidîne fîhâ ebedâ, radiyel-lâhü 'anhüm veradû 'anh, zâlike limen haşiye rabbeh."
+  ]
+};
+
+/* Kur'an'daki dualar — âyetler uygulamanın Kur'an servisinden çekilir
+   (Arapça + okunuş + hoca sesi), ilk açılışta cihaza kaydedilir. */
+const SIFIRDAN_KURAN_DUALARI = [
+  { ad: "Rabbenâ tekabbel minnâ", alt: "Bakara 127-128 · İbrâhîm ve İsmâil (a.s.)", s: 2, b: 127, e: 128 },
+  { ad: "Rabbenâ âtinâ fid-dünyâ", alt: "Bakara 201", s: 2, b: 201, e: 201 },
+  { ad: "Rabbenâ efriğ aleynâ sabran", alt: "Bakara 250 · Tâlût'un ordusu", s: 2, b: 250, e: 250 },
+  { ad: "Rabbenâ lâ tüâhiznâ", alt: "Bakara 286", s: 2, b: 286, e: 286 },
+  { ad: "Rabbenâ lâ tüziğ kulûbenâ", alt: "Âl-i İmrân 8-9", s: 3, b: 8, e: 9 },
+  { ad: "Rabbenâ innenâ âmennâ", alt: "Âl-i İmrân 16", s: 3, b: 16, e: 16 },
+  { ad: "Rabbi heb lî min ledünke", alt: "Âl-i İmrân 38 · Zekeriyyâ (a.s.)", s: 3, b: 38, e: 38 },
+  { ad: "Rabbenâ âmennâ bimâ enzelte", alt: "Âl-i İmrân 53 · Havârîler", s: 3, b: 53, e: 53 },
+  { ad: "Rabbenağfir lenâ zünûbenâ", alt: "Âl-i İmrân 147", s: 3, b: 147, e: 147 },
+  { ad: "Rabbenâ mâ halakte hâzâ bâtılâ", alt: "Âl-i İmrân 191-194", s: 3, b: 191, e: 194 },
+  { ad: "Rabbenâ ahricnâ", alt: "Nisâ 75", s: 4, b: 75, e: 75 },
+  { ad: "Rabbenâ âmennâ fektübnâ", alt: "Mâide 83", s: 5, b: 83, e: 83 },
+  { ad: "Rabbenâ zalemnâ enfüsenâ", alt: "A'râf 23 · Âdem (a.s.)", s: 7, b: 23, e: 23 },
+  { ad: "Rabbenâ lâ tec'alnâ meal-kavmiz-zâlimîn", alt: "A'râf 47", s: 7, b: 47, e: 47 },
+  { ad: "Rabbenâ eftah beynenâ", alt: "A'râf 89 · Şuayb (a.s.)", s: 7, b: 89, e: 89 },
+  { ad: "Rabbenâ efriğ aleynâ sabran ve teveffenâ", alt: "A'râf 126 · Sihirbazların imanı", s: 7, b: 126, e: 126 },
+  { ad: "Rabbiğfir lî ve li ehî", alt: "A'râf 151 · Mûsâ (a.s.)", s: 7, b: 151, e: 151 },
+  { ad: "Rabbenâ lâ tec'alnâ fitneten", alt: "Yûnus 85-86", s: 10, b: 85, e: 86 },
+  { ad: "Rabbi innî eûzü bike", alt: "Hûd 47 · Nûh (a.s.)", s: 11, b: 47, e: 47 },
+  { ad: "Rabbi kad âteytenî minel-mülk", alt: "Yûsuf 101 · Yûsuf (a.s.)", s: 12, b: 101, e: 101 },
+  { ad: "Rabbic'alnî mukîmes-salâh", alt: "İbrâhîm 40-41 · İbrâhîm (a.s.)", s: 14, b: 40, e: 41 },
+  { ad: "Rabbirhamhümâ", alt: "İsrâ 24 · Anne-baba için", s: 17, b: 24, e: 24 },
+  { ad: "Rabbi edhilnî müdhale sıdk", alt: "İsrâ 80", s: 17, b: 80, e: 80 },
+  { ad: "Rabbenâ âtinâ min ledünke rahmeh", alt: "Kehf 10 · Ashâb-ı Kehf", s: 18, b: 10, e: 10 },
+  { ad: "Rabbişrah lî sadrî", alt: "Tâhâ 25-28 · Mûsâ (a.s.)", s: 20, b: 25, e: 28 },
+  { ad: "Rabbi zidnî ilmâ", alt: "Tâhâ 114", s: 20, b: 114, e: 114 },
+  { ad: "Ennî messeniyed-durru", alt: "Enbiyâ 83 · Eyyûb (a.s.)", s: 21, b: 83, e: 83 },
+  { ad: "Lâ ilâhe illâ ente sübhânek", alt: "Enbiyâ 87 · Yûnus (a.s.)", s: 21, b: 87, e: 87 },
+  { ad: "Rabbi lâ tezernî ferdâ", alt: "Enbiyâ 89 · Zekeriyyâ (a.s.)", s: 21, b: 89, e: 89 },
+  { ad: "Rabbi eûzü bike min hemezâtiş-şeyâtîn", alt: "Mü'minûn 97-98", s: 23, b: 97, e: 98 },
+  { ad: "Rabbenâ âmennâ fağfir lenâ", alt: "Mü'minûn 109", s: 23, b: 109, e: 109 },
+  { ad: "Rabbiğfir verham", alt: "Mü'minûn 118", s: 23, b: 118, e: 118 },
+  { ad: "Rabbenasrif annâ azâbe cehennem", alt: "Furkân 65-66", s: 25, b: 65, e: 66 },
+  { ad: "Rabbenâ heb lenâ min ezvâcinâ", alt: "Furkân 74", s: 25, b: 74, e: 74 },
+  { ad: "Rabbi heb lî hukmen", alt: "Şuarâ 83-85 · İbrâhîm (a.s.)", s: 26, b: 83, e: 85 },
+  { ad: "Rabbi evzi'nî en eşküra", alt: "Neml 19 · Süleymân (a.s.)", s: 27, b: 19, e: 19 },
+  { ad: "Rabbi innî zalemtü nefsî", alt: "Kasas 16 · Mûsâ (a.s.)", s: 28, b: 16, e: 16 },
+  { ad: "Rabbi innî limâ enzelte ileyye", alt: "Kasas 24 · Mûsâ (a.s.)", s: 28, b: 24, e: 24 },
+  { ad: "Rabbinsurnî", alt: "Ankebût 30 · Lût (a.s.)", s: 29, b: 30, e: 30 },
+  { ad: "Rabbi heb lî mines-sâlihîn", alt: "Sâffât 100 · İbrâhîm (a.s.)", s: 37, b: 100, e: 100 },
+  { ad: "Rabbenâ vesi'te külle şey'in", alt: "Mü'min 7-8 · Meleklerin duası", s: 40, b: 7, e: 8 },
+  { ad: "Rabbi evzi'nî en eşküra ni'metek", alt: "Ahkâf 15", s: 46, b: 15, e: 15 },
+  { ad: "Rabbenağfir lenâ ve li ihvâninâ", alt: "Haşr 10", s: 59, b: 10, e: 10 },
+  { ad: "Rabbenâ aleyke tevekkelnâ", alt: "Mümtehine 4-5", s: 60, b: 4, e: 5 },
+  { ad: "Rabbenâ etmim lenâ nûranâ", alt: "Tahrîm 8", s: 66, b: 8, e: 8 },
+  { ad: "Rabbiğfir lî ve li vâlideyye", alt: "Nûh 28 · Nûh (a.s.)", s: 71, b: 28, e: 28 }
+];

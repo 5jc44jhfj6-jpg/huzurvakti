@@ -1384,6 +1384,7 @@ window.orucKazaAdjust = orucKazaAdjust;
 /* ══════════ FEATURE ROUTE KAYIT & BAŞLATMA ══════════ */
 window.FEATURE_ROUTES = {
   'onemli-sureler': renderOnemliSureler,
+  'sifirdan': renderSifirdan,
   'dua-ogrenme': () => renderDuaOgrenme(document.getElementById('dua-search-input') ? document.getElementById('dua-search-input').value : ''),
   'esma': () => renderEsma(document.getElementById('esma-search-input') ? document.getElementById('esma-search-input').value : ''),
   'ezkar': () => switchEzkar(_ezkarMode),
@@ -4268,3 +4269,342 @@ async function hvTamEkranCiz(calmayaDevam) {
   }
 }
 window.hvTamEkranCiz = hvTamEkranCiz;
+
+/* ══════════════════════════════════════════════════════════════
+   0'DAN DUA ÖĞREN — sayfa sayfa, satır satır Arapça + okunuş
+   Bölümler: Namaz Duaları · Namaz Sureleri · Kur'an'daki Dualar
+   Kaydırma (sağ/sol), A+/A-, hoca sesi, kaldığın yer, ✓ öğrendim
+   ══════════════════════════════════════════════════════════════ */
+const HV_SD_BOLUM = { dua: 'Namaz Duaları', sure: 'Namaz Sureleri', kdua: "Kur'an'daki Dualar" };
+const HV_SD_BOLUM_IKON = { dua: '🤲', sure: '📖', kdua: '✨' };
+let hvSdSayfalar = null, hvSdIdx = 0, hvSdListeAcik = false;
+let hvSdSes = null, hvSdSesListe = [], hvSdSesSira = 0, hvSdCaliyor = false;
+let hvSdDokunX = null, hvSdDokunY = null;
+
+function hvSdPunto() { const v = parseFloat(hvGet('hv_sd_punto', '1')); return isNaN(v) ? 1 : v; }
+function hvSdPuntoAyarla(fark) {
+  let v = Math.round((hvSdPunto() + fark) * 10) / 10;
+  v = Math.max(0.7, Math.min(1.8, v));
+  hvSet('hv_sd_punto', v);
+  hvSdPuntoUygula();
+}
+window.hvSdPuntoAyarla = hvSdPuntoAyarla;
+function hvSdPuntoUygula() {
+  const kok = document.getElementById('sifirdan-root');
+  if (kok) kok.style.setProperty('--sd-olcek', String(hvSdPunto()));
+  const et = document.getElementById('sd-punto-deger');
+  if (et) et.textContent = Math.round(hvSdPunto() * 100) + '%';
+}
+
+/* Öğrendim işaretleri (Ezber'den ayrı tutulur) */
+function hvSdOgrenilenler() {
+  try { return JSON.parse(localStorage.getItem('hv_sd_ogrenildi') || '[]'); } catch (e) { return []; }
+}
+function hvSdOgrenildiMi(a) { return hvSdOgrenilenler().indexOf(a) >= 0; }
+function hvSdOgrendimDegistir() {
+  const s = hvSdSayfalar && hvSdSayfalar[hvSdIdx];
+  if (!s) return;
+  let l = hvSdOgrenilenler();
+  l = l.indexOf(s.anahtar) >= 0 ? l.filter(x => x !== s.anahtar) : l.concat([s.anahtar]);
+  try { localStorage.setItem('hv_sd_ogrenildi', JSON.stringify(l)); } catch (e) {}
+  hvSdOgrendimDugme();
+}
+window.hvSdOgrendimDegistir = hvSdOgrendimDegistir;
+function hvSdOgrendimDugme() {
+  const s = hvSdSayfalar && hvSdSayfalar[hvSdIdx];
+  const b = document.getElementById('sd-ogrendim');
+  if (!b || !s) return;
+  const on = hvSdOgrenildiMi(s.anahtar);
+  b.classList.toggle('on', on);
+  b.innerHTML = on ? '✓ Öğrendim' : '○ Öğrendim';
+}
+
+/* Cümle bölücü (lookbehind kullanmadan — eski Safari uyumu) */
+function hvSdCumleler(metin) {
+  const m = String(metin || '').match(/[^.!?]+[.!?]*/g) || [];
+  return m.map(s => s.trim()).filter(Boolean);
+}
+
+/* Tüm sayfaların listesi */
+function hvSdListeKur() {
+  const L = [];
+  const besmeleAr = 'بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ', besmeleOk = 'Bismillâhir-rahmânir-rahîm';
+
+  (typeof SIFIRDAN_NAMAZ_DUALARI !== 'undefined' ? SIFIRDAN_NAMAZ_DUALARI : []).forEach(d => {
+    L.push({
+      tur: 'dua', ad: d.ad, alt: d.alt || '', anahtar: 'sd_dua_' + d.ad,
+      satirlar: d.satirlar.map(s => ({ ar: s.ar, ok: s.ok, not: s.not || '' })),
+      ses: (d.ses || []).map(x => hvAaUrl(x.s, x.a))
+    });
+  });
+
+  (typeof KISA_SURELER !== 'undefined' ? KISA_SURELER : []).forEach(k => {
+    const no = (typeof HV_SURE_NO !== 'undefined' && HV_SURE_NO[k.title]) || 0;
+    const ar = String(k.arabic || '').split('۝').map(s => s.trim()).filter(Boolean);
+    const duzelt = (typeof SIFIRDAN_SURE_OKUNUS !== 'undefined') ? SIFIRDAN_SURE_OKUNUS[k.title] : null;
+    const ok = duzelt || hvSdCumleler(k.okunusu);
+    const satirlar = [];
+    if (no !== 1) satirlar.push({ ar: besmeleAr, ok: besmeleOk, ses: hvAaUrl(1, 1), besmele: true });
+    ar.forEach((a, i) => satirlar.push({ ar: a, ok: ok[i] || '', ses: no ? hvAaUrl(no, i + 1) : '', no: i + 1 }));
+    L.push({
+      tur: 'sure', ad: k.title, alt: (no ? no + '. sûre · ' : '') + ar.length + ' âyet',
+      anahtar: 'sd_sure_' + k.title, satirlar: satirlar,
+      ses: satirlar.map(s => s.ses).filter(Boolean)
+    });
+  });
+
+  (typeof SIFIRDAN_KURAN_DUALARI !== 'undefined' ? SIFIRDAN_KURAN_DUALARI : []).forEach(d => {
+    L.push({ tur: 'kdua', ad: d.ad, alt: d.alt || '', anahtar: 'sd_kdua_' + d.s + '_' + d.b, ref: d, satirlar: null, ses: [] });
+  });
+  return L;
+}
+
+function hvSdBasaSar() {
+  const kok = document.getElementById('sifirdan-root');
+  const kap = kok ? hvMvKaydirilabilir(kok) : null;
+  try {
+    if (kap) kap.scrollTo({ top: 0, behavior: 'auto' }); else window.scrollTo({ top: 0, behavior: 'auto' });
+  } catch (e) { if (kap) kap.scrollTop = 0; else window.scrollTo(0, 0); }
+}
+
+/* ── Giriş noktası ── */
+function renderSifirdan() {
+  const kok = document.getElementById('sifirdan-root');
+  if (!kok) return;
+  if (!hvSdSayfalar) hvSdSayfalar = hvSdListeKur();
+  if (!hvSdSayfalar.length) { kok.innerHTML = '<div class="mv-loading">İçerik bulunamadı.</div>'; return; }
+  let son = parseInt(hvGet('hv_sd_son', '0'), 10);
+  if (isNaN(son) || son < 0 || son >= hvSdSayfalar.length) son = 0;
+  hvSdIdx = son;
+  hvSdListeAcik = false;
+  hvSdSayfaCiz();
+}
+window.renderSifirdan = renderSifirdan;
+
+function hvSdGit(i) {
+  if (!hvSdSayfalar) return;
+  if (i < 0) i = 0;
+  if (i >= hvSdSayfalar.length) i = hvSdSayfalar.length - 1;
+  hvSdSesDurdur();
+  hvSdIdx = i;
+  hvSet('hv_sd_son', i);
+  hvSdListeAcik = false;
+  hvSdSayfaCiz();
+}
+window.hvSdGit = hvSdGit;
+function hvSdIleri() { if (hvSdSayfalar && hvSdIdx < hvSdSayfalar.length - 1) hvSdGit(hvSdIdx + 1); }
+function hvSdGeri() { if (hvSdIdx > 0) hvSdGit(hvSdIdx - 1); }
+window.hvSdIleri = hvSdIleri; window.hvSdGeri = hvSdGeri;
+
+function hvSdBolumeGit(tur) {
+  const i = hvSdSayfalar.findIndex(s => s.tur === tur);
+  if (i >= 0) hvSdGit(i);
+}
+window.hvSdBolumeGit = hvSdBolumeGit;
+
+function hvSdEsc(s) {
+  return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+/* ── Sayfa çizimi ── */
+function hvSdSayfaCiz() {
+  const kok = document.getElementById('sifirdan-root');
+  if (!kok || !hvSdSayfalar) return;
+  const s = hvSdSayfalar[hvSdIdx];
+  const toplam = hvSdSayfalar.length;
+  const bolumSayi = { dua: 0, sure: 0, kdua: 0 };
+  hvSdSayfalar.forEach(x => { bolumSayi[x.tur] = (bolumSayi[x.tur] || 0) + 1; });
+
+  const chips = Object.keys(HV_SD_BOLUM).map(t =>
+    `<button class="sd-chip${s.tur === t ? ' on' : ''}" onclick="hvSdBolumeGit('${t}')">${HV_SD_BOLUM_IKON[t]} ${HV_SD_BOLUM[t]} <span>${bolumSayi[t] || 0}</span></button>`
+  ).join('');
+
+  const sesVar = s.tur === 'kdua' ? true : (s.ses && s.ses.length > 0);
+
+  kok.innerHTML = `
+    <div class="sd-ust">
+      <button class="hub-back-btn" onclick="navigateTo('kurandua')">← Kuran &amp; Dua</button>
+      <button class="sd-liste-btn" onclick="hvSdListeGoster()">☰ Liste</button>
+      <div class="sd-sayac">${hvSdIdx + 1} / ${toplam}</div>
+    </div>
+    <div class="sd-chips">${chips}</div>
+    <div class="sd-kart" id="sd-kart">
+      <div class="sd-baslik">
+        <div class="sd-ad">${hvSdEsc(s.ad)}</div>
+        ${s.alt ? `<div class="sd-alt-yazi">${hvSdEsc(s.alt)}</div>` : ''}
+      </div>
+      <div class="sd-satirlar" id="sd-satirlar">${s.satirlar ? hvSdSatirlarHtml(s) : '<div class="mv-loading">Âyetler yükleniyor…</div>'}</div>
+      <div class="sd-ipucu">◀ Sağa-sola kaydırarak sayfa değiştir ▶</div>
+    </div>
+    <div class="sd-arac">
+      <button class="sd-punto-btn" onclick="hvSdPuntoAyarla(-0.1)" aria-label="Yazıyı küçült">A−</button>
+      <span class="sd-punto-deger" id="sd-punto-deger">${Math.round(hvSdPunto() * 100)}%</span>
+      <button class="sd-punto-btn" onclick="hvSdPuntoAyarla(0.1)" aria-label="Yazıyı büyüt">A+</button>
+      ${sesVar ? `<button class="sd-ses-btn" id="sd-ses" onclick="hvSdSesCal()">🔊 Dinle</button>` : ''}
+      <button id="sd-ogrendim" class="ez-ogrendim" onclick="hvSdOgrendimDegistir()">○ Öğrendim</button>
+    </div>
+    <div class="sd-gecis">
+      <button class="sd-gecis-btn" onclick="hvSdGeri()" ${hvSdIdx === 0 ? 'disabled' : ''}>◀ Önceki</button>
+      <button class="sd-gecis-btn" onclick="hvSdIleri()" ${hvSdIdx === toplam - 1 ? 'disabled' : ''}>Sonraki ▶</button>
+    </div>
+  `;
+  hvSdPuntoUygula();
+  hvSdOgrendimDugme();
+  hvSdKaydirmaBagla();
+  hvSdBasaSar();
+
+  if (!s.satirlar && s.tur === 'kdua') hvSdKuranDuasiYukle(s);
+}
+
+function hvSdSatirlarHtml(s) {
+  return s.satirlar.map((r, i) => {
+    let etiket = '';
+    if (r.besmele) etiket = '';
+    else if (s.tur === 'sure' && r.no) etiket = `<span class="sd-no">${r.no}</span>`;
+    else if (s.tur === 'kdua' && r.no) etiket = `<span class="sd-no">${r.no}</span>`;
+    return `<div class="sd-satir${r.besmele ? ' sd-besmele' : ''}" data-i="${i}">
+      <div class="sd-ar" dir="rtl" lang="ar">${hvSdEsc(r.ar)}</div>
+      <div class="sd-ok-satir">${etiket}<span class="sd-ok">${hvSdEsc(r.ok)}</span></div>
+      ${r.not ? `<div class="sd-not">${hvSdEsc(r.not)}</div>` : ''}
+    </div>`;
+  }).join('');
+}
+
+/* Kur'an duaları: âyetler servisten, sonra cihazda saklanır */
+async function hvSdKuranDuasiYukle(s) {
+  const kap = document.getElementById('sd-satirlar');
+  const d = s.ref;
+  const anahtar = 'hv_sd_kd_' + d.s + '_' + d.b + '_' + d.e;
+  let satirlar = null;
+  try {
+    const c = JSON.parse(localStorage.getItem(anahtar) || 'null');
+    if (Array.isArray(c) && c.length) satirlar = c;
+  } catch (e) {}
+  if (!satirlar) {
+    try {
+      const out = await hvEzAyetleriGetir(d.s, d.b, d.e);
+      if (!out || !out.length) throw new Error('boş');
+      satirlar = out.map((x, i) => ({ ar: x.ar, ok: x.ok, no: d.b + i }));
+      try { localStorage.setItem(anahtar, JSON.stringify(satirlar)); } catch (e) {}
+    } catch (e) {
+      if (kap && hvSdSayfalar[hvSdIdx] === s) {
+        kap.innerHTML = `<div class="sd-hata">Âyetler alınamadı. İnternet bağlantını kontrol edip tekrar dene.<br>
+          <button class="gold-outline-btn" onclick="hvSdGit(${hvSdIdx})">↻ Tekrar Dene</button></div>`;
+      }
+      return;
+    }
+  }
+  s.satirlar = satirlar.map(r => ({ ar: r.ar, ok: r.ok, no: r.no, ses: hvAaUrl(d.s, r.no) }));
+  s.ses = s.satirlar.map(r => r.ses);
+  if (kap && hvSdSayfalar[hvSdIdx] === s) kap.innerHTML = hvSdSatirlarHtml(s);
+}
+
+/* ── Liste görünümü ── */
+function hvSdListeGoster() {
+  const kok = document.getElementById('sifirdan-root');
+  if (!kok || !hvSdSayfalar) return;
+  hvSdSesDurdur();
+  hvSdListeAcik = true;
+  const ogr = hvSdOgrenilenler();
+  let html = `
+    <div class="sd-ust">
+      <button class="hub-back-btn" onclick="navigateTo('kurandua')">← Kuran &amp; Dua</button>
+      <button class="sd-liste-btn on" onclick="hvSdGit(${hvSdIdx})">📄 Sayfaya Dön</button>
+      <div class="sd-sayac">${ogr.length} / ${hvSdSayfalar.length} ✓</div>
+    </div>`;
+  Object.keys(HV_SD_BOLUM).forEach(t => {
+    const grup = hvSdSayfalar.map((s, i) => ({ s, i })).filter(x => x.s.tur === t);
+    if (!grup.length) return;
+    html += `<div class="sd-liste-baslik">${HV_SD_BOLUM_IKON[t]} ${HV_SD_BOLUM[t]} <span>${grup.length}</span></div><div class="sd-liste">`;
+    grup.forEach(x => {
+      const on = ogr.indexOf(x.s.anahtar) >= 0;
+      html += `<button class="sd-liste-oge${on ? ' ogrenildi' : ''}${x.i === hvSdIdx ? ' simdiki' : ''}" onclick="hvSdGit(${x.i})">
+        <span class="sd-liste-no">${x.i + 1}</span>
+        <span class="sd-liste-metin"><b>${hvSdEsc(x.s.ad)}</b>${x.s.alt ? `<small>${hvSdEsc(x.s.alt)}</small>` : ''}</span>
+        <span class="sd-liste-tik">${on ? '✓' : ''}</span>
+      </button>`;
+    });
+    html += '</div>';
+  });
+  kok.innerHTML = html;
+  hvSdBasaSar();
+}
+window.hvSdListeGoster = hvSdListeGoster;
+
+/* ── Kaydırma (sağ/sol) ── */
+function hvSdKaydirmaBagla() {
+  const k = document.getElementById('sd-kart');
+  if (!k) return;
+  k.addEventListener('touchstart', e => {
+    const t = e.changedTouches && e.changedTouches[0];
+    if (!t) return;
+    hvSdDokunX = t.clientX; hvSdDokunY = t.clientY;
+  }, { passive: true });
+  k.addEventListener('touchend', e => {
+    const t = e.changedTouches && e.changedTouches[0];
+    if (!t || hvSdDokunX === null) return;
+    const dx = t.clientX - hvSdDokunX, dy = t.clientY - hvSdDokunY;
+    hvSdDokunX = hvSdDokunY = null;
+    if (Math.abs(dx) < 60 || Math.abs(dy) > Math.abs(dx) * 0.8) return;
+    if (dx < 0) hvSdIleri(); else hvSdGeri();
+  }, { passive: true });
+}
+document.addEventListener('keydown', e => {
+  const sayfa = document.getElementById('page-sifirdan');
+  if (!sayfa || !sayfa.classList.contains('active') || hvSdListeAcik) return;
+  if (e.key === 'ArrowRight') hvSdIleri();
+  else if (e.key === 'ArrowLeft') hvSdGeri();
+});
+
+/* ── Ses: sayfadaki âyetleri sırayla çalar, okunan satırı vurgular ── */
+function hvSdSesNesnesi() {
+  if (!hvSdSes) {
+    hvSdSes = new Audio();
+    hvSdSes.addEventListener('ended', () => {
+      hvSdSesSira++;
+      if (hvSdCaliyor && hvSdSesSira < hvSdSesListe.length) hvSdSesParcaCal();
+      else hvSdSesDurdur();
+    });
+    hvSdSes.addEventListener('error', () => hvSdSesDurdur());
+  }
+  return hvSdSes;
+}
+function hvSdSesParcaCal() {
+  const s = hvSdSesNesnesi();
+  s.src = hvSdSesListe[hvSdSesSira];
+  s.play().catch(() => hvSdSesDurdur());
+  hvSdSatirVurgula(hvSdSesListe[hvSdSesSira]);
+}
+function hvSdSatirVurgula(url) {
+  const sayfa = hvSdSayfalar && hvSdSayfalar[hvSdIdx];
+  document.querySelectorAll('.sd-satir.sd-caliyor').forEach(el => el.classList.remove('sd-caliyor'));
+  if (!sayfa || !sayfa.satirlar || !url) return;
+  const i = sayfa.satirlar.findIndex(r => r.ses === url);
+  if (i < 0) return;
+  const el = document.querySelector('.sd-satir[data-i="' + i + '"]');
+  if (el) {
+    el.classList.add('sd-caliyor');
+    try { el.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); } catch (e) {}
+  }
+}
+function hvSdSesCal() {
+  const s = hvSdSayfalar && hvSdSayfalar[hvSdIdx];
+  if (!s) return;
+  if (hvSdCaliyor) { hvSdSesDurdur(); return; }
+  const liste = (s.ses && s.ses.length) ? s.ses : [];
+  if (!liste.length) return;
+  if (typeof hvEzSesDurdur === 'function') hvEzSesDurdur();
+  hvSdSesListe = liste; hvSdSesSira = 0; hvSdCaliyor = true;
+  const b = document.getElementById('sd-ses');
+  if (b) { b.innerHTML = '⏸ Durdur'; b.classList.add('on'); }
+  hvSdSesParcaCal();
+}
+window.hvSdSesCal = hvSdSesCal;
+function hvSdSesDurdur() {
+  hvSdCaliyor = false;
+  try { if (hvSdSes) { hvSdSes.pause(); hvSdSes.currentTime = 0; } } catch (e) {}
+  const b = document.getElementById('sd-ses');
+  if (b) { b.innerHTML = '🔊 Dinle'; b.classList.remove('on'); }
+  document.querySelectorAll('.sd-satir.sd-caliyor').forEach(el => el.classList.remove('sd-caliyor'));
+}
+window.hvSdSesDurdur = hvSdSesDurdur;

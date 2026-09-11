@@ -98,7 +98,7 @@ function setupNavTabs() {
 // Maps every sub-page to its parent bottom-nav tab so the correct tab stays highlighted
 const PAGE_PARENT = {
   home: 'home',
-  kurandua: 'kurandua', quran: 'kurandua', 'dua-ogrenme': 'kurandua', esma: 'kurandua', ezkar: 'kurandua', 'gunluk-dua': 'kurandua', 'onemli-sureler': 'kurandua', 'ayet-arama': 'kurandua', 'kirk-hadis': 'kurandua', qibla: 'kurandua', guide: 'kurandua', mushaf: 'kurandua', ezber: 'kurandua', dinle: 'kurandua', elifba: 'kurandua',
+  kurandua: 'kurandua', quran: 'kurandua', 'dua-ogrenme': 'kurandua', 'sifirdan': 'kurandua', esma: 'kurandua', ezkar: 'kurandua', 'gunluk-dua': 'kurandua', 'onemli-sureler': 'kurandua', 'ayet-arama': 'kurandua', 'kirk-hadis': 'kurandua', qibla: 'kurandua', guide: 'kurandua', mushaf: 'kurandua', ezber: 'kurandua', dinle: 'kurandua', elifba: 'kurandua',
   ibadet: 'ibadet', zikirmatik: 'ibadet', 'namaz-takibi': 'ibadet', kaza: 'ibadet', hatim: 'ibadet', oruc: 'ibadet', taharet: 'ibadet', 'ozel-namaz': 'ibadet', iman: 'ibadet', peygamberler: 'ibadet', siyer: 'ibadet',
   araclar: 'araclar', zekat: 'araclar', fitre: 'araclar', quiz: 'araclar', ruya: 'araclar', bebek: 'araclar', takvim: 'araclar', paylasim: 'araclar', cuma: 'araclar', sozluk: 'araclar', imsakiye: 'araclar',
   settings: 'settings', kaynaklar: 'settings'
@@ -113,6 +113,7 @@ function navigateTo(pageId) {
   // Mushaf ve ezber seslerini de durdur (features.js)
   try { if (typeof hvMvDurdur === 'function') hvMvDurdur(); } catch (e) {}
   try { if (typeof hvEzSesDurdur === 'function') hvEzSesDurdur(); } catch (e) {}
+  try { if (typeof hvSdSesDurdur === 'function') hvSdSesDurdur(); } catch (e) {}
   // Kıble sayfasından çıkılıyorsa pusula sensörünü bırak
   try {
     if (APP_STATE.currentPage === 'qibla' && pageId !== 'qibla' && typeof hvPusulaDurdur === 'function') hvPusulaDurdur();
@@ -639,7 +640,7 @@ window.updateNotifyStatusUI = updateNotifyStatusUI;
 
 // Ayarlar → Geri Bildirim Gönder (doğrudan e-posta açar)
 function hvSendFeedback() {
-  const ver = 'v64.2';
+  const ver = 'v64.3';
   let ortam = 'Tarayıcı';
   try {
     if (window.hvIsAndroid) ortam = 'Android uygulaması';
