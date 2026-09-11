@@ -4333,7 +4333,7 @@ function hvSdListeKur() {
   (typeof SIFIRDAN_NAMAZ_DUALARI !== 'undefined' ? SIFIRDAN_NAMAZ_DUALARI : []).forEach(d => {
     L.push({
       tur: 'dua', ad: d.ad, alt: d.alt || '', anahtar: 'sd_dua_' + d.ad,
-      satirlar: d.satirlar.map(s => ({ ar: s.ar, ok: s.ok, not: s.not || '' })),
+      satirlar: d.satirlar.map(s => ({ ar: s.ar, ok: s.ok, not: s.not || '', seg: (typeof s.seg === 'number' ? s.seg : 0) })),
       ses: (d.ses || []).map(x => hvAaUrl(x.s, x.a))
     });
   });
@@ -4557,6 +4557,7 @@ document.addEventListener('keydown', e => {
 });
 
 /* ── Ses: sayfadaki âyetleri sırayla çalar, okunan satırı vurgular ── */
+let hvSdSegSatirlar = null;   // dua sayfası: bu ses parçasına ait satır indeksleri
 function hvSdSesNesnesi() {
   if (!hvSdSes) {
     hvSdSes = new Audio();
@@ -4566,14 +4567,43 @@ function hvSdSesNesnesi() {
       else hvSdSesDurdur();
     });
     hvSdSes.addEventListener('error', () => hvSdSesDurdur());
+    // Dua sayfalarında tek ses dosyası birden çok satırı kapsar:
+    // süreyi satırların Arapça uzunluğuna orantılı bölüp sırayla işaretleriz.
+    hvSdSes.addEventListener('timeupdate', () => {
+      if (!hvSdCaliyor || !hvSdSegSatirlar || !hvSdSegSatirlar.length) return;
+      const sure = hvSdSes.duration;
+      if (!sure || !isFinite(sure)) return;
+      const oran = Math.min(hvSdSes.currentTime / sure, 0.999);
+      const top = hvSdSegSatirlar.reduce((t, x) => t + x.w, 0) || 1;
+      let birikim = 0, secilen = hvSdSegSatirlar[0].i;
+      for (const x of hvSdSegSatirlar) {
+        birikim += x.w;
+        if (oran < birikim / top) { secilen = x.i; break; }
+        secilen = x.i;
+      }
+      const el = document.querySelector('.sd-satir[data-i="' + secilen + '"]');
+      if (el && !el.classList.contains('sd-caliyor')) {
+        document.querySelectorAll('.sd-satir.sd-caliyor').forEach(e => e.classList.remove('sd-caliyor'));
+        el.classList.add('sd-caliyor');
+        try { el.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); } catch (e) {}
+      }
+    });
   }
   return hvSdSes;
 }
 function hvSdSesParcaCal() {
-  const s = hvSdSesNesnesi();
-  s.src = hvSdSesListe[hvSdSesSira];
-  s.play().catch(() => hvSdSesDurdur());
-  hvSdSatirVurgula(hvSdSesListe[hvSdSesSira]);
+  const ses = hvSdSesNesnesi();
+  const sayfa = hvSdSayfalar && hvSdSayfalar[hvSdIdx];
+  hvSdSegSatirlar = null;
+  if (sayfa && sayfa.tur === 'dua' && sayfa.satirlar) {
+    hvSdSegSatirlar = sayfa.satirlar
+      .map((r, i) => ({ i: i, w: Math.max(String(r.ar || '').length, 1), seg: r.seg }))
+      .filter(x => x.seg === hvSdSesSira);
+    if (!hvSdSegSatirlar.length) hvSdSegSatirlar = null;
+  }
+  ses.src = hvSdSesListe[hvSdSesSira];
+  ses.play().catch(() => hvSdSesDurdur());
+  if (!hvSdSegSatirlar) hvSdSatirVurgula(hvSdSesListe[hvSdSesSira]);
 }
 function hvSdSatirVurgula(url) {
   const sayfa = hvSdSayfalar && hvSdSayfalar[hvSdIdx];
@@ -4602,6 +4632,7 @@ function hvSdSesCal() {
 window.hvSdSesCal = hvSdSesCal;
 function hvSdSesDurdur() {
   hvSdCaliyor = false;
+  hvSdSegSatirlar = null;
   try { if (hvSdSes) { hvSdSes.pause(); hvSdSes.currentTime = 0; } } catch (e) {}
   const b = document.getElementById('sd-ses');
   if (b) { b.innerHTML = '🔊 Dinle'; b.classList.remove('on'); }

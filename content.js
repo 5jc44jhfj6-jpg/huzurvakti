@@ -1129,8 +1129,8 @@ const SIFIRDAN_NAMAZ_DUALARI = [
   {
     ad: "Eûzü – Besmele", alt: "Namaza ve okumaya başlarken",
     satirlar: [
-      { ar: "أَعُوذُ بِاللَّهِ مِنَ الشَّيْطَانِ الرَّجِيمِ", ok: "Eûzü billâhi mineş-şeytânir-racîm" },
-      { ar: "بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ", ok: "Bismillâhir-rahmânir-rahîm" }
+      { ar: "أَعُوذُ بِاللَّهِ مِنَ الشَّيْطَانِ الرَّجِيمِ", ok: "Eûzü billâhi mineş-şeytânir-racîm", seg: -1 },
+      { ar: "بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ", ok: "Bismillâhir-rahmânir-rahîm", seg: 0 }
     ],
     ses: [{ s: 1, a: 1 }]
   },
@@ -1239,17 +1239,17 @@ const SIFIRDAN_NAMAZ_DUALARI = [
   {
     ad: "Âmenerrasûlü", alt: "Bakara 285-286 — yatsıdan sonra",
     satirlar: [
-      { ar: "اٰمَنَ الرَّسُولُ بِمَٓا اُنْزِلَ اِلَيْهِ مِنْ رَبِّهٖ وَالْمُؤْمِنُونَؕ", ok: "Âmener-rasûlü bimâ ünzile ileyhi min rabbihî vel-mü'minûn" },
-      { ar: "كُلٌّ اٰمَنَ بِاللّٰهِ وَمَلٰٓئِكَتِهٖ وَكُتُبِهٖ وَرُسُلِهٖؕ", ok: "Küllün âmene billâhi ve melâiketihî ve kütübihî ve rusülih" },
-      { ar: "لَا نُفَرِّقُ بَيْنَ اَحَدٍ مِنْ رُسُلِهٖࣞ", ok: "Lâ nüferriku beyne ehadin min rusülih" },
-      { ar: "وَقَالُوا سَمِعْنَا وَاَطَعْنَا غُفْرَانَكَ رَبَّنَا وَاِلَيْكَ الْمَصٖيرُ", ok: "Ve kâlû semi'nâ ve eta'nâ ğufrâneke rabbenâ ve ileykel-masîr" },
-      { ar: "لَا يُكَلِّفُ اللّٰهُ نَفْسًا اِلَّا وُسْعَهَاۜ", ok: "Lâ yükellifullâhü nefsen illâ vüs'ahâ" },
-      { ar: "لَهَا مَا كَسَبَتْ وَعَلَيْهَا مَا اكْتَسَبَتْۜ", ok: "Lehâ mâ kesebet ve aleyhâ mektesebet" },
-      { ar: "رَبَّنَا لَا تُؤَاخِذْنَٓا اِنْ نَسٖينَٓا اَوْ اَخْطَاْنَاۚ", ok: "Rabbenâ lâ tüâhiznâ in nesînâ ev ahta'nâ" },
-      { ar: "رَبَّنَا وَلَا تَحْمِلْ عَلَيْنَٓا اِصْرًا كَمَا حَمَلْتَهُ عَلَى الَّذٖينَ مِنْ قَبْلِنَاۚ", ok: "Rabbenâ ve lâ tahmil aleynâ ısran kemâ hameltehû alellezîne min kablinâ" },
-      { ar: "رَبَّنَا وَلَا تُحَمِّلْنَا مَا لَا طَاقَةَ لَنَا بِهٖۚ", ok: "Rabbenâ ve lâ tühammilnâ mâ lâ tâkate lenâ bih" },
-      { ar: "وَاعْفُ عَنَّا۠ وَاغْفِرْ لَنَا۠ وَارْحَمْنَا۠", ok: "Va'fü annâ vağfir lenâ verhamnâ" },
-      { ar: "اَنْتَ مَوْلٰينَا فَانْصُرْنَا عَلَى الْقَوْمِ الْكَافِرٖينَ", ok: "Ente mevlânâ fensurnâ alel-kavmil-kâfirîn" }
+      { ar: "اٰمَنَ الرَّسُولُ بِمَٓا اُنْزِلَ اِلَيْهِ مِنْ رَبِّهٖ وَالْمُؤْمِنُونَؕ", ok: "Âmener-rasûlü bimâ ünzile ileyhi min rabbihî vel-mü'minûn", seg: 0 },
+      { ar: "كُلٌّ اٰمَنَ بِاللّٰهِ وَمَلٰٓئِكَتِهٖ وَكُتُبِهٖ وَرُسُلِهٖؕ", ok: "Küllün âmene billâhi ve melâiketihî ve kütübihî ve rusülih", seg: 0 },
+      { ar: "لَا نُفَرِّقُ بَيْنَ اَحَدٍ مِنْ رُسُلِهٖࣞ", ok: "Lâ nüferriku beyne ehadin min rusülih", seg: 0 },
+      { ar: "وَقَالُوا سَمِعْنَا وَاَطَعْنَا غُفْرَانَكَ رَبَّنَا وَاِلَيْكَ الْمَصٖيرُ", ok: "Ve kâlû semi'nâ ve eta'nâ ğufrâneke rabbenâ ve ileykel-masîr", seg: 0 },
+      { ar: "لَا يُكَلِّفُ اللّٰهُ نَفْسًا اِلَّا وُسْعَهَاۜ", ok: "Lâ yükellifullâhü nefsen illâ vüs'ahâ", seg: 1 },
+      { ar: "لَهَا مَا كَسَبَتْ وَعَلَيْهَا مَا اكْتَسَبَتْۜ", ok: "Lehâ mâ kesebet ve aleyhâ mektesebet", seg: 1 },
+      { ar: "رَبَّنَا لَا تُؤَاخِذْنَٓا اِنْ نَسٖينَٓا اَوْ اَخْطَاْنَاۚ", ok: "Rabbenâ lâ tüâhiznâ in nesînâ ev ahta'nâ", seg: 1 },
+      { ar: "رَبَّنَا وَلَا تَحْمِلْ عَلَيْنَٓا اِصْرًا كَمَا حَمَلْتَهُ عَلَى الَّذٖينَ مِنْ قَبْلِنَاۚ", ok: "Rabbenâ ve lâ tahmil aleynâ ısran kemâ hameltehû alellezîne min kablinâ", seg: 1 },
+      { ar: "رَبَّنَا وَلَا تُحَمِّلْنَا مَا لَا طَاقَةَ لَنَا بِهٖۚ", ok: "Rabbenâ ve lâ tühammilnâ mâ lâ tâkate lenâ bih", seg: 1 },
+      { ar: "وَاعْفُ عَنَّا۠ وَاغْفِرْ لَنَا۠ وَارْحَمْنَا۠", ok: "Va'fü annâ vağfir lenâ verhamnâ", seg: 1 },
+      { ar: "اَنْتَ مَوْلٰينَا فَانْصُرْنَا عَلَى الْقَوْمِ الْكَافِرٖينَ", ok: "Ente mevlânâ fensurnâ alel-kavmil-kâfirîn", seg: 1 }
     ],
     ses: [{ s: 2, a: 285 }, { s: 2, a: 286 }]
   },
