@@ -456,18 +456,7 @@ const ONEMLI_SURELER = [
 ];
 
 /* ══════════ HİCRİ TAKVİM - KANDİL VE ÖNEMLİ GÜNLER (2026) ══════════ */
-const KANDIL_GUNLERI = [
-  { name: "Regâip Kandili", date: "2026-01-15", type: "kandil", desc: "Üç ayların ilk cuma gecesi. Rahmet ve mağfiret gecesidir." },
-  { name: "Miraç Kandili", date: "2026-01-25", type: "kandil", desc: "Peygamberimizin Miraç'a yükseldiği gece. Beş vakit namazın farz kılındığı gecedir." },
-  { name: "Berat Kandili", date: "2026-02-13", type: "kandil", desc: "Şaban ayının 15. gecesi. Kulların bir yıllık amellerinin arz edildiği af gecesidir." },
-  { name: "Ramazan Başlangıcı", date: "2026-02-28", type: "bayram", desc: "On bir ayın sultanı Ramazan-ı Şerif'in başlangıcı." },
-  { name: "Kadir Gecesi", date: "2026-03-25", type: "kandil", desc: "Bin aydan hayırlı gece. Kur'an'ın indirilmeye başladığı en faziletli gecedir." },
-  { name: "Ramazan Bayramı", date: "2026-03-30", type: "bayram", desc: "Ramazan orucunun tamamlanmasıyla kutlanan bayram (arefe: 29 Mart)." },
-  { name: "Kurban Bayramı", date: "2026-06-06", type: "bayram", desc: "Hac ibadetinin yapıldığı, kurban kesilen bayram (arefe: 5 Haziran)." },
-  { name: "Hicrî Yılbaşı (1448)", date: "2026-06-26", type: "onemli", desc: "Muharrem ayının başlangıcı, yeni hicri yılın ilk günü." },
-  { name: "Aşure Günü", date: "2026-07-05", type: "onemli", desc: "Muharrem ayının 10. günü. Birçok peygamberin kurtuluşuna vesile olan mübarek gün." },
-  { name: "Mevlid Kandili", date: "2026-08-25", type: "kandil", desc: "Peygamber Efendimizin (s.a.v.) dünyaya teşrif ettiği gece." }
-];
+/* KANDIL_GUNLERI kaldırıldı (v64.8): dini günler artık hicri takvimden otomatik hesaplanıyor → features.js hvDiniGunler() */
 
 /* ══════════ CUMA MESAJLARI ══════════ */
 const CUMA_MESAJLARI = [
@@ -552,63 +541,7 @@ const QUIZ_QUESTIONS = [
 ];
 
 /* ══════════ RÜYA TABİRLERİ (55 Tabir) ══════════ */
-const RUYA_TABIRLERI = [
-  { kw: "Su (Berrak)", meaning: "Berrak ve temiz su görmek; helal rızık, huzur, bereket ve hayırlı gelişmelere işaret eder." },
-  { kw: "Su (Bulanık)", meaning: "Bulanık su; sıkıntı, üzüntü veya geçici bir zorluğa yorumlanır." },
-  { kw: "Deniz", meaning: "Sakin deniz huzuru, dalgalı deniz ise hayattaki dalgalanmaları ve büyük fırsatları temsil eder." },
-  { kw: "Yağmur", meaning: "Rahmet, bereket, bolluk ve gönül ferahlığına işaret eder." },
-  { kw: "Ateş", meaning: "Kontrollü ateş güç ve enerjidir; zarar veren ateş fitne veya öfkeye işaret eder." },
-  { kw: "Yılan", meaning: "Gizli düşman, mal veya rızık anlamına gelebilir; yılanı öldürmek düşmana galip gelmektir." },
-  { kw: "Altın", meaning: "Kadınlar için hayır sayılsa da genelde erkekler için bazı yorumlarda sıkıntı ve endişe olarak geçer." },
-  { kw: "Para", meaning: "Az para rızka, çok para bazen küçük sıkıntılara; para bulmak beklenmedik habere işaret eder." },
-  { kw: "Ekmek", meaning: "Bereket, sağlıklı ve bol rızık, uzun ömür ve helal kazanca işaret eder." },
-  { kw: "Bebek", meaning: "Yeni başlangıçlar, müjde, sevinç ve bereketli haberlere yorumlanır." },
-  { kw: "Ölmek", meaning: "Uzun ömür, tövbe ve yeni bir hayata başlangıç olarak yorumlanır; genelde hayırdır." },
-  { kw: "Ölü Görmek", meaning: "Vefat etmiş birini güler yüzlü görmek onun iyi halde olduğuna ve hayırlı habere işaret eder." },
-  { kw: "Ağlamak", meaning: "Rüyada sessizce ağlamak sevince ve ferahlığa yorumlanır." },
-  { kw: "Gülmek", meaning: "Aşırı gülmek bazı yorumlarda üzüntüye, tebessüm ise müjdeye işaret eder." },
-  { kw: "Uçmak", meaning: "Yükselme, mevki, seyahat ve arzulara kavuşmaya işaret eder." },
-  { kw: "Düşmek", meaning: "Yüksekten düşmek itibar kaybı veya bir işten vazgeçmeye yorumlanabilir." },
-  { kw: "Ağaç", meaning: "Yeşil ağaç sağlıklı ve bereketli bir hayatı, meyveli ağaç bolluğu temsil eder." },
-  { kw: "Meyve", meaning: "Mevsiminde meyve rızık ve kazanç; olgun meyve emeğin karşılığıdır." },
-  { kw: "Çiçek", meaning: "Sevinç, güzellik, mutluluk ve hayırlı gelişmelere işaret eder." },
-  { kw: "Kuş", meaning: "Güzel haber, müjde ve rızık; uçan kuş sürüsü bolluğa işaret eder." },
-  { kw: "Balık", meaning: "Taze balık rızık ve ganimet, bol balık bereketli kazanca yorumlanır." },
-  { kw: "At", meaning: "İzzet, şeref, yüksek mevki ve hayırlı işlere işaret eder." },
-  { kw: "Ev", meaning: "Yeni ev huzur, güven ve aile saadetine; ev yıkılması sıkıntıya yorumlanır." },
-  { kw: "Kâbe", meaning: "Hidayet, huzur, hac nasibi ve manevi yükselişe işaret eden çok hayırlı bir rüyadır." },
-  { kw: "Namaz Kılmak", meaning: "İşlerin yoluna girmesi, dua kabulü ve manevi huzura işaret eder." },
-  { kw: "Kur'an Okumak", meaning: "Hidayet, ilim, bereket ve gönül huzuruna yorumlanır; çok hayırlıdır." },
-  { kw: "Ezan", meaning: "Hayra çağrı, müjde, hac veya hayırlı bir davete işaret eder." },
-  { kw: "Cami", meaning: "Huzur, birlik, hayırlı işler ve manevi olgunluğa yorumlanır." },
-  { kw: "Peygamber Görmek", meaning: "Çok büyük hayır, hidayet, bereket ve müjdedir." },
-  { kw: "Nur / Işık", meaning: "Hidayet, ilim, iman ve gönül aydınlığına işaret eder." },
-  { kw: "Güneş", meaning: "Devlet, itibar, güç ve baba figürünü temsil eder." },
-  { kw: "Ay", meaning: "Güzellik, müjde, anne figürü ve yükselişe işaret eder." },
-  { kw: "Yıldız", meaning: "Umut, hedefler ve önemli kişilerle tanışmaya yorumlanır." },
-  { kw: "Süt", meaning: "Saf rızık, ilim, fıtrat ve bereketli kazanca işaret eder." },
-  { kw: "Bal", meaning: "Şifa, ilim, helal ve tatlı kazanca yorumlanır." },
-  { kw: "Diş (Düşmesi)", meaning: "Akraba ile ilgili haber veya bir sıkıntının geçmesine yorumlanabilir." },
-  { kw: "Saç", meaning: "Uzun saç mal ve uzun ömür; saç kesmek sıkıntıdan kurtulmaya işaret eder." },
-  { kw: "Kan", meaning: "Haram mal veya sıkıntı; bazı yorumlarda sıkıntıdan kurtuluşa işaret eder." },
-  { kw: "Düğün", meaning: "Sevinçli bir olay veya bazen dikkat gerektiren bir habere yorumlanır." },
-  { kw: "Gelin", meaning: "Yeni başlangıç, sevinç, dünya nimetleri ve fırsatlara işaret eder." },
-  { kw: "Yol", meaning: "Düz yol doğruluğu, geniş yol kolaylığı, dar yol zorluğu temsil eder." },
-  { kw: "Köprü", meaning: "Bir durumdan diğerine geçiş, engelleri aşmak ve hayırlı değişime işaret eder." },
-  { kw: "Dağ", meaning: "Yüksek makam, güçlü kişi veya aşılması gereken bir hedefe yorumlanır." },
-  { kw: "Yağ", meaning: "Bereket, rızık ve mal artışına işaret eder." },
-  { kw: "Beyaz Elbise", meaning: "Temizlik, iyi hal, itibar ve hayırlı hallere işaret eder." },
-  { kw: "Yüzük", meaning: "Erkek için güç ve mevki, kadın için evlilik ve mutluluğa yorumlanır." },
-  { kw: "Anahtar", meaning: "Yeni fırsatlar, çözülen sorunlar ve hayırlı kapıların açılmasına işaret eder." },
-  { kw: "Kitap", meaning: "İlim, hikmet, hidayet ve hayırlı haberlere yorumlanır." },
-  { kw: "Bahçe", meaning: "Cennet misali güzellik, huzur, bereket ve mutlu bir hayata işaret eder." },
-  { kw: "Deve", meaning: "Sabır, güçlü bir yolculuk, büyük kazanç veya miras anlamına gelir." },
-  { kw: "Koyun", meaning: "Bereket, mal, helal rızık ve kurban ibadetine işaret eder." },
-  { kw: "Arı", meaning: "Çalışkanlık, bereketli kazanç ve hayırlı bir topluluğa yorumlanır." },
-  { kw: "Deprem", meaning: "Ani değişiklikler, korku veya toplumsal bir olaya işaret edebilir." },
-  { kw: "Bulut", meaning: "Beyaz bulut rahmet ve müjde, kara bulut geçici sıkıntı olarak yorumlanır." },
-  { kw: "Merdiven", meaning: "Yükselme, terfi, manevi ilerleme ve hedeflere ulaşmaya işaret eder." }
-];
+/* RUYA_TABIRLERI kaldırıldı (v65.1) */
 
 /* ══════════ BEBEK İSİMLERİ (110 İsim) ══════════ */
 const BEBEK_ISIMLERI = [
@@ -1365,4 +1298,668 @@ const SIFIRDAN_KURAN_DUALARI = [
   { ad: "Rabbenâ aleyke tevekkelnâ", alt: "Mümtehine 4-5", s: 60, b: 4, e: 5 },
   { ad: "Rabbenâ etmim lenâ nûranâ", alt: "Tahrîm 8", s: 66, b: 8, e: 8 },
   { ad: "Rabbiğfir lî ve li vâlideyye", alt: "Nûh 28 · Nûh (a.s.)", s: 71, b: 28, e: 28 }
+];
+
+/* ══════════ v65.0 — ÖZEL NAMAZLAR EKLERİ (Hanefî fıkhı / Diyanet İlmihali) ══════════ */
+OZEL_NAMAZLAR.push(
+  {
+    title: "Vitir Namazı",
+    ozet: "3 rekât, vacip. Yatsıdan sonra, tercihen gecenin son kısmında kılınır.",
+    detay: "Yatsı namazının farzından ve son sünnetinden sonra 3 rekât olarak kılınır; tek selamla tamamlanır. Her rekâtta Fâtiha ve bir sûre okunur. Üçüncü rekâtta sûreden sonra eller kulak hizasına kaldırılıp tekbir alınır, eller bağlanır ve Kunut duaları okunur; ardından rükû ve secdeye gidilir. Gece kalkma alışkanlığı olan, vitri teheccüdden sonraya bırakabilir. Unutulursa kazası gerekir."
+  },
+  {
+    title: "Teheccüd Namazı",
+    ozet: "Gece namazı. Yatsıdan sonra bir miktar uyuyup kalkarak 2–8 rekât kılınır.",
+    detay: "Kur'an'da (İsrâ 79, Müzzemmil) övülen, Peygamberimizin hiç terk etmediği nafile namazdır. Yatsıdan sonra uyuyup gecenin son üçte birinde kalkarak ikişer rekât hâlinde kılınır; 2, 4, 6 veya 8 rekât olabilir. Uzun kıraat ve huşû ile kılınması, sonunda dua ve istiğfar edilmesi tavsiye edilir. Bu vakit duaların kabulüne en yakın vakittir. Vitir henüz kılınmadıysa teheccüdden sonra kılınır."
+  },
+  {
+    title: "Kuşluk (Duhâ) Namazı",
+    ozet: "2–12 rekât nafile. Güneş doğduktan ~45 dk sonra ile öğle arasında kılınır.",
+    detay: "İşrak vaktinden (güneşin doğuşundan yaklaşık 45 dakika sonra) öğle namazına yaklaşık 10 dakika kalana kadar kılınabilir. En azı 2, orta hâli 4, en fazlası 12 rekâttır; ikişer rekât hâlinde kılınır. Hadiste 'Kim sabah namazını cemaatle kılıp güneş doğana kadar zikirle oturur, sonra iki rekât kılarsa hac ve umre sevabı alır' buyrulmuştur. Kerahet vaktinde (güneş doğarken) kılınmaz; uygulamanın ana sayfasındaki 'Kuşluk' saatleri bu aralığı gösterir."
+  },
+  {
+    title: "Evvâbîn Namazı",
+    ozet: "Akşam namazından sonra 6 rekât nafile (2+2+2).",
+    detay: "Akşam namazının farz ve sünnetinden sonra, yatsıya kadar olan sürede ikişer rekât hâlinde 6 rekât kılınır. 'Evvâbîn' Allah'a çokça yönelenler demektir. Hadiste, akşamla yatsı arasında altı rekât kılana on iki yıllık ibadet sevabı müjdelenmiştir. Akşamın iki rekât sünneti de bu altı rekâta dâhil sayılabilir."
+  },
+  {
+    title: "Tesbih Namazı",
+    ozet: "4 rekât. Her rekâtta 75, toplam 300 tesbih okunur. Ömürde bir kez olsun tavsiye edilir.",
+    detay: "Tesbih: 'Sübhânallâhi vel-hamdü lillâhi ve lâ ilâhe illallâhü vallâhü ekber'. Her rekâtta: Sübhâneke'den sonra 15, Fâtiha ve sûreden sonra 10, rükûda 10, rükûdan doğrulunca 10, birinci secdede 10, iki secde arasında 10, ikinci secdede 10 kez okunur (toplam 75). Dört rekâtta 300 olur. Tek veya iki selamla kılınabilir. Hadiste 'Her gün kılabilirsen kıl; gücün yetmezse haftada, ayda, yılda bir; o da olmazsa ömründe bir kere kıl' buyrulmuştur. Kandil gecelerinde ve Ramazan'da çokça kılınır."
+  },
+  {
+    title: "İstihâre Namazı",
+    ozet: "2 rekât. Bir konuda hayırlı olanı Allah'tan istemek için kılınır, ardından istihâre duası okunur.",
+    detay: "Evlilik, iş, yolculuk gibi meşru bir işte tereddüt edildiğinde 2 rekât nafile kılınır. Birinci rekâtta Kâfirûn, ikinci rekâtta İhlâs sûresi okunması tavsiye edilir. Selamdan sonra Peygamberimizin öğrettiği istihâre duası okunur: 'Allâhümme innî estehîruke bi-ilmike ve estakdiruke bi-kudretike...' Rüya görmek şart değildir; kalbin meylettiği yön hayırlı kabul edilir. Gerekirse yedi güne kadar tekrarlanabilir. Kerahet vakitlerinde kılınmaz."
+  },
+  {
+    title: "Hâcet Namazı",
+    ozet: "2 veya 4 rekât. Dünyevî ya da uhrevî bir ihtiyaç için kılınıp dua edilir.",
+    detay: "Yatsıdan sonra 2 (bazı rivayetlerde 4 veya 12) rekât kılınır. Birinci rekâtta Fâtiha'dan sonra 3 Âyetel Kürsî, diğer rekâtlarda İhlâs, Felâk ve Nâs okunması tavsiye edilir. Namazdan sonra Allah'a hamd, Peygamberimize salavat getirilir ve hâcet duası okunur: 'Lâ ilâhe illallâhül-halîmül-kerîm. Sübhânallâhi rabbil-arşil-azîm. El-hamdü lillâhi rabbil-âlemîn...' Ardından ihtiyaç içtenlikle Allah'a arz edilir."
+  },
+  {
+    title: "Tahiyyetü'l-Mescid",
+    ozet: "Camiye girince oturmadan önce kılınan 2 rekât nafile.",
+    detay: "Mescide giren kişinin oturmadan önce 2 rekât kılması sünnettir; 'mescidi selamlama' anlamına gelir. Kerahet vaktinde girilmişse kılınmaz. Camiye girip hemen farz veya sünnet bir namaza durulursa o namaz tahiyyetü'l-mescid yerine de geçer. Cuma günü hutbe başlamışsa kılınmaz, hutbe dinlenir."
+  },
+  {
+    title: "Tövbe Namazı",
+    ozet: "2 rekât. Bir günahtan sonra abdest alıp kılınır, ardından samimiyetle istiğfar edilir.",
+    detay: "Hadiste 'Bir kul günah işler de güzelce abdest alıp iki rekât namaz kılar ve Allah'tan bağışlanma dilerse Allah onu bağışlar' buyrulmuştur. Güzelce abdest alınır, 2 rekât nafile kılınır; sonra günah için pişmanlık duyularak 'Estağfirullâh el-azîm ellezî lâ ilâhe illâ hüvel-hayyel-kayyûme ve etûbü ileyh' ile tövbe ve istiğfar edilir. Kul hakkı varsa helallik almak gerekir."
+  },
+  {
+    title: "Şükür Namazı ve Şükür Secdesi",
+    ozet: "Bir nimete kavuşunca 2 rekât namaz veya bir şükür secdesi yapılır.",
+    detay: "Bir nimete kavuşan ya da bir beladan kurtulan kişi, Allah'a şükür için 2 rekât nafile kılar veya kıbleye dönüp tekbir alarak bir secde yapar; secdede 'Sübhâne rabbiyel-a'lâ' der, hamd ve şükreder, sonra tekbirle kalkar. Peygamberimiz sevindirici haber aldığında şükür secdesi yapmıştır."
+  },
+  {
+    title: "Yolcu (Sefer) Namazı",
+    ozet: "Yolcu, 4 rekâtlı farzları 2 rekât kılar; öğle-ikindi ve akşam-yatsı birleştirilebilir (Şafiî).",
+    detay: "En az 90 km (Hanefî'de yaklaşık 90 km) mesafeye giden ve 15 günden az kalacak kişi 'seferî'dir. Öğle, ikindi ve yatsı farzları 2 rekât kılınır (sabah ve akşam değişmez). Sünnetler kılınabilir; sıkıntı hâlinde terk edilebilir. Hanefî'de vakitler birleştirilmez; Şafiî'de öğle-ikindi ve akşam-yatsı cem edilebilir. Seferî, mukim imama uyarsa 4 rekât kılar; mukim, seferî imama uyarsa imam selam verince kalkıp kalan iki rekâtı tamamlar."
+  },
+  {
+    title: "Hasta Namazı",
+    ozet: "Ayakta duramayan oturarak, oturamayan yatarak, îmâ ile kılar. Namaz hiçbir hâlde düşmez.",
+    detay: "Ayakta durmaya gücü yetmeyen oturarak kılar; rükû ve secdeyi yapabiliyorsa yapar. Secdeye eğilemeyen, rükû için biraz, secde için daha fazla eğilerek îmâ eder; secde için önüne yastık vb. koymak gerekmez. Oturamayan sırt üstü yatar, ayaklarını kıbleye uzatır, başını hafifçe kaldırıp îmâ ile kılar. Abdest alamayan teyemmüm eder; su ve toprak kullanamayan mazeretli sayılır. Bilinç açıkken namaz terk edilmez; geçen namazlar iyileşince kaza edilir."
+  }
+);
+
+/* ══════════ v65.0 — GÜNLÜK DUALAR: düzeltme + ekler ══════════ */
+// Düzeltme: "Uyumadan Önce" duasında Arapça ile okunuş uyuşmuyordu
+(function () {
+  const u = GUNLUK_DUALAR.find(d => d.title === "Uyumadan Önce");
+  if (u) {
+    u.arabic = "اللَّهُمَّ أَسْلَمْتُ نَفْسِي إِلَيْكَ وَوَجَّهْتُ وَجْهِي إِلَيْكَ وَفَوَّضْتُ أَمْرِي إِلَيْكَ وَأَلْجَأْتُ ظَهْرِي إِلَيْكَ رَغْبَةً وَرَهْبَةً إِلَيْكَ لَا مَلْجَأَ وَلَا مَنْجَا مِنْكَ إِلَّا إِلَيْكَ آمَنْتُ بِكِتَابِكَ الَّذِي أَنْزَلْتَ وَبِنَبِيِّكَ الَّذِي أَرْسَلْتَ";
+  }
+})();
+GUNLUK_DUALAR.push(
+  { title: "Yatağa Yatarken (Kısa)", arabic: "بِاسْمِكَ اللَّهُمَّ أَمُوتُ وَأَحْيَا", okunusu: "Bismikellâhümme emûtü ve ahyâ", turkish: "Allah'ım! Senin adınla ölür (uyur) ve senin adınla dirilirim (uyanırım).", tag: "uyku" },
+  { title: "Korkulu Rüya Görünce", arabic: "أَعُوذُ بِكَلِمَاتِ اللَّهِ التَّامَّاتِ مِنْ غَضَبِهِ وَعِقَابِهِ وَشَرِّ عِبَادِهِ وَمِنْ هَمَزَاتِ الشَّيَاطِينِ وَأَنْ يَحْضُرُونِ", okunusu: "Eûzü bi-kelimâtillâhit-tâmmâti min ğadabihî ve ıkâbihî ve şerri ibâdihî ve min hemezâtiş-şeyâtîni ve en yahdurûn", turkish: "Allah'ın gazabından, azabından, kullarının şerrinden, şeytanların vesveselerinden ve yanımda bulunmalarından Allah'ın eksiksiz kelimelerine sığınırım.", tag: "uyku" },
+  { title: "Elbise Giyerken", arabic: "الْحَمْدُ لِلَّهِ الَّذِي كَسَانِي هَذَا وَرَزَقَنِيهِ مِنْ غَيْرِ حَوْلٍ مِنِّي وَلَا قُوَّةٍ", okunusu: "Elhamdü lillâhillezî kesânî hâzâ ve razekanîhi min ğayri havlin minnî ve lâ kuvveh", turkish: "Benden bir güç ve kuvvet olmaksızın bana bunu giydiren ve rızık olarak veren Allah'a hamdolsun.", tag: "giyim" },
+  { title: "Vasıtaya Binince", arabic: "سُبْحَانَ الَّذِي سَخَّرَ لَنَا هَذَا وَمَا كُنَّا لَهُ مُقْرِنِينَ وَإِنَّا إِلَى رَبِّنَا لَمُنْقَلِبُونَ", okunusu: "Sübhânellezî sahhara lenâ hâzâ ve mâ künnâ lehû mukrinîn. Ve innâ ilâ rabbinâ le-munkalibûn", turkish: "Bunu bizim hizmetimize veren Allah'ı tesbih ederim; yoksa biz buna güç yetiremezdik. Şüphesiz biz Rabbimize döneceğiz. (Zuhruf 13-14)", tag: "yolculuk" },
+  { title: "Yolcuyu Uğurlarken", arabic: "أَسْتَوْدِعُ اللَّهَ دِينَكَ وَأَمَانَتَكَ وَخَوَاتِيمَ عَمَلِكَ", okunusu: "Estevdiullâhe dîneke ve emâneteke ve havâtîme amelik", turkish: "Dinini, emanetini ve amellerinin sonunu Allah'a emanet ediyorum.", tag: "yolculuk" },
+  { title: "Seferden Dönünce", arabic: "آيِبُونَ تَائِبُونَ عَابِدُونَ لِرَبِّنَا حَامِدُونَ", okunusu: "Âyibûne tâibûne âbidûne li-rabbinâ hâmidûn", turkish: "Dönenler, tövbe edenler, ibadet edenler ve Rabbimize hamd edenleriz.", tag: "yolculuk" },
+  { title: "Ezan Duyunca (Ezandan Sonra)", arabic: "اللَّهُمَّ رَبَّ هَذِهِ الدَّعْوَةِ التَّامَّةِ وَالصَّلَاةِ الْقَائِمَةِ آتِ مُحَمَّدًا الْوَسِيلَةَ وَالْفَضِيلَةَ وَابْعَثْهُ مَقَامًا مَحْمُودًا الَّذِي وَعَدْتَهُ", okunusu: "Allâhümme rabbe hâzihid-da'vetit-tâmmeti ves-salâtil-kâimeti âti Muhammedenil-vesîlete vel-fadîlete veb'ashü makâmen mahmûdenillezî vaadteh", turkish: "Ey bu eksiksiz davetin ve kılınacak namazın Rabbi olan Allah'ım! Muhammed'e vesîleyi ve fazileti ver; onu vaad ettiğin Makâm-ı Mahmûd'a ulaştır.", tag: "ezan" },
+  { title: "Üzüntü ve Keder Anında", arabic: "اللَّهُمَّ إِنِّي أَعُوذُ بِكَ مِنَ الْهَمِّ وَالْحَزَنِ وَالْعَجْزِ وَالْكَسَلِ وَالْبُخْلِ وَالْجُبْنِ وَضَلَعِ الدَّيْنِ وَغَلَبَةِ الرِّجَالِ", okunusu: "Allâhümme innî eûzü bike minel-hemmi vel-hazeni vel-aczi vel-keseli vel-buhli vel-cübni ve dala'id-deyni ve ğalebetir-ricâl", turkish: "Allah'ım! Kaygıdan, üzüntüden, acizlikten, tembellikten, cimrilikten, korkaklıktan, borç yükünden ve insanların baskısından sana sığınırım.", tag: "sıkıntı" },
+  { title: "Öfkelenince", arabic: "أَعُوذُ بِاللَّهِ مِنَ الشَّيْطَانِ الرَّجِيمِ", okunusu: "Eûzü billâhi mineş-şeytânir-racîm", turkish: "Kovulmuş şeytandan Allah'a sığınırım. (Öfke anında abdest almak ve oturmak da tavsiye edilir.)", tag: "sıkıntı" },
+  { title: "Musibet Anında", arabic: "إِنَّا لِلَّهِ وَإِنَّا إِلَيْهِ رَاجِعُونَ اللَّهُمَّ أْجُرْنِي فِي مُصِيبَتِي وَأَخْلِفْ لِي خَيْرًا مِنْهَا", okunusu: "İnnâ lillâhi ve innâ ileyhi râciûn. Allâhümme'cürnî fî musîbetî ve ahlif lî hayran minhâ", turkish: "Biz Allah'a aidiz ve O'na döneceğiz. Allah'ım! Musibetimde bana ecir ver ve onun yerine bana daha hayırlısını ihsan et.", tag: "sıkıntı" },
+  { title: "Zor Bir İş Öncesi", arabic: "اللَّهُمَّ لَا سَهْلَ إِلَّا مَا جَعَلْتَهُ سَهْلًا وَأَنْتَ تَجْعَلُ الْحَزْنَ إِذَا شِئْتَ سَهْلًا", okunusu: "Allâhümme lâ sehle illâ mâ cealtehû sehlen ve ente tec'alül-hazne izâ şi'te sehlâ", turkish: "Allah'ım! Senin kolay kıldığından başka kolay yoktur. Sen dilersen zoru da kolay kılarsın.", tag: "iş" },
+  { title: "Borçtan Kurtulmak İçin", arabic: "اللَّهُمَّ اكْفِنِي بِحَلَالِكَ عَنْ حَرَامِكَ وَأَغْنِنِي بِفَضْلِكَ عَمَّنْ سِوَاكَ", okunusu: "Allâhümmekfinî bi-halâlike an harâmike ve ağninî bi-fadlike ammen sivâk", turkish: "Allah'ım! Helâlinle beni haramından müstağni kıl; lütfunla beni senden başkasına muhtaç etme.", tag: "rızık" },
+  { title: "Hasta Ziyaretinde", arabic: "لَا بَأْسَ طَهُورٌ إِنْ شَاءَ اللَّهُ", okunusu: "Lâ be'se tahûrun inşâallâh", turkish: "Geçmiş olsun; inşallah bu hastalık günahlara kefaret olur, temizler.", tag: "hastalık" },
+  { title: "Hastaya Şifa Duası", arabic: "اللَّهُمَّ رَبَّ النَّاسِ أَذْهِبِ الْبَأْسَ اشْفِ أَنْتَ الشَّافِي لَا شِفَاءَ إِلَّا شِفَاؤُكَ شِفَاءً لَا يُغَادِرُ سَقَمًا", okunusu: "Allâhümme rabben-nâsi ezhibil-be'se, işfi enteş-şâfî, lâ şifâe illâ şifâüke şifâen lâ yuğâdiru sekamâ", turkish: "Ey insanların Rabbi olan Allah'ım! Sıkıntıyı gider, şifa ver; şifa veren sensin. Senin şifandan başka şifa yoktur. Hiçbir hastalık bırakmayan bir şifa ver.", tag: "hastalık" },
+  { title: "Hapşırınca ve Cevabı", arabic: "الْحَمْدُ لِلَّهِ — يَرْحَمُكَ اللَّهُ — يَهْدِيكُمُ اللَّهُ وَيُصْلِحُ بَالَكُمْ", okunusu: "Elhamdülillâh — Yerhamükellâh — Yehdîkümullâhü ve yuslihu bâleküm", turkish: "Hapşıran: 'Allah'a hamdolsun' der. Duyan: 'Allah sana merhamet etsin' der. Hapşıran cevap verir: 'Allah size hidayet versin ve hâlinizi düzeltsin.'", tag: "günlük" },
+  { title: "Bir Şeyi Beğenince", arabic: "مَا شَاءَ اللَّهُ لَا قُوَّةَ إِلَّا بِاللَّهِ", okunusu: "Mâşâallâh, lâ kuvvete illâ billâh", turkish: "Allah dilemiş (de olmuş); güç ve kuvvet ancak Allah'tandır. (Nazardan korunmak için söylenir.)", tag: "nazar" },
+  { title: "Yeni Doğan Bebek İçin", arabic: "أُعِيذُكَ بِكَلِمَاتِ اللَّهِ التَّامَّةِ مِنْ كُلِّ شَيْطَانٍ وَهَامَّةٍ وَمِنْ كُلِّ عَيْنٍ لَامَّةٍ", okunusu: "Üîzüke bi-kelimâtillâhit-tâmmeti min külli şeytânin ve hâmmetin ve min külli aynin lâmmeh", turkish: "Seni her şeytandan, zararlı haşereden ve kem gözden Allah'ın eksiksiz kelimelerine sığındırırım. (Peygamberimiz torunlarına okurdu.)", tag: "aile" },
+  { title: "Evlenenlere", arabic: "بَارَكَ اللَّهُ لَكَ وَبَارَكَ عَلَيْكَ وَجَمَعَ بَيْنَكُمَا فِي خَيْرٍ", okunusu: "Bârekellâhü leke ve bâreke aleyke ve cemea beynekümâ fî hayr", turkish: "Allah sana mübarek kılsın, üzerine bereket indirsin ve sizi hayırda bir araya getirsin.", tag: "aile" },
+  { title: "Anne Baba İçin", arabic: "رَبِّ ارْحَمْهُمَا كَمَا رَبَّيَانِي صَغِيرًا", okunusu: "Rabbirhamhümâ kemâ rabbeyânî sağîrâ", turkish: "Rabbim! Onlar beni küçükken nasıl yetiştirdilerse sen de onlara öyle merhamet et. (İsrâ 24)", tag: "aile" },
+  { title: "Yağmur Yağarken", arabic: "اللَّهُمَّ صَيِّبًا نَافِعًا", okunusu: "Allâhümme sayyiben nâfiâ", turkish: "Allah'ım! Bunu faydalı bir yağmur kıl.", tag: "tabiat" },
+  { title: "Gök Gürleyince", arabic: "سُبْحَانَ الَّذِي يُسَبِّحُ الرَّعْدُ بِحَمْدِهِ وَالْمَلَائِكَةُ مِنْ خِيفَتِهِ", okunusu: "Sübhânellezî yüsebbihur-ra'dü bi-hamdihî vel-melâiketü min hîfetih", turkish: "Gök gürültüsünün hamd ile, meleklerin de korkusundan tesbih ettiği Allah'ı tesbih ederim.", tag: "tabiat" },
+  { title: "Rüzgâr Estiğinde", arabic: "اللَّهُمَّ إِنِّي أَسْأَلُكَ خَيْرَهَا وَأَعُوذُ بِكَ مِنْ شَرِّهَا", okunusu: "Allâhümme innî es'elüke hayrahâ ve eûzü bike min şerrihâ", turkish: "Allah'ım! Senden bunun hayrını isterim, şerrinden sana sığınırım.", tag: "tabiat" },
+  { title: "Hilâli (Yeni Ayı) Görünce", arabic: "اللَّهُمَّ أَهِلَّهُ عَلَيْنَا بِالْأَمْنِ وَالْإِيمَانِ وَالسَّلَامَةِ وَالْإِسْلَامِ رَبِّي وَرَبُّكَ اللَّهُ", okunusu: "Allâhümme ehillehû aleynâ bil-emni vel-îmâni ves-selâmeti vel-islâm. Rabbî ve rabbükellâh", turkish: "Allah'ım! Bu ayı üzerimize güven, iman, esenlik ve İslâm ile doğdur. (Ey hilâl!) Benim de Rabbim, senin de Rabbin Allah'tır.", tag: "tabiat" },
+  { title: "Pazara / Çarşıya Girerken", arabic: "لَا إِلَهَ إِلَّا اللَّهُ وَحْدَهُ لَا شَرِيكَ لَهُ لَهُ الْمُلْكُ وَلَهُ الْحَمْدُ يُحْيِي وَيُمِيتُ وَهُوَ حَيٌّ لَا يَمُوتُ بِيَدِهِ الْخَيْرُ وَهُوَ عَلَى كُلِّ شَيْءٍ قَدِيرٌ", okunusu: "Lâ ilâhe illallâhü vahdehû lâ şerîke leh, lehül-mülkü ve lehül-hamdü yuhyî ve yümîtü ve hüve hayyün lâ yemût, bi-yedihil-hayru ve hüve alâ külli şey'in kadîr", turkish: "Allah'tan başka ilâh yoktur, O tektir, ortağı yoktur. Mülk O'nundur, hamd O'nadır. Diriltir ve öldürür; O ölmeyen diridir. Hayır O'nun elindedir ve O her şeye kadirdir.", tag: "günlük" },
+  { title: "Kabir Ziyaretinde", arabic: "السَّلَامُ عَلَيْكُمْ أَهْلَ الدِّيَارِ مِنَ الْمُؤْمِنِينَ وَالْمُسْلِمِينَ وَإِنَّا إِنْ شَاءَ اللَّهُ بِكُمْ لَاحِقُونَ نَسْأَلُ اللَّهَ لَنَا وَلَكُمُ الْعَافِيَةَ", okunusu: "Esselâmü aleyküm ehled-diyâri minel-mü'minîne vel-müslimîn, ve innâ inşâallâhü biküm lâhikûn, nes'elüllâhe lenâ ve lekümül-âfiyeh", turkish: "Ey bu diyarın mümin ve Müslüman sakinleri! Selam üzerinize olsun. İnşallah biz de size katılacağız. Bizim ve sizin için Allah'tan afiyet dileriz.", tag: "ziyaret" },
+  { title: "Taziyede (Baş Sağlığı)", arabic: "إِنَّ لِلَّهِ مَا أَخَذَ وَلَهُ مَا أَعْطَى وَكُلُّ شَيْءٍ عِنْدَهُ بِأَجَلٍ مُسَمًّى فَلْتَصْبِرْ وَلْتَحْتَسِبْ", okunusu: "İnne lillâhi mâ ehaze ve lehû mâ a'tâ ve küllü şey'in indehû bi-ecelin müsemmâ, fel-tasbir vel-tahtesib", turkish: "Aldığı da verdiği de Allah'ındır; her şeyin O'nun katında belli bir eceli vardır. Sabret ve sevabını Allah'tan bekle.", tag: "ziyaret" },
+  { title: "Vesvese Gelince", arabic: "آمَنْتُ بِاللَّهِ وَرُسُلِهِ — هُوَ الْأَوَّلُ وَالْآخِرُ وَالظَّاهِرُ وَالْبَاطِنُ وَهُوَ بِكُلِّ شَيْءٍ عَلِيمٌ", okunusu: "Âmentü billâhi ve rusülih — Hüvel-evvelü vel-âhiru vez-zâhiru vel-bâtınu ve hüve bi-külli şey'in alîm", turkish: "Allah'a ve peygamberlerine iman ettim. — O ilktir, sondur, zâhirdir, bâtındır ve O her şeyi bilendir. (Hadîd 3; vesvesede okunması tavsiye edilir.)", tag: "sıkıntı" },
+  { title: "Namazdan Sonra (Kısa Dua)", arabic: "اللَّهُمَّ أَعِنِّي عَلَى ذِكْرِكَ وَشُكْرِكَ وَحُسْنِ عِبَادَتِكَ", okunusu: "Allâhümme einnî alâ zikrike ve şükrike ve hüsni ibâdetik", turkish: "Allah'ım! Seni zikretmek, sana şükretmek ve sana güzelce ibadet etmek için bana yardım et.", tag: "namaz" },
+  { title: "Yemek Davetine Cevap", arabic: "اللَّهُمَّ بَارِكْ لَهُمْ فِيمَا رَزَقْتَهُمْ وَاغْفِرْ لَهُمْ وَارْحَمْهُمْ", okunusu: "Allâhümme bârik lehüm fîmâ razaktehüm vağfir lehüm verhamhüm", turkish: "Allah'ım! Onlara verdiğin rızkı bereketli kıl, onları bağışla ve onlara merhamet et. (Ev sahibine dua)", tag: "yemek" },
+  { title: "Su İçtikten Sonra", arabic: "الْحَمْدُ لِلَّهِ الَّذِي سَقَانَا عَذْبًا فُرَاتًا بِرَحْمَتِهِ وَلَمْ يَجْعَلْهُ مِلْحًا أُجَاجًا بِذُنُوبِنَا", okunusu: "Elhamdü lillâhillezî sekânâ azben fürâten bi-rahmetihî ve lem yec'alhü milhan ücâcen bi-zünûbinâ", turkish: "Rahmetiyle bize tatlı ve içimi hoş su içiren, günahlarımız sebebiyle onu tuzlu ve acı kılmayan Allah'a hamdolsun.", tag: "yemek" }
+);
+
+/* ══════════ v65.0 — SABAH & AKŞAM EZKÂRI (20 + 20, kaynak: Hısnü'l-Müslim / sahih hadisler) ══════════ */
+(function () {
+  const AYETEL = EZKAR_SABAH.find(z => z.title === "Âyetel Kürsî");
+  const IHLAS = EZKAR_SABAH.find(z => z.title === "İhlâs Sûresi");
+  const FELAK = EZKAR_SABAH.find(z => z.title === "Felâk Sûresi");
+  const NAS = EZKAR_SABAH.find(z => z.title === "Nâs Sûresi");
+  const SEYYID = EZKAR_SABAH.find(z => z.title === "Seyyidü'l-İstiğfar");
+  const SALAVAT = EZKAR_SABAH.find(z => z.title === "Salavât-ı Şerife");
+
+  const ortak = (sabah) => [
+    AYETEL && Object.assign({}, AYETEL, { count: 1, turkish: (AYETEL.turkish || "") + " (Sabah-akşam okuyan, Allah'ın korumasında olur.)" }),
+    IHLAS && Object.assign({}, IHLAS, { count: 3 }),
+    FELAK && Object.assign({}, FELAK, { count: 3 }),
+    NAS && Object.assign({}, NAS, { count: 3 }),
+    sabah ? {
+      title: "Sabah Tesbihi",
+      arabic: "أَصْبَحْنَا وَأَصْبَحَ الْمُلْكُ لِلَّهِ وَالْحَمْدُ لِلَّهِ لَا إِلَهَ إِلَّا اللَّهُ وَحْدَهُ لَا شَرِيكَ لَهُ لَهُ الْمُلْكُ وَلَهُ الْحَمْدُ وَهُوَ عَلَى كُلِّ شَيْءٍ قَدِيرٌ رَبِّ أَسْأَلُكَ خَيْرَ مَا فِي هَذَا الْيَوْمِ وَخَيْرَ مَا بَعْدَهُ وَأَعُوذُ بِكَ مِنْ شَرِّ مَا فِي هَذَا الْيَوْمِ وَشَرِّ مَا بَعْدَهُ",
+      okunusu: "Asbahnâ ve asbahal-mülkü lillâh, vel-hamdü lillâh, lâ ilâhe illallâhü vahdehû lâ şerîke leh, lehül-mülkü ve lehül-hamdü ve hüve alâ külli şey'in kadîr. Rabbi es'elüke hayra mâ fî hâzel-yevmi ve hayra mâ ba'dehû ve eûzü bike min şerri mâ fî hâzel-yevmi ve şerri mâ ba'deh",
+      turkish: "Sabaha erdik; mülk de Allah'ın olarak sabaha erdi. Hamd Allah'adır. Allah'tan başka ilâh yoktur, O tektir, ortağı yoktur; mülk O'nundur, hamd O'nadır ve O her şeye kadirdir. Rabbim! Bu günün ve sonrasının hayrını senden ister, bu günün ve sonrasının şerrinden sana sığınırım.", count: 1
+    } : {
+      title: "Akşam Tesbihi",
+      arabic: "أَمْسَيْنَا وَأَمْسَى الْمُلْكُ لِلَّهِ وَالْحَمْدُ لِلَّهِ لَا إِلَهَ إِلَّا اللَّهُ وَحْدَهُ لَا شَرِيكَ لَهُ لَهُ الْمُلْكُ وَلَهُ الْحَمْدُ وَهُوَ عَلَى كُلِّ شَيْءٍ قَدِيرٌ رَبِّ أَسْأَلُكَ خَيْرَ مَا فِي هَذِهِ اللَّيْلَةِ وَخَيْرَ مَا بَعْدَهَا وَأَعُوذُ بِكَ مِنْ شَرِّ مَا فِي هَذِهِ اللَّيْلَةِ وَشَرِّ مَا بَعْدَهَا",
+      okunusu: "Emseynâ ve emsel-mülkü lillâh, vel-hamdü lillâh, lâ ilâhe illallâhü vahdehû lâ şerîke leh, lehül-mülkü ve lehül-hamdü ve hüve alâ külli şey'in kadîr. Rabbi es'elüke hayra mâ fî hâzihil-leyleti ve hayra mâ ba'dehâ ve eûzü bike min şerri mâ fî hâzihil-leyleti ve şerri mâ ba'dehâ",
+      turkish: "Akşama erdik; mülk de Allah'ın olarak akşama erdi. Hamd Allah'adır. Allah'tan başka ilâh yoktur, O tektir, ortağı yoktur; mülk O'nundur, hamd O'nadır ve O her şeye kadirdir. Rabbim! Bu gecenin ve sonrasının hayrını senden ister, bu gecenin ve sonrasının şerrinden sana sığınırım.", count: 1
+    },
+    sabah ? {
+      title: "Sabaha Erdirene Hamd",
+      arabic: "اللَّهُمَّ بِكَ أَصْبَحْنَا وَبِكَ أَمْسَيْنَا وَبِكَ نَحْيَا وَبِكَ نَمُوتُ وَإِلَيْكَ النُّشُورُ",
+      okunusu: "Allâhümme bike asbahnâ ve bike emseynâ ve bike nahyâ ve bike nemûtü ve ileyken-nüşûr",
+      turkish: "Allah'ım! Senin lütfunla sabaha erdik, seninle akşama erdik; seninle yaşar, seninle ölürüz. Dönüş sanadır.", count: 1
+    } : {
+      title: "Akşama Erdirene Hamd",
+      arabic: "اللَّهُمَّ بِكَ أَمْسَيْنَا وَبِكَ أَصْبَحْنَا وَبِكَ نَحْيَا وَبِكَ نَمُوتُ وَإِلَيْكَ الْمَصِيرُ",
+      okunusu: "Allâhümme bike emseynâ ve bike asbahnâ ve bike nahyâ ve bike nemûtü ve ileykel-masîr",
+      turkish: "Allah'ım! Senin lütfunla akşama erdik, seninle sabaha erdik; seninle yaşar, seninle ölürüz. Varış sanadır.", count: 1
+    },
+    SEYYID && Object.assign({}, SEYYID, { count: 1 }),
+    {
+      title: "Din, Dünya, Aile ve Mal İçin Afiyet",
+      arabic: "اللَّهُمَّ إِنِّي أَسْأَلُكَ الْعَافِيَةَ فِي الدُّنْيَا وَالْآخِرَةِ اللَّهُمَّ إِنِّي أَسْأَلُكَ الْعَفْوَ وَالْعَافِيَةَ فِي دِينِي وَدُنْيَايَ وَأَهْلِي وَمَالِي اللَّهُمَّ اسْتُرْ عَوْرَاتِي وَآمِنْ رَوْعَاتِي",
+      okunusu: "Allâhümme innî es'elükel-âfiyete fid-dünyâ vel-âhirah. Allâhümme innî es'elükel-afve vel-âfiyete fî dînî ve dünyâye ve ehlî ve mâlî. Allâhümmestür avrâtî ve âmin rav'âtî",
+      turkish: "Allah'ım! Dünya ve ahirette senden afiyet dilerim. Allah'ım! Dinim, dünyam, ailem ve malım hakkında senden af ve afiyet dilerim. Allah'ım! Ayıplarımı ört, korkularımdan emin kıl.", count: 1
+    },
+    {
+      title: "Bedene, Kulağa, Göze Afiyet",
+      arabic: "اللَّهُمَّ عَافِنِي فِي بَدَنِي اللَّهُمَّ عَافِنِي فِي سَمْعِي اللَّهُمَّ عَافِنِي فِي بَصَرِي لَا إِلَهَ إِلَّا أَنْتَ",
+      okunusu: "Allâhümme âfinî fî bedenî, Allâhümme âfinî fî sem'î, Allâhümme âfinî fî basarî, lâ ilâhe illâ ent",
+      turkish: "Allah'ım! Bedenime afiyet ver. Allah'ım! Kulağıma afiyet ver. Allah'ım! Gözüme afiyet ver. Senden başka ilâh yoktur.", count: 3
+    },
+    {
+      title: "Küfür ve Fakirlikten Sığınma",
+      arabic: "اللَّهُمَّ إِنِّي أَعُوذُ بِكَ مِنَ الْكُفْرِ وَالْفَقْرِ وَأَعُوذُ بِكَ مِنْ عَذَابِ الْقَبْرِ لَا إِلَهَ إِلَّا أَنْتَ",
+      okunusu: "Allâhümme innî eûzü bike minel-küfri vel-fakr, ve eûzü bike min azâbil-kabr, lâ ilâhe illâ ent",
+      turkish: "Allah'ım! Küfürden ve fakirlikten sana sığınırım; kabir azabından sana sığınırım. Senden başka ilâh yoktur.", count: 3
+    },
+    {
+      title: "Hasbiyallâh",
+      arabic: "حَسْبِيَ اللَّهُ لَا إِلَهَ إِلَّا هُوَ عَلَيْهِ تَوَكَّلْتُ وَهُوَ رَبُّ الْعَرْشِ الْعَظِيمِ",
+      okunusu: "Hasbiyallâhü lâ ilâhe illâ hüve aleyhi tevekkeltü ve hüve rabbül-arşil-azîm",
+      turkish: "Allah bana yeter; O'ndan başka ilâh yoktur. O'na tevekkül ettim; O büyük Arş'ın Rabbidir. (Tevbe 129 — 7 kez okuyana Allah dünya ve ahiret sıkıntılarında kâfi gelir.)", count: 7
+    },
+    {
+      title: "Allah'ın Adıyla Korunma",
+      arabic: "بِسْمِ اللَّهِ الَّذِي لَا يَضُرُّ مَعَ اسْمِهِ شَيْءٌ فِي الْأَرْضِ وَلَا فِي السَّمَاءِ وَهُوَ السَّمِيعُ الْعَلِيمُ",
+      okunusu: "Bismillâhillezî lâ yedurru maasmihî şey'ün fil-ardı ve lâ fis-semâi ve hüves-semîul-alîm",
+      turkish: "İsmiyle yerde ve gökte hiçbir şeyin zarar veremeyeceği Allah'ın adıyla. O işitendir, bilendir. (3 kez okuyana o gün/gece hiçbir şey zarar vermez.)", count: 3
+    },
+    {
+      title: "Rıza Duası",
+      arabic: "رَضِيتُ بِاللَّهِ رَبًّا وَبِالْإِسْلَامِ دِينًا وَبِمُحَمَّدٍ صَلَّى اللَّهُ عَلَيْهِ وَسَلَّمَ نَبِيًّا",
+      okunusu: "Radîtü billâhi rabben ve bil-islâmi dînen ve bi-Muhammedin sallallâhü aleyhi ve selleme nebiyyâ",
+      turkish: "Rab olarak Allah'tan, din olarak İslâm'dan, peygamber olarak Muhammed'den (s.a.v.) razı oldum.", count: 3
+    },
+    {
+      title: "Yâ Hayyu Yâ Kayyûm",
+      arabic: "يَا حَيُّ يَا قَيُّومُ بِرَحْمَتِكَ أَسْتَغِيثُ أَصْلِحْ لِي شَأْنِي كُلَّهُ وَلَا تَكِلْنِي إِلَى نَفْسِي طَرْفَةَ عَيْنٍ",
+      okunusu: "Yâ Hayyü yâ Kayyûm, bi-rahmetike estağîs, aslih lî şe'nî küllehû ve lâ tekilnî ilâ nefsî tarfete ayn",
+      turkish: "Ey Hayy, ey Kayyûm! Rahmetinle yardım dilerim. Bütün işlerimi düzelt ve beni göz açıp kapayıncaya kadar bile nefsime bırakma.", count: 1
+    },
+    {
+      title: "Fıtrat Üzere Sabah/Akşam",
+      arabic: sabah ? "أَصْبَحْنَا عَلَى فِطْرَةِ الْإِسْلَامِ وَعَلَى كَلِمَةِ الْإِخْلَاصِ وَعَلَى دِينِ نَبِيِّنَا مُحَمَّدٍ صَلَّى اللَّهُ عَلَيْهِ وَسَلَّمَ وَعَلَى مِلَّةِ أَبِينَا إِبْرَاهِيمَ حَنِيفًا مُسْلِمًا وَمَا كَانَ مِنَ الْمُشْرِكِينَ" : "أَمْسَيْنَا عَلَى فِطْرَةِ الْإِسْلَامِ وَعَلَى كَلِمَةِ الْإِخْلَاصِ وَعَلَى دِينِ نَبِيِّنَا مُحَمَّدٍ صَلَّى اللَّهُ عَلَيْهِ وَسَلَّمَ وَعَلَى مِلَّةِ أَبِينَا إِبْرَاهِيمَ حَنِيفًا مُسْلِمًا وَمَا كَانَ مِنَ الْمُشْرِكِينَ",
+      okunusu: (sabah ? "Asbahnâ" : "Emseynâ") + " alâ fıtratil-islâm ve alâ kelimetil-ihlâs ve alâ dîni nebiyyinâ Muhammedin sallallâhü aleyhi ve sellem ve alâ milleti ebînâ İbrâhîme hanîfen müslimen ve mâ kâne minel-müşrikîn",
+      turkish: (sabah ? "Sabaha" : "Akşama") + " İslâm fıtratı, ihlâs kelimesi, Peygamberimiz Muhammed'in (s.a.v.) dini ve hanîf, Müslüman olan, müşriklerden olmayan babamız İbrahim'in milleti üzere erdik.", count: 1
+    },
+    {
+      title: "Sübhânallâhi ve bi-hamdihî",
+      arabic: "سُبْحَانَ اللَّهِ وَبِحَمْدِهِ",
+      okunusu: "Sübhânallâhi ve bi-hamdih",
+      turkish: "Allah'ı hamd ile tesbih ederim. (Günde 100 kez söyleyenin günahları denizin köpüğü kadar da olsa bağışlanır.)", count: 100
+    },
+    {
+      title: "Sübhânallâhi ve bi-hamdihî adede halkıh",
+      arabic: "سُبْحَانَ اللَّهِ وَبِحَمْدِهِ عَدَدَ خَلْقِهِ وَرِضَا نَفْسِهِ وَزِنَةَ عَرْشِهِ وَمِدَادَ كَلِمَاتِهِ",
+      okunusu: "Sübhânallâhi ve bi-hamdihî adede halkıhî ve rıdâ nefsihî ve zinete arşihî ve midâde kelimâtih",
+      turkish: "Yarattıkları sayısınca, kendisinin razı olacağı kadar, Arş'ının ağırlığınca ve kelimelerinin mürekkebi kadar Allah'ı hamd ile tesbih ederim.", count: 3
+    },
+    {
+      title: "Lâ ilâhe illallâhü vahdehû",
+      arabic: "لَا إِلَهَ إِلَّا اللَّهُ وَحْدَهُ لَا شَرِيكَ لَهُ لَهُ الْمُلْكُ وَلَهُ الْحَمْدُ وَهُوَ عَلَى كُلِّ شَيْءٍ قَدِيرٌ",
+      okunusu: "Lâ ilâhe illallâhü vahdehû lâ şerîke leh, lehül-mülkü ve lehül-hamdü ve hüve alâ külli şey'in kadîr",
+      turkish: "Allah'tan başka ilâh yoktur; O tektir, ortağı yoktur. Mülk O'nundur, hamd O'nadır ve O her şeye kadirdir. (10 kez; 100 kez söyleyene köle azat etme sevabı.)", count: 10
+    },
+    sabah ? {
+      title: "Faydalı İlim, Temiz Rızık",
+      arabic: "اللَّهُمَّ إِنِّي أَسْأَلُكَ عِلْمًا نَافِعًا وَرِزْقًا طَيِّبًا وَعَمَلًا مُتَقَبَّلًا",
+      okunusu: "Allâhümme innî es'elüke ilmen nâfian ve rızkan tayyiben ve amelen mütekabbelâ",
+      turkish: "Allah'ım! Senden faydalı ilim, temiz rızık ve kabul edilmiş amel isterim. (Sabah namazından sonra okunur.)", count: 1
+    } : {
+      title: "Gecenin Şerrinden Sığınma",
+      arabic: "أَعُوذُ بِكَلِمَاتِ اللَّهِ التَّامَّاتِ مِنْ شَرِّ مَا خَلَقَ",
+      okunusu: "Eûzü bi-kelimâtillâhit-tâmmâti min şerri mâ halak",
+      turkish: "Yarattıklarının şerrinden Allah'ın eksiksiz kelimelerine sığınırım. (Akşam 3 kez okuyana o gece zehirli hayvan zarar vermez.)", count: 3
+    },
+    SALAVAT && Object.assign({}, SALAVAT, { count: 10 }),
+    {
+      title: "İstiğfar",
+      arabic: "أَسْتَغْفِرُ اللَّهَ وَأَتُوبُ إِلَيْهِ",
+      okunusu: "Estağfirullâhe ve etûbü ileyh",
+      turkish: "Allah'tan bağışlanma diler ve O'na tövbe ederim. (Peygamberimiz günde 100 kez istiğfar ederdi.)", count: 100
+    }
+  ].filter(Boolean);
+
+  EZKAR_SABAH.length = 0; ortak(true).forEach(z => EZKAR_SABAH.push(z));
+  EZKAR_AKSAM.length = 0; ortak(false).forEach(z => EZKAR_AKSAM.push(z));
+})();
+
+/* ══════════ v65.0 — DİNİ SÖZLÜK EKLERİ (47 → 150) ══════════ */
+DINI_SOZLUK.push(
+  { term: "Âdâb", meaning: "Bir işi yaparken uyulması güzel görülen edep ve nezaket kuralları." },
+  { term: "Âlem", meaning: "Allah'ın dışındaki her şey; yaratılmışların tamamı." },
+  { term: "Âmentü", meaning: "İmanın altı esasını özetleyen 'inandım' ile başlayan ifade." },
+  { term: "Âmin", meaning: "Duanın sonunda söylenen 'Kabul buyur' anlamındaki söz." },
+  { term: "Arafat", meaning: "Mekke yakınında, hacıların Kurban Bayramı arefesinde vakfe yaptığı ova." },
+  { term: "Arefe", meaning: "Bayramdan bir önceki gün; Kurban Bayramı arefesinde hacılar Arafat'ta bulunur." },
+  { term: "Arş", meaning: "Allah'ın kudret ve hükümranlığını simgeleyen, yaratılmışların en yücesi olan varlık." },
+  { term: "Âyetel Kürsî", meaning: "Bakara sûresinin 255. âyeti; Allah'ın sıfatlarını anlatan, korunma için okunan âyet." },
+  { term: "Bâtıl", meaning: "Gerçek olmayan, boş, geçersiz; hakkın zıddı." },
+  { term: "Bereket", meaning: "Allah'tan gelen hayır ve bolluk; bir şeyin azken çok fayda vermesi." },
+  { term: "Besmele", meaning: "'Bismillâhirrahmânirrahîm' — Rahmân ve Rahîm olan Allah'ın adıyla." },
+  { term: "Bid'at", meaning: "Dinde sonradan ortaya çıkan, sünnette dayanağı olmayan uygulama." },
+  { term: "Cemaat", meaning: "Namazı bir imamın arkasında birlikte kılan topluluk; en az iki kişiyle oluşur." },
+  { term: "Cenaze Namazı", meaning: "Ölen Müslüman için kılınan, rükû ve secdesi olmayan, dört tekbirli dua niteliğindeki namaz." },
+  { term: "Cihad", meaning: "Allah yolunda gayret; nefisle mücadele, ilim, infak ve gerektiğinde savunma." },
+  { term: "Cin", meaning: "Ateşten yaratılmış, gözle görülmeyen, sorumluluk sahibi varlıklar." },
+  { term: "Cuma", meaning: "Haftanın en faziletli günü; öğle vaktinde cemaatle kılınan iki rekâtlık farz namaz." },
+  { term: "Delil", meaning: "Bir hükmün dayandığı Kur'an, sünnet, icmâ ve kıyas gibi kaynak." },
+  { term: "Diyet", meaning: "Öldürme veya yaralama karşılığında ödenen mal bedeli." },
+  { term: "Dua", meaning: "Kulun Allah'a yalvarması, isteklerini arz etmesi; ibadetin özü." },
+  { term: "Dünya", meaning: "İçinde yaşadığımız, imtihan yeri olan geçici hayat." },
+  { term: "Ecel", meaning: "Her canlı için takdir edilmiş ölüm vakti." },
+  { term: "Ecir", meaning: "Yapılan iyilik ve ibadetin Allah katındaki karşılığı, sevap." },
+  { term: "Ehl-i Beyt", meaning: "Peygamberimizin ev halkı; Hz. Ali, Hz. Fâtıma, Hz. Hasan ve Hz. Hüseyin." },
+  { term: "Ehl-i Kitap", meaning: "Kendilerine ilâhî kitap gönderilen Yahudi ve Hristiyanlar." },
+  { term: "Ehl-i Sünnet", meaning: "Peygamberimizin ve sahabenin yolunu izleyen ana akım Müslümanlar." },
+  { term: "Esmâü'l-Hüsnâ", meaning: "Allah'ın en güzel isimleri; 99 isim olarak bilinir." },
+  { term: "Evliya", meaning: "Allah'ın dostları; takvası ve ihlâsıyla Allah'a yakın olan kimseler." },
+  { term: "Evvâbîn", meaning: "Akşam ile yatsı arasında kılınan altı rekâtlık nafile namaz." },
+  { term: "Fâsık", meaning: "Büyük günah işleyen veya küçük günahta ısrar eden kimse." },
+  { term: "Fetva", meaning: "Dinî bir konuda yetkili âlimin verdiği hüküm, görüş." },
+  { term: "Fıkıh", meaning: "İbadet, muamelât ve helâl-haramı inceleyen İslâm hukuku ilmi." },
+  { term: "Fidye", meaning: "Oruç tutamayan yaşlı ve hastaların her gün için verdiği bedel." },
+  { term: "Fitne", meaning: "İmtihan, kargaşa, insanları doğru yoldan saptıran karışıklık." },
+  { term: "Gıybet", meaning: "Bir kimsenin arkasından hoşlanmayacağı şekilde konuşmak; büyük günah." },
+  { term: "Hafız", meaning: "Kur'an-ı Kerim'in tamamını ezberleyen kimse." },
+  { term: "Hamd", meaning: "Allah'ı övmek, nimetleri için O'na şükretmek; 'Elhamdülillâh'." },
+  { term: "Hanîf", meaning: "Şirkten uzak, yalnız Allah'a yönelen; Hz. İbrahim'in dini." },
+  { term: "Haşr", meaning: "Kıyamet günü bütün insanların diriltilip hesap için toplanması." },
+  { term: "Hatim", meaning: "Kur'an-ı Kerim'i baştan sona okuyup bitirmek." },
+  { term: "Havle", meaning: "'Lâ havle ve lâ kuvvete illâ billâh' — güç ve kuvvet ancak Allah'tandır." },
+  { term: "Hayâ", meaning: "Utanma duygusu, edep; imandan bir şubedir." },
+  { term: "Hayız", meaning: "Kadınların aylık âdet hâli; bu sürede namaz ve oruç tutulmaz." },
+  { term: "Hidayet", meaning: "Allah'ın kulunu doğru yola iletmesi." },
+  { term: "Hilâl", meaning: "Ayın ilk görünen ince şekli; hicrî ayların başlangıcı." },
+  { term: "Hutbe", meaning: "Cuma ve bayram namazlarında imamın minberden yaptığı konuşma." },
+  { term: "Huşû", meaning: "Namazda kalp ve bedenle Allah'a saygı içinde olma hâli." },
+  { term: "İcmâ", meaning: "İslâm âlimlerinin bir konuda görüş birliği etmesi." },
+  { term: "İçtihat", meaning: "Âlimin Kur'an ve sünnetten hüküm çıkarmak için çaba göstermesi." },
+  { term: "İftar", meaning: "Oruç açma; akşam ezanıyla orucun sona ermesi." },
+  { term: "İhram", meaning: "Hac ve umrede giyilen dikişsiz örtü ve o hâlde uyulan yasaklar." },
+  { term: "İhsan", meaning: "Allah'ı görüyormuş gibi ibadet etmek; iyilik yapmak." },
+  { term: "İkindi", meaning: "Günün dördüncü farz namazı; asr vakti." },
+  { term: "İmsak", meaning: "Oruca başlama vakti; sabah namazı vaktinin girişi." },
+  { term: "İnfak", meaning: "Allah rızası için malından harcamak, vermek." },
+  { term: "İsra", meaning: "Peygamberimizin bir gecede Mekke'den Kudüs'e götürülmesi." },
+  { term: "İstiğfar", meaning: "Allah'tan günahların bağışlanmasını dilemek; 'Estağfirullah'." },
+  { term: "İstihâre", meaning: "Bir işin hayırlı olup olmadığını Allah'tan dilemek için kılınan namaz ve dua." },
+  { term: "İşrak", meaning: "Güneşin doğuşundan yaklaşık 45 dakika sonra başlayan, kuşluk namazının kılınabildiği vakit." },
+  { term: "İtikâf", meaning: "Ramazan'ın son on gününde ibadet amacıyla camide kalmak." },
+  { term: "Kâfir", meaning: "İman etmeyen, hakkı örten kimse." },
+  { term: "Kadir Gecesi", meaning: "Kur'an'ın indirilmeye başlandığı, bin aydan hayırlı gece." },
+  { term: "Kandil", meaning: "Mübarek geceler; Mevlid, Regaib, Miraç, Berat ve Kadir geceleri." },
+  { term: "Kaza", meaning: "Vaktinde kılınamayan namazın veya tutulamayan orucun sonradan yerine getirilmesi." },
+  { term: "Kefâret", meaning: "İşlenen bir günah veya bozulan yeminin telafisi için yapılan ibadet, bedel." },
+  { term: "Kerahet Vakti", meaning: "Güneş doğarken, tam tepedeyken ve batarken nafile namaz kılınmayan vakitler." },
+  { term: "Kıraat", meaning: "Namazda Kur'an okumak; Kur'an'ı usulüne göre okuma ilmi." },
+  { term: "Kıyam", meaning: "Namazda ayakta durmak; namazın farzlarındandır." },
+  { term: "Kıyamet", meaning: "Dünyanın sonu; ölülerin diriltilip hesaba çekileceği gün." },
+  { term: "Kıyas", meaning: "Hükmü bilinen bir meseleye benzeterek yeni meseleye hüküm vermek." },
+  { term: "Kurban", meaning: "Allah'a yakınlaşmak için bayramda kesilen hayvan; gücü yetene vaciptir." },
+  { term: "Kuşluk", meaning: "İşrak ile öğle arasındaki vakit; bu vakitte kılınan nafile namaz (duhâ)." },
+  { term: "Küfür", meaning: "İman edilmesi gerekenleri inkâr etmek." },
+  { term: "Mahşer", meaning: "Kıyamet günü insanların hesap için toplanacağı yer." },
+  { term: "Mahrem", meaning: "Evlenilmesi ebediyen haram olan yakın akraba; gizli olan." },
+  { term: "Mekke", meaning: "Kâbe'nin bulunduğu, Peygamberimizin doğduğu kutsal şehir." },
+  { term: "Medine", meaning: "Peygamberimizin hicret ettiği ve kabrinin bulunduğu şehir." },
+  { term: "Melek", meaning: "Nurdan yaratılmış, Allah'a itaat eden, günah işlemeyen varlıklar." },
+  { term: "Mevlid", meaning: "Peygamberimizin doğumu; doğum gecesi (12 Rebiülevvel)." },
+  { term: "Mihrap", meaning: "Camide imamın namaz kıldırdığı, kıbleyi gösteren oyuk." },
+  { term: "Minber", meaning: "Camide hutbe okunan basamaklı yüksek yer." },
+  { term: "Miraç", meaning: "Peygamberimizin göklere yükseltilerek Allah'ın huzuruna çıkarılması." },
+  { term: "Muharrem", meaning: "Hicrî yılın ilk ayı; Aşure günü bu aydadır." },
+  { term: "Mukim", meaning: "Yolcu olmayan, bulunduğu yerde ikamet eden kimse." },
+  { term: "Mümin", meaning: "Allah'a ve iman esaslarına inanan kimse." },
+  { term: "Münafık", meaning: "İnanmadığı hâlde inanmış görünen kimse." },
+  { term: "Müstehap", meaning: "Yapılması sevap, terki günah olmayan güzel davranış (mendup)." },
+  { term: "Müzdelife", meaning: "Arafat ile Mina arasında, hacıların arefe gecesi kaldığı yer." },
+  { term: "Namaz", meaning: "Günde beş vakit farz olan, tekbirle başlayıp selamla biten ibadet." },
+  { term: "Nefis", meaning: "İnsanın kendisi; kötülüğü emreden arzu ve istekler." },
+  { term: "Niyet", meaning: "Bir ibadeti yapmaya kalben karar vermek; ibadetlerin şartıdır." },
+  { term: "Peygamber", meaning: "Allah'ın insanlara mesajını iletmek için seçtiği elçi (nebi, resul)." },
+  { term: "Ramazan", meaning: "Hicrî yılın dokuzuncu ayı; oruç ayı." },
+  { term: "Regaib", meaning: "Recep ayının ilk Cuma gecesi; üç ayların ilk kandili." },
+  { term: "Rızık", meaning: "Allah'ın canlılara verdiği yiyecek, içecek ve her türlü nimet." },
+  { term: "Riyâ", meaning: "İbadeti gösteriş için yapmak; gizli şirk sayılır." },
+  { term: "Ruh", meaning: "İnsana hayat veren, mahiyeti Allah'ın bilgisinde olan cevher." },
+  { term: "Sabır", meaning: "Zorluklara ve ibadetlere dayanmak, günahlardan kaçınmak." },
+  { term: "Sahur", meaning: "Oruç için imsaktan önce yenen yemek." },
+  { term: "Sa'y", meaning: "Hac ve umrede Safa ile Merve arasında yedi kez gidip gelmek." },
+  { term: "Selam", meaning: "Namazın sonunda sağa ve sola 'Esselâmü aleyküm ve rahmetullah' demek; Müslümanların selamlaşması." },
+  { term: "Selef", meaning: "İlk üç nesil: sahabe, tâbiîn ve tebe-i tâbiîn." },
+  { term: "Sevap", meaning: "İyi amellerin Allah katındaki mükâfatı." },
+  { term: "Sırat", meaning: "Cehennem üzerine kurulacak, cennete giden köprü; doğru yol." },
+  { term: "Siyer", meaning: "Peygamberimizin hayatını anlatan ilim." },
+  { term: "Sünnet-i Müekkede", meaning: "Peygamberimizin devamlı yaptığı, terkini hoş görmediği sünnet." },
+  { term: "Şeytan", meaning: "İnsanı kötülüğe sürükleyen, Allah'ın rahmetinden kovulmuş varlık; İblis." },
+  { term: "Şefaat", meaning: "Ahirette Peygamberimizin ve salihlerin Allah'ın izniyle affa aracılık etmesi." },
+  { term: "Şehit", meaning: "Allah yolunda canını veren kimse." },
+  { term: "Şer", meaning: "Kötülük; hayrın zıddı." },
+  { term: "Şirk", meaning: "Allah'a ortak koşmak; en büyük günah." },
+  { term: "Tâbiîn", meaning: "Sahabeyi görüp onlardan ilim alan nesil." },
+  { term: "Taharet", meaning: "Maddi ve manevi temizlik; abdest ve gusül." },
+  { term: "Tahiyyat", meaning: "Namazın oturuşlarında okunan 'Ettehiyyâtü' duası." },
+  { term: "Tavaf", meaning: "Kâbe'nin etrafında yedi kez dönmek." },
+  { term: "Tefekkür", meaning: "Allah'ın yarattıkları ve nimetleri üzerinde derin düşünmek." },
+  { term: "Tefsir", meaning: "Kur'an âyetlerini açıklama ilmi." },
+  { term: "Teheccüd", meaning: "Gece uyuduktan sonra kalkılarak kılınan nafile namaz." },
+  { term: "Tekbir", meaning: "'Allâhü ekber' — Allah en büyüktür." },
+  { term: "Telbiye", meaning: "Hac ve umrede söylenen 'Lebbeyk Allâhümme lebbeyk' nidası." },
+  { term: "Teravih", meaning: "Ramazan gecelerinde yatsıdan sonra kılınan 20 rekâtlık sünnet namaz." },
+  { term: "Teşrik Tekbiri", meaning: "Kurban Bayramı arefesi sabahından bayramın 4. günü ikindisine kadar farzlardan sonra alınan tekbir." },
+  { term: "Tevekkül", meaning: "Gerekeni yaptıktan sonra sonucu Allah'a bırakmak, O'na güvenmek." },
+  { term: "Teyemmüm", meaning: "Su bulunamadığında temiz toprakla alınan abdest." },
+  { term: "Tövbe", meaning: "Günahtan pişmanlık duyup Allah'a yönelmek ve bir daha yapmamaya karar vermek." },
+  { term: "Ümmet", meaning: "Bir peygambere inananların tamamı; Muhammed ümmeti." },
+  { term: "Umre", meaning: "Hac mevsimi dışında da yapılabilen, ihram, tavaf ve sa'yden oluşan ziyaret ibadeti." },
+  { term: "Vahiy", meaning: "Allah'ın peygamberlerine mesajını bildirmesi." },
+  { term: "Vakfe", meaning: "Haccın farzı; arefe günü Arafat'ta bir süre bulunmak." },
+  { term: "Vesvese", meaning: "Şeytanın kalbe attığı şüphe ve kuruntu." },
+  { term: "Vitir", meaning: "Yatsıdan sonra kılınan üç rekâtlık vacip namaz; Kunut duası okunur." },
+  { term: "Yatsı", meaning: "Günün beşinci farz namazı; akşam kızıllığının kaybolmasıyla başlar." },
+  { term: "Yemin", meaning: "Allah'ın adını anarak bir sözü kuvvetlendirmek; bozulursa kefaret gerekir." },
+  { term: "Zemzem", meaning: "Kâbe yakınındaki mübarek kuyunun suyu." },
+  { term: "Zeval", meaning: "Güneşin tam tepe noktasından batıya kaymaya başlaması; öğle vaktinin girişi." },
+  { term: "Zilhicce", meaning: "Hicrî yılın son ayı; hac ve Kurban Bayramı bu aydadır." },
+  { term: "Zühd", meaning: "Dünyaya kalpten bağlanmamak, ahireti tercih etmek." }
+);
+(function () {
+  const g = {}; const tekil = [];
+  DINI_SOZLUK.forEach(x => { const k = x.term.toLocaleLowerCase('tr'); if (!g[k]) { g[k] = 1; tekil.push(x); } });
+  DINI_SOZLUK.length = 0; tekil.forEach(x => DINI_SOZLUK.push(x));
+  DINI_SOZLUK.sort((a, b) => a.term.localeCompare(b.term, 'tr'));
+})();
+
+/* ══════════ v65.0 — SİYER EKLERİ (16 → 30, kronolojik) ══════════ */
+SIYER_OLAYLARI.push(
+  { yil: "590", baslik: "Hılfü'l-Fudûl", desc: "Yirmili yaşlarında, Mekke'de haksızlığa uğrayanları korumak için kurulan 'Erdemliler Anlaşması'na katıldı; sonraları 'Böyle bir anlaşmaya yine çağrılsam katılırım' buyurdu." },
+  { yil: "605", baslik: "Kâbe Hakemliği", desc: "Kâbe onarımında Hacerülesved'i yerine kimin koyacağı tartışılınca, 'el-Emîn' olarak hakem seçildi; taşı bir örtüye koyup her kabileden birine tutturarak anlaşmazlığı çözdü." },
+  { yil: "611", baslik: "Gizli Davet ve İlk Müslümanlar", desc: "Üç yıl boyunca yakın çevresini gizlice İslâm'a davet etti. Hz. Hatice, Hz. Ali, Hz. Ebû Bekir ve Zeyd b. Hârise ilk Müslümanlardandır." },
+  { yil: "616", baslik: "Boykot Yılları", desc: "Müşrikler Hâşimoğullarına üç yıl süren sosyal ve ekonomik boykot uyguladı; Müslümanlar büyük sıkıntı çekti, boykot sahifesini kurtlar yedi ve boykot sona erdi." },
+  { yil: "619", baslik: "Tâif Yolculuğu", desc: "Mekke'de davet imkânı daralınca Tâif'e gitti; taşlanarak kovuldu. Bir bağda dinlenirken 'Ey Rabbim, kuvvetimin zayıflığını sana şikâyet ederim' diye dua etti, onlara beddua etmedi." },
+  { yil: "621", baslik: "Akabe Biatları", desc: "Medineli Müslümanlar iki yıl üst üste Akabe'de Peygamberimize biat etti; ikinci biatta 75 kişi onu Medine'ye davet edip koruyacaklarına söz verdi." },
+  { yil: "622", baslik: "Mescid-i Nebevî ve Kardeşlik", desc: "Medine'de mescit inşa edildi; Mekkeli muhacirlerle Medineli ensar kardeş ilan edildi. Medine Sözleşmesi ile şehirde birlikte yaşama esasları belirlendi." },
+  { yil: "624", baslik: "Kıblenin Değişmesi ve Orucun Farz Kılınması", desc: "Hicretin 2. yılında kıble Mescid-i Aksâ'dan Kâbe'ye çevrildi; Ramazan orucu ve zekât farz kılındı, ilk bayram namazı kılındı." },
+  { yil: "628", baslik: "Hayber'in Fethi", desc: "Hudeybiye'den sonra Yahudi kalelerinin bulunduğu Hayber fethedildi; Hz. Ali'nin kahramanlığıyla son kale düştü." },
+  { yil: "628", baslik: "Hükümdarlara Mektuplar", desc: "Bizans, İran, Habeşistan, Mısır ve çevre hükümdarlarına İslâm'a davet mektupları gönderdi; mektuplarına 'Muhammed Resûlullah' mührünü bastı." },
+  { yil: "630", baslik: "Huneyn ve Tâif", desc: "Mekke'nin fethinden sonra Hevâzin kabilesiyle Huneyn'de savaşıldı; başlangıçtaki dağılmaya rağmen zafer kazanıldı, ganimetler bağışlandı." },
+  { yil: "630", baslik: "Tebük Seferi", desc: "Bizans tehdidine karşı kıtlık ve sıcakta 30 bin kişilik orduyla Tebük'e gidildi; savaş olmadı, çevre kabilelerle antlaşmalar yapıldı." },
+  { yil: "631", baslik: "Heyetler (Elçiler) Yılı", desc: "Arap Yarımadası'nın dört bir yanından kabile heyetleri Medine'ye gelip Müslüman oldu; İslâm yarımadaya yayıldı." },
+  { yil: "632", baslik: "Son Hastalığı ve Hz. Ebû Bekir'in İmamlığı", desc: "Hastalığı ağırlaşınca namazı kıldırması için Hz. Ebû Bekir'i görevlendirdi; vefatından önce ümmetine 'Namaz, namaz!' diye vasiyet etti." }
+);
+(function () {
+  const sira = { "Hüzün Yılı": 0, "Tâif Yolculuğu": 1, "Kıblenin Değişmesi ve Orucun Farz Kılınması": 0, "Bedir Savaşı": 1, "Hudeybiye Antlaşması": 0, "Hayber'in Fethi": 1, "Hükümdarlara Mektuplar": 2,
+    "Mekke'nin Fethi": 0, "Huneyn ve Tâif": 1, "Tebük Seferi": 2, "Veda Haccı ve Hutbesi": 0, "Son Hastalığı ve Hz. Ebû Bekir'in İmamlığı": 1, "Vefatı": 2 };
+  SIYER_OLAYLARI.forEach(o => { if (o.baslik === "Veda Haccı ve Hutbesi") o.yil = "632"; });
+  SIYER_OLAYLARI.sort((a, b) => (parseInt(a.yil, 10) - parseInt(b.yil, 10)) || ((sira[a.baslik] || 0) - (sira[b.baslik] || 0)));
+})();
+
+/* ══════════ v65.0 — HAC & UMRE REHBERİ ══════════ */
+const HAC_UMRE = {
+  giris: "Umre; ihrama girip Kâbe'yi tavaf etmek ve Safa-Merve arasında sa'y yapmaktan oluşur, yılın her günü yapılabilir. Hac ise bunlara ek olarak Zilhicce'nin 9. günü Arafat'ta vakfe, Müzdelife, Mina ve şeytan taşlamayı kapsar; ömürde bir kez, gücü yetene farzdır. Aşağıdaki adımlar Diyanet'in Hanefî uygulamasına göredir.",
+  bolumler: [
+    {
+      ad: "Umre Nasıl Yapılır?", ikon: "🕋",
+      adimlar: [
+        { baslik: "1. Hazırlık ve İhram", metin: "Mîkat sınırından önce (uçakla gidenler genelde uçakta) gusül veya abdest alınır, erkekler dikişsiz iki parça beyaz örtüye bürünür; kadınlar normal tesettürlü kıyafetle ihrama girer. İki rekât ihram namazı kılınır, 'Allah'ım, umre yapmak istiyorum; kolaylaştır ve kabul et' diye niyet edilir ve telbiye getirilir. Bu andan itibaren ihram yasakları başlar: koku sürmek, tırnak kesmek, saç-kıl almak, avlanmak, tartışmak ve eşle beraber olmak yasaktır." },
+        { baslik: "2. Telbiye", metin: "Mescid-i Haram'a girene kadar sık sık 'Lebbeyk Allâhümme lebbeyk…' denir. Erkekler sesli, kadınlar kısık sesle söyler." },
+        { baslik: "3. Mescid-i Haram'a Giriş", metin: "Sağ ayakla, besmele ve salavatla girilir; Kâbe görülünce dua edilir (bu an duanın kabul olduğu anlardandır)." },
+        { baslik: "4. Umre Tavafı", metin: "Hacerülesved hizasından 'Bismillâhi Allâhü ekber' diyerek başlanır; Kâbe sol tarafta kalacak şekilde 7 şavt (tur) dönülür. Her şavtta Hacerülesved'e uzaktan selam verilir; Rükn-i Yemânî ile Hacerülesved arasında 'Rabbenâ âtinâ…' okunur. Erkekler ilk üç şavtta hızlı ve çalımlı yürür (remel); sağ omuz açık tutulur (ıztıbâ). Tavafta abdestli olmak şarttır." },
+        { baslik: "5. Tavaf Namazı ve Zemzem", metin: "Tavaf bitince mümkünse Makâm-ı İbrâhim arkasında 2 rekât tavaf namazı kılınır, ardından Zemzem içilir ve dua edilir." },
+        { baslik: "6. Sa'y", metin: "Safa tepesine çıkılıp Kâbe'ye dönülerek tekbir ve dua edilir; Safa'dan Merve'ye 4 gidiş, 3 dönüş olmak üzere 7 şavt yürünür. Yeşil ışıklar arasında erkekler hızlanır (hervele). Merve'de bitirilir ve dua edilir." },
+        { baslik: "7. Tıraş ve İhramdan Çıkış", metin: "Erkekler saçlarını tıraş eder veya kısaltır, kadınlar saç ucundan bir parmak boğumu kadar keser. Böylece umre tamamlanır ve ihram yasakları biter." }
+      ]
+    },
+    {
+      ad: "Hac Nasıl Yapılır?", ikon: "🏔️",
+      adimlar: [
+        { baslik: "Hac çeşitleri", metin: "Türkiye'den gidenler çoğunlukla 'temettu' haccı yapar: önce umre yapılır, ihramdan çıkılır; 8 Zilhicce'de yeniden hac için ihrama girilir. Kurban kesmek bu haccın vacibidir." },
+        { baslik: "8 Zilhicce — Terviye: Mina", metin: "Mekke'de hac niyetiyle ihrama girilir, telbiye getirilir. Sünnet olan, bu günü Mina'da geçirmek ve beş vakit namazı orada kılmaktır (günümüzde kafileler doğrudan Arafat'a da çıkabilir)." },
+        { baslik: "9 Zilhicce — Arefe: Arafat Vakfesi", metin: "Haccın en önemli farzı. Öğleden sonra güneş batana kadar Arafat sınırları içinde bulunmak gerekir; bir an bile bulunan haccı kaçırmamış olur. Öğle ve ikindi cem edilerek kılınır, kıbleye dönülüp gün boyu dua, tövbe, Kur'an ve zikirle geçirilir. Peygamberimiz 'Hac, Arafat'tır' buyurmuştur." },
+        { baslik: "Arefe gecesi — Müzdelife", metin: "Güneş battıktan sonra Müzdelife'ye geçilir; akşam ve yatsı yatsı vaktinde birlikte kılınır. Gece burada kalınır, sabah namazından sonra Müzdelife vakfesi yapılır (vacip). Şeytan taşlamak için küçük taşlar toplanır." },
+        { baslik: "10 Zilhicce — Bayramın 1. günü: Mina", metin: "Sırayla: (1) Büyük şeytana (Akabe cemresi) 7 taş atılır, telbiye biter. (2) Kurban kesilir (temettu ve kıran haccında vacip). (3) Tıraş olunup ihramdan çıkılır; artık eşle beraberlik dışında yasaklar kalkar. (4) Mekke'ye inip ziyaret tavafı (farz) ve haccın sa'yi yapılır; sa'y daha önce yapılmadıysa şimdi yapılır." },
+        { baslik: "11–12 (13) Zilhicce — Şeytan taşlama", metin: "Her gün zevalden sonra küçük, orta ve büyük cemreye yedişer taş atılır (toplam 21). 12. gün Mina'dan ayrılınabilir; 13. güne kalan o gün de taşlar. Geceleri Mina'da kalmak sünnettir." },
+        { baslik: "Veda Tavafı", metin: "Mekke'den ayrılmadan önce 7 şavt veda tavafı yapılır (vacip). Hayızlı kadınlardan düşer. Böylece hac tamamlanır." },
+        { baslik: "Medine Ziyareti", metin: "Haccın parçası olmasa da Peygamberimizin kabrini ve Mescid-i Nebevî'yi ziyaret etmek büyük fazilettir. Ravza'da edeple selam verilir, Cennetü'l-Bakî ve Uhud ziyaret edilir." }
+      ]
+    },
+    {
+      ad: "Pratik Bilgiler", ikon: "🧳",
+      adimlar: [
+        { baslik: "Yanınıza alın", metin: "İhram örtüsü ve kemeri, terlik, seccade, küçük Kur'an/bu uygulama, ilaçlar, güneş şemsiyesi, su matarası, taş torbası, kimlik ve otel kartı. Telefonunuzda kıble pusulası ve vakitler için Namaz Dostu'nu kullanabilirsiniz." },
+        { baslik: "Sağlık", metin: "Bol su için, güneşten korunun, kalabalıkta kafileden ayrılmayın. Yaşlı ve hastalar tavafı tekerlekli sandalyeyle yapabilir; vekâleten şeytan taşlatmak mümkündür." },
+        { baslik: "Kadınlar", metin: "İhramda yüz ve eller açık, eldiven ve peçe takılmaz. Hayız hâlinde tavaf yapılmaz; sa'y ve Arafat vakfesi yapılabilir, tavaf temizlenince tamamlanır." },
+        { baslik: "Sık yapılan hatalar", metin: "İhramda kokulu sabun kullanmak, tavafı abdestsiz yapmak, şavt sayısını şaşırmak (tesbih/sayaçla sayın), Arafat'tan güneş batmadan ayrılmak, veda tavafını unutmak. Şüphe hâlinde kafile hocasına sorun." }
+      ]
+    }
+  ],
+  dualar: [
+    { title: "Telbiye", arabic: "لَبَّيْكَ اللَّهُمَّ لَبَّيْكَ، لَبَّيْكَ لَا شَرِيكَ لَكَ لَبَّيْكَ، إِنَّ الْحَمْدَ وَالنِّعْمَةَ لَكَ وَالْمُلْكَ، لَا شَرِيكَ لَكَ", okunusu: "Lebbeyk Allâhümme lebbeyk. Lebbeyke lâ şerîke leke lebbeyk. İnnel-hamde ven-ni'mete leke vel-mülk. Lâ şerîke lek", turkish: "Buyur Allah'ım buyur! Emrindeyim, buyur! Senin hiçbir ortağın yoktur. Emrindeyim, buyur! Şüphesiz hamd sana, nimet sana, mülk de senindir; senin ortağın yoktur." },
+    { title: "Kâbe'yi Görünce", arabic: "اللَّهُمَّ أَنْتَ السَّلَامُ وَمِنْكَ السَّلَامُ فَحَيِّنَا رَبَّنَا بِالسَّلَامِ", okunusu: "Allâhümme entes-selâmü ve minkes-selâm, fe-hayyinâ rabbenâ bis-selâm", turkish: "Allah'ım! Sen selâmsın, selâmet sendendir. Rabbimiz, bizi selâmetle yaşat." },
+    { title: "Tavafa Başlarken", arabic: "بِسْمِ اللَّهِ اللَّهُ أَكْبَرُ اللَّهُمَّ إِيمَانًا بِكَ وَتَصْدِيقًا بِكِتَابِكَ وَوَفَاءً بِعَهْدِكَ وَاتِّبَاعًا لِسُنَّةِ نَبِيِّكَ مُحَمَّدٍ صَلَّى اللَّهُ عَلَيْهِ وَسَلَّمَ", okunusu: "Bismillâhi Allâhü ekber. Allâhümme îmânen bike ve tasdîkan bi-kitâbike ve vefâen bi-ahdike vettibâan li-sünneti nebiyyike Muhammedin sallallâhü aleyhi ve sellem", turkish: "Allah'ın adıyla, Allah en büyüktür. Allah'ım! Sana iman ederek, kitabını tasdik ederek, ahdine vefa göstererek ve Peygamberin Muhammed'in (s.a.v.) sünnetine uyarak (tavaf ediyorum)." },
+    { title: "Rükn-i Yemânî ile Hacerülesved Arasında", arabic: "رَبَّنَا آتِنَا فِي الدُّنْيَا حَسَنَةً وَفِي الْآخِرَةِ حَسَنَةً وَقِنَا عَذَابَ النَّارِ", okunusu: "Rabbenâ âtinâ fid-dünyâ haseneten ve fil-âhirati haseneten ve kınâ azâben-nâr", turkish: "Rabbimiz! Bize dünyada iyilik, ahirette de iyilik ver ve bizi cehennem azabından koru. (Bakara 201)" },
+    { title: "Safa ve Merve'de", arabic: "إِنَّ الصَّفَا وَالْمَرْوَةَ مِنْ شَعَائِرِ اللَّهِ — لَا إِلَهَ إِلَّا اللَّهُ وَحْدَهُ لَا شَرِيكَ لَهُ لَهُ الْمُلْكُ وَلَهُ الْحَمْدُ وَهُوَ عَلَى كُلِّ شَيْءٍ قَدِيرٌ لَا إِلَهَ إِلَّا اللَّهُ وَحْدَهُ أَنْجَزَ وَعْدَهُ وَنَصَرَ عَبْدَهُ وَهَزَمَ الْأَحْزَابَ وَحْدَهُ", okunusu: "İnnes-Safâ vel-Mervete min şeâirillâh — Lâ ilâhe illallâhü vahdehû lâ şerîke leh, lehül-mülkü ve lehül-hamdü ve hüve alâ külli şey'in kadîr. Lâ ilâhe illallâhü vahdehû enceze va'dehû ve nasara abdehû ve hezemel-ahzâbe vahdeh", turkish: "Şüphesiz Safa ve Merve Allah'ın nişanelerindendir. — Allah'tan başka ilâh yoktur; O tektir, ortağı yoktur; mülk O'nundur, hamd O'nadır, O her şeye kadirdir. Allah'tan başka ilâh yoktur; O vaadini yerine getirdi, kuluna yardım etti ve düşman topluluklarını tek başına bozguna uğrattı." },
+    { title: "Arafat'ta (En Hayırlı Dua)", arabic: "لَا إِلَهَ إِلَّا اللَّهُ وَحْدَهُ لَا شَرِيكَ لَهُ لَهُ الْمُلْكُ وَلَهُ الْحَمْدُ وَهُوَ عَلَى كُلِّ شَيْءٍ قَدِيرٌ", okunusu: "Lâ ilâhe illallâhü vahdehû lâ şerîke leh, lehül-mülkü ve lehül-hamdü ve hüve alâ külli şey'in kadîr", turkish: "Allah'tan başka ilâh yoktur; O tektir, ortağı yoktur. Mülk O'nundur, hamd O'nadır ve O her şeye kadirdir. (Peygamberimiz: 'Duaların en hayırlısı Arefe günü duasıdır; benim ve benden önceki peygamberlerin söylediği en hayırlı söz budur.')" },
+    { title: "Şeytan Taşlarken", arabic: "بِسْمِ اللَّهِ اللَّهُ أَكْبَرُ رَغْمًا لِلشَّيْطَانِ وَرِضًا لِلرَّحْمَنِ", okunusu: "Bismillâhi Allâhü ekber, rağmen liş-şeytâni ve rıdan lir-Rahmân", turkish: "Allah'ın adıyla, Allah en büyüktür; şeytana rağmen, Rahmân'ın rızası için. (Her taşta 'Bismillâhi Allâhü ekber' denir.)" },
+    { title: "Zemzem İçerken", arabic: "اللَّهُمَّ إِنِّي أَسْأَلُكَ عِلْمًا نَافِعًا وَرِزْقًا وَاسِعًا وَشِفَاءً مِنْ كُلِّ دَاءٍ", okunusu: "Allâhümme innî es'elüke ilmen nâfian ve rızkan vâsian ve şifâen min külli dâ'", turkish: "Allah'ım! Senden faydalı ilim, geniş rızık ve her dertten şifa dilerim. (Zemzem ne niyetle içilirse onun içindir.)" },
+    { title: "Ravza'da Peygamberimize Selam", arabic: "السَّلَامُ عَلَيْكَ أَيُّهَا النَّبِيُّ وَرَحْمَةُ اللَّهِ وَبَرَكَاتُهُ، السَّلَامُ عَلَيْكَ يَا رَسُولَ اللَّهِ، السَّلَامُ عَلَيْكَ يَا خَيْرَ خَلْقِ اللَّهِ", okunusu: "Esselâmü aleyke eyyühen-nebiyyü ve rahmetullâhi ve berakâtüh. Esselâmü aleyke yâ Resûlallâh. Esselâmü aleyke yâ hayra halkıllâh", turkish: "Selam sana ey Peygamber; Allah'ın rahmeti ve bereketi üzerine olsun. Selam sana ey Allah'ın Resûlü. Selam sana ey Allah'ın yarattıklarının en hayırlısı." }
+  ]
+};
+
+/* ══════════ v65.0 — MÜBAREK GECELER (KANDİL) REHBERİ ══════════ */
+const GECELER_REHBERI = [
+  {
+    ad: "Regaip Kandili", anahtar: "Regaip",
+    ne: "Recep ayının ilk Cuma gecesi; üç ayların ve kandillerin ilkidir. 'Regâib' çokça rağbet edilen, bol ihsan demektir.",
+    yap: ["Kaza namazı veya nafile namaz kılın; tesbih namazı tavsiye edilir.", "Perşembe günü oruç tutmak güzeldir.", "Kur'an okuyun; Yâsîn ve İhlâs sûreleri.", "Bol bol istiğfar ve salavat.", "Aile ve akraba ile helalleşin, dargınları barıştırın.", "Sadaka verin, kandil simidi/tatlısı geleneği paylaşmanın vesilesidir."],
+    dua: "Allâhümme bârik lenâ fî Recebe ve Şa'bân ve belliğnâ Ramazân — Allah'ım! Recep ve Şaban'ı bize mübarek kıl ve bizi Ramazan'a ulaştır.",
+    hadis: "Peygamberimiz Recep ayı girince 'Allah'ım, Recep ve Şaban'ı bize mübarek kıl, bizi Ramazan'a ulaştır' diye dua ederdi."
+  },
+  {
+    ad: "Miraç Kandili", anahtar: "Miraç",
+    ne: "27 Recep gecesi. Peygamberimizin Mescid-i Haram'dan Mescid-i Aksâ'ya (İsrâ), oradan göklere (Miraç) yükseltildiği, beş vakit namazın farz kılındığı gece.",
+    yap: ["Beş vakit namaz bu gece hediye edildi: namazlarınızı gözden geçirin, kazalarınızı kılın.", "12 rekât nafile namaz (2'şer rekât) kılınabilir.", "İsrâ sûresinin ilk âyeti ve Necm sûresi okunur.", "Âmenerrasûlü (Bakara 285-286) bu gecede verildi; okuyun.", "Gündüzünde oruç tutmak faziletlidir.", "Tövbe, istiğfar ve uzun dua."],
+    dua: "Sübhânellezî esrâ bi-abdihî leylen minel-mescidil-harâmi ilel-mescidil-aksâ — Kulunu bir gece Mescid-i Haram'dan Mescid-i Aksâ'ya götüren Allah her türlü noksandan münezzehtir. (İsrâ 1)",
+    hadis: "Peygamberimize Miraç'ta üç şey verildi: beş vakit namaz, Bakara sûresinin son âyetleri ve şirk koşmayanların bağışlanacağı müjdesi."
+  },
+  {
+    ad: "Berat Kandili", anahtar: "Berat",
+    ne: "15 Şaban gecesi. 'Berat' borçtan, cezadan kurtuluş demektir; bir yıllık rızık ve ecellerin takdir edildiği, günahların bağışlandığı gece kabul edilir.",
+    yap: ["Gecenin bir kısmını namazla ihya edin; 100 rekâta kadar nafile kılanlar olur, 2-12 rekât da yeterlidir.", "Yâsîn sûresini üç niyetle (uzun ömür, bela-musibetten korunma, rızık) okumak yaygın gelenektir.", "Berat duası ve bol istiğfar.", "Ertesi gün (15 Şaban) oruç tutmak müstehaptır.", "Kul haklarını ödeyin, küskünlükleri bitirin — hadiste kin tutanın bu gece affedilmediği bildirilir.", "Kabir ziyareti ve geçmişler için dua."],
+    dua: "Allâhümme innî es'elükel-afve vel-âfiyete fid-dünyâ vel-âhirah — Allah'ım! Dünya ve ahirette senden af ve afiyet dilerim.",
+    hadis: "Peygamberimiz: 'Allah Şaban'ın on beşinci gecesinde kullarına rahmetiyle tecelli eder; müşrik ve kin tutan dışında herkesi bağışlar.'"
+  },
+  {
+    ad: "Kadir Gecesi", anahtar: "Kadir",
+    ne: "Ramazan'ın 27. gecesi olarak kutlanır (son on günün tek gecelerinde aranması tavsiye edilir). Kur'an'ın indirilmeye başlandığı, bin aydan hayırlı gece.",
+    yap: ["Kadir sûresini okuyun ve anlamını düşünün.", "Teravih ve teheccüd; gece boyunca nafile namaz.", "Kur'an okuyun, hatim varsa bu gece bitirin.", "Peygamberimizin Hz. Âişe'ye öğrettiği duayı çokça söyleyin.", "Sadaka ve fitre verin, iftar açtırın.", "Ramazan'ın son on gününde itikâfa girmek sünnettir."],
+    dua: "Allâhümme inneke afüvvün kerîmün tühibbül-afve fa'fü annî — Allah'ım! Sen affedicisin, kerimsin, affetmeyi seversin; beni affet.",
+    hadis: "Peygamberimiz: 'Kim Kadir Gecesi'ni inanarak ve sevabını Allah'tan bekleyerek ihya ederse geçmiş günahları bağışlanır.'"
+  },
+  {
+    ad: "Mevlid Kandili", anahtar: "Mevlid",
+    ne: "12 Rebiülevvel gecesi. Peygamber Efendimizin (s.a.v.) dünyaya teşrif ettiği gece; 'Mevlid' doğum demektir.",
+    yap: ["Bol bol salavat getirin: 'Allâhümme salli alâ seyyidinâ Muhammedin ve alâ âlihî ve sahbihî ve sellim'.", "Siyer okuyun; Peygamberimizin hayatından bir bölüm öğrenin (uygulamada Siyer bölümü).", "Sünnetlerinden birini hayatınıza katmaya niyet edin.", "Kur'an okuyun; Duhâ ve İnşirâh sûreleri.", "Yetim ve yoksulları sevindirin; Peygamberimiz yetimdi.", "Aile ile birlikte Mevlid-i Şerif okumak Anadolu geleneğidir."],
+    dua: "Allâhümme salli alâ Muhammedin ve alâ âli Muhammed, kemâ salleyte alâ İbrâhîme ve alâ âli İbrâhîm, inneke hamîdün mecîd.",
+    hadis: "Peygamberimiz: 'Kim bana bir salavat getirirse Allah ona on rahmet eder.'"
+  },
+  {
+    ad: "Ramazan Bayramı", anahtar: "Ramazan Bayramı",
+    ne: "Şevval'in ilk üç günü. Bir aylık orucun ardından sevinç, şükür ve ikram günleri.",
+    yap: ["Bayram sabahı gusül/abdest alın, en güzel elbisenizi giyin, camiye giderken bir şey yiyin (Ramazan Bayramı'na özgü).", "Bayram namazına gidin; yolda tekbir getirin.", "Fitreyi bayram namazından önce verin.", "Büyükleri ziyaret edin, küskünleri barıştırın, kabristanı ziyaret edin.", "Bayram günü oruç tutulmaz.", "Şevval'de 6 gün oruç tutmak bütün yıl oruç tutmuş gibi sevap kazandırır."],
+    dua: "Tekabbelallâhü minnâ ve minküm — Allah bizden ve sizden kabul etsin. (Sahabenin bayramlaşma sözü)",
+    hadis: "Peygamberimiz: 'Ramazan orucunu tutup ardından Şevval'den altı gün tutan, bütün yılı oruçlu geçirmiş gibi olur.'"
+  },
+  {
+    ad: "Kurban Bayramı", anahtar: "Kurban",
+    ne: "Zilhicce'nin 10-13. günleri. Hz. İbrahim'in teslimiyetini hatırlatan, hacıların haccını tamamladığı, kurban kesilen bayram.",
+    yap: ["Arefe sabahından bayramın 4. günü ikindisine kadar her farzdan sonra teşrik tekbiri: 'Allâhü ekber Allâhü ekber lâ ilâhe illallâhü vallâhü ekber Allâhü ekber ve lillâhil-hamd'.", "Arefe günü oruç tutmak (hacda olmayanlara) iki yılın günahına kefarettir.", "Bayram namazına giderken bir şey yemeyin; ilk lokma kurban etinden olsun (sünnet).", "Kurbanı bayram namazından sonra kesin; etini üçe bölün: fakir, komşu-akraba, ev.", "Zilhicce'nin ilk on günü oruç, zikir ve ibadet için çok faziletlidir.", "Ziyaretler, hediye ve çocukları sevindirmek."],
+    dua: "Bismillâhi Allâhü ekber — (kurban keserken) Allah'ın adıyla, Allah en büyüktür. Allâhümme hâzâ minke ve leke — Allah'ım, bu sendendir ve sanadır.",
+    hadis: "Peygamberimiz: 'Hiçbir günde yapılan salih amel Allah'a Zilhicce'nin ilk on gününde yapılandan daha sevimli değildir.'"
+  },
+  {
+    ad: "Aşure Günü", anahtar: "Aşure",
+    ne: "Muharrem'in 10. günü. Hz. Nuh'un gemisinin karaya oturduğu, Hz. Mûsâ'nın kurtulduğu gün olarak anılır; Hz. Hüseyin'in Kerbelâ şehadeti de bu gündedir.",
+    yap: ["Aşure orucu tutun; Yahudilere benzememek için 9 veya 11. günü de ekleyin.", "Aile bütçesini bugün geniş tutmak, aşure pişirip komşularla paylaşmak gelenektir.", "Sadaka verin, hasta ziyaret edin.", "Kerbelâ şehitleri ve Ehl-i Beyt için dua edin.", "Gusül abdesti, tırnak kesmek ve temizlik tavsiye edilir."],
+    dua: "Hasbünallâhü ve ni'mel-vekîl — Allah bize yeter, O ne güzel vekildir.",
+    hadis: "Peygamberimiz: 'Aşure günü orucunun geçmiş bir yılın günahlarına kefaret olmasını Allah'tan umarım.'"
+  }
+];
+
+/* ══════════ v65.1 — TECVİD DERSLERİ (Elifbâ'nın devamı) ══════════ */
+const TECVID_DERSLERI = [
+  {
+    ad: "Tecvid Nedir?", ozet: "Kur'an'ı, harflerin hakkını vererek ve kurallarına uygun okuma ilmi.",
+    kural: "Tecvid, Kur'an harflerini çıkış yerlerinden (mahreç) ve sıfatlarına uygun okumayı, uzatma (med), gizleme (ihfâ), katma (idgam) gibi kuralları öğretir. Kur'an'ı tecvidle okumak sünnete uygun okumaktır; anlamı bozan hatalardan (lahn-ı celî) kaçınmak farzdır, ince hataları (lahn-ı hafî) düzeltmek ise faziletlidir. Bu derslerde en sık karşılaşılan kurallar sade örneklerle anlatılır; dinleyerek pekiştirmek için Kur'an Oku bölümündeki hoca sesini kullanın.",
+    ornekler: [{ ar: "وَرَتِّلِ الْقُرْآنَ تَرْتِيلًا", ok: "Ve rattilil-Kur'âne tertîlâ", not: "Kur'an'ı tane tane, tertil ile oku. (Müzzemmil 4)" }]
+  },
+  {
+    ad: "Harflerin Mahreçleri ve Kalın Harfler", ozet: "Her harfin çıkış yeri vardır; 7 harf her zaman kalın okunur.",
+    kural: "Harfler boğaz (ء ه ع ح غ خ), dil (ق ك ج ش ي ض ل ن ر ط د ت ص ز س ظ ذ ث), dudak (ف ب م و) ve geniz (gunne) bölgelerinden çıkar. Yedi harf daima kalın (dolgun) okunur — 'hurûf-ı isti'lâ': خ ص ض غ ط ق ظ. Bunları 'Hussa dağtin kız' diye ezberleyebilirsiniz. Diğer harfler incedir; ل ve ر ile Allah lafzı bazı yerlerde kalın, bazı yerlerde ince okunur (ilerideki ders).",
+    ornekler: [
+      { ar: "خَلَقَ", ok: "halaka", not: "خ ve ق kalın" },
+      { ar: "صِرَاطَ", ok: "sırâta", not: "ص ve ط kalın; ر burada kalın" },
+      { ar: "ظَلَمَ", ok: "zaleme", not: "ظ kalın" }
+    ]
+  },
+  {
+    ad: "Med Harfleri ve Tabiî Med", ozet: "Elif, vav ve ya harfleri sesi 1 elif miktarı (bir parmak kaldıracak süre) uzatır.",
+    kural: "Med harfleri üçtür: harekesiz elif (öncesi üstün), harekesiz vav (öncesi ötre), harekesiz ya (öncesi esre). Bu harflerden sonra hemze veya sükûn yoksa 'tabiî med' olur ve ses bir elif miktarı (yaklaşık bir saniye) uzatılır. Uzatmayı ne kısaltmalı ne de abartmalı.",
+    ornekler: [
+      { ar: "قَالَ", ok: "kâle", not: "elif ile tabiî med" },
+      { ar: "يَقُولُ", ok: "yekûlü", not: "vav ile tabiî med" },
+      { ar: "قِيلَ", ok: "kîle", not: "ya ile tabiî med" }
+    ]
+  },
+  {
+    ad: "Medd-i Muttasıl (Bitişik Uzatma)", ozet: "Med harfinden sonra aynı kelimede hemze gelirse 4 elif uzatılır.",
+    kural: "Med harfi ile hemze aynı kelimedeyse 'muttasıl' (bitişik) med olur; uzatmak vaciptir. Uzunluk 4 elif miktarıdır (en az 2, en çok 5 kabul edilir). Mushafta genellikle harfin üzerinde küçük bir med işareti (~) bulunur.",
+    ornekler: [
+      { ar: "جَاءَ", ok: "câââe", not: "elif + hemze aynı kelimede" },
+      { ar: "سُوءَ", ok: "sûûûe", not: "vav + hemze" },
+      { ar: "السَّمَاءِ", ok: "es-semâââi", not: "elif + hemze" }
+    ]
+  },
+  {
+    ad: "Medd-i Munfasıl (Ayrı Uzatma)", ozet: "Med harfi bir kelimenin sonunda, hemze sonraki kelimenin başındaysa 2–4 elif uzatılır.",
+    kural: "Med harfi ile hemze ayrı kelimelerdeyse 'munfasıl' (ayrı) med olur; uzatmak câizdir, Türkiye'de yaygın uygulama 4 elif (en az 2) uzatmaktır. Durulursa (vakıf) hemze okunmadığı için med tabiî medde döner.",
+    ornekler: [
+      { ar: "بِمَا أُنْزِلَ", ok: "bimâââ ünzile", not: "elif kelime sonunda, hemze sonraki kelimede" },
+      { ar: "يَا أَيُّهَا", ok: "yâââ eyyühâ", not: "ünlem yâ'sı + hemze" },
+      { ar: "قُوا أَنْفُسَكُمْ", ok: "kûûû enfüseküm", not: "vav + hemze" }
+    ]
+  },
+  {
+    ad: "Medd-i Lâzım (Zorunlu Uzatma)", ozet: "Med harfinden sonra sürekli sükûn (cezm ya da şedde) gelirse 4 elif uzatılır.",
+    kural: "Med harfinden sonra kelimenin aslında bulunan bir sükûn (cezimli veya şeddeli harf) gelirse 'lâzım' med olur; 4 elif uzatmak vaciptir. Durulsa da durulmasa da uzatma değişmez. Sûre başlarındaki hurûf-ı mukattaa'da (الٓمٓ gibi) da lâzım med vardır.",
+    ornekler: [
+      { ar: "وَلَا الضَّالِّينَ", ok: "ve led-dâââllîn", not: "elif + şeddeli lâm (Fâtiha 7)" },
+      { ar: "الٓمٓ", ok: "Elif-lâââm-mîîîm", not: "hurûf-ı mukattaa (Bakara 1)" },
+      { ar: "الْحَاقَّةُ", ok: "el-hâââkkah", not: "elif + şeddeli kaf" }
+    ]
+  },
+  {
+    ad: "Medd-i Ârız (Geçici Uzatma)", ozet: "Med harfinden sonraki harfte durulunca oluşan sükûnla 1–4 elif uzatılır.",
+    kural: "Med harfinden sonra gelen harf aslında harekeli olduğu hâlde, o kelimede durulduğu için sükûnlu okunursa 'ârız' (geçici) med olur. Uzunluk okuyanın tercihine göre 1, 2 veya 4 eliftir; bir okuyuşta aynı ölçü korunmalıdır. Durulmadan geçilirse tabiî med olarak okunur.",
+    ornekler: [
+      { ar: "الرَّحِيمِ", ok: "er-rahîîîm", not: "durunca ya'dan sonraki mîm sükûnlu olur" },
+      { ar: "نَسْتَعِينُ", ok: "nesteîîîn", not: "Fâtiha 5, vakıfta" },
+      { ar: "يَعْلَمُونَ", ok: "ya'lemûûûn", not: "vav + vakıf sükûnu" }
+    ]
+  },
+  {
+    ad: "Medd-i Lîn (Yumuşak Uzatma)", ozet: "Üstünden sonra cezimli vav veya ya gelir, sonrasında durulursa yumuşakça uzatılır.",
+    kural: "Harekesi üstün olan bir harften sonra cezimli vav (وْ) veya cezimli ya (يْ) gelirse 'lîn' harfi oluşur; bu harften sonraki harfte durulursa medd-i lîn olur ve 1–4 elif yumuşak bir uzatmayla okunur. Durulmazsa uzatılmaz.",
+    ornekler: [
+      { ar: "خَوْفٍ", ok: "havf → havvvf (vakıfta)", not: "Kureyş 4" },
+      { ar: "الْبَيْتِ", ok: "el-beyt (vakıfta uzar)", not: "Kureyş 3" },
+      { ar: "قُرَيْشٍ", ok: "Kureyş", not: "Kureyş 1, vakıfta lîn" }
+    ]
+  },
+  {
+    ad: "İzhâr (Açık Okuma)", ozet: "Sakin nûn veya tenvinden sonra boğaz harfi gelirse nûn açıkça okunur.",
+    kural: "Sakin nûn (نْ) veya tenvin (ً ٍ ٌ) den sonra altı boğaz harfinden biri (ء ه ع ح غ خ) gelirse nûn sesi gizlenmeden, gunnesiz ve açık okunur. Bu harfleri 'Ehâ, hâ, ğâ' diye üçlü hatırlayabilirsiniz.",
+    ornekler: [
+      { ar: "مِنْ هَادٍ", ok: "min hâd", not: "nûn açık: ه" },
+      { ar: "عَلِيمٌ حَكِيمٌ", ok: "alîmün hakîm", not: "tenvin + ح" },
+      { ar: "مَنْ آمَنَ", ok: "men âmene", not: "nûn + hemze" }
+    ]
+  },
+  {
+    ad: "İdgam (Katarak Okuma)", ozet: "Sakin nûn/tenvin, 'يرملون' harflerine katılır: ي م ن و ile gunneli, ل ر ile gunnesiz.",
+    kural: "Sakin nûn veya tenvinden sonra ي م ن و harflerinden biri gelirse nûn bu harfe katılır ve genizden 'gunne' ile 1,5–2 elif miktarı tutulur (idgam maa'l-gunne). ل veya ر gelirse gunnesiz, doğrudan katılarak okunur (idgam bilâ gunne). Bu kural yalnız iki ayrı kelime arasında geçerlidir; دُنْيَا، قِنْوَان gibi tek kelimede izhar yapılır.",
+    ornekler: [
+      { ar: "مِنْ وَالٍ", ok: "miv-vâl", not: "gunneli: nûn → vav" },
+      { ar: "مِنْ نُورٍ", ok: "min-nûr", not: "gunneli: nûn → nûn" },
+      { ar: "مِنْ رَبِّهِمْ", ok: "mir-rabbihim", not: "gunnesiz: nûn → ر" },
+      { ar: "هُدًى لِلْمُتَّقِينَ", ok: "hüdel-lil-müttakîn", not: "tenvin → ل, gunnesiz (Bakara 2)" }
+    ]
+  },
+  {
+    ad: "İklâb (Çevirme)", ozet: "Sakin nûn/tenvinden sonra ب gelirse nûn, gunneli bir mîm'e dönüşür.",
+    kural: "Sakin nûn veya tenvinden sonra ب harfi gelirse nûn sesi 'mîm'e çevrilir ve dudaklar hafifçe kapatılarak gunne ile okunur. Mushafta nûn'un üzerine küçük bir mîm (م) konarak gösterilir.",
+    ornekler: [
+      { ar: "مِنْ بَعْدِ", ok: "mim-ba'di", not: "nûn → mîm" },
+      { ar: "سَمِيعٌ بَصِيرٌ", ok: "semîum-basîr", not: "tenvin → mîm" },
+      { ar: "أَنْبِئْهُمْ", ok: "embi'hüm", not: "tek kelimede iklâb (Bakara 33)" }
+    ]
+  },
+  {
+    ad: "İhfâ (Gizleme)", ozet: "Sakin nûn/tenvinden sonra kalan 15 harf gelirse nûn gizlenerek, genizden okunur.",
+    kural: "İzhâr, idgam ve iklâb harfleri dışındaki 15 harf (ت ث ج د ذ ز س ش ص ض ط ظ ف ق ك) sakin nûn veya tenvinden sonra gelirse, dil nûn'un mahrecine değdirilmeden nûn sesi genizden (gunne ile) 1,5 elif miktarı gizlenerek okunur. Sonraki harf kalınsa gunne kalın, inceyse ince çıkar.",
+    ornekler: [
+      { ar: "مِنْ كُلِّ", ok: "min~külli", not: "nûn gizli, ك ince" },
+      { ar: "أَنْتَ", ok: "en~te", not: "tek kelimede ihfâ" },
+      { ar: "عَنْ صَلَاتِهِمْ", ok: "an~salâtihim", not: "ص kalın → kalın gunne" },
+      { ar: "مَاءً دَافِقًا", ok: "mâen~dâfika", not: "tenvin + د" }
+    ]
+  },
+  {
+    ad: "Sakin Mîm'in Hükümleri", ozet: "Sakin mîm'den sonra mîm gelirse idgam, ب gelirse dudak ihfâsı, diğer harflerde izhâr.",
+    kural: "Sakin mîm (مْ) den sonra: (1) mîm gelirse iki mîm birleştirilip gunne ile okunur — idgam-ı misleyn maa'l-gunne; (2) ب gelirse mîm dudaklar hafif açık tutularak gunne ile gizlenir — ihfâ-i şefevî; (3) diğer harfler gelirse mîm açıkça okunur — izhâr-ı şefevî. Özellikle ف ve و harflerinde mîm'i açık okumaya dikkat edilir.",
+    ornekler: [
+      { ar: "لَهُمْ مَا", ok: "lehüm-mâ", not: "idgam-ı misleyn (gunneli)" },
+      { ar: "تَرْمِيهِمْ بِحِجَارَةٍ", ok: "termîhim~bi-hicâratin", not: "ihfâ-i şefevî (Fîl 4)" },
+      { ar: "لَهُمْ فِيهَا", ok: "lehüm fîhâ", not: "izhâr-ı şefevî" }
+    ]
+  },
+  {
+    ad: "Kalkale (Sıçratma)", ozet: "ق ط ب ج د harfleri cezimli olunca ses hafif titretilerek çıkarılır.",
+    kural: "'Kutbu ced' (قطب جد) harfleri sükûnlu okunduğunda mahreçte hapsedilen ses hafif bir sıçramayla bırakılır. Kelime ortasında hafif (kalkale-i suğrâ), kelime sonunda durulunca daha belirgin (kalkale-i kübrâ) yapılır. Kalkale harfin kendi sesiyle olur; 'ı', 'i' gibi bir ünlü eklenmez.",
+    ornekler: [
+      { ar: "يَقْطَعُونَ", ok: "yak'taûn", not: "kelime ortasında ق" },
+      { ar: "أَحَدٌ", ok: "ehad' (vakıfta)", not: "İhlâs 1, kübrâ" },
+      { ar: "الْفَلَقِ", ok: "el-felak' (vakıfta)", not: "Felâk 1" },
+      { ar: "أَبْتَرُ", ok: "eb'ter", not: "Kevser 3, ب" }
+    ]
+  },
+  {
+    ad: "Lafzatullah ve Râ Harfi", ozet: "Allah lafzındaki lâm ve râ harfi, önceki harekeye göre kalın ya da ince okunur.",
+    kural: "Allah (الله) lafzından önceki harf üstün veya ötre ise lâm kalın, esre ise ince okunur. Râ harfi: harekesi üstün veya ötre ise kalın; esre ise ince; cezimli ise önceki harfin harekesine bakılır (üstün/ötre → kalın, esre → ince). Vakıfta sondaki râ, önceki harekeye göre okunur.",
+    ornekler: [
+      { ar: "قَالَ اللَّهُ", ok: "kâlallâh", not: "önce üstün → kalın lâm" },
+      { ar: "بِسْمِ اللَّهِ", ok: "bismillâh", not: "önce esre → ince lâm" },
+      { ar: "رَبِّ", ok: "rabbi", not: "üstün → kalın râ" },
+      { ar: "رِزْقًا", ok: "rizkan", not: "esre → ince râ" }
+    ]
+  },
+  {
+    ad: "Gunne, Sekte ve Vakıf İşaretleri", ozet: "Şeddeli nûn/mîm'de genizden tutma, dört yerde nefes almadan kısa duruş ve mushaftaki durak işaretleri.",
+    kural: "GUNNE: Şeddeli nûn (نّ) ve mîm (مّ) her zaman genizden 1,5–2 elif miktarı tutularak okunur. SEKTE: Kur'an'da dört yerde nefes almadan sesi kısaca kesmek gerekir — Kehf 1 (عِوَجًا), Yâsîn 52 (مَرْقَدِنَا), Kıyâme 27 (مَنْ رَاقٍ), Mutaffifîn 14 (بَلْ رَانَ). VAKIF İŞARETLERİ: م durmak gerekli · لا durulmaz · ج durmak da geçmek de olur · صلى geçmek daha iyi · قلى durmak daha iyi · ∴ ∴ ikisinden yalnız birinde durulur (muânaka).",
+    ornekler: [
+      { ar: "إِنَّ", ok: "innne", not: "şeddeli nûn → gunne" },
+      { ar: "ثُمَّ", ok: "sümmme", not: "şeddeli mîm → gunne" },
+      { ar: "عِوَجًا ۜ قَيِّمًا", ok: "ivecâ (sekte) kayyimâ", not: "Kehf 1-2" },
+      { ar: "مَنْ رَاقٍ", ok: "men (sekte) râk", not: "Kıyâme 27 — burada idgam yapılmaz" }
+    ]
+  }
 ];

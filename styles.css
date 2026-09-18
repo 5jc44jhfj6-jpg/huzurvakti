@@ -3368,3 +3368,218 @@ body.green-theme .mv-ayah.okunuyor .mv-w.gecti {
   .sd-ok { font-size:calc(1.15rem * var(--sd-olcek)); }
   .sd-ses-btn { padding:0 10px; font-size:.8rem; }
 }
+
+
+/* ══════════ v64.8 — Ek vakitler şeridi, yakın cami ══════════ */
+.ek-vakit-kart { background:var(--bg-card); border:1.2px solid var(--border-gold); border-radius:var(--radius-md); padding:10px 12px; margin:10px 0 12px; box-shadow:var(--shadow-card); }
+.ek-vakit-ust { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:6px; flex-wrap:wrap; }
+.ek-vakit-baslik { font-size:.86rem; font-weight:800; color:var(--gold-light); }
+.ek-vakit-baslik small { font-weight:600; color:var(--text-muted); font-size:.72rem; }
+.ek-vakit-paylas { background:transparent; border:1px solid var(--border-gold); color:var(--gold-light); border-radius:30px; padding:6px 12px; font-size:.78rem; font-weight:700; cursor:pointer; font-family:inherit; white-space:nowrap; }
+.ek-vakit-paylas:active { transform:scale(.97); }
+.ek-vakit-satir { display:flex; align-items:baseline; justify-content:space-between; gap:10px; padding:6px 0; border-top:1px dashed var(--border-light); font-size:.84rem; }
+.ek-vakit-satir:first-child { border-top:none; }
+.ek-vakit-satir b { color:var(--text-main); font-weight:700; text-align:right; font-variant-numeric:tabular-nums; }
+.ek-vakit-ad { color:var(--text-sub); font-weight:600; }
+.ek-vakit-satir.kerahet b { color:#e8a08a; font-size:.78rem; }
+.ek-vakit-satir.bayram { background:rgba(212,175,55,.12); border-radius:8px; padding:8px 8px; border-top:none; }
+.ek-vakit-satir.bayram b, .ek-vakit-satir.bayram .ek-vakit-ad { color:var(--gold-light); }
+.ek-vakit-satir.kandil { background:rgba(212,175,55,.08); border-radius:8px; padding:8px 8px; border-top:none; }
+.ek-vakit-not { font-size:.72rem; color:var(--text-muted); margin-top:6px; line-height:1.45; }
+.yakin-cami-btn { display:block; width:100%; margin:12px 0 10px; text-align:center; }
+@media (max-width: 380px) { .ek-vakit-satir { flex-direction:column; gap:2px; } .ek-vakit-satir b { text-align:left; } }
+
+
+/* ══════════ v65.0 — Hac & Umre, Kandil Rehberi ══════════ */
+.hac-seg { margin: 10px 0 12px; }
+.gece-kart { background:var(--bg-card); border:1.2px solid var(--border-gold); border-radius:var(--radius-md); padding:0 14px; margin-bottom:10px; box-shadow:var(--shadow-card); }
+.gece-kart summary { list-style:none; cursor:pointer; display:flex; align-items:center; justify-content:space-between; gap:8px; padding:13px 0; font-weight:800; color:var(--gold-light); font-size:.98rem; }
+.gece-kart summary::-webkit-details-marker { display:none; }
+.gece-kart summary::after { content:'▾'; color:var(--text-muted); margin-left:6px; transition:transform .2s; }
+.gece-kart[open] summary::after { transform:rotate(180deg); }
+.gece-ad { flex:1; }
+.gece-etiket { font-size:.72rem; font-weight:700; color:var(--text-sub); background:rgba(212,175,55,.12); border:1px solid var(--border-light); border-radius:20px; padding:3px 9px; white-space:nowrap; }
+.gece-etiket.yakin { background:var(--gold-gradient); color:#1a0e05; border-color:transparent; }
+.gece-tarih { font-size:.82rem; color:var(--gold-light); font-weight:700; margin:-4px 0 8px; }
+.gece-ne { font-size:.9rem; color:var(--text-main); line-height:1.55; margin-bottom:10px; }
+.gece-alt-baslik { font-size:.8rem; font-weight:800; color:var(--gold-light); text-transform:uppercase; letter-spacing:.4px; margin:10px 0 5px; }
+.gece-liste { margin:0 0 6px 0; padding-left:20px; font-size:.88rem; line-height:1.55; color:var(--text-main); }
+.gece-liste li { margin-bottom:4px; }
+.gece-dua { font-size:.88rem; color:var(--text-main); line-height:1.55; font-style:italic; background:rgba(212,175,55,.08); border-radius:10px; padding:9px 11px; }
+.gece-hadis { font-size:.86rem; color:var(--text-sub); line-height:1.55; padding-bottom:14px; }
+
+/* ══════════ v65.0 — Büyük Yazı modu ══════════ */
+html.hv-buyuk { font-size: 113%; }
+html.hv-buyuk .prayer-time { font-size: 1.3rem; }
+html.hv-buyuk .prayer-name { font-size: .9rem; }
+html.hv-buyuk .hub-title { font-size: .98rem; }
+html.hv-buyuk .hub-sub { font-size: .76rem; }
+html.hv-buyuk .fc-tr, html.hv-buyuk .fc-ok, html.hv-buyuk .hadis-text, html.hv-buyuk .kandil-desc, html.hv-buyuk .gece-liste, html.hv-buyuk .gece-ne { font-size: 1rem; line-height: 1.6; }
+html.hv-buyuk .tab-label { font-size: .7rem; white-space: nowrap; }
+html.hv-buyuk .tab-icon { font-size: 1.45rem; }
+
+/* ══════════ v65.0 — GÜNDÜZ TEMASI (açık renk) cilası ══════════
+   Değişkenler dosyanın başındaki body.light-theme bloğunda; burada
+   sabit renkli parçalar (beyaz yazı, koyu kartlar) gündüze uyarlanır. */
+body.light-theme {
+  --gold-light: #8a6410;            /* başlık/ikon altını: krem zeminde okunur koyu altın */
+  --gold: #a8801c;
+  --border-gold: rgba(168,128,28,.55);
+  --t1:#f6ead8; --t2:#efe0c8; --t3:#e7d4b6; --t4:#dcc4a0;
+  --bg-main:#f4efe4;
+  --bg-gradient: linear-gradient(180deg, #efe4d0 0%, #f6f1e6 100%);
+}
+body.light-theme::before { opacity: .35; }
+body.light-theme .hero-frame-box { background: radial-gradient(circle at 50% 22%, rgba(255,252,246,.96) 0%, rgba(247,241,230,.98) 80%); border-color: var(--border-gold); box-shadow: 0 8px 22px rgba(90,60,20,.10); }
+body.light-theme .hero-prayer-unified-box { background: linear-gradient(180deg, rgba(255,251,243,.9), rgba(246,238,224,.95)); box-shadow: 0 0 0 1px var(--border-gold) inset; }
+body.light-theme .countdown-timer-text { background: none; -webkit-text-fill-color: #3a2410; color:#3a2410; filter:none; text-shadow:none; }
+body.light-theme .countdown-target, body.light-theme .countdown-next { color: #6b4a12; }
+body.light-theme .countdown-next { background: rgba(168,128,28,.12); border-color: rgba(168,128,28,.35); }
+body.light-theme .prayer-card { background: rgba(255,255,255,.85); border: 1px solid rgba(168,128,28,.28); }
+body.light-theme .prayer-time { color: #2b1a0a; }
+body.light-theme .prayer-name { color: #6b4a12; }
+body.light-theme .prayer-card.active { border: 2px solid #a8801c; background: linear-gradient(135deg, rgba(212,175,55,.35), rgba(255,255,255,.9)); box-shadow: 0 0 16px rgba(168,128,28,.35); }
+body.light-theme .ip { background: rgba(255,255,255,.85); border-color: rgba(168,128,28,.28); color:#4a3520; }
+body.light-theme .ip.remain { background: linear-gradient(135deg, rgba(212,175,55,.32), rgba(255,255,255,.7)); color:#3a2410; }
+body.light-theme .hub-card { background: linear-gradient(160deg, rgba(255,255,255,.92), rgba(246,238,224,.96)); border: 1px solid rgba(168,128,28,.32); box-shadow: 0 6px 16px rgba(90,60,20,.08); }
+body.light-theme .hub-title { color: #5b3f0c; }
+body.light-theme .hub-sub { color: rgba(24,36,33,.6); }
+body.light-theme #bottom-nav { background: linear-gradient(180deg, rgba(255,252,246,.98), rgba(243,236,223,.98)); border-top: 1px solid rgba(168,128,28,.35); box-shadow: 0 -4px 18px rgba(90,60,20,.10); }
+body.light-theme #bottom-nav .nav-item, body.light-theme #bottom-nav button, body.light-theme #bottom-nav span { color: #4a3520; }
+body.light-theme #bottom-nav .active, body.light-theme #bottom-nav .nav-item.active span { color: #8a6410; }
+body.light-theme .info-note, body.light-theme .empty-note { background: rgba(168,128,28,.08); color: #4a3520; border-color: rgba(168,128,28,.25); }
+body.light-theme .feature-card, body.light-theme .cuma-msg-card, body.light-theme .kandil-item, body.light-theme .gece-kart, body.light-theme .ek-vakit-kart, body.light-theme .sd-kart, body.light-theme .onemli-card, body.light-theme .surah-card { background: rgba(255,255,255,.88); }
+body.light-theme .sd-satir { background: rgba(168,128,28,.05); border-color: rgba(168,128,28,.22); }
+body.light-theme .sd-ar, body.light-theme .fc-ar, body.light-theme .verse-arabic { color: #3a2410; }
+body.light-theme .sd-ok { color: #1f1408; }
+body.light-theme .sd-satir.sd-caliyor { border-color: #a8801c; box-shadow: 0 0 0 2px rgba(168,128,28,.25); }
+body.light-theme .sd-satir.sd-caliyor .sd-w { background-image: linear-gradient(rgba(212,175,55,.22), rgba(212,175,55,.22)); }
+body.light-theme .sd-satir.sd-caliyor .sd-w.gecti, body.light-theme .sd-w.gecti { background-image: linear-gradient(rgba(212,175,55,.55), rgba(212,175,55,.55)); }
+body.light-theme .gold-primary-btn, body.light-theme .seg-btn.active, body.light-theme .cuma-act-btn.share, body.light-theme .scp-badge { color: #2b1a0a; }
+body.light-theme .hadis-text, body.light-theme .fc-tr, body.light-theme .fc-ok { color: #1f1408; }
+body.light-theme .ek-vakit-satir.kerahet b { color: #a8412e; }
+body.light-theme .scp-inner { background: radial-gradient(circle at 50% 30%, #5C3B25 0%, #2A170C 55%, #160B04 100%); }  /* paylaşım kartı önizlemesi kart rengini korur */
+body.light-theme .scp-inner .scp-tr { color: #FDF6EE; }
+body.light-theme .scp-inner .scp-ar, body.light-theme .scp-inner .scp-src, body.light-theme .scp-inner .scp-brand { color: #E3AD82; }
+body.light-theme .select-input, body.light-theme .search-input-field, body.light-theme input[type="number"], body.light-theme input[type="text"] { background: #fff; color: #1f1408; border-color: rgba(168,128,28,.4); }
+body.light-theme .toggle-slider { background: rgba(0,0,0,.18); }
+body.light-theme .notify-status.ok { color: #1f6b3a; }
+body.light-theme .hijri-today-card, body.light-theme .zikir-display, body.light-theme .daily-hadis-card, body.light-theme .compass-note, body.light-theme .qt-card, body.light-theme .quiz-intro, body.light-theme .quiz-result, body.light-theme .mv-where { background: rgba(255,255,255,.88) !important; border-color: rgba(168,128,28,.35); color: #1f1408; }
+body.light-theme .ht-hijri, body.light-theme .zikir-display .zikir-count, body.light-theme .verse-card-title { color: #6b4a12; }
+body.light-theme .ht-greg, body.light-theme .hadis-source { color: rgba(24,36,33,.7); }
+body.light-theme .nav-tab { background: rgba(255,255,255,.7); color: #4a3520; }
+body.light-theme .prayer-check-row.checked { background: rgba(212,175,55,.22); }
+body.light-theme .kandil-item.is-today { background: linear-gradient(135deg, rgba(212,175,55,.3), rgba(255,255,255,.9)); }
+body.light-theme .compass-dial-ring { background: radial-gradient(circle at 50% 42%, #f6ead8, #e7d4b6 55%, #dcc4a0) !important; }
+
+
+/* ══════════ v65.1 — Tecvid, Öğren mod anahtarı, TTS yardım ══════════ */
+.tecvid-no { display:inline-flex; align-items:center; justify-content:center; min-width:22px; height:22px; border-radius:11px; background:rgba(212,175,55,.18); font-size:.72rem; margin-right:4px; }
+.tecvid-kart.biten summary { opacity:.85; }
+.tecvid-ornek { border:1px solid var(--border-light); border-radius:10px; padding:8px 10px; margin-bottom:6px; background:rgba(255,255,255,.03); }
+.tecvid-ar { font-family:var(--font-ar); font-size:1.6rem; direction:rtl; text-align:right; color:var(--gold-light); line-height:1.8; }
+.tecvid-ok { font-size:.88rem; color:var(--text-main); font-weight:600; margin-top:2px; }
+.tecvid-not { font-weight:400; color:var(--text-muted); font-size:.8rem; }
+.ogren-mod { margin:0; padding:3px; flex:0 0 auto; }
+.ogren-mod .seg-btn { padding:6px 10px; font-size:.78rem; }
+.tts-yardim-btn { display:inline-block; margin-top:6px; background:var(--gold-gradient); color:#1a0e05; border:0; border-radius:20px; padding:6px 12px; font-size:.8rem; font-weight:800; cursor:pointer; font-family:inherit; }
+.tts-box { text-align:left; }
+.tts-baslik { font-size:1.05rem; font-weight:800; color:var(--gold-light); margin-bottom:8px; }
+.tts-aciklama { font-size:.88rem; color:var(--text-sub); line-height:1.5; margin-bottom:10px; }
+.tts-adim { padding-left:20px; font-size:.9rem; line-height:1.55; color:var(--text-main); margin:0 0 12px; }
+.tts-adim li { margin-bottom:6px; }
+.tts-play { display:block; text-align:center; text-decoration:none; margin-bottom:6px; }
+body.light-theme .tecvid-ornek { background:rgba(168,128,28,.06); }
+body.light-theme .tecvid-ar { color:#3a2410; }
+
+/* ══════════ v65.1 — Kaza hesaplayıcı, namaz istatistiği ══════════ */
+.kaza-tahmin { text-align:center; font-size:.82rem; color:var(--text-sub); margin:6px 0 12px; }
+.kaza-hesap { margin-top:6px; }
+.kaza-form { display:flex; flex-direction:column; gap:10px; margin:6px 0 8px; }
+.kaza-form label { display:flex; flex-direction:column; gap:4px; font-size:.84rem; font-weight:600; color:var(--text-sub); }
+.kaza-form input, .kaza-form select { width:100%; padding:10px 12px; border-radius:10px; border:1.5px solid var(--border-gold); background:var(--bg-card); color:var(--text-main); font-size:1rem; font-family:var(--font-ui); }
+.nt-grafik-baslik { font-size:.78rem; color:var(--text-muted); font-weight:600; margin:10px 0 4px; }
+.nt-grafik { display:grid; grid-template-columns:repeat(8, 1fr); gap:6px; align-items:end; height:120px; padding:6px 2px 0; background:rgba(212,175,55,.06); border:1px solid var(--border-light); border-radius:12px; }
+.nt-cubuk-kap { display:flex; flex-direction:column; align-items:center; justify-content:flex-end; height:100%; gap:3px; }
+.nt-cubuk { width:70%; max-width:26px; background:var(--gold-gradient); border-radius:6px 6px 2px 2px; min-height:4px; }
+.nt-cubuk-etiket { font-size:.56rem; color:var(--text-muted); white-space:nowrap; }
+.nt-cubuk-deger { font-size:.62rem; color:var(--gold-light); font-weight:700; }
+
+/* ══════════ v65.1 — Hatim planı ══════════ */
+.hatim-plan-btnler { display:flex; flex-direction:column; gap:8px; margin:10px 0 8px; }
+.hatim-plan-btnler .gold-outline-btn, .hatim-plan-btnler .gold-primary-btn { width:100%; }
+
+/* ══════════ v65.1 — Hızlı Erişim (ana sayfa) ══════════ */
+.he-kart { background:var(--bg-card); border:1.2px solid var(--border-gold); border-radius:var(--radius-md); padding:10px 10px 12px; margin:10px 0 0; box-shadow:var(--shadow-card); }
+.he-ust { display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; padding:0 2px; }
+.he-baslik { font-size:.86rem; font-weight:800; color:var(--gold-light); }
+.he-duzenle { background:transparent; border:1px solid var(--border-light); color:var(--text-sub); border-radius:20px; padding:4px 10px; font-size:.72rem; font-weight:700; cursor:pointer; font-family:inherit; }
+.he-grid { display:grid; grid-template-columns:repeat(4, 1fr); gap:6px; }
+.he-btn { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; background:rgba(212,175,55,.08); border:1px solid var(--border-light); border-radius:14px; padding:10px 2px 8px; cursor:pointer; font-family:inherit; color:var(--text-main); min-height:74px; transition:transform .12s, background .2s; }
+.he-btn:active { transform:scale(.96); background:rgba(212,175,55,.18); }
+.he-ikon { font-size:1.6rem; line-height:1; filter:drop-shadow(0 1px 2px rgba(0,0,0,.35)); }
+.he-ad { font-size:.74rem; font-weight:700; color:var(--gold-light); text-align:center; line-height:1.15; }
+.he-box { text-align:left; max-height:88vh; overflow:auto; }
+.he-secim { display:grid; grid-template-columns:repeat(3, 1fr); gap:6px; margin:8px 0 12px; }
+.he-secenek { position:relative; display:flex; flex-direction:column; align-items:center; gap:3px; background:var(--bg-card); border:1px solid var(--border-light); border-radius:12px; padding:8px 4px; cursor:pointer; font-family:inherit; color:var(--text-main); opacity:.75; }
+.he-secenek .he-ad { color:var(--text-sub); font-size:.68rem; }
+.he-secenek.on { opacity:1; border-color:var(--gold-light); background:rgba(212,175,55,.16); }
+.he-secenek.on .he-ad { color:var(--gold-light); }
+.he-sira { position:absolute; top:4px; right:4px; min-width:18px; height:18px; border-radius:9px; background:var(--gold-gradient); color:#1a0e05; font-size:.66rem; font-weight:800; display:inline-flex; align-items:center; justify-content:center; }
+html.hv-buyuk .he-ad { font-size:.82rem; }
+body.light-theme .he-btn { background:rgba(168,128,28,.08); }
+body.light-theme .he-ad { color:#5b3f0c; }
+
+/* ══════════ v65.1 — ANA SAYFA TEK EKRAN (Hızlı Erişim eklenince yeniden sığdırma; puntolar aynı) ══════════ */
+.cd-ring { width: 220px; height: 220px; }
+.cd-ticks { -webkit-mask: radial-gradient(circle, transparent 0 69px, #000 71px 85px, transparent 87px); mask: radial-gradient(circle, transparent 0 69px, #000 71px 85px, transparent 87px); }
+.horizon { margin-top: -44px; height: 64px; }
+.mosque { height: 64px; }
+.info-pills { margin: 4px 0 8px; }
+.warm-home .prayer-card { padding: 8px 4px; }
+.warm-home .prayer-grid { margin-bottom: 8px; }
+/* Hızlı Erişim: ince kart */
+.he-kart { padding: 8px 8px 8px; margin: 0; }
+.he-ust { margin-bottom: 6px; }
+.he-btn { min-height: 0; padding: 7px 2px 6px; gap: 3px; }
+.he-ikon { font-size: 1.3rem; }
+/* Günün Âyeti: paylaş düğmesi başlık satırında, kart ekranın kalanını doldurur */
+.ayet-ust { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 6px; }
+.ayet-ust .verse-card-title { margin-bottom: 0 !important; text-align: left; }
+.daily-hadis-card .ayet-ust .mini-share-btn { margin-top: 0; align-self: auto; }
+.warm-home .daily-hadis-card { padding: 10px 14px 12px; margin-top: 8px; min-height: 96px; }
+.daily-hadis-card #daily-verse-source { margin-top: 6px; }
+/* Diğer Vakitler: âyetin altında, kapalı tek satır; dokununca açılır */
+.ek-vakit-kart { margin: 8px 0 0; padding: 0; }
+.ek-vakit-ust { width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 0; padding: 9px 12px; background: transparent; border: 0; color: inherit; font-family: inherit; cursor: pointer; text-align: left; }
+.ek-vakit-baslik small { margin-left: 4px; }
+.ek-vakit-ok { color: var(--gold-light); font-size: .9rem; transition: transform .2s; }
+.ek-vakit-kart.acik .ek-vakit-ok { transform: rotate(180deg); }
+.ek-vakit-govde { display: none; padding: 0 12px 10px; }
+.ek-vakit-kart.acik .ek-vakit-govde { display: block; }
+.ek-vakit-govde .ek-vakit-paylas { margin-top: 8px; width: 100%; }
+/* Özel gün şeridi (bayram namazı / kandil / Ramazan) — vakit kartlarının altında, yalnızca o günlerde */
+.ozel-serit { margin: 0 0 8px; display: flex; flex-direction: column; gap: 4px; }
+.ozel-satir { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 7px 10px; border-radius: 10px; background: rgba(212,175,55,.12); border: 1px solid rgba(212,175,55,.3); font-size: .82rem; }
+.ozel-satir span, .ozel-satir b { color: var(--gold-light); font-weight: 700; }
+body.light-theme .ozel-satir { background: rgba(168,128,28,.10); }
+/* Hızlı Erişim: başlıksız tek sıra — 4 kısayol + sağda ince kalem */
+.he-kart { padding: 6px; }
+.he-grid { grid-template-columns: repeat(4, 1fr) 30px; gap: 5px; align-items: stretch; }
+.he-grid .he-duzenle { border-radius: 12px; padding: 0; font-size: .95rem; display: flex; align-items: center; justify-content: center; }
+.warm-home { padding: 10px 12px 8px; }
+.horizon { margin-top: -46px; height: 58px; }
+.mosque { height: 58px; }
+.warm-home .prayer-card { padding: 7px 4px; }
+.warm-home .daily-hadis-card { padding: 9px 14px 10px; }
+.daily-hadis-card #daily-verse-source { margin-top: 4px; }
+.info-pills { margin: 3px 0 6px; }
+.warm-home .daily-hadis-card { margin-top: 6px; }
+.ek-vakit-kart { margin-top: 6px; }
+.ek-vakit-ust { padding: 7px 12px; }
+.warm-home { padding-bottom: 6px; }
+.he-grid { gap: 4px; }
+.warm-home { padding-bottom: 4px; }
+body.light-theme .warm-home .daily-hadis-card .verse-card-title { color: #6b4a12; text-shadow: none; }
+/* Doğuş/Batış balonları kaldırıldı (v65.1): silüet ile vakit kartları arası boşluk */
+.warm-home .prayer-grid { margin-top: 8px; }

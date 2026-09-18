@@ -169,17 +169,31 @@ const HV_KART_AYET = [
   '61:3', '62:10', '63:9', '64:11', '74:38', '76:8', '79:40', '87:14',
   '90:17', '92:5', '93:11', '96:1', '98:5', '102:1', '109:6'
 ];
-function hvAyetSec() {
+/* Sıra (v65.1): uygulama her açıldığında günün ÖNCELİKLİ âyetiyle başlar
+   ("anlayasınız diye Arapça bir Kur'an indirdik" mealindeki âyetler —
+   HV_ONCELIKLI_AYET, data.js). Her gün sıradaki öncelikli âyet ilk gelir; karta
+   dokundukça önce öncelikli listenin kalanı, sonra karıştırılmış genel havuz. */
+let _hvAyetSirasi = null, _hvAyetK = 0;
+function hvAyetSirasiKur() {
   const hepsi = (typeof DAILY_VERSES !== 'undefined') ? DAILY_VERSES : [];
-  let all = hepsi.filter(v => HV_KART_AYET.indexOf(v.surahNumber + ':' + v.ayah) >= 0);
-  if (all.length < 10) all = hepsi;
-  if (!all.length) return null;
-  let son = -1;
-  try { son = parseInt(localStorage.getItem('hv_son_ayet_idx') || '-1', 10); } catch (e) {}
-  let i = Math.floor(Math.random() * all.length);
-  if (all.length > 1 && i === son) i = (i + 1 + Math.floor(Math.random() * (all.length - 1))) % all.length;
-  try { localStorage.setItem('hv_son_ayet_idx', String(i)); } catch (e) {}
-  return all[i];
+  const oncelik = (typeof HV_ONCELIKLI_AYET !== 'undefined') ? HV_ONCELIKLI_AYET.slice() : [];
+  let genel = hepsi.filter(v => HV_KART_AYET.indexOf(v.surahNumber + ':' + v.ayah) >= 0);
+  if (genel.length < 10) genel = hepsi.slice();
+  for (let i = genel.length - 1; i > 0; i--) {            // genel havuzu karıştır
+    const j = Math.floor(Math.random() * (i + 1));
+    const t = genel[i]; genel[i] = genel[j]; genel[j] = t;
+  }
+  const gun = Math.floor(Date.now() / 86400000);          // her gün bir sonraki öncelikli âyetle başla
+  const bas = oncelik.length ? gun % oncelik.length : 0;
+  _hvAyetSirasi = oncelik.slice(bas).concat(oncelik.slice(0, bas)).concat(genel);
+  _hvAyetK = 0;
+}
+function hvAyetSec() {
+  if (!_hvAyetSirasi) hvAyetSirasiKur();
+  if (!_hvAyetSirasi.length) return null;
+  const v = _hvAyetSirasi[_hvAyetK % _hvAyetSirasi.length];
+  _hvAyetK++;
+  return v;
 }
 function hvAyetCiz(v, animasyon) {
   if (!v) return;
@@ -253,27 +267,7 @@ function openSurahById(id) {
 window.openSurahById = openSurahById;
 
 /* ══════════ DUA ÖĞRENME (Namaz Duaları + Namazda Okunan Sureler + Arama) ══════════ */
-function renderDuaOgrenme(filter) {
-  const c = document.getElementById('dua-ogrenme-content');
-  if (!c || typeof DUA_LEARN === 'undefined') return;
-  const q = (filter || '').toLocaleLowerCase('tr').trim();
-  const match = d => !q || d.title.toLocaleLowerCase('tr').includes(q) || (d.turkish || '').toLocaleLowerCase('tr').includes(q) || (d.okunusu || '').toLocaleLowerCase('tr').includes(q);
-  const cardHtml = (d, icon) => `
-    <div class="feature-card">
-      <div class="fc-title">${icon} ${hvEsc(d.title)}</div>
-      <div class="fc-ar">${d.arabic}</div>
-      <div class="fc-ok">🗣️ <b>Okunuşu:</b> ${hvEsc(d.okunusu)}</div>
-      <div class="fc-tr">📖 <b>Anlamı:</b> ${hvEsc(d.turkish)}</div>
-      ${d.note ? `<div class="fc-note">💡 ${hvEsc(d.note)}</div>` : ''}
-    </div>`;
-  const duas = DUA_LEARN.filter(match);
-  const sureler = (typeof KISA_SURELER !== 'undefined' ? KISA_SURELER : []).filter(match);
-  let html = '';
-  if (duas.length) html += `<div class="section-mini-title">📿 Namaz Duaları</div>` + duas.map(d => cardHtml(d, '🤲')).join('');
-  if (sureler.length) html += `<div class="section-mini-title">📖 Namazda Okunan Sureler (Zamm-ı Sure)</div>` + sureler.map(d => cardHtml(d, '📖')).join('');
-  if (!html) html = '<div class="empty-note">Sonuç bulunamadı.</div>';
-  c.innerHTML = html;
-}
+/* renderDuaOgrenme kaldırıldı (v65.0) — yerini 0'dan Dua Öğren (renderSifirdan) aldı */
 
 /* ══════════ ESMAÜL HÜSNA ══════════ */
 function renderEsma(filter) {
@@ -479,7 +473,41 @@ function renderNamazTakibi() {
         <div class="wd-label">${d.label}</div>
         <div class="wd-dot">${d.cnt}</div>
       </div>`).join('')}
-    </div>`;
+    </div>
+    ${hvNamazIstatistikHtml(data)}`;
+}
+/* İstatistik: son 8 hafta yüzde çubukları, bu ay, en uzun seri, toplam (v65.1) */
+function hvNamazIstatistikHtml(data) {
+  const haftalar = [];
+  for (let h = 7; h >= 0; h--) {
+    let kilinan = 0;
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(); d.setDate(d.getDate() - (h * 7 + i));
+      const rec = data[hvTodayKey(d)] || {};
+      kilinan += NAMAZ_VAKITLERI.filter(v => rec[v.key]).length;
+    }
+    haftalar.push(Math.round(kilinan / 35 * 100));
+  }
+  const now = new Date(); const ym = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+  let ayKilinan = 0, ayGun = now.getDate();
+  Object.keys(data).forEach(k => { if (k.startsWith(ym)) ayKilinan += NAMAZ_VAKITLERI.filter(v => data[k][v.key]).length; });
+  const ayYuzde = Math.round(ayKilinan / (ayGun * 5) * 100);
+  let toplam = 0; Object.keys(data).forEach(k => { toplam += NAMAZ_VAKITLERI.filter(v => data[k][v.key]).length; });
+  // en uzun seri
+  const gunler = Object.keys(data).filter(k => NAMAZ_VAKITLERI.every(v => data[k][v.key])).sort();
+  let enUzun = 0, cur = 0, prev = null;
+  gunler.forEach(k => { const t = new Date(k + 'T00:00:00').getTime(); cur = (prev !== null && t - prev === 86400000) ? cur + 1 : 1; enUzun = Math.max(enUzun, cur); prev = t; });
+  const rozet = enUzun >= 40 ? '🏆 40 gün' : enUzun >= 30 ? '🥇 30 gün' : enUzun >= 7 ? '🥈 7 gün' : enUzun >= 3 ? '🥉 3 gün' : '—';
+  return `
+    <div class="section-mini-title">📊 İstatistik</div>
+    <div class="hatim-stat">
+      <div class="hs-item"><div class="hs-num">%${isNaN(ayYuzde) ? 0 : ayYuzde}</div><div class="hs-lbl">Bu ay</div></div>
+      <div class="hs-item"><div class="hs-num">${enUzun}</div><div class="hs-lbl">En uzun seri</div></div>
+      <div class="hs-item"><div class="hs-num">${toplam.toLocaleString('tr-TR')}</div><div class="hs-lbl">Toplam vakit</div></div>
+    </div>
+    <div class="nt-grafik-baslik">Son 8 hafta (haftalık % kılınan)</div>
+    <div class="nt-grafik">${haftalar.map((y, i) => `<div class="nt-cubuk-kap"><div class="nt-cubuk" style="height:${Math.max(4, y)}%" title="%${y}"></div><div class="nt-cubuk-etiket">${i === 7 ? 'Bu hafta' : (7 - i) + 'h önce'}</div><div class="nt-cubuk-deger">%${y}</div></div>`).join('')}</div>
+    <div class="streak-box">🎖️ Rozet: <b>${rozet}</b> <span style="font-weight:400;color:var(--text-muted);font-size:.8rem;">(3 · 7 · 30 · 40 gün kesintisiz 5 vakit)</span></div>`;
 }
 function toggleNamaz(key) {
   const data = hvLoad('namaz_takip', {});
@@ -527,8 +555,70 @@ function renderKaza() {
           <button class="counter-btn plus" onclick="kazaAdjust('${it.key}',1)">+</button>
         </div>
       </div>`).join('')}
-    <div class="kaza-total">Toplam Kaza Borcu: <b>${total}</b> vakit</div>`;
+    <div class="kaza-total">Toplam Kaza Borcu: <b>${total}</b> vakit</div>
+    ${total > 0 ? `<div class="kaza-tahmin">Günde 1 günlük kaza (6 vakit) kılarsan yaklaşık <b>${hvKazaSure(Math.ceil(total / 6))}</b> sürer.</div>` : ''}
+    <details class="gece-kart kaza-hesap" id="kaza-hesap">
+      <summary><span class="gece-ad">🧮 Kaza Borcumu Hesapla</span></summary>
+      <div class="gece-ne">Kaç yıllık namaz borcun olduğunu bilmiyorsan buradan yaklaşık hesapla, sonra sayaçlara aktar.</div>
+      <div class="kaza-form">
+        <label>Doğum yılın <input type="number" id="kz-dogum" inputmode="numeric" min="1900" max="${new Date().getFullYear()}" placeholder="ör. 1985"></label>
+        <label>Ergenlik (bülûğ) yaşı
+          <select id="kz-bulug"><option value="15">15 (varsayılan)</option><option value="14">14</option><option value="13">13</option><option value="12">12 (erkek, ihtiyat)</option><option value="9">9 (kadın, ihtiyat)</option></select>
+        </label>
+        <label>Düzenli kılmaya başladığın yıl <input type="number" id="kz-basla" inputmode="numeric" min="1900" max="${new Date().getFullYear()}" placeholder="boş bırak = hâlâ düzenli değil"></label>
+        <label>Cinsiyet
+          <select id="kz-cins"><option value="e">Erkek</option><option value="k">Kadın (aylık ~6 gün âdet düşülür)</option></select>
+        </label>
+        <label id="kz-dogum-sayisi-satir" style="display:none">Doğum sayısı (her doğum için 40 gün lohusalık düşülür) <input type="number" id="kz-dogum-sayisi" inputmode="numeric" min="0" max="20" value="0"></label>
+        <button class="gold-primary-btn" onclick="hvKazaHesapla()">Hesapla</button>
+      </div>
+      <div id="kz-sonuc"></div>
+    </details>`;
+  const cins = document.getElementById('kz-cins');
+  if (cins) cins.addEventListener('change', () => { const r = document.getElementById('kz-dogum-sayisi-satir'); if (r) r.style.display = cins.value === 'k' ? '' : 'none'; });
 }
+function hvKazaSure(gun) {
+  if (gun < 30) return gun + ' gün';
+  if (gun < 365) return Math.round(gun / 30) + ' ay';
+  const y = Math.floor(gun / 365), a = Math.round((gun % 365) / 30);
+  return y + ' yıl' + (a ? ' ' + a + ' ay' : '');
+}
+let _kzSonGun = 0;
+function hvKazaHesapla() {
+  const dogum = parseInt((document.getElementById('kz-dogum') || {}).value, 10);
+  const bulug = parseInt((document.getElementById('kz-bulug') || {}).value, 10) || 15;
+  const baslaRaw = (document.getElementById('kz-basla') || {}).value;
+  const cins = (document.getElementById('kz-cins') || {}).value || 'e';
+  const dogumSayisi = parseInt((document.getElementById('kz-dogum-sayisi') || {}).value, 10) || 0;
+  const out = document.getElementById('kz-sonuc');
+  const simdi = new Date();
+  if (!dogum || dogum < 1900 || dogum > simdi.getFullYear()) { if (out) out.innerHTML = '<div class="empty-note">Doğum yılını gir.</div>'; return; }
+  const mukellefBas = new Date(dogum + bulug, simdi.getMonth(), simdi.getDate());
+  const bitis = baslaRaw ? new Date(parseInt(baslaRaw, 10), 0, 1) : simdi;
+  let gun = Math.round((bitis - mukellefBas) / 86400000);
+  if (gun <= 0) { if (out) out.innerHTML = '<div class="info-note">Bu bilgilere göre kaza borcun görünmüyor. 🎉</div>'; _kzSonGun = 0; return; }
+  let dusulen = 0;
+  if (cins === 'k') dusulen = Math.round(gun * 6 / 30) + dogumSayisi * 40;
+  gun = Math.max(0, gun - dusulen);
+  _kzSonGun = gun;
+  const yil = (gun / 365).toFixed(1);
+  if (out) out.innerHTML = `
+    <div class="hatim-stat" style="margin-top:10px;">
+      <div class="hs-item"><div class="hs-num">${gun.toLocaleString('tr-TR')}</div><div class="hs-lbl">gün (≈ ${yil} yıl)</div></div>
+      <div class="hs-item"><div class="hs-num">${(gun * 6).toLocaleString('tr-TR')}</div><div class="hs-lbl">vakit (vitir dâhil)</div></div>
+    </div>
+    <div class="info-note">Her vakit için <b>${gun.toLocaleString('tr-TR')}</b> kaza: Sabah, Öğle, İkindi, Akşam, Yatsı ve Vitir.${dusulen ? ' Âdet/lohusalık için ' + dusulen.toLocaleString('tr-TR') + ' gün düşüldü.' : ''} Bu bir yaklaşık hesaptır; kesin bilgi için din görevlisine danışabilirsin.</div>
+    <button class="gold-primary-btn" style="width:100%;" onclick="hvKazaAktar()">📥 Sayaçlara yaz (${gun.toLocaleString('tr-TR')} × 6)</button>`;
+}
+function hvKazaAktar() {
+  if (!_kzSonGun) return;
+  const data = { sabah: _kzSonGun, ogle: _kzSonGun, ikindi: _kzSonGun, aksam: _kzSonGun, yatsi: _kzSonGun, vitir: _kzSonGun };
+  hvSave('kaza_takip', data);
+  renderKaza();
+  hvToast('📥 Aktarıldı', 'Kaza sayaçları hesaba göre ayarlandı. Kıldıkça azalt.');
+  const kok = document.getElementById('page-kaza'); const box = kok && kok.querySelector('.hero-frame-box'); if (box) box.scrollTop = 0;
+}
+window.hvKazaHesapla = hvKazaHesapla; window.hvKazaAktar = hvKazaAktar;
 function kazaAdjust(key, delta) {
   const data = hvLoad('kaza_takip', { sabah: 0, ogle: 0, ikindi: 0, aksam: 0, yatsi: 0, vitir: 0 });
   data[key] = Math.max(0, (data[key] || 0) + delta);
@@ -560,8 +650,67 @@ function renderHatim() {
       <button class="counter-btn plus" onclick="hatimAdjust(20)">+ Cüz</button>
     </div>
     <button class="zikir-mini-btn" style="margin-top:10px;width:100%;" onclick="hatimReset()">🔄 Hatmi Sıfırla</button>
-    ${page >= HATIM_TOTAL_PAGES ? '<div class="hatim-done">🎉 Hatminizi tamamladınız! Allah kabul etsin.</div>' : ''}`;
+    ${page >= HATIM_TOTAL_PAGES ? '<div class="hatim-done">🎉 Hatminizi tamamladınız! Allah kabul etsin.</div>' : ''}
+    ${hvHatimPlanHtml(page)}`;
 }
+/* Hatim planı: günde 1 cüz (30 gün) ya da seçilen gün sayısı (v65.1) */
+function hvHatimPlanHtml(page) {
+  const plan = hvLoad('hatim_plan', null);
+  const ram = (typeof hvRamazanDurum === 'function') ? hvRamazanDurum() : null;
+  if (!plan) {
+    return `<details class="gece-kart" style="margin-top:12px;"${ram ? ' open' : ''}>
+      <summary><span class="gece-ad">📅 Hatim Planı</span></summary>
+      <div class="gece-ne">Günde 1 cüz okuyarak 30 günde hatim bitir. ${ram && ram.durum === 'once' ? `Ramazan'a ${ram.kalan} gün var — plan Ramazan'ın ilk günü başlayacak şekilde kurulabilir.` : ram && ram.durum === 'icinde' ? `Ramazan'ın ${ram.gunNo}. günü — bayrama kadar bitirmek için plan kur.` : 'İstediğin gün sayısını seç.'}</div>
+      <div class="hatim-plan-btnler">
+        ${ram ? `<button class="gold-primary-btn" onclick="hvHatimPlanKur('ramazan')">🌙 Ramazan hatmi (30 gün)</button>` : ''}
+        <button class="gold-outline-btn" onclick="hvHatimPlanKur(30)">Bugün başla · 30 gün</button>
+        <button class="gold-outline-btn" onclick="hvHatimPlanKur(60)">Bugün başla · 60 gün</button>
+        <button class="gold-outline-btn" onclick="hvHatimPlanKur(90)">Bugün başla · 90 gün</button>
+      </div>
+    </details>`;
+  }
+  const bas = new Date(plan.bas + 'T00:00:00'); const bugun = new Date(); bugun.setHours(0, 0, 0, 0);
+  const gunNo = Math.floor((bugun - bas) / 86400000) + 1;
+  const gundeSayfa = HATIM_TOTAL_PAGES / plan.gun;
+  const hedefSayfa = Math.min(HATIM_TOTAL_PAGES, Math.round(gundeSayfa * Math.max(0, gunNo)));
+  const bugunBas = Math.round(gundeSayfa * (gunNo - 1)) + 1, bugunSon = hedefSayfa;
+  const fark = page - Math.round(gundeSayfa * Math.max(0, gunNo - 1));   // dünün hedefine göre
+  const cuz = Math.min(30, Math.max(1, Math.ceil(bugunSon / 20.14)));
+  const bitis = new Date(bas); bitis.setDate(bitis.getDate() + plan.gun - 1);
+  let durum = '';
+  if (gunNo < 1) durum = `Plan ${Math.abs(gunNo) + 1} gün sonra başlıyor.`;
+  else if (gunNo > plan.gun) durum = page >= HATIM_TOTAL_PAGES ? 'Plan tamamlandı 🎉' : 'Plan süresi doldu — kalan sayfaları tamamla.';
+  else durum = fark > 0 ? `Plana göre <b>${fark} sayfa ilerdesin</b> 👏` : fark === 0 ? 'Plandasın 👍' : `Plana göre <b>${-fark} sayfa geridesin</b> — bugün biraz fazla oku.`;
+  return `<div class="gece-kart" style="margin-top:12px;padding:12px 14px;">
+      <div class="gece-alt-baslik" style="margin-top:0">📅 Hatim Planı · ${plan.gun} gün · ${plan.ad || ''}</div>
+      <div class="gece-ne">${gunNo >= 1 && gunNo <= plan.gun ? `<b>${gunNo}. gün</b> — bugün: <b>${cuz}. cüz</b> (sayfa ${bugunBas}–${bugunSon})` : ''} ${durum}</div>
+      <div class="hatim-bar-wrap"><div class="hatim-bar" style="width:${Math.min(100, Math.round(page / HATIM_TOTAL_PAGES * 100))}%"></div></div>
+      <div class="hatim-plan-btnler">
+        <button class="gold-primary-btn" onclick="hvHatimBugunOkudum(${bugunSon})">✓ Bugünkü cüzü okudum</button>
+        <button class="gold-outline-btn" onclick="hvHatimPlanSil()">Planı kaldır</button>
+      </div>
+      <div class="ek-vakit-not">Başlangıç ${bas.toLocaleDateString('tr-TR', { day: 'numeric', month: 'long' })} · Bitiş ${bitis.toLocaleDateString('tr-TR', { day: 'numeric', month: 'long' })}</div>
+    </div>`;
+}
+function hvHatimPlanKur(tur) {
+  let bas = new Date(); bas.setHours(0, 0, 0, 0); let gun = 30, ad = '';
+  if (tur === 'ramazan') {
+    const ram = hvRamazanDurum();
+    if (ram) { bas = new Date(ram.baslangic + 'T00:00:00'); gun = ram.toplam || 30; ad = 'Ramazan'; }
+  } else gun = parseInt(tur, 10) || 30;
+  const ymd = bas.getFullYear() + '-' + String(bas.getMonth() + 1).padStart(2, '0') + '-' + String(bas.getDate()).padStart(2, '0');
+  hvSave('hatim_plan', { bas: ymd, gun: gun, ad: ad });
+  if (tur === 'ramazan' || tur === 30) { /* hatim sıfırdan başlasın */ }
+  renderHatim();
+  hvToast('📅 Plan kuruldu', 'Günde ' + (Math.round(HATIM_TOTAL_PAGES / gun * 10) / 10) + ' sayfa okuyarak ' + gun + ' günde hatim.');
+}
+function hvHatimBugunOkudum(hedef) {
+  const page = hvLoad('hatim_page', 0);
+  hvSave('hatim_page', Math.max(page, Math.min(HATIM_TOTAL_PAGES, hedef)));
+  renderHatim(); hvVibrate(15);
+}
+function hvHatimPlanSil() { hvSave('hatim_plan', null); renderHatim(); }
+window.hvHatimPlanKur = hvHatimPlanKur; window.hvHatimBugunOkudum = hvHatimBugunOkudum; window.hvHatimPlanSil = hvHatimPlanSil;
 function hatimAdjust(delta) {
   let page = hvLoad('hatim_page', 0);
   page = Math.max(0, Math.min(HATIM_TOTAL_PAGES, page + delta));
@@ -576,6 +725,27 @@ function hatimReset() {
   renderHatim();
 }
 window.hatimReset = hatimReset;
+
+/* ══════════ ZEKÂT & FİTRE — tek sayfa, iki sekme (v65.1) ══════════ */
+function zfSec(tur) {
+  const z = document.getElementById('zekat-content'), f = document.getElementById('fitre-content');
+  if (z) z.style.display = tur === 'fitre' ? 'none' : '';
+  if (f) f.style.display = tur === 'fitre' ? '' : 'none';
+  const bz = document.getElementById('zf-zekat'), bf = document.getElementById('zf-fitre');
+  if (bz) bz.classList.toggle('active', tur !== 'fitre');
+  if (bf) bf.classList.toggle('active', tur === 'fitre');
+}
+window.zfSec = zfSec;
+/* Hicri Takvim sayfası: 📅 Takvim | 🔄 Tarih Çevirici sekmeleri (v65.1) */
+function tkSec(tur) {
+  const t = document.getElementById('takvim-content'), c = document.getElementById('cevirici-content');
+  if (t) t.style.display = tur === 'cevirici' ? 'none' : '';
+  if (c) c.style.display = tur === 'cevirici' ? '' : 'none';
+  const bt = document.getElementById('tk-takvim'), bc = document.getElementById('tk-cevirici');
+  if (bt) bt.classList.toggle('active', tur !== 'cevirici');
+  if (bc) bc.classList.toggle('active', tur === 'cevirici');
+}
+window.tkSec = tkSec;
 
 /* ══════════ ZEKÂT HESAPLAYICI ══════════ */
 const NISAB_GRAM_GOLD = 80.18; // 80.18 gr altın
@@ -732,19 +902,7 @@ function quizFinish() {
 }
 
 /* ══════════ RÜYA TABİRLERİ ══════════ */
-function renderRuya(filter) {
-  const c = document.getElementById('ruya-content');
-  if (!c || typeof RUYA_TABIRLERI === 'undefined') return;
-  const q = (filter || '').toLocaleLowerCase('tr').trim();
-  const list = q ? RUYA_TABIRLERI.filter(r => r.kw.toLocaleLowerCase('tr').includes(q) || r.meaning.toLocaleLowerCase('tr').includes(q)) : RUYA_TABIRLERI;
-  const note = '<div class="info-note ruya-note">⚠️ Rüya tabirleri İbn Sîrîn ve Nablusî geleneğine dayanan kültürel bir derlemedir; dinî hüküm veya kesin bilgi değildir. Hayırlı rüyaları Allah\'a hamd ile, hoşa gitmeyenleri kimseye anlatmadan Allah\'a sığınarak karşılamak sünnettir.</div>';
-  if (!list.length) { c.innerHTML = note + '<div class="empty-note">Bu konuda tabir bulunamadı.</div>'; return; }
-  c.innerHTML = (q ? '' : note) + list.map(r => `
-    <div class="ruya-item">
-      <div class="ruya-kw">🌙 ${hvEsc(r.kw)}</div>
-      <div class="ruya-mean">${hvEsc(r.meaning)}</div>
-    </div>`).join('');
-}
+/* renderRuya kaldırıldı (v65.1) — Rüya Tabirleri bölümü uygulamadan çıkarıldı */
 
 /* ══════════ BEBEK İSİMLERİ ══════════ */
 let _bebekGender = 'all';
@@ -783,16 +941,16 @@ function renderTakvim() {
   const gregText = new Date().toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric', weekday: 'long' });
   const now = new Date(); now.setHours(0, 0, 0, 0);
 
-  let upcoming = [];
-  if (typeof KANDIL_GUNLERI !== 'undefined') {
-    upcoming = KANDIL_GUNLERI.map(k => {
-      const d = new Date(k.date + 'T00:00:00');
-      const diff = Math.round((d - now) / 86400000);
-      return Object.assign({}, k, { diff, dObj: d });
-    }).sort((a, b) => a.dObj - b.dObj);
-  }
-  const future = upcoming.filter(k => k.diff >= 0);
-  const past = upcoming.filter(k => k.diff < 0);
+  // Dini günler: bu yıl + gelecek yıl, hicri takvimden otomatik (Diyanet penceresiyle düzeltilir)
+  const yil = now.getFullYear();
+  const hvAyAd = a => (typeof HV_HICRI_AYLAR !== 'undefined' ? HV_HICRI_AYLAR[a - 1] : '');
+  let upcoming = hvDiniGunler(yil, yil + 1).map(k => {
+    const d = new Date(k.date + 'T00:00:00');
+    const diff = Math.round((d - now) / 86400000);
+    return Object.assign({}, k, { diff, dObj: d });
+  });
+  const future = upcoming.filter(k => k.diff >= 0 && k.diff <= 400);
+  const past = upcoming.filter(k => k.diff < 0 && k.dObj.getFullYear() === yil).reverse();
 
   const typeIcon = { kandil: '🕯️', bayram: '🎉', onemli: '⭐' };
   const renderItem = k => {
@@ -801,7 +959,7 @@ function renderTakvim() {
       <div class="kandil-icon">${typeIcon[k.type] || '📌'}</div>
       <div class="kandil-body">
         <div class="kandil-name">${hvEsc(k.name)}</div>
-        <div class="kandil-date">${k.dObj.toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' })}</div>
+        <div class="kandil-date">${k.dObj.toLocaleDateString('tr-TR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}${k.sure > 1 ? ' · ' + k.sure + ' gün' : ''}</div>
         <div class="kandil-desc">${hvEsc(k.desc)}</div>
       </div>
       <div class="kandil-count ${k.diff === 0 ? 'today' : ''}">${countTxt}</div>
@@ -816,7 +974,7 @@ function renderTakvim() {
     <div class="section-mini-title">🔜 Yaklaşan Kandil ve Bayramlar</div>
     ${future.length ? future.map(renderItem).join('') : '<div class="info-note">Bu yıl için yaklaşan gün kalmadı.</div>'}
     ${past.length ? `<div class="section-mini-title" style="margin-top:14px;">📜 Geçen Günler</div>${past.map(renderItem).join('')}` : ''}
-    <div class="info-note" style="margin-top:10px;">* Kandil ve bayram tarihleri yaklaşık olup Diyanet takvimine göre değişebilir.</div>`;
+    <div class="info-note" style="margin-top:10px;">* Tarihler hicri takvimden hesaplanır; Diyanet vakit tablosu cihazda olduğu günler için Diyanet'in ilan ettiği tarih kullanılır. Kandiller, gecesi kutlanan günün akşamına düşen tarihte gösterilir.</div>`;
 }
 
 /* ══════════ PAYLAŞIM KARTLARI ══════════ */
@@ -837,13 +995,16 @@ function renderPaylasim() {
       <div class="share-actions">
         <button class="zikir-mini-btn" onclick="paylasimYenile()">🔄 Yenile</button>
         <button class="gold-primary-btn" onclick="paylasimPaylas()">📤 Paylaş</button>
-      </div>`;
+      </div>
+      <div id="paylasim-cuma-liste"></div>`;
   }
   paylasimPick('ayet');
 }
 let _paylasimTip = 'ayet';
 function paylasimPick(tip) {
   _paylasimTip = tip;
+  const liste = document.getElementById('paylasim-cuma-liste');
+  if (liste) { if (tip === 'cuma') renderCuma('paylasim-cuma-liste'); else liste.innerHTML = ''; }
   document.getElementById('pt-ayet').classList.toggle('active', tip === 'ayet');
   document.getElementById('pt-hadis').classList.toggle('active', tip === 'hadis');
   const cb = document.getElementById('pt-cuma');
@@ -889,10 +1050,11 @@ function paylasimPaylas() {
 window.paylasimPaylas = paylasimPaylas;
 
 /* ══════════ CUMA MESAJLARI ══════════ */
-function renderCuma() {
-  const c = document.getElementById('cuma-content');
+function renderCuma(hedefId) {
+  const c = document.getElementById(hedefId || 'cuma-content');
   if (!c || typeof CUMA_MESAJLARI === 'undefined') return;
-  c.innerHTML = `<div class="info-note">Bir mesaja dokunarak WhatsApp'ta paylaşabilir veya kopyalayabilirsiniz.</div>` +
+  c.innerHTML = `<div class="section-mini-title" style="margin-top:14px;">🕌 Tüm Cuma Mesajları <span style="font-size:.75rem;color:var(--text-muted);font-weight:600;">${CUMA_MESAJLARI.length}</span></div>
+    <div class="info-note">Kopyala ile WhatsApp'a yapıştır ya da Paylaş ile kart olarak gönder.</div>` +
     CUMA_MESAJLARI.map((m, i) => `
       <div class="cuma-msg-card">
         <div class="cuma-msg-text">${hvEsc(m)}</div>
@@ -953,6 +1115,190 @@ function renderOzelNamazlar() {
       <div class="fc-tr">${hvEsc(n.detay)}</div>
     </div>`).join('');
 }
+
+/* ══════════ HAC & UMRE REHBERİ (v65.0) ══════════ */
+let _hacBolum = 0;
+function hacBolumSec(i) { _hacBolum = i; renderHacUmre(); }
+window.hacBolumSec = hacBolumSec;
+function renderHacUmre() {
+  const c = document.getElementById('hac-umre-content');
+  if (!c || typeof HAC_UMRE === 'undefined') return;
+  const seg = HAC_UMRE.bolumler.map((b, i) =>
+    `<button class="seg-btn${i === _hacBolum ? ' active' : ''}" onclick="hacBolumSec(${i})">${b.ikon} ${hvEsc(b.ad.replace(/ Nasıl Yapılır\?/, ''))}</button>`).join('') +
+    `<button class="seg-btn${_hacBolum === 3 ? ' active' : ''}" onclick="hacBolumSec(3)">🤲 Dualar</button>`;
+  let govde = '';
+  if (_hacBolum < 3) {
+    const b = HAC_UMRE.bolumler[_hacBolum];
+    govde = `<div class="section-mini-title">${b.ikon} ${hvEsc(b.ad)}</div>` +
+      b.adimlar.map(a => `<div class="feature-card"><div class="fc-title">${hvEsc(a.baslik)}</div><div class="fc-tr">${hvEsc(a.metin)}</div></div>`).join('');
+  } else {
+    govde = `<div class="section-mini-title">🤲 Hac &amp; Umre Duaları</div>` +
+      HAC_UMRE.dualar.map(d => `<div class="feature-card"><div class="fc-title">${hvEsc(d.title)}</div><div class="fc-ar">${d.arabic}</div><div class="fc-ok">🗣️ ${hvEsc(d.okunusu)}</div><div class="fc-tr">${hvEsc(d.turkish)}</div></div>`).join('');
+  }
+  c.innerHTML = `<div class="info-note">${hvEsc(HAC_UMRE.giris)}</div><div class="share-type-switch hac-seg">${seg}</div>${govde}`;
+  const kok = document.getElementById('page-hac-umre'); const box = kok && kok.querySelector('.hero-frame-box'); if (box) box.scrollTop = 0;
+}
+
+/* ══════════ KANDİL (MÜBAREK GECELER) REHBERİ (v65.0) ══════════ */
+function renderGeceler() {
+  const c = document.getElementById('geceler-content');
+  if (!c || typeof GECELER_REHBERI === 'undefined') return;
+  // Yaklaşan gün bilgisi (hicri takvimden)
+  let yaklasan = {};
+  try {
+    const now = new Date(); now.setHours(0, 0, 0, 0);
+    const yil = now.getFullYear();
+    hvDiniGunler(yil, yil + 1).forEach(g => {
+      const d = new Date(g.date + 'T00:00:00'); const diff = Math.round((d - now) / 86400000);
+      if (diff < 0) return;
+      GECELER_REHBERI.forEach(r => { if (g.name.indexOf(r.anahtar) === 0 && (yaklasan[r.anahtar] === undefined || diff < yaklasan[r.anahtar].diff)) yaklasan[r.anahtar] = { diff, d }; });
+    });
+  } catch (e) {}
+  const sirali = GECELER_REHBERI.slice().sort((a, b) => ((yaklasan[a.anahtar] || { diff: 9999 }).diff) - ((yaklasan[b.anahtar] || { diff: 9999 }).diff));
+  c.innerHTML = `<div class="info-note">Kandil ve bayramlar yaklaşan tarihe göre sıralanır. Tarihler Hicri Takvim bölümünden takip edilir.</div>` +
+    sirali.map((r, i) => {
+      const y = yaklasan[r.anahtar];
+      const etiket = y ? (y.diff === 0 ? 'BUGÜN' : y.diff === 1 ? 'YARIN' : y.diff + ' gün kaldı') : '';
+      const tarih = y ? y.d.toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' }) : '';
+      return `<details class="gece-kart"${i === 0 ? ' open' : ''}>
+        <summary><span class="gece-ad">🕯️ ${hvEsc(r.ad)}</span>${etiket ? `<span class="gece-etiket${y && y.diff <= 1 ? ' yakin' : ''}">${etiket}</span>` : ''}</summary>
+        ${tarih ? `<div class="gece-tarih">📅 ${tarih}</div>` : ''}
+        <div class="gece-ne">${hvEsc(r.ne)}</div>
+        <div class="gece-alt-baslik">Bu gece ne yapılır?</div>
+        <ul class="gece-liste">${r.yap.map(x => `<li>${hvEsc(x)}</li>`).join('')}</ul>
+        <div class="gece-alt-baslik">Dua</div>
+        <div class="gece-dua">${hvEsc(r.dua)}</div>
+        <div class="gece-alt-baslik">Hadis</div>
+        <div class="gece-hadis">${hvEsc(r.hadis)}</div>
+      </details>`;
+    }).join('');
+}
+
+/* ══════════ HIZLI ERİŞİM — ana sayfa (v65.1) ══════════
+   En çok kullanılan 9 bölüm; kullanıcı "Düzenle" ile kendi listesini seçer (hv_hizli). */
+const HV_HE_KATALOG = [
+  { id: 'qibla', ikon: '🧭', ad: 'Kıble' }, { id: 'quran', ikon: '📖', ad: "Kur'an Oku" }, { id: 'dinle', ikon: '🎧', ad: "Kur'an Dinle" },
+  { id: 'ezber', ikon: '🌱', ad: 'Dua Öğren' }, { id: 'zikirmatik', ikon: '📿', ad: 'Zikirmatik' }, { id: 'namaz-takibi', ikon: '✅', ad: 'Namaz Takibi' },
+  { id: 'mushaf', ikon: '📜', ad: 'Sayfa Sayfa Mushaf' }, { id: 'sifirdan', ikon: '🗒️', ad: 'Satır Satır Oku' },
+  { id: 'kaza', ikon: '🔄', ad: 'Kaza Namazı' }, { id: 'oruc', ikon: '🌙', ad: 'Oruç Takibi' }, { id: 'namaz-programi', ikon: '🗓️', ad: '30 Günde Namaz' },
+  { id: 'guide', ikon: '🤲', ad: 'Namaz Rehberi' }, { id: 'onemli-sureler', ikon: '⭐', ad: 'Önemli Sureler' },
+  { id: 'hatim', ikon: '📗', ad: 'Hatim Takibi' }, { id: 'elifba', ikon: '🔤', ad: 'Elifbâ' }, { id: 'tecvid', ikon: '🎓', ad: 'Tecvid' },
+  { id: 'ayet-arama', ikon: '🔎', ad: 'Ayet Ara' }, { id: 'ezkar', ikon: '🌅', ad: 'Ezkâr' }, { id: 'gunluk-dua', ikon: '📔', ad: 'Günlük Dualar' },
+  { id: 'esma', ikon: '🕋', ad: 'Esmaül Hüsna' }, { id: 'kirk-hadis', ikon: '📜', ad: 'Hadisler' }, { id: 'taharet', ikon: '💧', ad: 'Abdest' },
+  { id: 'ozel-namaz', ikon: '🕌', ad: 'Özel Namazlar' }, { id: 'hac-umre', ikon: '🧳', ad: 'Hac & Umre' }, { id: 'geceler', ikon: '🕯️', ad: 'Kandil Rehberi' },
+  { id: 'iman', ikon: '🧾', ad: 'İman Esasları' }, { id: 'peygamberler', ikon: '👳', ad: 'Peygamberler' }, { id: 'siyer', ikon: '🌟', ad: 'Siyer' },
+  { id: 'zekat', ikon: '💰', ad: 'Zekât & Fitre' }, { id: 'takvim', ikon: '📅', ad: 'Hicri Takvim' }, { id: 'imsakiye', ikon: '🍽️', ad: 'İmsakiye' },
+  { id: 'paylasim', ikon: '📤', ad: 'Paylaşım' }, { id: 'sozluk', ikon: '📚', ad: 'Sözlük' }, { id: 'cevirici', ikon: '🔄', ad: 'Tarih Çevirici' },
+  { id: 'quiz', ikon: '❓', ad: 'Bilgi Quizi' }, { id: 'bebek', ikon: '👶', ad: 'Bebek İsimleri' }, { id: 'settings', ikon: '⚙️', ad: 'Ayarlar' }
+];
+const HV_HE_VARSAYILAN = ['qibla', 'quran', 'dinle', 'ezber'];   // tek sıra: Kıble · Kur'an Oku · Kur'an Dinle · Dua Öğren
+const HV_HE_MAX = 4;
+function hvHeListe() {
+  let l = null; try { l = JSON.parse(localStorage.getItem('hv_hizli') || 'null'); } catch (e) {}
+  if (!Array.isArray(l) || !l.length) l = HV_HE_VARSAYILAN.slice();
+  return l.filter(id => HV_HE_KATALOG.some(k => k.id === id)).slice(0, HV_HE_MAX);
+}
+function renderHizliErisim() {
+  const c = document.getElementById('hizli-erisim');
+  if (!c) return;
+  const liste = hvHeListe();
+  // Tek sıra: 4 kısayol + sağda ince "düzenle" kalemi (başlık satırı yok → ana sayfa tek ekrana sığar)
+  c.innerHTML = `<div class="he-kart" role="group" aria-label="Hızlı Erişim">
+      <div class="he-grid">${liste.map(id => { const k = HV_HE_KATALOG.find(x => x.id === id); return `<button class="he-btn" onclick="navigateTo('${id}')"><span class="he-ikon">${k.ikon}</span><span class="he-ad">${hvEsc(k.ad)}</span></button>`; }).join('')}<button class="he-duzenle" onclick="hvHeDuzenle()" title="Hızlı Erişim'i düzenle" aria-label="Hızlı Erişim'i düzenle">✏️</button></div>
+    </div>`;
+}
+window.renderHizliErisim = renderHizliErisim;
+function hvHeDuzenle() {
+  const old = document.getElementById('hv-he-modal'); if (old) old.remove();
+  let secili = hvHeListe();
+  const w = document.createElement('div'); w.id = 'hv-he-modal'; w.className = 'hv-sc-backdrop';
+  const ciz = () => {
+    w.innerHTML = `<div class="hv-sc-box he-box">
+        <div class="tts-baslik">✏️ Hızlı Erişimi Düzenle</div>
+        <div class="tts-aciklama">Ana sayfada görünecek en fazla <b>${HV_HE_MAX}</b> bölümü seç. Seçim sırası ana sayfadaki sırayı belirler. <b>${secili.length}/${HV_HE_MAX}</b> seçili.</div>
+        <div class="he-secim">${HV_HE_KATALOG.map(k => { const i = secili.indexOf(k.id); return `<button class="he-secenek${i >= 0 ? ' on' : ''}" data-id="${k.id}"><span class="he-ikon">${k.ikon}</span><span class="he-ad">${hvEsc(k.ad)}</span>${i >= 0 ? `<span class="he-sira">${i + 1}</span>` : ''}</button>`; }).join('')}</div>
+        <div class="hv-sc-actions">
+          <button class="hv-sc-btn hv-sc-primary" id="he-kaydet">Kaydet</button>
+          <button class="hv-sc-btn" id="he-varsayilan">Varsayılana dön</button>
+        </div>
+        <button class="hv-sc-close" id="he-kapat">Kapat</button>
+      </div>`;
+    w.querySelectorAll('.he-secenek').forEach(b => b.addEventListener('click', () => {
+      const id = b.dataset.id; const i = secili.indexOf(id);
+      if (i >= 0) secili.splice(i, 1);
+      else if (secili.length < HV_HE_MAX) secili.push(id);
+      else { hvToast('⚠️ En fazla ' + HV_HE_MAX, 'Yeni eklemek için birini kaldır.'); return; }
+      ciz();
+    }));
+    w.querySelector('#he-kaydet').onclick = () => { try { localStorage.setItem('hv_hizli', JSON.stringify(secili)); } catch (e) {} renderHizliErisim(); w.remove(); hvToast('✅ Kaydedildi', 'Hızlı erişim güncellendi.'); };
+    w.querySelector('#he-varsayilan').onclick = () => { secili = HV_HE_VARSAYILAN.slice(); ciz(); };
+    w.querySelector('#he-kapat').onclick = () => w.remove();
+  };
+  ciz();
+  document.body.appendChild(w);
+  w.addEventListener('click', e => { if (e.target === w) w.remove(); });
+}
+window.hvHeDuzenle = hvHeDuzenle;
+
+/* ══════════ TECVİD DERSLERİ (v65.1) ══════════ */
+function renderTecvid() {
+  const c = document.getElementById('tecvid-content');
+  if (!c || typeof TECVID_DERSLERI === 'undefined') return;
+  const bitenler = (() => { try { return JSON.parse(localStorage.getItem('hv_tecvid_biten') || '[]'); } catch (e) { return []; } })();
+  const baslik = document.querySelector('#page-tecvid .page-header-title p');
+  if (baslik) baslik.textContent = "Kur'an'ı kurallarına göre okuma — " + TECVID_DERSLERI.length + ' ders · ' + bitenler.length + ' tamamlandı';
+  c.innerHTML = `<div class="info-note">Elifbâ'yı bitirdiysen sıra tecvidde. Her dersi okuyup örnekleri Kur'an Oku'daki hoca sesiyle dinleyerek pekiştir; bitirince ✓ işaretle.</div>` +
+    TECVID_DERSLERI.map((d, i) => {
+      const biten = bitenler.indexOf(i) >= 0;
+      return `<details class="gece-kart tecvid-kart${biten ? ' biten' : ''}"${i === 0 ? ' open' : ''}>
+        <summary><span class="gece-ad"><span class="tecvid-no">${i + 1}</span> ${hvEsc(d.ad)}</span>${biten ? '<span class="gece-etiket yakin">✓</span>' : ''}</summary>
+        <div class="gece-ne"><b>${hvEsc(d.ozet)}</b></div>
+        <div class="gece-hadis" style="padding-bottom:6px;">${hvEsc(d.kural)}</div>
+        <div class="gece-alt-baslik">Örnekler</div>
+        ${d.ornekler.map(o => `<div class="tecvid-ornek"><div class="tecvid-ar">${hvEsc(o.ar)}</div><div class="tecvid-ok">${hvEsc(o.ok)}${o.not ? ` <span class="tecvid-not">— ${hvEsc(o.not)}</span>` : ''}</div></div>`).join('')}
+        <button class="ez-ogrendim${biten ? ' on' : ''}" style="margin:10px 0 14px;" onclick="tecvidBitir(${i})">${biten ? '✓ Bu dersi bitirdim' : '○ Bu dersi bitirdim'}</button>
+      </details>`;
+    }).join('');
+}
+function tecvidBitir(i) {
+  let l = []; try { l = JSON.parse(localStorage.getItem('hv_tecvid_biten') || '[]'); } catch (e) {}
+  l = l.indexOf(i) >= 0 ? l.filter(x => x !== i) : l.concat([i]);
+  try { localStorage.setItem('hv_tecvid_biten', JSON.stringify(l)); } catch (e) {}
+  renderTecvid();
+}
+window.tecvidBitir = tecvidBitir;
+
+/* ══════════ TÜRKÇE SES YARDIMI — ücretsiz çözüm (v65.1) ══════════
+   Telefonda Türkçe konuşma sesi yoksa: Google'ın ücretsiz ses paketini kurma rehberi */
+function hvTtsYardim() {
+  const old = document.getElementById('hv-tts-yardim'); if (old) old.remove();
+  const platform = (typeof hvNativePlatform === 'function') ? hvNativePlatform() : 'web';
+  const ios = platform === 'ios' || /iPhone|iPad/i.test(navigator.userAgent);
+  const adimlar = ios ? `
+      <ol class="tts-adim">
+        <li>Telefonda <b>Ayarlar → Erişilebilirlik → Sesli İçerik → Sesler</b> yolunu izle.</li>
+        <li><b>Türkçe</b>'yi seç, bir ses indir (ör. <b>Yelda</b> — gelişmiş sürümü daha doğal).</li>
+        <li>Namaz Dostu'nu tamamen kapatıp tekrar aç.</li>
+      </ol>` : `
+      <ol class="tts-adim">
+        <li>Aşağıdaki düğmeyle <b>Google Konuşma Hizmetleri</b>'ni kur ya da güncelle (ücretsiz).</li>
+        <li>Telefonda <b>Ayarlar → Sistem → Diller ve giriş → Metin okuma çıkışı</b> (bazı telefonlarda Erişilebilirlik altında).</li>
+        <li>Tercih edilen motor: <b>Google</b> → ⚙ → <b>Ses verilerini yükle</b> → <b>Türkçe</b>'yi indir.</li>
+        <li>Namaz Dostu'nu tamamen kapatıp tekrar aç.</li>
+      </ol>
+      <a class="gold-primary-btn tts-play" href="https://play.google.com/store/apps/details?id=com.google.android.tts" target="_blank" rel="noopener">▶ Google Konuşma Hizmetleri'ni Play Store'da aç</a>`;
+  const w = document.createElement('div');
+  w.id = 'hv-tts-yardim'; w.className = 'hv-sc-backdrop';
+  w.innerHTML = `<div class="hv-sc-box tts-box">
+      <div class="tts-baslik">🔊 Türkçe sesi ücretsiz nasıl kurarım?</div>
+      <div class="tts-aciklama">Meâli telefonunun kendi Türkçe sesi okur. Bu telefonda Türkçe ses paketi yüklü değil; bir kez kurulunca meâl sesli okunur.</div>
+      ${adimlar}
+      <button class="hv-sc-close" onclick="document.getElementById('hv-tts-yardim').remove()">Kapat</button>
+    </div>`;
+  document.body.appendChild(w);
+  w.addEventListener('click', e => { if (e.target === w) w.remove(); });
+}
+window.hvTtsYardim = hvTtsYardim;
 
 /* ══════════ İMAN ESASLARI (ÂMENTÜ) ══════════ */
 function renderImanEsaslari() {
@@ -1141,6 +1487,165 @@ function hvHicridenMiladi(g, a, y) {
   return null;
 }
 
+
+/* ══════════════════════════════════════════════════════════════
+   DİNİ GÜNLER — hicri takvimden otomatik hesap (v64.8)
+   Eski elle yazılmış liste (yanlış tarihler, tek yıl) kaldırıldı.
+   Kural Diyanet listesiyle aynı: kandil, gecesi kutlanan günün
+   akşamına düşen tarihte gösterilir (27 Recep gecesi → 26 Recep günü).
+   Cihazdaki Diyanet vakit tablosu (hv_cal_*, 'h' alanı) o günü
+   kapsıyorsa tarih doğrudan Diyanet'in hicri gününden alınır;
+   yoksa Ümmü'l-Kura hesabı kullanılır (2025 listesiyle birebir doğrulandı).
+   ══════════════════════════════════════════════════════════════ */
+const HV_DINI_GUN_TANIM = [
+  { ad: 'Üç Ayların Başlangıcı', ay: 7,  gun: 1,        tur: 'onemli', acik: 'Recep ayının ilk günü; Recep, Şaban ve Ramazan\'dan oluşan rahmet mevsimi başlar.' },
+  { ad: 'Regaip Kandili',        ay: 7,  gun: 'regaib', tur: 'kandil', acik: 'Recep ayının ilk Cuma gecesi. Rahmet ve mağfiretin bol olduğu, dua ve tövbe gecesi.' },
+  { ad: 'Miraç Kandili',         ay: 7,  gun: 26,       tur: 'kandil', acik: '27 Recep gecesi. Peygamberimizin (s.a.v.) Miraç\'a yükseldiği, beş vakit namazın farz kılındığı gece.' },
+  { ad: 'Berat Kandili',         ay: 8,  gun: 14,       tur: 'kandil', acik: '15 Şaban gecesi. Günahlardan arınma, af ve kurtuluş gecesi; bir yıllık takdirin yenilendiğine inanılır.' },
+  { ad: 'Ramazan Başlangıcı',    ay: 9,  gun: 1,        tur: 'onemli', acik: 'On bir ayın sultanı Ramazan\'ın ilk günü. Oruç, teravih ve Kur\'an ayı başlar.' },
+  { ad: 'Kadir Gecesi',          ay: 9,  gun: 26,       tur: 'kandil', acik: '27 Ramazan gecesi. Kur\'an\'ın indirilmeye başlandığı, bin aydan hayırlı gece.' },
+  { ad: 'Ramazan Bayramı Arefesi', ay: 10, gun: 0,      tur: 'onemli', acik: 'Ramazan\'ın son günü. Bayram hazırlığı, fitre ve tövbe günü.' },
+  { ad: 'Ramazan Bayramı',       ay: 10, gun: 1,        tur: 'bayram', acik: 'Şevval\'in ilk günü, 3 gün sürer. Bayram namazı, ziyaretler ve sevinç günleri.', sure: 3 },
+  { ad: 'Kurban Bayramı Arefesi', ay: 12, gun: 9,       tur: 'onemli', acik: 'Zilhicce\'nin 9. günü. Hacıların Arafat\'ta vakfe yaptığı gün; oruç tutmak faziletlidir. Teşrik tekbirleri sabah namazından itibaren başlar.' },
+  { ad: 'Kurban Bayramı',        ay: 12, gun: 10,       tur: 'bayram', acik: 'Zilhicce\'nin 10. günü, 4 gün sürer. Kurban kesilir, teşrik tekbirleri 4. gün ikindiye kadar devam eder.', sure: 4 },
+  { ad: 'Hicrî Yılbaşı',         ay: 1,  gun: 1,        tur: 'onemli', acik: 'Muharrem ayının ilk günü; hicrî yeni yıl.' },
+  { ad: 'Aşure Günü',            ay: 1,  gun: 10,       tur: 'onemli', acik: 'Muharrem\'in 10. günü. Oruç tutmak sünnettir; 9 veya 11. günle birlikte tutulması tavsiye edilir.' },
+  { ad: 'Mevlid Kandili',        ay: 3,  gun: 11,       tur: 'kandil', acik: '12 Rebiülevvel gecesi. Peygamber Efendimizin (s.a.v.) dünyaya teşrif ettiği gece.' }
+];
+
+/* Diyanet farklı bir tarih ilan ederse buraya yazılır: 'YYYY|Ad': 'YYYY-MM-DD' */
+const HV_DINI_GUN_DUZELT = {};
+
+const HV_HICRI_AY_ANAHTAR = ['muharrem','safer','rebiulevvel','rebiulahir','cemaziyelevvel','cemaziyelahir','recep','saban','ramazan','sevval','zilkade','zilhicce'];
+function hvHicriAyNo(ad) {
+  const n = String(ad || '').toLocaleLowerCase('tr')
+    .replace(/[âäàáã]/g, 'a').replace(/[îïìí]/g, 'i').replace(/[ûüùú]/g, 'u').replace(/ş/g, 's').replace(/ğ/g, 'g').replace(/ı/g, 'i').replace(/[^a-z]/g, '');
+  const i = HV_HICRI_AY_ANAHTAR.findIndex(a => n.indexOf(a) === 0 || a.indexOf(n) === 0);
+  return i >= 0 ? i + 1 : 0;
+}
+
+function hvTarihYmd(d) {
+  return d.getUTCFullYear() + '-' + String(d.getUTCMonth() + 1).padStart(2, '0') + '-' + String(d.getUTCDate()).padStart(2, '0');
+}
+function hvYmdTarih(s) { return new Date(s + 'T00:00:00Z'); }
+
+/* Cihazdaki Diyanet tablosundan "gün/ay/yıl" hicri tarihini taşıyan miladi günü bul */
+let hvDiyanetHicriHarita = null;
+function hvDiyanetHicriHaritaKur() {
+  if (hvDiyanetHicriHarita) return hvDiyanetHicriHarita;
+  const harita = {};
+  try {
+    Object.keys(localStorage).filter(k => k.startsWith('hv_cal_')).forEach(k => {
+      let ay; try { ay = JSON.parse(localStorage.getItem(k)); } catch (e) { return; }
+      const liste = Array.isArray(ay) ? ay : Object.values(ay || {});
+      liste.forEach(e => {
+        if (!e || e.s !== 'd' || !e.h || !e.date) return;
+        const m = String(e.h).match(/^(\d{1,2})\s+([^\d]+?)\s+(\d{4})$/);
+        if (!m) return;
+        const ayNo = hvHicriAyNo(m[2]);
+        if (!ayNo) return;
+        harita[m[3] + '-' + ayNo + '-' + parseInt(m[1], 10)] = e.date;
+      });
+    });
+  } catch (e) {}
+  hvDiyanetHicriHarita = harita;
+  return harita;
+}
+
+/* Hicri gün → miladi (önce Diyanet penceresi, sonra hesap) */
+function hvHicriGunMiladi(g, a, y) {
+  const d = hvDiyanetHicriHaritaKur()[y + '-' + a + '-' + g];
+  if (d) return hvYmdTarih(d);
+  return (typeof hvHicridenMiladi === 'function') ? hvHicridenMiladi(g, a, y) : null;
+}
+
+function hvDiniGunlerHicriYil(y) {
+  const out = [];
+  HV_DINI_GUN_TANIM.forEach(t => {
+    let d = null;
+    if (t.gun === 'regaib') {
+      let b = hvHicriGunMiladi(1, 7, y);
+      for (let i = 0; b && i < 7; i++) {
+        if (b.getUTCDay() === 5) { d = new Date(b.getTime() - 86400000); break; }
+        b = new Date(b.getTime() + 86400000);
+      }
+    } else if (t.gun === 0) {
+      const b = hvHicriGunMiladi(1, t.ay, y);
+      if (b) d = new Date(b.getTime() - 86400000);
+    } else {
+      d = hvHicriGunMiladi(t.gun, t.ay, y);
+    }
+    if (!d) return;
+    let ymd = hvTarihYmd(d);
+    const duzelt = HV_DINI_GUN_DUZELT[ymd.slice(0, 4) + '|' + t.ad];
+    if (duzelt) ymd = duzelt;
+    out.push({ name: t.ad, date: ymd, type: t.tur, desc: t.acik, hicriYil: y, sure: t.sure || 1 });
+  });
+  return out;
+}
+
+/* Miladi yıl aralığındaki tüm dini günler (tarihe göre sıralı) */
+function hvDiniGunler(yilBas, yilSon) {
+  if (!yilSon) yilSon = yilBas;
+  const hBas = hvHicriParcala(new Date(Date.UTC(yilBas, 0, 1)));
+  const hSon = hvHicriParcala(new Date(Date.UTC(yilSon, 11, 31)));
+  if (!hBas || !hSon) return [];
+  const gorulen = {};
+  const liste = [];
+  for (let y = hBas.y; y <= hSon.y; y++) {
+    hvDiniGunlerHicriYil(y).forEach(g => {
+      const yil = parseInt(g.date.slice(0, 4), 10);
+      if (yil < yilBas || yil > yilSon) return;
+      const k = g.name + '|' + g.date;
+      if (gorulen[k]) return;
+      gorulen[k] = 1;
+      liste.push(g);
+    });
+  }
+  liste.sort((a, b) => a.date < b.date ? -1 : a.date > b.date ? 1 : 0);
+  return liste;
+}
+window.hvDiniGunler = hvDiniGunler;
+
+/* Ramazan durumu: kaç gün kaldı / kaçıncı gün / Kadir'e ve bayrama kalan (v65.1) */
+function hvRamazanDurum(tarih) {
+  const d = tarih || new Date(); d.setHours(0, 0, 0, 0);
+  const ymd = x => x.getFullYear() + '-' + String(x.getMonth() + 1).padStart(2, '0') + '-' + String(x.getDate()).padStart(2, '0');
+  const liste = hvDiniGunler(d.getFullYear() - 1, d.getFullYear() + 1);
+  const gun = (a, b) => Math.round((hvYmdTarih(b) - hvYmdTarih(a)) / 86400000);
+  const bugun = ymd(d);
+  // içinde bulunduğumuz ya da yaklaşan Ramazan
+  let ramazan = null, bayram = null, kadir = null;
+  for (const g of liste) {
+    if (g.name === 'Ramazan Başlangıcı') {
+      const b = liste.find(x => x.name === 'Ramazan Bayramı' && x.date > g.date);
+      const k = liste.find(x => x.name === 'Kadir Gecesi' && x.date > g.date);
+      if (b && bugun < b.date) { ramazan = g; bayram = b; kadir = k; break; }
+    }
+  }
+  if (!ramazan) return null;
+  if (bugun < ramazan.date) return { durum: 'once', kalan: gun(bugun, ramazan.date), baslangic: ramazan.date };
+  return { durum: 'icinde', gunNo: gun(ramazan.date, bugun) + 1, toplam: gun(ramazan.date, bayram.date),
+    kadirKalan: kadir ? gun(bugun, kadir.date) : null, bayramKalan: gun(bugun, bayram.date), baslangic: ramazan.date, kadir: kadir ? kadir.date : null };
+}
+window.hvRamazanDurum = hvRamazanDurum;
+
+/* Bugün / yarın kandil-bayram mı? (ana sayfa şeridi ve bildirimler için) */
+function hvBugunDiniGun(tarih) {
+  const d = tarih || new Date();
+  const ymd = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+  return hvDiniGunler(d.getFullYear() - 1, d.getFullYear() + 1).filter(g => {
+    if (g.date === ymd) return true;
+    // çok günlü bayramlar: 2., 3., 4. günler
+    if (g.sure > 1) {
+      const b = hvYmdTarih(g.date), fark = Math.round((hvYmdTarih(ymd) - b) / 86400000);
+      return fark > 0 && fark < g.sure;
+    }
+    return false;
+  });
+}
+window.hvBugunDiniGun = hvBugunDiniGun;
+
 function hvCevYaz(id, html) { const e = document.getElementById(id); if (e) e.innerHTML = html; }
 function hvCevSayi(id, varsayilan) {
   const e = document.getElementById(id);
@@ -1297,8 +1802,15 @@ async function renderImsakiye() {
       }).join('');
       const load = document.getElementById('imsakiye-loading');
       if (load) load.remove();
+      // görsel paylaşım için satırları sakla
+      window._hvImsakiyeVeri = { ay: monthNames[month - 1], yil: year, konum: cityLbl, satirlar: json.data.map(d => {
+        const g = d.date.gregorian; const dateKey = `${g.year}-${String(g.month.number).padStart(2, '0')}-${String(g.day).padStart(2, '0')}`;
+        const t = dmap[dateKey] || d.timings;
+        return { gun: g.day, hafta: trWeekdayShort(g.weekday.en), bugun: dateKey === todayKey, imsak: strip(t.Imsak), gunes: strip(t.Sunrise), ogle: strip(t.Dhuhr), ikindi: strip(t.Asr), aksam: strip(t.Maghrib), yatsi: strip(t.Isha) };
+      }) };
       const wrap = document.createElement('div');
       wrap.innerHTML = `
+        <button class="gold-primary-btn" style="width:100%;margin:4px 0 10px;" onclick="hvImsakiyeGorselPaylas()">📤 İmsakiyeyi Görsel Olarak Paylaş</button>
         <div class="imsakiye-table-wrap">
           <table class="imsakiye-table">
             <thead><tr><th>Gün</th><th>İmsak</th><th>Güneş</th><th>Öğle</th><th>İkindi</th><th>Akşam</th><th>Yatsı</th></tr></thead>
@@ -1314,6 +1826,48 @@ async function renderImsakiye() {
     c.insertAdjacentHTML('beforeend', '<div class="empty-note">İmsakiye için internet bağlantısı gerekiyor. Lütfen tekrar deneyin.</div>');
   }
 }
+
+/* İmsakiyeyi tek görsel (1080×1920) olarak paylaş — WhatsApp/Instagram (v65.1) */
+function hvImsakiyeGorselPaylas() {
+  const v = window._hvImsakiyeVeri;
+  if (!v || !v.satirlar || !v.satirlar.length) { hvToast('⏳ Bekle', 'İmsakiye henüz yüklenmedi.'); return; }
+  const W = 1080, H = 1920, cv = document.createElement('canvas'); cv.width = W; cv.height = H;
+  const ctx = cv.getContext('2d');
+  const rg = ctx.createRadialGradient(W / 2, 260, 80, W / 2, 260, 1400);
+  rg.addColorStop(0, '#5C3B25'); rg.addColorStop(0.5, '#2A170C'); rg.addColorStop(1, '#160B04');
+  ctx.fillStyle = rg; ctx.fillRect(0, 0, W, H);
+  ctx.strokeStyle = 'rgba(227,173,130,0.45)'; ctx.lineWidth = 3; hvCardRoundRect(ctx, 40, 40, W - 80, H - 80, 40); ctx.stroke();
+  const GOLD = '#E3AD82', CREAM = '#F7DDC4', WHITE = '#FDF6EE';
+  ctx.textAlign = 'center';
+  hvCardMoon(ctx, W / 2 - 250, 132, 26, GOLD, 0.95);
+  ctx.fillStyle = CREAM; ctx.font = "700 62px 'Outfit', system-ui, sans-serif"; ctx.fillText('İMSAKİYE', W / 2 + 10, 152);
+  ctx.fillStyle = GOLD; ctx.font = "600 40px 'Outfit', system-ui, sans-serif"; ctx.fillText(`${v.ay} ${v.yil}`, W / 2, 210);
+  ctx.fillStyle = 'rgba(247,221,196,0.85)'; ctx.font = "500 32px 'Outfit', system-ui, sans-serif"; ctx.fillText('📍 ' + (v.konum || ''), W / 2, 258);
+  // tablo
+  const cols = ['Gün', 'İmsak', 'Güneş', 'Öğle', 'İkindi', 'Akşam', 'Yatsı'];
+  const x0 = 70, tw = W - 140, colW = [150, 135, 135, 135, 135, 135, 135];
+  const y0 = 300, satirH = Math.min(46, Math.floor((H - y0 - 300) / (v.satirlar.length + 1)));
+  let y = y0;
+  ctx.fillStyle = 'rgba(227,173,130,0.18)'; hvCardRoundRect(ctx, x0, y, tw, satirH, 12); ctx.fill();
+  ctx.fillStyle = GOLD; ctx.font = "700 26px 'Outfit', system-ui, sans-serif";
+  let x = x0; cols.forEach((c, i) => { ctx.fillText(c, x + colW[i] / 2, y + satirH * 0.68); x += colW[i]; });
+  y += satirH;
+  v.satirlar.forEach((r, i) => {
+    if (r.bugun) { ctx.fillStyle = 'rgba(227,173,130,0.30)'; ctx.fillRect(x0, y, tw, satirH); }
+    else if (i % 2 === 0) { ctx.fillStyle = 'rgba(255,255,255,0.04)'; ctx.fillRect(x0, y, tw, satirH); }
+    ctx.fillStyle = r.bugun ? WHITE : CREAM; ctx.font = (r.bugun ? '700 ' : '500 ') + Math.round(satirH * 0.56) + "px 'Outfit', system-ui, sans-serif";
+    const vals = [`${r.gun} ${r.hafta}`, r.imsak, r.gunes, r.ogle, r.ikindi, r.aksam, r.yatsi];
+    x = x0; vals.forEach((t, j) => { if (j === 5) ctx.fillStyle = r.bugun ? WHITE : GOLD; ctx.fillText(t, x + colW[j] / 2, y + satirH * 0.68); if (j === 5) ctx.fillStyle = r.bugun ? WHITE : CREAM; x += colW[j]; });
+    y += satirH;
+  });
+  // alt bilgi
+  ctx.fillStyle = 'rgba(247,221,196,0.7)'; ctx.font = "500 26px 'Outfit', system-ui, sans-serif";
+  ctx.fillText('İmsak = sahurun sonu · Akşam = iftar · Vakitler Diyanet takvimine göre', W / 2, H - 200);
+  hvCardMoon(ctx, W / 2 - 120, H - 128, 22, GOLD, 0.95);
+  ctx.fillStyle = CREAM; ctx.font = "600 40px 'Outfit', system-ui, sans-serif"; ctx.fillText('Namaz Dostu', W / 2 + 30, H - 114);
+  hvOpenShareCard({ canvas: cv, fallbackText: `${v.ay} ${v.yil} İmsakiyesi — ${v.konum}\n` + v.satirlar.map(r => `${r.gun} ${r.hafta}: İmsak ${r.imsak} · İftar ${r.aksam}`).join('\n') });
+}
+window.hvImsakiyeGorselPaylas = hvImsakiyeGorselPaylas;
 
 /* ══════════ ORUÇ TAKİBİ ══════════ */
 function renderOruc() {
@@ -1347,6 +1901,12 @@ function renderOruc() {
       <span class="pc-label">${todayDone ? '🌙 Bugün oruç tuttum' : 'Bugün oruç tuttum'}</span>
       <span class="pc-box">${todayDone ? '✓' : ''}</span>
     </button>
+    ${(() => { const tv = hvLoad('teravih', {}); const on = !!tv[today]; const ram = (typeof hvRamazanDurum === 'function') ? hvRamazanDurum() : null;
+      const say = Object.keys(tv).filter(k => tv[k] && (!ram || !ram.baslangic || k >= ram.baslangic)).length;
+      return `<button class="prayer-check-row ${on ? 'checked' : ''}" onclick="toggleTeravihToday()" style="margin-top:8px;">
+        <span class="pc-label">${on ? '🕌 Bugün teravih kıldım' : 'Bugün teravih kıldım'}${ram && ram.durum === 'icinde' ? ` <small style="font-weight:400;color:var(--text-muted)">· Ramazan ${ram.gunNo}. gün · ${say} teravih</small>` : ''}</span>
+        <span class="pc-box">${on ? '✓' : ''}</span>
+      </button>`; })()}
     <div class="hatim-stat" style="margin-top:12px;">
       <div class="hs-item"><div class="hs-num">${monthCount}</div><div class="hs-lbl">Bu ay</div></div>
       <div class="hs-item"><div class="hs-num">${total}</div><div class="hs-lbl">Toplam</div></div>
@@ -1374,6 +1934,11 @@ function toggleOrucToday() {
   renderOruc();
 }
 window.toggleOrucToday = toggleOrucToday;
+function toggleTeravihToday() {
+  const tv = hvLoad('teravih', {}); const t = hvTodayKey();
+  tv[t] = !tv[t]; hvSave('teravih', tv); hvVibrate(15); renderOruc();
+}
+window.toggleTeravihToday = toggleTeravihToday;
 function orucKazaAdjust(delta) {
   const k = Math.max(0, hvLoad('oruc_kaza', 0) + delta);
   hvSave('oruc_kaza', k);
@@ -1382,10 +1947,13 @@ function orucKazaAdjust(delta) {
 window.orucKazaAdjust = orucKazaAdjust;
 
 /* ══════════ FEATURE ROUTE KAYIT & BAŞLATMA ══════════ */
+try { if (document.readyState !== 'loading') renderHizliErisim(); else document.addEventListener('DOMContentLoaded', renderHizliErisim); } catch (e) {}
 window.FEATURE_ROUTES = {
   'onemli-sureler': renderOnemliSureler,
+  'hac-umre': renderHacUmre,
+  'tecvid': renderTecvid,
+  'geceler': renderGeceler,
   'sifirdan': renderSifirdan,
-  'dua-ogrenme': () => renderDuaOgrenme(document.getElementById('dua-search-input') ? document.getElementById('dua-search-input').value : ''),
   'esma': () => renderEsma(document.getElementById('esma-search-input') ? document.getElementById('esma-search-input').value : ''),
   'ezkar': () => switchEzkar(_ezkarMode),
   'gunluk-dua': () => renderGunlukDua(document.getElementById('gunluk-search-input') ? document.getElementById('gunluk-search-input').value : ''),
@@ -1393,15 +1961,13 @@ window.FEATURE_ROUTES = {
   'namaz-takibi': renderNamazTakibi,
   'kaza': renderKaza,
   'hatim': renderHatim,
-  'zekat': renderZekat,
-  'fitre': renderFitre,
+  'zekat': () => { renderZekat(); renderFitre(); },
+  'fitre': () => { renderZekat(); renderFitre(); },
   'quiz': () => { if (!_quiz) renderQuizIntro(); },
-  'ruya': () => renderRuya(document.getElementById('ruya-search-input') ? document.getElementById('ruya-search-input').value : ''),
   'bebek': () => renderBebek(document.getElementById('bebek-search-input') ? document.getElementById('bebek-search-input').value : ''),
-  'cevirici': renderCevirici,
-  'takvim': renderTakvim,
+  'cevirici': () => { renderTakvim(); renderCevirici(); tkSec('cevirici'); },
+  'takvim': () => { renderTakvim(); renderCevirici(); tkSec('takvim'); },
   'paylasim': renderPaylasim,
-  'cuma': renderCuma,
   'taharet': () => switchTaharet(_taharetActive),
   'ozel-namaz': renderOzelNamazlar,
   'iman': renderImanEsaslari,
@@ -1479,6 +2045,22 @@ function hvShareApp() {
 window.hvBackupExport = hvBackupExport;
 window.hvBackupImport = hvBackupImport;
 window.hvShareApp = hvShareApp;
+/* Görüş & Öneri: e-posta uygulamasını açar; açılamazsa adresi panoya kopyalar (v65.1) */
+const HV_DESTEK_MAIL = 'fahrettinyaldiz@outlook.com';
+function hvGorusGonder() {
+  const platform = (typeof hvNativePlatform === 'function') ? hvNativePlatform() : 'web';
+  const surum = (window.HV_SURUM || '');
+  const konu = encodeURIComponent('Namaz Dostu v' + surum + ' — Görüş/Öneri (' + platform + ')');
+  const govde = encodeURIComponent('Merhaba,\n\n');
+  const url = 'mailto:' + HV_DESTEK_MAIL + '?subject=' + konu + '&body=' + govde;
+  try { window.location.href = url; } catch (e) {}
+  // Posta uygulaması yoksa (ör. bazı tabletler) adres elde kalsın
+  setTimeout(() => {
+    try { if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(HV_DESTEK_MAIL).catch(() => {}); } catch (e) {}
+    if (typeof hvToast === 'function') hvToast('✉️ ' + HV_DESTEK_MAIL, 'Posta uygulaması açılmadıysa adres panoya kopyalandı.');
+  }, 900);
+}
+window.hvGorusGonder = hvGorusGonder;
 
 function featuresInit() {
   loadDailyAyet();
@@ -1489,11 +2071,7 @@ function featuresInit() {
   const gunlukSearch = document.getElementById('gunluk-search-input');
   if (gunlukSearch) gunlukSearch.addEventListener('input', e => renderGunlukDua(e.target.value));
 
-  const ruyaSearch = document.getElementById('ruya-search-input');
-  if (ruyaSearch) ruyaSearch.addEventListener('input', e => renderRuya(e.target.value));
 
-  const duaSearch = document.getElementById('dua-search-input');
-  if (duaSearch) duaSearch.addEventListener('input', e => renderDuaOgrenme(e.target.value));
 
   const hadisSearch = document.getElementById('hadis-search-input');
   if (hadisSearch) hadisSearch.addEventListener('input', e => renderKirkHadis(e.target.value));
@@ -2045,7 +2623,7 @@ async function hvBuildShareCard(data) {
 async function hvOpenShareCard(data) {
   const d = data || {};
   let cv;
-  try { cv = await hvBuildShareCard(d); }
+  try { cv = d.canvas || await hvBuildShareCard(d); }
   catch (e) { console.warn('Kart üretilemedi:', e); return hvShareText(d.fallbackText || d.text || ''); }
 
   const dataUrl = cv.toDataURL('image/png');
@@ -2836,7 +3414,7 @@ async function renderMushaf(calmayaDevam) {
         ${HV_DINLE_QARILER.map(q => `<option value="${q.id}" ${q.id === hvDnQari().id ? 'selected' : ''}>${q.ad}</option>`).join('')}
       </select>
     </div>
-    ${mod !== 'ar' ? `<div class="mv-tts-not">🔊 Meâli telefonunun Türkçe sesi okur.${hvTtsTurkceVarMi() ? '' : ' <b>Bu cihazda Türkçe konuşma sesi bulunamadı</b> — meâl sesli okunamaz.'}</div>` : ''}
+    ${mod !== 'ar' ? `<div class="mv-tts-not">🔊 Meâli telefonunun Türkçe sesi okur.${hvTtsTurkceVarMi() ? '' : ' <b>Bu cihazda Türkçe konuşma sesi bulunamadı.</b> <button class="tts-yardim-btn" onclick="hvTtsYardim()">🔧 Ücretsiz nasıl düzeltirim?</button>'}</div>` : ''}
 
     <div class="mv-ilerleme">
       <div class="mv-il-ust">
@@ -3798,7 +4376,7 @@ function renderDinle() {
         <button class="${hiz === '1.05' ? 'on' : ''}" data-h="1.05" onclick="hvTtsHizDegistir('1.05')">Hızlı</button>
       </div>
     </div>
-    ${hvTtsTurkceVarMi() ? '' : `<div class="dn-not uyari">⚠️ Bu cihazda Türkçe konuşma sesi bulunamadı. Meâl sesli okunamaz; ekranda gösterilip sıradaki âyete geçilir. Telefon ayarlarından Türkçe konuşma sesini yükleyebilirsin.</div>`}
+    ${hvTtsTurkceVarMi() ? '' : `<div class="dn-not uyari">⚠️ Bu cihazda Türkçe konuşma sesi bulunamadı. Meâl ekranda gösterilip sıradaki âyete geçilir. <button class="tts-yardim-btn" onclick="hvTtsYardim()">🔧 Ücretsiz nasıl düzeltirim?</button></div>`}
     <div class="dn-not">
       🔊 Meâli <b>telefonunun kendi Türkçe sesi</b> okur, bu yüzden kalite cihazdan cihaza değişir.
       Sesi belirgin şekilde iyileştirmek için ücretsiz "gelişmiş" sesi indir:<br>
@@ -3827,7 +4405,7 @@ function renderDinle() {
   if (ayetMod) { hvMealHazir().then(() => { if (!hvAaListe.length && hvAaSure) hvAaListe = hvAaListeKur(hvAaSure); hvAaEkran(); }); }
 }
 window.renderDinle = renderDinle;
-try { if (window.FEATURE_ROUTES) window.FEATURE_ROUTES['dinle'] = renderDinle; } catch (e) {}
+try { if (window.FEATURE_ROUTES) window.FEATURE_ROUTES['dinle'] = () => { hvSet('hv_dinle_mod', 'ar'); renderDinle(); }; } catch (e) {}   // sayfa her açılışta Arapça ile başlar
 
 /* ═══════════════════════════════════════════════════════════════════════
    v61.4 — ELİFBÂ (Kur'an okumayı öğrenme)
@@ -4470,8 +5048,9 @@ function hvSdSayfaCiz() {
 
   kok.innerHTML = `
     <div class="sd-ust">
-      <button class="hub-back-btn" onclick="navigateTo('kurandua')">← Kuran &amp; Dua</button>
+      <button class="hub-back-btn" onclick="hvGeri(\'kurandua\')">← Kuran &amp; Dua</button>
       <button class="sd-liste-btn" onclick="hvSdListeGoster()">☰ Liste</button>
+      <div class="share-type-switch ogren-mod"><button class="seg-btn active">📖 Oku</button><button class="seg-btn" onclick="navigateTo('ezber')">🧠 Ezberle</button></div>
       <div class="sd-sayac">${hvSdIdx + 1} / ${toplam}</div>
     </div>
     <div class="sd-chips">${chips}</div>
@@ -4562,7 +5141,7 @@ function hvSdListeGoster() {
   const ogr = hvSdOgrenilenler();
   let html = `
     <div class="sd-ust">
-      <button class="hub-back-btn" onclick="navigateTo('kurandua')">← Kuran &amp; Dua</button>
+      <button class="hub-back-btn" onclick="hvGeri(\'kurandua\')">← Kuran &amp; Dua</button>
       <button class="sd-liste-btn on" onclick="hvSdGit(${hvSdIdx})">📄 Sayfaya Dön</button>
       <div class="sd-sayac">${ogr.length} / ${hvSdSayfalar.length} ✓</div>
     </div>`;

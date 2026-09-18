@@ -16,18 +16,18 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Namaz Dostu">
-    <link rel="apple-touch-icon" href="apple-touch-icon.png?v=64.6.0">
-    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png?v=64.6.0">
+    <link rel="apple-touch-icon" href="apple-touch-icon.png?v=65.1.0">
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png?v=65.1.0">
     <meta name="description" content="Namaz Dostu: Namaz vakitleri, ezan, Kur'an-ı Kerim, kıble, dualar, zikirmatik ve yeni başlayanlar için adım adım namaz rehberi. Ücretsiz, reklamsız, çevrimdışı.">
 
-    <link rel="stylesheet" href="styles.css?v=64.6.0">
-    <script>window.HV_SURUM = '64.6.0';</script>
-    <script src="cities.js?v=64.6.0" defer></script>
-    <script src="data.js?v=64.6.0" defer></script>
-    <script src="content.js?v=64.6.0" defer></script>
-    <script src="hadisler.js?v=64.6.0" defer></script>
-    <script src="app.js?v=64.6.0" defer></script>
-    <script src="features.js?v=64.6.0" defer></script>
+    <link rel="stylesheet" href="styles.css?v=65.1.0">
+    <script>window.HV_SURUM = '65.1.0';</script>
+    <script src="cities.js?v=65.1.0" defer></script>
+    <script src="data.js?v=65.1.0" defer></script>
+    <script src="content.js?v=65.1.0" defer></script>
+    <script src="hadisler.js?v=65.1.0" defer></script>
+    <script src="app.js?v=65.1.0" defer></script>
+    <script src="features.js?v=65.1.0" defer></script>
 </head>
 <body class="dark-theme">
     <!-- Loading Screen -->
@@ -131,23 +131,37 @@
                     </div>
                 </div>
 
-                <!-- Doğuş / Batış / Kalan -->
-                <div class="info-pills">
-                    <span class="ip">Doğuş <b id="ip-sunrise">06:12</b></span>
-                    <span class="ip">Batış <b id="ip-sunset">20:15</b></span>
-                    <span class="ip remain" id="ip-remain">—</span>
-                </div>
-
                 <!-- Namaz Vakitleri -->
                 <div id="prayer-times-container" class="prayer-grid"></div>
 
+                <!-- Özel gün şeridi: bayram namazı / kandil / Ramazan (yalnızca o günlerde) -->
+                <div id="ozel-gun-serit" class="ozel-serit" style="display:none;"></div>
+
+                <!-- Hızlı Erişim (v65.1): en çok kullanılan 4 bölüm, düzenlenebilir -->
+                <div id="hizli-erisim"></div>
+
+                <!-- Ek vakitler: İşrak / Kuşluk / Kerahet + paylaş (v65.1) -->
                 <!-- Günün Âyeti -->
                 <div class="daily-hadis-card" id="daily-ayet-card" onclick="nextDailyAyet()" title="Yeni âyet için dokun">
-                    <div class="verse-card-title">📖 Günün Âyeti</div>
+                    <div class="ayet-ust">
+                        <div class="verse-card-title">📖 Günün Âyeti</div>
+                        <button class="mini-share-btn" onclick="shareDailyVerse(event)">📤 Paylaş</button>
+                    </div>
                     <div id="daily-verse-arabic" class="hadis-arabic"></div>
                     <div id="daily-verse-turkish" class="hadis-text">Yükleniyor...</div>
                     <div id="daily-verse-source" class="hadis-source"></div>
-                    <button class="mini-share-btn" onclick="shareDailyVerse(event)">📤 Paylaş</button>
+                </div>
+
+                <!-- Diğer vakitler (İşrak, Kuşluk, Kerahet) — kapalı başlar, dokununca açılır (v65.1) -->
+                <div class="ek-vakit-kart" id="ek-vakit-kart" style="display:none;">
+                    <button class="ek-vakit-ust" onclick="hvEkVakitAcKapa()" aria-expanded="false">
+                        <span class="ek-vakit-baslik">⏱ Diğer Vakitler <small>İşrak · Kuşluk · Kerahet · Teheccüd</small></span>
+                        <span class="ek-vakit-ok">▾</span>
+                    </button>
+                    <div class="ek-vakit-govde" id="ek-vakit-govde">
+                        <div class="ek-vakit-satirlar" id="ek-vakit-satirlar"></div>
+                        <button class="ek-vakit-paylas" onclick="hvVakitleriPaylas()">📤 Vakitleri Paylaş</button>
+                    </div>
                 </div>
             </div>
         </section>
@@ -166,23 +180,26 @@
                     <button class="hub-card" onclick="navigateTo('guide')">
                         <span class="hub-icon">🤲</span><span class="hub-title">Namaz Rehberi</span><span class="hub-sub">5 Vaktin Kılınışı</span>
                     </button>
-                    <button class="hub-card" onclick="navigateTo('mushaf')">
+                    <button class="hub-card" onclick="navigateTo('quran')">
                         <span class="hub-icon">📖</span><span class="hub-title">Kuran-ı Kerim</span><span class="hub-sub">Sayfa Sayfa • Sure Sure • Meal & Ses</span>
                     </button>
                     <button class="hub-card" onclick="navigateTo('dinle')">
                         <span class="hub-icon">🎧</span><span class="hub-title">Kuran Dinle</span><span class="hub-sub">Kesintisiz • 4 Hafız</span>
                     </button>
-                    <button class="hub-card" onclick="navigateTo('sifirdan')">
-                        <span class="hub-icon">🌱</span><span class="hub-title">0'dan Dua Öğren</span><span class="hub-sub">Satır Satır Arapça + Okunuş</span>
+                    <button class="hub-card" onclick="navigateTo('ezber')">
+                        <span class="hub-icon">🌱</span><span class="hub-title">Dua &amp; Sure Öğren</span><span class="hub-sub">Satır Satır Oku • Parça Parça Ezberle</span>
                     </button>
                     <button class="hub-card" onclick="navigateTo('elifba')">
                         <span class="hub-icon">🔤</span><span class="hub-title">Elifbâ</span><span class="hub-sub">Kur'an Okumayı Öğren</span>
                     </button>
+                    <button class="hub-card" onclick="navigateTo('tecvid')">
+                        <span class="hub-icon">🎓</span><span class="hub-title">Tecvid Dersleri</span><span class="hub-sub">Med, İdgam, İhfa… Kurallar</span>
+                    </button>
                     <button class="hub-card" onclick="navigateTo('hatim')">
                         <span class="hub-icon">📗</span><span class="hub-title">Hatim Takibi</span><span class="hub-sub">İlerleme Çubuğu</span>
                     </button>
-                    <button class="hub-card" onclick="navigateTo('ezber')">
-                        <span class="hub-icon">🧠</span><span class="hub-title">Dua & Sure Ezberle</span><span class="hub-sub">Parça Parça Dinle</span>
+                    <button class="hub-card" onclick="navigateTo('onemli-sureler')">
+                        <span class="hub-icon">⭐</span><span class="hub-title">Önemli Sureler</span><span class="hub-sub">Yâsîn, Mülk, Fetih… Faziletleri</span>
                     </button>
                     <button class="hub-card" onclick="navigateTo('ayet-arama')">
                         <span class="hub-icon">🔎</span><span class="hub-title">Ayet & Meal Arama</span><span class="hub-sub">Kelimeyle ayet bul</span>
@@ -230,7 +247,7 @@
                         <span class="hub-icon">💧</span><span class="hub-title">Abdest & Taharet</span><span class="hub-sub">Abdest, Gusül, Teyemmüm</span>
                     </button>
                     <button class="hub-card" onclick="navigateTo('ozel-namaz')">
-                        <span class="hub-icon">🕌</span><span class="hub-title">Özel Namazlar</span><span class="hub-sub">Cuma, Bayram, Cenaze...</span>
+                        <span class="hub-icon">🕌</span><span class="hub-title">Özel Namazlar</span><span class="hub-sub">Vitir, Teheccüd, Cuma, Bayram…</span>
                     </button>
                     <button class="hub-card" onclick="navigateTo('iman')">
                         <span class="hub-icon">📜</span><span class="hub-title">İman Esasları</span><span class="hub-sub">Âmentü & 6 Şart</span>
@@ -240,6 +257,12 @@
                     </button>
                     <button class="hub-card" onclick="navigateTo('siyer')">
                         <span class="hub-icon">🌟</span><span class="hub-title">Siyer</span><span class="hub-sub">Peygamberimizin Hayatı</span>
+                    </button>
+                    <button class="hub-card" onclick="navigateTo('hac-umre')">
+                        <span class="hub-icon">🕋</span><span class="hub-title">Hac &amp; Umre</span><span class="hub-sub">Adım Adım Rehber &amp; Dualar</span>
+                    </button>
+                    <button class="hub-card" onclick="navigateTo('geceler')">
+                        <span class="hub-icon">🕯️</span><span class="hub-title">Kandil Rehberi</span><span class="hub-sub">Mübarek Gecelerde Ne Yapılır?</span>
                     </button>
                 </div>
             </div>
@@ -254,16 +277,13 @@
                 </div>
                 <div class="hub-grid">
                     <button class="hub-card" onclick="navigateTo('zekat')">
-                        <span class="hub-icon">💰</span><span class="hub-title">Zekât Hesaplama</span><span class="hub-sub">Altın + Nakit</span>
-                    </button>
-                    <button class="hub-card" onclick="navigateTo('fitre')">
-                        <span class="hub-icon">🌾</span><span class="hub-title">Fitre / Fidye</span><span class="hub-sub">Hesaplayıcı</span>
+                        <span class="hub-icon">💰</span><span class="hub-title">Zekât &amp; Fitre</span><span class="hub-sub">Zekât, Fitre, Fidye Hesaplama</span>
                     </button>
                     <button class="hub-card" onclick="navigateTo('quiz')">
                         <span class="hub-icon">🧠</span><span class="hub-title">İslami Bilgi Quizi</span><span class="hub-sub">50+ Soru</span>
                     </button>
                     <button class="hub-card" onclick="navigateTo('takvim')">
-                        <span class="hub-icon">📅</span><span class="hub-title">Hicri Takvim</span><span class="hub-sub">Kandiller & Bayramlar</span>
+                        <span class="hub-icon">📅</span><span class="hub-title">Hicri Takvim</span><span class="hub-sub">Kandiller, Bayramlar & Tarih Çevirici</span>
                     </button>
                     <button class="hub-card" onclick="navigateTo('imsakiye')">
                         <span class="hub-icon">🌙</span><span class="hub-title">İmsakiye</span><span class="hub-sub">Ramazan • Sahur & İftar</span>
@@ -273,12 +293,6 @@
                     </button>
                     <button class="hub-card" onclick="navigateTo('sozluk')">
                         <span class="hub-icon">📚</span><span class="hub-title">Dini Sözlük</span><span class="hub-sub">Kavramlar & Anlamları</span>
-                    </button>
-                    <button class="hub-card" onclick="navigateTo('cevirici')">
-                        <span class="hub-icon">🔄</span><span class="hub-title">Tarih Çevirici</span><span class="hub-sub">Hicri ↔ Miladi</span>
-                    </button>
-                    <button class="hub-card" onclick="navigateTo('ruya')">
-                        <span class="hub-icon">🌙</span><span class="hub-title">Rüya Tabirleri</span><span class="hub-sub">Kültürel Derleme</span>
                     </button>
                     <button class="hub-card" onclick="navigateTo('bebek')">
                         <span class="hub-icon">👶</span><span class="hub-title">Bebek İsimleri</span><span class="hub-sub">Anlamlarıyla</span>
@@ -290,7 +304,7 @@
         <!-- ═══ QIBLA SECTION (KUSURSUZ KIBLE NAVİGASYONU) ═══ -->
         <section id="page-qibla" class="page-section">
             <div class="hero-frame-box">
-                <button class="hub-back-btn" onclick="navigateTo('kurandua')">← Kuran &amp; Dua</button>
+                <button class="hub-back-btn" onclick="hvGeri('kurandua')">← Kuran &amp; Dua</button>
                 <div class="page-header-title">
                     <h2>🕋 Canlı Kıble Navigasyonu & Pusula</h2>
                     <p id="qibla-user-loc">Yalova, Armutlu ➔ Mekke-i Mükerreme</p>
@@ -370,6 +384,8 @@
                         <div class="kible-ofset-not">Pusulanız bilinen kıble yönünden birkaç derece sapıyorsa buradan düzeltin. Ayarınız telefonunuzda saklanır.</div>
                     </div>
 
+                    <button class="gold-outline-btn yakin-cami-btn" onclick="hvYakinCami()">🕌 Yakındaki Camileri Haritada Gör</button>
+
                     <div id="compass-status-msg" class="compass-note">
                         💡 <b>Nasıl Kullanılır?</b> Telefonunuzu düz tutun ve döner altın ibreyi en üstteki sabit 🕋 <b>KÂBE HEDEFİNE</b> getirene kadar dönün.
                     </div>
@@ -406,7 +422,7 @@
         <section id="page-quran" class="page-section">
             <div class="hero-frame-box">
                 <div id="surah-list-view">
-                    <button class="hub-back-btn" onclick="navigateTo('kurandua')">← Kuran &amp; Dua</button>
+                    <button class="hub-back-btn" onclick="hvGeri('kurandua')">← Kuran &amp; Dua</button>
                     <div class="page-header-title">
                         <h2>📖 Kuran-ı Kerim</h2>
                         <p>Arapça Metin ve Türkçe Meali</p>
@@ -436,11 +452,11 @@
                         <div style="width: 100%; display: flex; justify-content: space-between; align-items: center; padding: 0 4px;">
                             <div style="font-size: 0.9rem; color: var(--gold-light); font-weight: 600;">🎙️ Sesli Dinle</div>
                             <select id="qari-select" style="background: var(--bg-dark); color: var(--text-main); border: 1px solid var(--border-light); border-radius: 6px; padding: 4px; font-size: 0.8rem; outline: none; cursor: pointer;">
-                                <option value="afs" data-server="server8">Mishary Rashid Alafasy</option>
-                                <option value="basit" data-server="server7">Abdul Basit Abdussamed</option>
-                                <option value="maher" data-server="server12">Maher Al Muaiqly</option>
-                                <option value="s_gmd" data-server="server7">Saad El Ghamidi</option>
-                            </select>
+                            <option value="husr" data-server="server13">Mahmud Halil el-Husarî</option>
+                            <option value="afs" data-server="server8">Mishary Rashid Alafasy</option>
+                            <option value="minsh" data-server="server10">Muhammed Sıddık el-Minşâvî</option>
+                            <option value="yasser" data-server="server11">Yâsir ed-Devserî</option>
+                        </select>
                         </div>
                         <audio id="surah-audio-player" controls style="width: 100%; height: 36px; outline: none; border-radius: 20px;"></audio>
                     </div>
@@ -454,7 +470,7 @@
         <!-- ═══ MUSHAF (SAYFA SAYFA) ═══ -->
         <section id="page-mushaf" class="page-section">
             <div class="hero-frame-box">
-                <button class="hub-back-btn" onclick="navigateTo('kurandua')">← Kuran &amp; Dua</button>
+                <button class="hub-back-btn" onclick="hvGeri('kurandua')">← Kuran &amp; Dua</button>
                 <div id="mushaf-root"></div>
             </div>
         </section>
@@ -462,15 +478,23 @@
         <!-- ═══ ELİFBÂ ═══ -->
         <section id="page-elifba" class="page-section">
             <div class="hero-frame-box">
-                <button class="hub-back-btn" onclick="navigateTo('kurandua')">← Kuran &amp; Dua</button>
+                <button class="hub-back-btn" onclick="hvGeri('kurandua')">← Kuran &amp; Dua</button>
                 <div id="elifba-root"></div>
+            </div>
+        </section>
+
+        <section id="page-tecvid" class="page-section">
+            <div class="hero-frame-box">
+                <button class="hub-back-btn" onclick="hvGeri('kurandua')">← Kuran &amp; Dua</button>
+                <div class="page-header-title"><h2>🎓 Tecvid Dersleri</h2><p>Kur'an'ı kurallarına göre okuma — 14 ders</p></div>
+                <div id="tecvid-content"></div>
             </div>
         </section>
 
         <!-- ═══ KURAN DİNLE ═══ -->
         <section id="page-dinle" class="page-section">
             <div class="hero-frame-box">
-                <button class="hub-back-btn" onclick="navigateTo('kurandua')">← Kuran &amp; Dua</button>
+                <button class="hub-back-btn" onclick="hvGeri('kurandua')">← Kuran &amp; Dua</button>
                 <div id="dinle-root"></div>
             </div>
         </section>
@@ -478,7 +502,13 @@
         <!-- ═══ DUA & SURE EZBERLEME ═══ -->
         <section id="page-ezber" class="page-section">
             <div class="hero-frame-box">
-                <button class="hub-back-btn" onclick="navigateTo('kurandua')">← Kuran &amp; Dua</button>
+                <div class="sd-ust">
+                    <button class="hub-back-btn" onclick="hvGeri('kurandua')">← Kuran &amp; Dua</button>
+                    <div class="share-type-switch ogren-mod">
+                        <button class="seg-btn" onclick="navigateTo('sifirdan')">📖 Oku</button>
+                        <button class="seg-btn active">🧠 Ezberle</button>
+                    </div>
+                </div>
                 <div id="ezber-root"></div>
             </div>
         </section>
@@ -486,7 +516,7 @@
         <!-- ═══ PRAYER GUIDE SECTION ═══ -->
         <section id="page-guide" class="page-section">
             <div class="hero-frame-box">
-                <button class="hub-back-btn" onclick="navigateTo('kurandua')">← Kuran &amp; Dua</button>
+                <button class="hub-back-btn" onclick="hvGeri('kurandua')">← Kuran &amp; Dua</button>
                 <div class="page-header-title">
                     <h2>🤲 Rehber</h2>
                     <p>5 Vakit Namazın Kılınışı & Dualar</p>
@@ -511,7 +541,7 @@
         <!-- ═══ FEATURE SUB-PAGES (İçerik features.js tarafından doldurulur) ═══ -->
         <section id="page-onemli-sureler" class="page-section">
             <div class="hero-frame-box">
-                <button class="hub-back-btn" onclick="navigateTo('kurandua')">← Kuran &amp; Dua</button>
+                <button class="hub-back-btn" onclick="hvGeri('kurandua')">← Kuran &amp; Dua</button>
                 <div class="page-header-title"><h2>⭐ Önemli Sureler</h2><p>Faziletli sureler için hızlı erişim</p></div>
                 <div id="onemli-sureler-content"></div>
             </div>
@@ -523,21 +553,10 @@
             </div>
         </section>
 
-        <section id="page-dua-ogrenme" class="page-section">
-            <div class="hero-frame-box">
-                <button class="hub-back-btn" onclick="navigateTo('kurandua')">← Kuran &amp; Dua</button>
-                <div class="page-header-title"><h2>🤲 Dua Öğrenme</h2><p>Namaz duaları ve sureler — Arapça, Okunuş ve Anlamı</p></div>
-                <div class="quran-search-bar">
-                    <span class="search-icon-fixed">🔍</span>
-                    <input type="text" id="dua-search-input" class="search-input-field" placeholder="Dua veya sure ara (ör. Kunut, Fatiha)...">
-                </div>
-                <div id="dua-ogrenme-content"></div>
-            </div>
-        </section>
 
         <section id="page-esma" class="page-section">
             <div class="hero-frame-box">
-                <button class="hub-back-btn" onclick="navigateTo('kurandua')">← Kuran &amp; Dua</button>
+                <button class="hub-back-btn" onclick="hvGeri('kurandua')">← Kuran &amp; Dua</button>
                 <div class="page-header-title"><h2>🕋 Esmaül Hüsna</h2><p>Allah'ın 99 Güzel İsmi</p></div>
                 <div class="quran-search-bar">
                     <span class="search-icon-fixed">🔍</span>
@@ -549,7 +568,7 @@
 
         <section id="page-ezkar" class="page-section">
             <div class="hero-frame-box">
-                <button class="hub-back-btn" onclick="navigateTo('kurandua')">← Kuran &amp; Dua</button>
+                <button class="hub-back-btn" onclick="hvGeri('kurandua')">← Kuran &amp; Dua</button>
                 <div class="page-header-title"><h2>🌅 Sabah / Akşam Ezkârı</h2><p>Günlük Zikir ve Dualar</p></div>
                 <div class="segmented-switch" id="ezkar-switch">
                     <button class="seg-btn active" onclick="switchEzkar('sabah')">🌅 Sabah</button>
@@ -561,7 +580,7 @@
 
         <section id="page-gunluk-dua" class="page-section">
             <div class="hero-frame-box">
-                <button class="hub-back-btn" onclick="navigateTo('kurandua')">← Kuran &amp; Dua</button>
+                <button class="hub-back-btn" onclick="hvGeri('kurandua')">← Kuran &amp; Dua</button>
                 <div class="page-header-title"><h2>📔 Günlük Dualar</h2><p>Günlük hayatın duaları</p></div>
                 <div class="quran-search-bar">
                     <span class="search-icon-fixed">🔍</span>
@@ -573,7 +592,7 @@
 
         <section id="page-zikirmatik" class="page-section">
             <div class="hero-frame-box">
-                <button class="hub-back-btn" onclick="navigateTo('ibadet')">← İbadet</button>
+                <button class="hub-back-btn" onclick="hvGeri('ibadet')">← İbadet</button>
                 <div class="page-header-title"><h2>📿 Zikirmatik</h2><p>Dijital Tesbih</p></div>
                 <div id="zikirmatik-content"></div>
             </div>
@@ -581,7 +600,7 @@
 
         <section id="page-namaz-takibi" class="page-section">
             <div class="hero-frame-box">
-                <button class="hub-back-btn" onclick="navigateTo('ibadet')">← İbadet</button>
+                <button class="hub-back-btn" onclick="hvGeri('ibadet')">← İbadet</button>
                 <div class="page-header-title"><h2>✅ Namaz Takibi</h2><p>Günlük 5 vakit ve haftalık seri</p></div>
                 <div id="namaz-takibi-content"></div>
             </div>
@@ -589,7 +608,7 @@
 
         <section id="page-namaz-programi" class="page-section">
             <div class="hero-frame-box">
-                <button class="hub-back-btn" onclick="navigateTo('ibadet')">← İbadet</button>
+                <button class="hub-back-btn" onclick="hvGeri('ibadet')">← İbadet</button>
                 <div class="page-header-title"><h2>🌱 30 Günde Namaza Başlangıç</h2><p>Sıfırdan adım adım namaz öğrenme programı</p></div>
                 <div id="namaz-programi-content"></div>
             </div>
@@ -597,7 +616,7 @@
 
         <section id="page-kaza" class="page-section">
             <div class="hero-frame-box">
-                <button class="hub-back-btn" onclick="navigateTo('ibadet')">← İbadet</button>
+                <button class="hub-back-btn" onclick="hvGeri('ibadet')">← İbadet</button>
                 <div class="page-header-title"><h2>🔄 Kaza Namazı Takibi</h2><p>Kaza borcunuzu takip edin</p></div>
                 <div id="kaza-content"></div>
             </div>
@@ -605,7 +624,7 @@
 
         <section id="page-hatim" class="page-section">
             <div class="hero-frame-box">
-                <button class="hub-back-btn" onclick="navigateTo('ibadet')">← İbadet</button>
+                <button class="hub-back-btn" onclick="hvGeri('ibadet')">← İbadet</button>
                 <div class="page-header-title"><h2>📗 Hatim Takibi</h2><p>Kuran hatmi ilerlemeniz</p></div>
                 <div id="hatim-content"></div>
             </div>
@@ -613,43 +632,30 @@
 
         <section id="page-zekat" class="page-section">
             <div class="hero-frame-box">
-                <button class="hub-back-btn" onclick="navigateTo('araclar')">← Araçlar</button>
-                <div class="page-header-title"><h2>💰 Zekât Hesaplayıcı</h2><p>Altın ve nakit üzerinden zekât</p></div>
+                <button class="hub-back-btn" onclick="hvGeri('araclar')">← Araçlar</button>
+                <div class="page-header-title"><h2>💰 Zekât &amp; Fitre</h2><p>Zekât, fitre ve fidye hesaplama</p></div>
+                <div class="share-type-switch" id="zf-switch">
+                    <button class="seg-btn active" id="zf-zekat" onclick="zfSec('zekat')">💰 Zekât</button>
+                    <button class="seg-btn" id="zf-fitre" onclick="zfSec('fitre')">🌾 Fitre / Fidye</button>
+                </div>
                 <div id="zekat-content"></div>
+                <div id="fitre-content" style="display:none"></div>
             </div>
         </section>
 
-        <section id="page-fitre" class="page-section">
-            <div class="hero-frame-box">
-                <button class="hub-back-btn" onclick="navigateTo('araclar')">← Araçlar</button>
-                <div class="page-header-title"><h2>🌾 Fitre / Fidye Hesaplayıcı</h2><p>Fitre ve fidye tutarları</p></div>
-                <div id="fitre-content"></div>
-            </div>
-        </section>
 
         <section id="page-quiz" class="page-section">
             <div class="hero-frame-box">
-                <button class="hub-back-btn" onclick="navigateTo('araclar')">← Araçlar</button>
+                <button class="hub-back-btn" onclick="hvGeri('araclar')">← Araçlar</button>
                 <div class="page-header-title"><h2>🧠 İslami Bilgi Quizi</h2><p>Bilgini test et</p></div>
                 <div id="quiz-content"></div>
             </div>
         </section>
 
-        <section id="page-ruya" class="page-section">
-            <div class="hero-frame-box">
-                <button class="hub-back-btn" onclick="navigateTo('araclar')">← Araçlar</button>
-                <div class="page-header-title"><h2>🌙 Rüya Tabirleri</h2><p>Rüyanızda gördüğünüzü arayın</p></div>
-                <div class="quran-search-bar">
-                    <span class="search-icon-fixed">🔍</span>
-                    <input type="text" id="ruya-search-input" class="search-input-field" placeholder="Rüya ara (ör. su, yılan, altın)...">
-                </div>
-                <div id="ruya-content"></div>
-            </div>
-        </section>
 
         <section id="page-bebek" class="page-section">
             <div class="hero-frame-box">
-                <button class="hub-back-btn" onclick="navigateTo('araclar')">← Araçlar</button>
+                <button class="hub-back-btn" onclick="hvGeri('araclar')">← Araçlar</button>
                 <div class="page-header-title"><h2>👶 Bebek İsimleri</h2><p>Anlamlı isimler</p></div>
                 <div class="segmented-switch" id="bebek-switch">
                     <button class="seg-btn active" onclick="switchBebek('all')">Tümü</button>
@@ -664,42 +670,32 @@
             </div>
         </section>
 
-        <section id="page-cevirici" class="page-section">
-            <div class="hero-frame-box">
-                <button class="hub-back-btn" onclick="navigateTo('araclar')">← Araçlar</button>
-                <div class="page-header-title"><h2>🔄 Tarih Çevirici</h2><p>Hicri ve Miladi tarihi karşılıklı çevirin</p></div>
-                <div id="cevirici-content"></div>
-            </div>
-        </section>
-
         <section id="page-takvim" class="page-section">
             <div class="hero-frame-box">
-                <button class="hub-back-btn" onclick="navigateTo('araclar')">← Araçlar</button>
-                <div class="page-header-title"><h2>📅 Hicri Takvim & Kandiller</h2><p>Önemli gün ve geceler</p></div>
+                <button class="hub-back-btn" onclick="hvGeri('araclar')">← Araçlar</button>
+                <div class="page-header-title"><h2>📅 Hicri Takvim</h2><p>Kandiller, bayramlar ve tarih çevirici</p></div>
+                <div class="share-type-switch" id="tk-switch">
+                    <button class="seg-btn active" id="tk-takvim" onclick="tkSec('takvim')">📅 Takvim</button>
+                    <button class="seg-btn" id="tk-cevirici" onclick="tkSec('cevirici')">🔄 Tarih Çevirici</button>
+                </div>
                 <div id="takvim-content"></div>
+                <div id="cevirici-content" style="display:none"></div>
             </div>
         </section>
 
         <section id="page-paylasim" class="page-section">
             <div class="hero-frame-box">
-                <button class="hub-back-btn" onclick="navigateTo('araclar')">← Araçlar</button>
-                <div class="page-header-title"><h2>📤 Paylaşım Kartları</h2><p>Ayet ve hadis kartları oluştur</p></div>
+                <button class="hub-back-btn" onclick="hvGeri('araclar')">← Araçlar</button>
+                <div class="page-header-title"><h2>📤 Paylaşım Kartları</h2><p>Ayet, hadis ve Cuma mesajı kartları</p></div>
                 <div id="paylasim-content"></div>
             </div>
         </section>
 
-        <section id="page-cuma" class="page-section">
-            <div class="hero-frame-box">
-                <button class="hub-back-btn" onclick="navigateTo('araclar')">← Araçlar</button>
-                <div class="page-header-title"><h2>🕌 Cuma Mesajları</h2><p>Hayırlı Cumalar kartları</p></div>
-                <div id="cuma-content"></div>
-            </div>
-        </section>
 
         <!-- ═══ YENİ MODÜL SAYFALARI (v55.2) ═══ -->
         <section id="page-taharet" class="page-section">
             <div class="hero-frame-box">
-                <button class="hub-back-btn" onclick="navigateTo('ibadet')">← İbadet</button>
+                <button class="hub-back-btn" onclick="hvGeri('ibadet')">← İbadet</button>
                 <div class="page-header-title"><h2>💧 Abdest & Taharet Rehberi</h2><p>Adım adım kılınışı</p></div>
                 <div class="segmented-switch" id="taharet-switch">
                     <button class="seg-btn active" data-k="abdest" onclick="switchTaharet('abdest')">Abdest</button>
@@ -712,7 +708,7 @@
 
         <section id="page-ozel-namaz" class="page-section">
             <div class="hero-frame-box">
-                <button class="hub-back-btn" onclick="navigateTo('ibadet')">← İbadet</button>
+                <button class="hub-back-btn" onclick="hvGeri('ibadet')">← İbadet</button>
                 <div class="page-header-title"><h2>🕌 Özel Namazlar</h2><p>Cuma, Bayram, Teravih, Cenaze</p></div>
                 <div id="ozel-namaz-content"></div>
             </div>
@@ -720,7 +716,7 @@
 
         <section id="page-iman" class="page-section">
             <div class="hero-frame-box">
-                <button class="hub-back-btn" onclick="navigateTo('ibadet')">← İbadet</button>
+                <button class="hub-back-btn" onclick="hvGeri('ibadet')">← İbadet</button>
                 <div class="page-header-title"><h2>📜 İman Esasları</h2><p>Âmentü ve İmanın 6 Şartı</p></div>
                 <div id="iman-content"></div>
             </div>
@@ -728,7 +724,7 @@
 
         <section id="page-ayet-arama" class="page-section">
             <div class="hero-frame-box">
-                <button class="hub-back-btn" onclick="navigateTo('kurandua')">← Kuran &amp; Dua</button>
+                <button class="hub-back-btn" onclick="hvGeri('kurandua')">← Kuran &amp; Dua</button>
                 <div class="page-header-title"><h2>🔎 Ayet & Meal Arama</h2><p>Kur'an mealinde kelime arayın</p></div>
                 <div class="quran-search-bar">
                     <span class="search-icon-fixed">🔍</span>
@@ -740,7 +736,7 @@
 
         <section id="page-kirk-hadis" class="page-section">
             <div class="hero-frame-box">
-                <button class="hub-back-btn" onclick="navigateTo('kurandua')">← Kuran &amp; Dua</button>
+                <button class="hub-back-btn" onclick="hvGeri('kurandua')">← Kuran &amp; Dua</button>
                 <div class="page-header-title"><h2>📜 1000 Hadis-i Şerif</h2><p id="kirk-hadis-count">Buhârî, Müslim, Tirmizî, Ebû Dâvûd, Nesâî, İbn Mâce, Riyâzü's-Sâlihîn</p></div>
                 <div class="quran-search-bar">
                     <span class="search-icon-fixed">🔍</span>
@@ -750,9 +746,25 @@
             </div>
         </section>
 
+        <section id="page-hac-umre" class="page-section">
+            <div class="hero-frame-box">
+                <button class="hub-back-btn" onclick="hvGeri('ibadet')">← İbadet</button>
+                <div class="page-header-title"><h2>🕋 Hac &amp; Umre</h2><p>Adım adım rehber, dualar ve pratik bilgiler</p></div>
+                <div id="hac-umre-content"></div>
+            </div>
+        </section>
+
+        <section id="page-geceler" class="page-section">
+            <div class="hero-frame-box">
+                <button class="hub-back-btn" onclick="hvGeri('ibadet')">← İbadet</button>
+                <div class="page-header-title"><h2>🕯️ Kandil Rehberi</h2><p>Mübarek gecelerde ne yapılır, hangi dualar okunur?</p></div>
+                <div id="geceler-content"></div>
+            </div>
+        </section>
+
         <section id="page-siyer" class="page-section">
             <div class="hero-frame-box">
-                <button class="hub-back-btn" onclick="navigateTo('ibadet')">← İbadet</button>
+                <button class="hub-back-btn" onclick="hvGeri('ibadet')">← İbadet</button>
                 <div class="page-header-title"><h2>🌟 Siyer</h2><p>Peygamberimizin Hayatı</p></div>
                 <div id="siyer-content"></div>
             </div>
@@ -760,7 +772,7 @@
 
         <section id="page-peygamberler" class="page-section">
             <div class="hero-frame-box">
-                <button class="hub-back-btn" onclick="navigateTo('ibadet')">← İbadet</button>
+                <button class="hub-back-btn" onclick="hvGeri('ibadet')">← İbadet</button>
                 <div class="page-header-title"><h2>👳 Peygamberler</h2><p>Kur'an'da adı geçen 25 peygamber</p></div>
                 <div id="peygamberler-content"></div>
             </div>
@@ -768,7 +780,7 @@
 
         <section id="page-sozluk" class="page-section">
             <div class="hero-frame-box">
-                <button class="hub-back-btn" onclick="navigateTo('araclar')">← Araçlar</button>
+                <button class="hub-back-btn" onclick="hvGeri('araclar')">← Araçlar</button>
                 <div class="page-header-title"><h2>📚 Dini Sözlük</h2><p>İslami kavramlar ve anlamları</p></div>
                 <div class="quran-search-bar">
                     <span class="search-icon-fixed">🔍</span>
@@ -780,7 +792,7 @@
 
         <section id="page-oruc" class="page-section">
             <div class="hero-frame-box">
-                <button class="hub-back-btn" onclick="navigateTo('ibadet')">← İbadet</button>
+                <button class="hub-back-btn" onclick="hvGeri('ibadet')">← İbadet</button>
                 <div class="page-header-title"><h2>🌙 Oruç Takibi</h2><p>Ramazan ve nafile oruçlarınız</p></div>
                 <div id="oruc-content"></div>
             </div>
@@ -788,7 +800,7 @@
 
         <section id="page-imsakiye" class="page-section">
             <div class="hero-frame-box">
-                <button class="hub-back-btn" onclick="navigateTo('araclar')">← Araçlar</button>
+                <button class="hub-back-btn" onclick="hvGeri('araclar')">← Araçlar</button>
                 <div class="page-header-title"><h2>🌙 Ramazan İmsakiyesi</h2><p>Aylık sahur ve iftar vakitleri</p></div>
                 <div id="imsakiye-content"></div>
             </div>
@@ -796,7 +808,7 @@
 
         <section id="page-kaynaklar" class="page-section">
             <div class="hero-frame-box">
-                <button class="hub-back-btn" onclick="navigateTo('settings')">← Ayarlar</button>
+                <button class="hub-back-btn" onclick="hvGeri('settings')">← Ayarlar</button>
                 <div class="page-header-title"><h2>📚 Kaynaklar &amp; Gizlilik</h2><p>İçerik kaynakları, yöntem ve veri politikası</p></div>
                 <div class="kaynak-wrap">
                     <div class="kaynak-card">
@@ -908,7 +920,6 @@
                                 <label for="notify-time">Bildirim Zamanı</label>
                                 <select id="notify-time" class="select-input">
                                     <option value="0">Tam vaktinde</option>
-                                    <option value="1">1 dakika kala (Test)</option>
                                     <option value="15">15 dakika kala</option>
                                     <option value="30">30 dakika kala</option>
                                     <option value="45">45 dakika kala</option>
@@ -940,6 +951,15 @@
                                     <span class="slider round"></span>
                                 </label>
                             </div>
+                            <div class="setting-row" style="display: flex; justify-content: space-between; align-items: center;">
+                                <label for="notify-kandil" style="margin: 0; font-weight: 600;">Kandil &amp; bayram hatırlatması
+                                    <span style="display:block;font-weight:400;font-size:.78rem;color:var(--text-sub);margin-top:3px;">Kandil, bayram, arefe ve Ramazan başlangıcında sabah bildirimi</span>
+                                </label>
+                                <label class="switch">
+                                    <input type="checkbox" id="notify-kandil">
+                                    <span class="slider round"></span>
+                                </label>
+                            </div>
                             <div id="notify-native-status" class="notify-status"></div>
                             <div class="backup-row">
                                 <button id="test-adhan-btn" class="gold-primary-btn" onclick="testAdhanSound()">🔊 Ezanı Test Et</button>
@@ -952,12 +972,12 @@
                         <div class="group-title">🎙️ Ses ve Okuma</div>
                         <div class="settings-card-box">
                             <div class="setting-row">
-                                <label for="settings-qari-select">Kuran Okuyucu (İmam)</label>
+                                <label for="settings-qari-select">Hafız (Kuran Oku, Dinle, Dua Öğren)</label>
                                 <select id="settings-qari-select" class="select-input">
-                                    <option value="afs" data-server="server8">Mishary Rashid Alafasy</option>
-                                    <option value="basit" data-server="server7">Abdul Basit Abdussamed</option>
-                                    <option value="maher" data-server="server12">Maher Al Muaiqly</option>
-                                    <option value="s_gmd" data-server="server7">Saad El Ghamidi</option>
+                                    <option value="husr">Mahmud Halil el-Husarî</option>
+                                    <option value="afs">Mishary Rashid Alafasy</option>
+                                    <option value="minsh">Muhammed Sıddık el-Minşâvî</option>
+                                    <option value="yasser">Yâsir ed-Devserî</option>
                                 </select>
                             </div>
                         </div>
@@ -965,6 +985,20 @@
                     <div class="settings-group">
                         <div class="group-title">🎨 Görünüm</div>
                         <div class="settings-card-box">
+                            <div class="setting-row">
+                                <label for="light-toggle">☀️ Gündüz Teması (açık renk)</label>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" id="light-toggle">
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+                            <div class="setting-row">
+                                <label for="big-text-toggle">🔍 Büyük Yazı (yaşlılar için)</label>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" id="big-text-toggle">
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
                             <div class="setting-row">
                                 <label for="theme-toggle">Yeşil Tema (Lüks Gece)</label>
                                 <label class="toggle-switch">
@@ -975,18 +1009,6 @@
                             <div class="setting-row range-row">
                                 <label for="font-size-slider">Kuran Metin Boyutu</label>
                                 <input type="range" id="font-size-slider" min="14" max="36" value="20">
-                            </div>
-                        </div>
-                    </div>
-                    <div class="settings-group">
-                        <div class="group-title">🔊 Ses & Bildirim</div>
-                        <div class="settings-card-box">
-                            <div class="setting-row">
-                                <label for="reciter-select">Kuran Okuyucu (İmam)</label>
-                                <select id="reciter-select" class="select-input" disabled>
-                                    <option value="alafasy" selected>Mishary Rashid Alafasy</option>
-                                    <option value="abdulbasit">Abdulbasit Abdussamed (Yakında)</option>
-                                </select>
                             </div>
                         </div>
                     </div>
@@ -1009,12 +1031,13 @@
                                 <button class="gold-primary-btn" onclick="hvRateNow()">⭐ Uygulamayı Puanla</button>
                                 <button class="gold-outline-btn" onclick="navigateTo('kaynaklar')">📚 Kaynaklar &amp; Gizlilik</button>
                                 <button class="gold-outline-btn" onclick="hvShareApp()">📲 Uygulamayı Paylaş</button>
+                                <button class="gold-outline-btn" onclick="hvGorusGonder()">✉️ Görüş &amp; Öneri</button>
                             </div>
                         </div>
                     </div>
                     <div class="app-info-footer">
                         <div class="footer-logo">🕌</div>
-                        <div class="footer-ver">Namaz Dostu v64.6</div>
+                        <div class="footer-ver">Namaz Dostu v65.1</div>
                         <div style="font-size: 0.8rem; margin-top: 4px;">Tüm Hakları Saklıdır • Diyanet Uyumlu • Çevrimdışı Çalışır</div>
                     </div>
                 </div>
@@ -1060,7 +1083,7 @@
     <script>
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
-          navigator.serviceWorker.register('/sw.js?v=64.6.0')
+          navigator.serviceWorker.register('/sw.js?v=65.1.0')
             .then(reg => {
               reg.onupdatefound = () => {
                 const installingWorker = reg.installing;

@@ -4,6 +4,7 @@
 
 const APP_STATE = {
   currentPage: 'home',
+  kokSekme: 'home',     // en son açık olan sekme (geri düğmeleri buraya döner)
   userLocation: { lat: 40.5233, lng: 28.8350 }, // Armutlu, Yalova
   currentCity: 'Yalova',
   currentDistrict: 'Armutlu',
@@ -19,6 +20,9 @@ const APP_STATE = {
   notifySound: 'ezan',
   notifyBoth: false,
   notifyCuma: true,
+  notifyKandil: true,
+  lightTheme: false,
+  bigText: false,
   qari: 'afs'
 };
 
@@ -98,13 +102,23 @@ function setupNavTabs() {
 // Maps every sub-page to its parent bottom-nav tab so the correct tab stays highlighted
 const PAGE_PARENT = {
   home: 'home',
-  kurandua: 'kurandua', quran: 'kurandua', 'dua-ogrenme': 'kurandua', 'sifirdan': 'kurandua', esma: 'kurandua', ezkar: 'kurandua', 'gunluk-dua': 'kurandua', 'onemli-sureler': 'kurandua', 'ayet-arama': 'kurandua', 'kirk-hadis': 'kurandua', qibla: 'kurandua', guide: 'kurandua', mushaf: 'kurandua', ezber: 'kurandua', dinle: 'kurandua', elifba: 'kurandua',
-  ibadet: 'ibadet', zikirmatik: 'ibadet', 'namaz-takibi': 'ibadet', kaza: 'ibadet', hatim: 'ibadet', oruc: 'ibadet', taharet: 'ibadet', 'ozel-namaz': 'ibadet', iman: 'ibadet', peygamberler: 'ibadet', siyer: 'ibadet',
-  araclar: 'araclar', zekat: 'araclar', fitre: 'araclar', quiz: 'araclar', ruya: 'araclar', bebek: 'araclar', takvim: 'araclar', paylasim: 'araclar', cuma: 'araclar', sozluk: 'araclar', imsakiye: 'araclar',
+  kurandua: 'kurandua', quran: 'kurandua', 'dua-ogrenme': 'kurandua', 'sifirdan': 'kurandua', esma: 'kurandua', ezkar: 'kurandua', 'gunluk-dua': 'kurandua', 'onemli-sureler': 'kurandua', 'ayet-arama': 'kurandua', 'kirk-hadis': 'kurandua', qibla: 'kurandua', guide: 'kurandua', mushaf: 'kurandua', ezber: 'kurandua', dinle: 'kurandua', elifba: 'kurandua', tecvid: 'kurandua',
+  ibadet: 'ibadet', 'namaz-programi': 'ibadet', zikirmatik: 'ibadet', 'namaz-takibi': 'ibadet', kaza: 'ibadet', hatim: 'ibadet', oruc: 'ibadet', taharet: 'ibadet', 'ozel-namaz': 'ibadet', iman: 'ibadet', peygamberler: 'ibadet', siyer: 'ibadet', 'hac-umre': 'ibadet', geceler: 'ibadet',
+  araclar: 'araclar', cevirici: 'araclar', zekat: 'araclar', fitre: 'araclar', quiz: 'araclar', bebek: 'araclar', takvim: 'araclar', paylasim: 'araclar', cuma: 'araclar', sozluk: 'araclar', imsakiye: 'araclar',
   settings: 'settings', kaynaklar: 'settings'
 };
 
+/* Geri: sayfaya ana sayfadaki Hızlı Erişim'den gelindiyse ana sayfaya, aksi hâlde ait olduğu sekmeye döner (v65.1) */
+const HV_SEKMELER = ['home', 'kurandua', 'ibadet', 'araclar', 'settings'];
+function hvGeri(varsayilan) {
+  navigateTo(APP_STATE.kokSekme || varsayilan || 'home');
+}
+window.hvGeri = hvGeri;
+
 function navigateTo(pageId) {
+  if (pageId === 'fitre') { pageId = 'zekat'; setTimeout(() => { if (typeof zfSec === 'function') zfSec('fitre'); }, 30); }
+  if (pageId === 'ruya') pageId = 'araclar';   // Rüya Tabirleri kaldırıldı (v65.1)
+  if (pageId === 'cevirici') { pageId = 'takvim'; setTimeout(() => { if (typeof tkSec === 'function') tkSec('cevirici'); }, 30); }   // Tarih Çevirici artık Takvim sayfasında sekme
   // Pause audio when leaving page
   const audioPlayer = document.getElementById('surah-audio-player');
   if (audioPlayer) {
@@ -136,6 +150,8 @@ function navigateTo(pageId) {
     t.classList.toggle('active', t.getAttribute('data-page') === parent);
   });
 
+  if (APP_STATE.currentPage !== pageId) APP_STATE.oncekiSayfa = APP_STATE.currentPage;
+  if (HV_SEKMELER.indexOf(pageId) >= 0) APP_STATE.kokSekme = pageId;   // son ziyaret edilen sekme: geri düğmeleri buraya döner
   APP_STATE.currentPage = pageId;
 
   if (pageId === 'qibla') {
@@ -146,8 +162,20 @@ function navigateTo(pageId) {
   if (window.FEATURE_ROUTES && typeof window.FEATURE_ROUTES[pageId] === 'function') {
     try { window.FEATURE_ROUTES[pageId](); } catch (e) { console.warn('Feature route error:', pageId, e); }
   }
+  hvGeriEtiketle(activeSec);
 }
 window.navigateTo = navigateTo;
+
+/* Geri düğmesi etiketi: ana sayfadan gelindiyse "← Ana Sayfa", yoksa kendi sekmesinin adı (v65.1) */
+function hvGeriEtiketle(sec) {
+  if (!sec) return;
+  sec.querySelectorAll('.hub-back-btn').forEach(b => {
+    const oc = b.getAttribute('onclick') || '';
+    if (oc.indexOf('hvGeri(') < 0) return;
+    if (!b.dataset.orj) b.dataset.orj = b.innerHTML;
+    b.innerHTML = (APP_STATE.kokSekme === 'home') ? '← Ana Sayfa' : b.dataset.orj;
+  });
+}
 
 // Local Storage & Settings
 function loadSavedSettings() {
@@ -175,6 +203,9 @@ function saveSettings() {
     notifySound: APP_STATE.notifySound,
     notifyBoth: APP_STATE.notifyBoth,
     notifyCuma: APP_STATE.notifyCuma,
+    notifyKandil: APP_STATE.notifyKandil,
+    lightTheme: APP_STATE.lightTheme,
+    bigText: APP_STATE.bigText,
     qari: APP_STATE.qari,
     timeOffsets: APP_STATE.timeOffsets || {},
     fontSize: APP_STATE.fontSize
@@ -183,9 +214,16 @@ function saveSettings() {
 
 function applyStateSettings() {
   // Tema: her zaman koyu zemin; "Lüks Gece" anahtarı bakır ↔ yeşil arasında geçiş yapar
-  document.body.classList.add('dark-theme');
-  document.body.classList.remove('light-theme');
-  document.body.classList.toggle('green-theme', !!APP_STATE.greenTheme);
+  // Tema: gündüz (açık) ya da gece (bakır / yeşil)
+  const gunduz = !!APP_STATE.lightTheme;
+  document.body.classList.toggle('light-theme', gunduz);
+  document.body.classList.toggle('dark-theme', !gunduz);
+  document.body.classList.toggle('green-theme', !gunduz && !!APP_STATE.greenTheme);
+  document.documentElement.classList.toggle('hv-buyuk', !!APP_STATE.bigText);
+  const lightToggle = document.getElementById('light-toggle');
+  if (lightToggle) lightToggle.checked = gunduz;
+  const bigToggle = document.getElementById('big-text-toggle');
+  if (bigToggle) bigToggle.checked = !!APP_STATE.bigText;
 
   const themeToggle = document.getElementById('theme-toggle');
   if (themeToggle) themeToggle.checked = !!APP_STATE.greenTheme;
@@ -211,12 +249,22 @@ function applyStateSettings() {
 
   const notifyCuma = document.getElementById('notify-cuma');
   if (notifyCuma) notifyCuma.checked = APP_STATE.notifyCuma !== false;
+  const notifyKandil = document.getElementById('notify-kandil');
+  if (notifyKandil) notifyKandil.checked = APP_STATE.notifyKandil !== false;
 
   const settingsQariSelect = document.getElementById('settings-qari-select');
-  if (settingsQariSelect) settingsQariSelect.value = APP_STATE.qari;
+  if (settingsQariSelect) {
+    let q = null; try { q = localStorage.getItem('hv_dinle_qari'); } catch (e) {}
+    settingsQariSelect.value = q || 'husr';
+    if (settingsQariSelect.selectedIndex < 0) settingsQariSelect.value = 'husr';
+  }
 
   const surahQariSelect = document.getElementById('qari-select');
-  if (surahQariSelect) surahQariSelect.value = APP_STATE.qari;
+  if (surahQariSelect) {
+    let q = null; try { q = localStorage.getItem('hv_dinle_qari'); } catch (e) {}
+    surahQariSelect.value = q || 'husr';
+    if (surahQariSelect.selectedIndex < 0) surahQariSelect.value = 'husr';
+  }
 
   // Vakit ince ayarı girişleri
   const offs = getTimeOffsets();
@@ -450,7 +498,10 @@ window.reapplyTimeOffsets = reapplyTimeOffsets;
 // Ramazan ayı mı? (Hicri metin API'den ya da yerel Intl'den gelir)
 function isRamazan() {
   const h = (APP_STATE.hijriDateText || '').toLowerCase();
-  return h.includes('ramazan') || h.includes('ramadan');
+  if (h.includes('ramazan') || h.includes('ramadan')) return true;
+  // Hicri metin yoksa/gecikirse hicri takvim hesabına bak (features.js)
+  try { if (typeof hvRamazanDurum === 'function') { const r = hvRamazanDurum(); if (r && r.durum === 'icinde') return true; } } catch (e) {}
+  return false;
 }
 window.isRamazan = isRamazan;
 
@@ -472,7 +523,7 @@ window.addEventListener('offline', () => setOfflineBadge(true));
    Tarayıcıda bu köprü yoktur; o durumda sessizce devre dışı kalır.
    ──────────────────────────────────────────────────────────── */
 const HV_NOTIFY_DAYS = 12;   // kaç gün ileriye kurulacak
-const HV_NOTIFY_MAX = 60;    // iOS sınırı 64; güvenli marj
+const HV_NOTIFY_MAX = 57;    // iOS sınırı 64; Cuma + kandil bildirimlerine yer bırakılır
 const HV_NOTIFY_PRAYERS = ['Fajr', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'];
 
 function hvNativeHandler(name) {
@@ -609,6 +660,49 @@ function scheduleNativePrayerNotifications() {
     }
   }
 
+  // ── Kandil / bayram / arefe / Ramazan hatırlatması (sabah) ──
+  if (APP_STATE.notifyKandil !== false && typeof hvBugunDiniGun === 'function') {
+    for (let d = 0; d < HV_NOTIFY_DAYS && count < HV_NOTIFY_MAX + 6; d++) {
+      const day = new Date();
+      day.setHours(0, 0, 0, 0);
+      day.setDate(day.getDate() + d);
+      let gunler = [];
+      try { gunler = hvBugunDiniGun(day); } catch (e) { gunler = []; }
+      const ymd = `${day.getFullYear()}-${hvPad2(day.getMonth() + 1)}-${hvPad2(day.getDate())}`;
+      gunler.forEach((g, gi) => {
+        if (count >= HV_NOTIFY_MAX + 6) return;
+        let saat = 9, title = '', body = '';
+        if (g.type === 'kandil') {
+          saat = 10; title = `🕯️ ${g.name}`;
+          body = `Bugün akşam ${g.name}. Kandiliniz mübarek olsun; geceyi dua, tövbe ve ibadetle ihya edin.`;
+        } else if (g.type === 'bayram') {
+          if (g.date !== ymd) return;   // sadece 1. gün
+          saat = 8; title = `🎉 ${g.name}`;
+          body = `Bayramınız mübarek olsun! Bayram namazı güneşin doğuşundan yaklaşık 45 dakika sonra kılınır.`;
+        } else if (/Arefe/i.test(g.name)) {
+          title = `🌙 ${g.name}`;
+          body = /Kurban/i.test(g.name)
+            ? 'Bugün arefe. Sabah namazından itibaren teşrik tekbirleri başlıyor; oruç tutmak faziletlidir.'
+            : 'Bugün arefe. Yarın bayram — fitrenizi vermeyi ve bayram hazırlığını unutmayın.';
+        } else if (/Ramazan Başlangıcı/i.test(g.name)) {
+          title = '🌙 Hoş geldin Ramazan';
+          body = 'Bugün Ramazan\'ın ilk günü. Orucunuz kabul, Ramazanınız mübarek olsun.';
+        } else if (/Aşure/i.test(g.name)) {
+          title = '🍲 Aşure Günü';
+          body = 'Bugün Muharrem\'in 10\'u. Aşure orucu tutmak sünnettir.';
+        } else return;
+        const at = new Date(day); at.setHours(saat, 0, 0, 0);
+        if (at.getTime() <= now + 20000) return;
+        const dayKey = `${day.getFullYear()}${hvPad2(day.getMonth() + 1)}${hvPad2(day.getDate())}`;
+        try {
+          sched.postMessage({ id: `hv_dini_${dayKey}_${gi}`, title: title, body: body,
+            timestamp: Math.floor(at.getTime() / 1000), sound: 'default' });
+          count++;
+        } catch (e) {}
+      });
+    }
+  }
+
   try { localStorage.setItem('hv_notif_count', String(count)); } catch (e) {}
   updateNotifyStatusUI(count, daysCovered.size);
   return count;
@@ -640,7 +734,7 @@ window.updateNotifyStatusUI = updateNotifyStatusUI;
 
 // Ayarlar → Geri Bildirim Gönder (doğrudan e-posta açar)
 function hvSendFeedback() {
-  const ver = 'v64.6';
+  const ver = 'v65.1';
   let ortam = 'Tarayıcı';
   try {
     if (window.hvIsAndroid) ortam = 'Android uygulaması';
@@ -998,7 +1092,142 @@ function renderPrayerCards(timings) {
   if (sr && timings.Sunrise) sr.textContent = timings.Sunrise;
   const ss = document.getElementById('ip-sunset');
   if (ss && timings.Maghrib) ss.textContent = timings.Maghrib;
+
+  window._hvBugunVakitler = timings;
+  hvEkVakitleriCiz(timings);
+  hvWidgetVerisiGonder();
 }
+
+/* Widget köprüsü (v65.1): önümüzdeki 7 günün vakitlerini native tarafa iletir.
+   iOS/Android kabuğu 'widget-data' köprüsünü eklediğinde ana ekran widget'ı bunu okur. */
+function hvWidgetVerisiGonder() {
+  try {
+    const h = (typeof hvNativeHandler === 'function') ? hvNativeHandler('widget-data') : null;
+    if (!h || !APP_STATE.userLocation) return;
+    const gunler = [];
+    for (let d = 0; d < 7; d++) {
+      const day = new Date(); day.setHours(0, 0, 0, 0); day.setDate(day.getDate() + d);
+      const e = getCachedDay(APP_STATE.userLocation.lat, APP_STATE.userLocation.lng, day);
+      if (!e || !e.t) continue;
+      const off = hvKaynakOfset(e.s);
+      const t = {}; ['Fajr', 'Sunrise', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'].forEach(k => { t[k] = addMinutes(e.t[k], parseInt(off[k], 10) || 0); });
+      gunler.push({ date: `${day.getFullYear()}-${hvPad2(day.getMonth() + 1)}-${hvPad2(day.getDate())}`, t: t, h: e.h || '' });
+    }
+    h.postMessage({ konum: `${APP_STATE.currentCity || ''}${APP_STATE.currentDistrict ? ', ' + APP_STATE.currentDistrict : ''}`, gunler: gunler });
+  } catch (e) {}
+}
+
+/* ── Ek vakitler (v64.8): İşrak / Kuşluk / Kerahet — Diyanet vakitlerinden türetilir ──
+   İşrak: güneşin doğuşundan ~45 dk sonra (kerahet çıkışı, kuşluk namazı kılınabilir)
+   Zeval: öğle vaktinden ~10 dk önce (güneş tepede — kerahet)
+   Akşam öncesi kerahet: akşam ezanından ~45 dk önce */
+function hvEkVakitleriCiz(t) {
+  const kart = document.getElementById('ek-vakit-kart');
+  const kap = document.getElementById('ek-vakit-satirlar');
+  const serit = document.getElementById('ozel-gun-serit');
+  if (!kart || !kap || !t || !t.Sunrise || !t.Dhuhr || !t.Maghrib) { if (kart) kart.style.display = 'none'; if (serit) serit.style.display = 'none'; return; }
+  const israk = addMinutes(t.Sunrise, 45);
+  const zeval = addMinutes(t.Dhuhr, -10);
+  const aksamOnce = addMinutes(t.Maghrib, -45);
+  // Gece: akşamdan ertesi günün imsakına kadar. Gece yarısı = akşam + gece/2, teheccüd = gecenin son üçte biri.
+  let gece = '';
+  try {
+    let imsakYarin = t.Fajr;
+    if (APP_STATE.userLocation && typeof getCachedDay === 'function') {
+      const yarin = new Date(); yarin.setDate(yarin.getDate() + 1);
+      const gy = getCachedDay(APP_STATE.userLocation.lat, APP_STATE.userLocation.lng, yarin);
+      if (gy && gy.t && gy.t.Fajr) imsakYarin = gy.t.Fajr;
+    }
+    if (imsakYarin) {
+      const dk = (hm) => { const [h, m] = hm.split(':').map(Number); return h * 60 + m; };
+      const aksamDk = dk(t.Maghrib);
+      let geceDk = dk(imsakYarin) + 1440 - aksamDk;
+      if (geceDk > 1440) geceDk -= 1440;
+      const yarisi = addMinutes(t.Maghrib, Math.round(geceDk / 2));
+      const teheccud = addMinutes(t.Maghrib, Math.round(geceDk * 2 / 3));
+      gece = `
+    <div class="ek-vakit-satir"><span class="ek-vakit-ad">🌌 Gece yarısı</span><b>${yarisi}</b></div>
+    <div class="ek-vakit-satir"><span class="ek-vakit-ad">🌙 Teheccüd (gecenin son üçte biri)</span><b>${teheccud} – ${imsakYarin}</b></div>`;
+    }
+  } catch (e) {}
+  kap.innerHTML = `
+    <div class="ek-vakit-satir"><span class="ek-vakit-ad">🌅 İşrak (Kuşluk başlangıcı)</span><b>${israk}</b></div>
+    <div class="ek-vakit-satir"><span class="ek-vakit-ad">☀️ Kuşluk namazı</span><b>${israk} – ${zeval}</b></div>
+    <div class="ek-vakit-satir kerahet"><span class="ek-vakit-ad">⛔ Kerahet vakitleri</span><b>${t.Sunrise}–${israk} · ${zeval}–${t.Dhuhr} · ${aksamOnce}–${t.Maghrib}</b></div>${gece}
+    <div class="ek-vakit-not">Yaklaşık değerlerdir. Kerahet vakitlerinde nafile namaz kılınmaz. Kuşluk (duhâ) namazı işrak ile zeval arasında, teheccüd gecenin son üçte birinde (imsaktan önce) kılınır.</div>`;
+  kart.style.display = '';
+  hvEkVakitDurumUygula();
+  // Özel gün şeridi (vakit kartlarının hemen altında; yalnızca o günlerde görünür)
+  let ozel = '';
+  try {
+    if (typeof hvBugunDiniGun === 'function') {
+      const bugun = new Date();
+      const ymd = `${bugun.getFullYear()}-${hvPad2(bugun.getMonth() + 1)}-${hvPad2(bugun.getDate())}`;
+      const gunler = hvBugunDiniGun(bugun);
+      const bayram = gunler.find(g => g.type === 'bayram' && g.date === ymd);
+      if (bayram) ozel += `<div class="ozel-satir bayram"><span>🕌 Bayram namazı</span><b>≈ ${israk}</b></div>`;
+      const kandil = gunler.find(g => g.type === 'kandil');
+      if (kandil) ozel += `<div class="ozel-satir kandil"><span>🕯️ Bu akşam ${kandil.name}</span><b>Mübarek olsun</b></div>`;
+      if (typeof hvRamazanDurum === 'function') {
+        const ram = hvRamazanDurum();
+        if (ram && ram.durum === 'once' && ram.kalan <= 60) ozel += `<div class="ozel-satir kandil"><span>🌙 Ramazan'a</span><b>${ram.kalan} gün</b></div>`;
+        else if (ram && ram.durum === 'icinde') {
+          ozel += `<div class="ozel-satir kandil"><span>🌙 Ramazan'ın ${ram.gunNo}. günü</span><b>${ram.kadirKalan !== null && ram.kadirKalan > 0 ? `Kadir Gecesi'ne ${ram.kadirKalan} gün` : ram.kadirKalan === 0 ? 'Bu gece Kadir Gecesi ✨' : `Bayrama ${ram.bayramKalan} gün`}</b></div>`;
+        }
+      }
+    }
+  } catch (e) {}
+  if (serit) { serit.innerHTML = ozel; serit.style.display = ozel ? '' : 'none'; }
+}
+
+/* Diğer Vakitler kartı: kapalı/açık (tercih hatırlanır) */
+function hvEkVakitDurumUygula() {
+  const kart = document.getElementById('ek-vakit-kart');
+  if (!kart) return;
+  let acik = false;
+  try { acik = localStorage.getItem('hv_ek_acik') === '1'; } catch (e) {}
+  kart.classList.toggle('acik', acik);
+  const b = kart.querySelector('.ek-vakit-ust');
+  if (b) b.setAttribute('aria-expanded', acik ? 'true' : 'false');
+}
+function hvEkVakitAcKapa() {
+  const kart = document.getElementById('ek-vakit-kart');
+  if (!kart) return;
+  const acik = !kart.classList.contains('acik');
+  try { localStorage.setItem('hv_ek_acik', acik ? '1' : '0'); } catch (e) {}
+  hvEkVakitDurumUygula();
+  if (acik) { try { kart.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); } catch (e) {} }
+  if (typeof hvVibrate === 'function') hvVibrate(8);
+}
+window.hvEkVakitAcKapa = hvEkVakitAcKapa;
+
+/* Bugünün vakitlerini metin olarak paylaş (WhatsApp vb.) */
+function hvVakitleriPaylas() {
+  const t = window._hvBugunVakitler;
+  if (!t) return;
+  const konum = (document.getElementById('header-location') || {}).textContent || '';
+  const tarih = new Date().toLocaleDateString('tr-TR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+  const hicri = (typeof computeLocalHijriText === 'function') ? computeLocalHijriText() : '';
+  const satir = (ad, v) => v ? `${ad.padEnd(7, ' ')} ${v}` : '';
+  const metin = `🕌 Namaz Vakitleri — ${konum.trim()}\n📅 ${tarih}${hicri ? ' · ' + hicri : ''}\n\n` +
+    [satir('İmsak', t.Fajr), satir('Güneş', t.Sunrise), satir('Öğle', t.Dhuhr), satir('İkindi', t.Asr), satir('Akşam', t.Maghrib), satir('Yatsı', t.Isha)].filter(Boolean).join('\n');
+  if (typeof hvShareText === 'function') hvShareText(metin);
+  else if (navigator.share) navigator.share({ title: 'Namaz Vakitleri', text: metin }).catch(() => {});
+}
+window.hvVakitleriPaylas = hvVakitleriPaylas;
+
+/* Yakındaki camiler — harita uygulamasında "cami" araması */
+function hvYakinCami() {
+  const u = APP_STATE.userLocation || {};
+  const lat = Number(u.lat), lng = Number(u.lng);
+  const varMi = !isNaN(lat) && !isNaN(lng);
+  const platform = (typeof hvNativePlatform === 'function') ? hvNativePlatform() : 'web';
+  let url;
+  if (platform === 'ios') url = 'https://maps.apple.com/?q=cami' + (varMi ? `&sll=${lat},${lng}&z=14` : '');
+  else url = varMi ? `https://www.google.com/maps/search/cami/@${lat},${lng},14z` : 'https://www.google.com/maps/search/cami';
+  try { window.open(url, '_blank'); } catch (e) { location.href = url; }
+}
+window.hvYakinCami = hvYakinCami;
 
 // Show remaining/elapsed time modal when clicking a prayer card
 function showPrayerTimeDetailsModal(prayerId, prayerName, timeStr) {
@@ -1183,7 +1412,7 @@ function updatePrayerCountdown() {
   let labelText = `${nextPrayer.name} Vaktine`;
   let pillPrefix = 'Ezan ';
   if (ramazan && nextPrayer.id === 'Maghrib') { labelText = 'İftara'; pillPrefix = 'İftar '; }
-  else if (ramazan && nextPrayer.id === 'Fajr') { labelText = 'Sahura (İmsak)'; pillPrefix = 'İmsak '; }
+  else if (ramazan && nextPrayer.id === 'Fajr') { labelText = 'Sahurun Bitimine'; pillPrefix = 'İmsak '; }
 
   const targetLabel = document.getElementById('countdown-target');
   if (targetLabel) targetLabel.textContent = labelText;
@@ -2487,6 +2716,14 @@ function setupSettingsListeners() {
     showToastNotification('🕰️ Vakit Ayarı', 'Varsayılan (Diyanet) değerlere dönüldü.');
   });
 
+  document.getElementById('light-toggle')?.addEventListener('change', (e) => {
+    APP_STATE.lightTheme = e.target.checked;
+    applyStateSettings(); saveSettings();
+  });
+  document.getElementById('big-text-toggle')?.addEventListener('change', (e) => {
+    APP_STATE.bigText = e.target.checked;
+    applyStateSettings(); saveSettings();
+  });
   document.getElementById('theme-toggle')?.addEventListener('change', (e) => {
     APP_STATE.greenTheme = e.target.checked;
     applyStateSettings();
@@ -2540,6 +2777,16 @@ function setupSettingsListeners() {
     );
   });
 
+  document.getElementById('notify-kandil')?.addEventListener('change', (e) => {
+    APP_STATE.notifyKandil = e.target.checked;
+    saveSettings();
+    setTimeout(scheduleNativePrayerNotifications, 300);
+    showToastNotification(
+      e.target.checked ? '🕯️ Kandil hatırlatması açık' : '🕯️ Kandil hatırlatması kapalı',
+      e.target.checked ? 'Kandil, bayram ve arefe günlerinde sabah bildirim gelecek.' : ''
+    );
+  });
+
   document.getElementById('notify-cuma')?.addEventListener('change', (e) => {
     APP_STATE.notifyCuma = e.target.checked;
     saveSettings();
@@ -2552,6 +2799,12 @@ function setupSettingsListeners() {
 
   const syncQari = (e) => {
     APP_STATE.qari = e.target.value;
+    // Tek hafız ayarı: Kuran Oku (mushaf), Kuran Dinle ve 0'dan Dua Öğren aynı seçimi kullanır
+    try {
+      if (typeof HV_DINLE_QARILER !== 'undefined' && HV_DINLE_QARILER.some(q => q.id === e.target.value)) {
+        localStorage.setItem('hv_dinle_qari', e.target.value);
+      }
+    } catch (err) {}
     applyStateSettings();
     saveSettings();
     const surahQariSelect = document.getElementById('qari-select');
@@ -2669,7 +2922,7 @@ function triggerNotification(prayer, offset) {
 
   // 2. Play Sound
   if (APP_STATE.notifySound === 'beep') {
-    playNotifyAudio(['https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3']);
+    playNotifyAudio(['zil.mp3', 'https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3']);
   } else if (APP_STATE.notifySound === 'ezan') {
     // Vakit bazlı "Ezan sesi açık" tercihine saygı duy
     if (getPrayerAdhan(prayer.id)) playAdhan();
@@ -2678,6 +2931,7 @@ function triggerNotification(prayer, offset) {
 
 // Gerçek ezan sesi (birkaç kaynak; biri çalmazsa diğerine geçer)
 const ADHAN_URLS = [
+  'ezan.mp3',   // uygulamanın kendi ezanı (v64.8) — dış siteye bağımlı değil
   'https://www.islamcan.com/audio/adhan/azan1.mp3',
   'https://www.islamcan.com/audio/adhan/azan2.mp3',
   'https://download.tvquran.com/download/mp3quran/adhan/mishary_rashid.mp3',

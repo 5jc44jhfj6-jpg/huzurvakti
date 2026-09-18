@@ -10,10 +10,10 @@
      takılıp kalmaz.
    • Dış kaynaklar (font, API) çevrimdışıyken sessizce boş geçilir.
    ══════════════════════════════════════════════════════════════ */
-const CACHE_NAME = 'namaz-dostu-v64.6';
+const CACHE_NAME = 'namaz-dostu-v65.1';
 
 // Sürüm etiketli çekirdek dosyalar (sayfanın gerçekte istediği URL'ler)
-const V = '64.6.0';
+const V = '65.1.0';
 const CORE_ASSETS = [
   './',
   './index.html',
@@ -28,7 +28,9 @@ const CORE_ASSETS = [
   './icon-192.png?v=60',
   './icon-512.png?v=60',
   './apple-touch-icon.png?v=' + V,
-  './favicon-32.png?v=' + V
+  './favicon-32.png?v=' + V,
+  './zil.mp3',
+  './ezan.mp3'   // kendi ezan sesi — çevrimdışı da çalar (v64.8)
 ];
 
 // ─── Kurulum: çekirdek dosyaları tek tek önbelleğe al ───
