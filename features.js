@@ -183,8 +183,11 @@ function hvAyetSirasiKur() {
     const j = Math.floor(Math.random() * (i + 1));
     const t = genel[i]; genel[i] = genel[j]; genel[j] = t;
   }
-  const gun = Math.floor(Date.now() / 86400000);          // her gün bir sonraki öncelikli âyetle başla
-  const bas = oncelik.length ? gun % oncelik.length : 0;
+  // Her AÇILIŞTA bir sonraki "Kur'an neden Arapça" âyetiyle başla (ilk HV_AYET_DONGU âyet sırayla döner)
+  const dongu = Math.min((typeof HV_AYET_DONGU === 'number') ? HV_AYET_DONGU : oncelik.length, oncelik.length) || 1;
+  let sayac = 0;
+  try { sayac = (parseInt(localStorage.getItem('hv_ayet_sayac') || '-1', 10) + 1) % dongu; localStorage.setItem('hv_ayet_sayac', String(sayac)); } catch (e) {}
+  const bas = oncelik.length ? sayac : 0;
   _hvAyetSirasi = oncelik.slice(bas).concat(oncelik.slice(0, bas)).concat(genel);
   _hvAyetK = 0;
 }
