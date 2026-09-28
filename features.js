@@ -173,23 +173,42 @@ const HV_KART_AYET = [
    ("anlayasınız diye Arapça bir Kur'an indirdik" mealindeki âyetler —
    HV_ONCELIKLI_AYET, data.js). Her gün sıradaki öncelikli âyet ilk gelir; karta
    dokundukça önce öncelikli listenin kalanı, sonra karıştırılmış genel havuz. */
+/* v65.4: Ana ekran kartı — âyet ve sahih hadis karışık, RASTGELE.
+   Havuz: kart âyetleri (HV_KART_AYET + HV_ONCELIKLI_AYET) + Buhârî/Müslim hadisleri (HADIS_HAVUZU, ≤200 harf).
+   Her açılışta karışık sıra kurulur; yaklaşık her 3 karttan 1'i hadis. Karta dokundukça sıradaki gelir. */
 let _hvAyetSirasi = null, _hvAyetK = 0;
+function hvKaristir(d) { for (let i = d.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); const t = d[i]; d[i] = d[j]; d[j] = t; } return d; }
 function hvAyetSirasiKur() {
   const hepsi = (typeof DAILY_VERSES !== 'undefined') ? DAILY_VERSES : [];
-  const oncelik = (typeof HV_ONCELIKLI_AYET !== 'undefined') ? HV_ONCELIKLI_AYET.slice() : [];
-  let genel = hepsi.filter(v => HV_KART_AYET.indexOf(v.surahNumber + ':' + v.ayah) >= 0);
-  if (genel.length < 10) genel = hepsi.slice();
-  for (let i = genel.length - 1; i > 0; i--) {            // genel havuzu karıştır
-    const j = Math.floor(Math.random() * (i + 1));
-    const t = genel[i]; genel[i] = genel[j]; genel[j] = t;
+  const oncelik = (typeof HV_ONCELIKLI_AYET !== 'undefined') ? HV_ONCELIKLI_AYET : [];
+  let ayetler = hepsi.filter(v => HV_KART_AYET.indexOf(v.surahNumber + ':' + v.ayah) >= 0);
+  if (ayetler.length < 10) ayetler = hepsi.slice();
+  ayetler = hvKaristir(ayetler.concat(oncelik).map(v => Object.assign({ tip: 'ayet' }, v)));
+  // Sahih hadisler: yalnız Buhârî / Müslim kaynaklı, karta sığacak uzunlukta
+  let hadisler = [];
+  try {
+    const havuz = (typeof HADIS_HAVUZU !== 'undefined') ? HADIS_HAVUZU : [];
+    hadisler = havuz.filter(h => h && h.t && /Buh[aâ]r[iî]|M[uü]slim/i.test(h.s || '') && h.t.length <= 200)
+      .map(h => ({ tip: 'hadis', turkish: h.t, arabic: h.a || '', kaynak: h.s }));
+    hvKaristir(hadisler);
+    hadisler = hadisler.slice(0, Math.max(10, Math.round(ayetler.length / 2)));   // her açılışta farklı ~80 hadis; oran ≈ 2 âyet : 1 hadis
+  } catch (e) {}
+  // Karışık sıra: her 3 karttan yaklaşık 1'i hadis (rastgele yerlerde)
+  const sira = [];
+  let ai = 0, hi = 0;
+  while (ai < ayetler.length || hi < hadisler.length) {
+    const hadisSirasi = hi < hadisler.length && (ai >= ayetler.length || Math.random() < 0.34);
+    sira.push(hadisSirasi ? hadisler[hi++] : ayetler[ai++]);
   }
-  // Her AÇILIŞTA bir sonraki "Kur'an neden Arapça" âyetiyle başla (ilk HV_AYET_DONGU âyet sırayla döner)
-  const dongu = Math.min((typeof HV_AYET_DONGU === 'number') ? HV_AYET_DONGU : oncelik.length, oncelik.length) || 1;
-  let sayac = 0;
-  try { sayac = (parseInt(localStorage.getItem('hv_ayet_sayac') || '-1', 10) + 1) % dongu; localStorage.setItem('hv_ayet_sayac', String(sayac)); } catch (e) {}
-  const bas = oncelik.length ? sayac : 0;
-  _hvAyetSirasi = oncelik.slice(bas).concat(oncelik.slice(0, bas)).concat(genel);
+  // Açılışta rastgele yerden başla; bir önceki açılıştaki ilk kartı tekrarlama
+  let son = '';
+  try { son = localStorage.getItem('hv_kart_son') || ''; } catch (e) {}
+  const kimlik = (v) => v.tip === 'hadis' ? 'h:' + v.turkish.slice(0, 40) : 'a:' + v.surahNumber + ':' + v.ayah;
+  let bas = sira.length ? Math.floor(Math.random() * sira.length) : 0;
+  if (sira.length > 1 && kimlik(sira[bas]) === son) bas = (bas + 1) % sira.length;
+  _hvAyetSirasi = sira.slice(bas).concat(sira.slice(0, bas));
   _hvAyetK = 0;
+  try { if (_hvAyetSirasi.length) localStorage.setItem('hv_kart_son', kimlik(_hvAyetSirasi[0])); } catch (e) {}
 }
 function hvAyetSec() {
   if (!_hvAyetSirasi) hvAyetSirasiKur();
@@ -198,22 +217,25 @@ function hvAyetSec() {
   _hvAyetK++;
   return v;
 }
+function hvKartKaynak(v) {
+  if (!v) return '';
+  return v.tip === 'hadis' ? (v.kaynak || 'Hadis-i Şerif') : (v.surah + ' Sûresi, ' + v.ayah + '. Âyet');
+}
 function hvAyetCiz(v, animasyon) {
   if (!v) return;
   const kart = document.getElementById('daily-ayet-card');
   const ar   = document.getElementById('daily-verse-arabic');
   const tr   = document.getElementById('daily-verse-turkish');
   const src  = document.getElementById('daily-verse-source');
+  const bas  = kart ? kart.querySelector('.verse-card-title') : null;
   const uygula = () => {
-    // Kartta yalnızca Türkçe meâl gösterilir. (Önceden kısa âyetlerde Arapça
-    // da çıkıyordu; bazı âyette var bazısında yok görünümü oluşuyordu.)
-    // Paylaşım kartında Arapça her zaman yer alır.
+    // Kartta yalnızca Türkçe metin gösterilir; paylaşım kartında Arapça (varsa) yer alır.
     if (ar) { ar.textContent = ''; ar.style.display = 'none'; }
-    // Diyanet metni zaten tırnakla başlıyorsa ikinci tırnağı ekleme
+    if (bas) bas.textContent = v.tip === 'hadis' ? '📿 Günün Hadisi' : '📖 Günün Âyeti';
     const met = (v.turkish || '').trim();
     const tirnakli = /[“”"«»]/.test(met);   // metinde zaten tırnak varsa ekleme
     if (tr)  tr.textContent  = tirnakli ? met : ('"' + met + '"');
-    if (src) src.textContent = '— ' + v.surah + ' Sûresi, ' + v.ayah + '. Âyet';
+    if (src) src.textContent = '— ' + hvKartKaynak(v);
   };
   if (animasyon && kart) {
     kart.classList.add('hadis-swap');
@@ -234,15 +256,16 @@ function shareDailyVerse(ev) {
   const v = window._currentAyet;
   const tr = document.getElementById('daily-verse-turkish');
   const src = document.getElementById('daily-verse-source');
+  const hadis = !!(v && v.tip === 'hadis');
   const metin  = v ? v.turkish : (tr ? (tr.textContent || '').replace(/^"|"$/g, '').trim() : '');
-  const kaynak = v ? (v.surah + ' Sûresi, ' + v.ayah + '. Âyet')
-                   : (src ? (src.textContent || '').replace(/^[\s—-]+/, '').trim() : '');
+  const kaynak = v ? hvKartKaynak(v) : (src ? (src.textContent || '').replace(/^[\s—-]+/, '').trim() : '');
+  const rozet = hadis ? '📿 Günün Hadisi' : '📖 Günün Âyeti';
   hvOpenShareCard({
-    badge: '📖 Günün Âyeti',
-    arabic: v ? v.arabic : '',   // paylaşımda Arapça her zaman tam
+    badge: rozet,
+    arabic: v ? (v.arabic || '') : '',   // paylaşımda Arapça (varsa) tam
     text: metin,
     source: kaynak,
-    fallbackText: `📖 Günün Âyeti\n\n"${metin}"\n— ${kaynak}`
+    fallbackText: `${rozet}\n\n"${metin}"\n— ${kaynak}`
   });
 }
 window.shareDailyVerse = shareDailyVerse;

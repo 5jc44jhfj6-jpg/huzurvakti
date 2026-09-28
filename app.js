@@ -734,7 +734,7 @@ window.updateNotifyStatusUI = updateNotifyStatusUI;
 
 // Ayarlar → Geri Bildirim Gönder (doğrudan e-posta açar)
 function hvSendFeedback() {
-  const ver = 'v65.2';
+  const ver = 'v65.4';
   let ortam = 'Tarayıcı';
   try {
     if (window.hvIsAndroid) ortam = 'Android uygulaması';
@@ -1897,7 +1897,10 @@ function handleOrientationEvent(e) {
     let diff = compassHeading - oncekiNorm;
     if (diff > 180) diff -= 360;
     if (diff < -180) diff += 360;
-    smoothHeading = oncekiNorm + diff * 0.35;   // daha yumuşak
+    // v65.3: 0,7° altındaki sensör titremesini yok say; büyük dönüşlerde hızlı, küçüklerde yumuşak izle
+    if (Math.abs(diff) < 0.7) diff = 0;
+    const k = Math.abs(diff) > 25 ? 0.5 : 0.18;
+    smoothHeading = oncekiNorm + diff * k;
   }
   // 0-360 dışına taşmasın (eskiden birikip 1000°+ gösteriyordu)
   smoothHeading = ((smoothHeading % 360) + 360) % 360;
@@ -1969,10 +1972,20 @@ function updateQiblaUI(heading) {
   // Rotate gold needle to point relative to fixed 12 o'clock Kâbe target
   // Needle points straight UP (0°) into 🕋 Kâbe target when heading == qiblaAngle
   const hedefAci = APP_STATE.qiblaAngle + hvKibleOfset();
-  const relativeNeedleAngle = hedefAci - heading;
+  let relativeNeedleAngle = hedefAci - heading;
 
   if (needle) {
-    needle.style.transform = `translate(-50%, -50%) rotate(${relativeNeedleAngle}deg)`;
+    // v65.3: ibre açısını sürekli tut (359°→1° geçişinde tam tur "çiftleme" olmasın)
+    // ve çizimi kareye bağla (sensör saniyede 50 kez gelse de ekran 60 fps'de tek çizim)
+    const onceki = (typeof window._hvIbreAci === 'number') ? window._hvIbreAci : relativeNeedleAngle;
+    let d = ((relativeNeedleAngle - onceki) % 360 + 540) % 360 - 180;
+    window._hvIbreAci = onceki + d;
+    if (!window._hvIbreKare) {
+      window._hvIbreKare = requestAnimationFrame(() => {
+        window._hvIbreKare = null;
+        needle.style.transform = `translate(-50%, -50%) rotate(${window._hvIbreAci.toFixed(1)}deg)`;
+      });
+    }
   }
 
   updateQiblaDirectionPill(hedefAci, heading);
