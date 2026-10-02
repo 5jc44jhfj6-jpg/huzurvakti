@@ -16,18 +16,18 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Namaz Dostu">
-    <link rel="apple-touch-icon" href="apple-touch-icon.png?v=65.4.0">
-    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png?v=65.4.0">
+    <link rel="apple-touch-icon" href="apple-touch-icon.png?v=65.6.0">
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png?v=65.6.0">
     <meta name="description" content="Namaz Dostu: Namaz vakitleri, ezan, Kur'an-ı Kerim, kıble, dualar, zikirmatik ve yeni başlayanlar için adım adım namaz rehberi. Ücretsiz, reklamsız, çevrimdışı.">
 
-    <link rel="stylesheet" href="styles.css?v=65.4.0">
-    <script>window.HV_SURUM = '65.4.0';</script>
-    <script src="cities.js?v=65.4.0" defer></script>
-    <script src="data.js?v=65.4.0" defer></script>
-    <script src="content.js?v=65.4.0" defer></script>
-    <script src="hadisler.js?v=65.4.0" defer></script>
-    <script src="app.js?v=65.4.0" defer></script>
-    <script src="features.js?v=65.4.0" defer></script>
+    <link rel="stylesheet" href="styles.css?v=65.6.0">
+    <script>window.HV_SURUM = '65.6.0';</script>
+    <script src="cities.js?v=65.6.0" defer></script>
+    <script src="data.js?v=65.6.0" defer></script>
+    <script src="content.js?v=65.6.0" defer></script>
+    <script src="hadisler.js?v=65.6.0" defer></script>
+    <script src="app.js?v=65.6.0" defer></script>
+    <script src="features.js?v=65.6.0" defer></script>
 </head>
 <body class="dark-theme">
     <!-- Loading Screen -->
@@ -140,8 +140,7 @@
                 <!-- Hızlı Erişim (v65.1): en çok kullanılan 4 bölüm, düzenlenebilir -->
                 <div id="hizli-erisim"></div>
 
-                <!-- Ek vakitler: İşrak / Kuşluk / Kerahet + paylaş (v65.1) -->
-                <!-- Günün Âyeti -->
+                <!-- Günün Âyeti / Hadisi — ekranın kalanını doldurur (v65.5: Diğer Vakitler kartı İmsakiye sayfasına taşındı) -->
                 <div class="daily-hadis-card" id="daily-ayet-card" onclick="nextDailyAyet()" title="Yeni âyet için dokun">
                     <div class="ayet-ust">
                         <div class="verse-card-title">📖 Günün Âyeti</div>
@@ -150,18 +149,6 @@
                     <div id="daily-verse-arabic" class="hadis-arabic"></div>
                     <div id="daily-verse-turkish" class="hadis-text">Yükleniyor...</div>
                     <div id="daily-verse-source" class="hadis-source"></div>
-                </div>
-
-                <!-- Diğer vakitler (İşrak, Kuşluk, Kerahet) — kapalı başlar, dokununca açılır (v65.1) -->
-                <div class="ek-vakit-kart" id="ek-vakit-kart" style="display:none;">
-                    <button class="ek-vakit-ust" onclick="hvEkVakitAcKapa()" aria-expanded="false">
-                        <span class="ek-vakit-baslik">⏱ Diğer Vakitler <small>İşrak · Kuşluk · Kerahet · Teheccüd</small></span>
-                        <span class="ek-vakit-ok">▾</span>
-                    </button>
-                    <div class="ek-vakit-govde" id="ek-vakit-govde">
-                        <div class="ek-vakit-satirlar" id="ek-vakit-satirlar"></div>
-                        <button class="ek-vakit-paylas" onclick="hvVakitleriPaylas()">📤 Vakitleri Paylaş</button>
-                    </div>
                 </div>
             </div>
         </section>
@@ -179,6 +166,12 @@
                     </button>
                     <button class="hub-card" onclick="navigateTo('guide')">
                         <span class="hub-icon">🤲</span><span class="hub-title">Namaz Rehberi</span><span class="hub-sub">5 Vaktin Kılınışı</span>
+                    </button>
+                    <button class="hub-card" onclick="navigateTo('namaz-nedir')">
+                        <span class="hub-icon">❓</span><span class="hub-title">Namaz Nedir?</span><span class="hub-sub">Niçin Kılınır, Farz, Sünnet, Kaza</span>
+                    </button>
+                    <button class="hub-card" onclick="navigateTo('kuran-nedir')">
+                        <span class="hub-icon">💡</span><span class="hub-title">Kur'an Nedir?</span><span class="hub-sub">Niçin ve Nasıl Okunur</span>
                     </button>
                     <button class="hub-card" onclick="navigateTo('quran')">
                         <span class="hub-icon">📖</span><span class="hub-title">Kuran-ı Kerim</span><span class="hub-sub">Sayfa Sayfa • Sure Sure • Meal & Ses</span>
@@ -286,7 +279,7 @@
                         <span class="hub-icon">📅</span><span class="hub-title">Hicri Takvim</span><span class="hub-sub">Kandiller, Bayramlar & Tarih Çevirici</span>
                     </button>
                     <button class="hub-card" onclick="navigateTo('imsakiye')">
-                        <span class="hub-icon">🌙</span><span class="hub-title">İmsakiye</span><span class="hub-sub">Ramazan • Sahur & İftar</span>
+                        <span class="hub-icon">🌙</span><span class="hub-title">İmsakiye</span><span class="hub-sub">Sahur & İftar • Diğer Vakitler</span>
                     </button>
                     <button class="hub-card" onclick="navigateTo('paylasim')">
                         <span class="hub-icon">📤</span><span class="hub-title">Paylaşım Kartları</span><span class="hub-sub">Ayet, Hadis & Cuma</span>
@@ -521,6 +514,7 @@
                     <h2>🤲 Rehber</h2>
                     <p>5 Vakit Namazın Kılınışı & Dualar</p>
                 </div>
+                <button class="nn-link" onclick="_nnBolum = 0; navigateTo('namaz-nedir')">❓ Namaz nedir, niçin kılınır? Farz ve sünnet ne demek? →</button>
                 <div class="guide-tabs-scroller">
                     <div id="prayer-pill-bar" class="prayer-type-pill-bar"></div>
                 </div>
@@ -618,6 +612,7 @@
             <div class="hero-frame-box">
                 <button class="hub-back-btn" onclick="hvGeri('ibadet')">← İbadet</button>
                 <div class="page-header-title"><h2>🔄 Kaza Namazı Takibi</h2><p>Kaza borcunuzu takip edin</p></div>
+                <button class="nn-link" onclick="_nnBolum = 2; navigateTo('namaz-nedir')">❓ Kaza nedir, nasıl kılınır? →</button>
                 <div id="kaza-content"></div>
             </div>
         </section>
@@ -746,6 +741,22 @@
             </div>
         </section>
 
+        <section id="page-namaz-nedir" class="page-section">
+            <div class="hero-frame-box">
+                <button class="hub-back-btn" onclick="hvGeri('kurandua')">← Kuran &amp; Dua</button>
+                <div class="page-header-title"><h2>❓ Namaz Nedir?</h2><p>Niçin kılınır · Farz, sünnet, nafile · Kaza · Peygamberimizin uygulaması</p></div>
+                <div id="namaz-nedir-content"></div>
+            </div>
+        </section>
+
+        <section id="page-kuran-nedir" class="page-section">
+            <div class="hero-frame-box">
+                <button class="hub-back-btn" onclick="hvGeri('kurandua')">← Kuran &amp; Dua</button>
+                <div class="page-header-title"><h2>💡 Kur'an Nedir?</h2><p>Nedir · Niçin okunur · Nasıl okunur · Peygamberimiz ve Kur'an</p></div>
+                <div id="kuran-nedir-content"></div>
+            </div>
+        </section>
+
         <section id="page-hac-umre" class="page-section">
             <div class="hero-frame-box">
                 <button class="hub-back-btn" onclick="hvGeri('ibadet')">← İbadet</button>
@@ -801,7 +812,17 @@
         <section id="page-imsakiye" class="page-section">
             <div class="hero-frame-box">
                 <button class="hub-back-btn" onclick="hvGeri('araclar')">← Araçlar</button>
-                <div class="page-header-title"><h2>🌙 Ramazan İmsakiyesi</h2><p>Aylık sahur ve iftar vakitleri</p></div>
+                <div class="page-header-title"><h2>🌙 İmsakiye &amp; Vakitler</h2><p>Aylık sahur-iftar çizelgesi ve bugünün diğer vakitleri</p></div>
+                <!-- Bugünün diğer vakitleri: İşrak / Kuşluk / Kerahet / Gece yarısı / Teheccüd + paylaş (v65.5: ana sayfadan buraya taşındı) -->
+                <div class="ek-vakit-kart sabit" id="ek-vakit-kart" style="display:none;">
+                    <div class="ek-vakit-ust">
+                        <span class="ek-vakit-baslik">⏱ Bugünün Diğer Vakitleri <small>İşrak · Kuşluk · Kerahet · Teheccüd</small></span>
+                    </div>
+                    <div class="ek-vakit-govde" id="ek-vakit-govde">
+                        <div class="ek-vakit-satirlar" id="ek-vakit-satirlar"></div>
+                        <button class="ek-vakit-paylas" onclick="hvVakitleriPaylas()">📤 Bugünün Vakitlerini Paylaş</button>
+                    </div>
+                </div>
                 <div id="imsakiye-content"></div>
             </div>
         </section>
@@ -960,6 +981,27 @@
                                     <span class="slider round"></span>
                                 </label>
                             </div>
+                            <div class="setting-row" style="display: flex; justify-content: space-between; align-items: center;">
+                                <label for="notify-ayet" style="margin: 0; font-weight: 600;">Sabah Günün Âyeti
+                                    <span style="display:block;font-weight:400;font-size:.78rem;color:var(--text-sub);margin-top:3px;">Her sabah seçtiğin saatte günün âyeti (Diyanet meali) bildirim olarak gelir</span>
+                                </label>
+                                <label class="switch">
+                                    <input type="checkbox" id="notify-ayet">
+                                    <span class="slider round"></span>
+                                </label>
+                            </div>
+                            <div class="setting-row">
+                                <label for="notify-ayet-saat">Günün Âyeti Saati</label>
+                                <select id="notify-ayet-saat" class="select-input">
+                                    <option value="6">06:00</option>
+                                    <option value="7">07:00</option>
+                                    <option value="8">08:00</option>
+                                    <option value="9">09:00</option>
+                                    <option value="10">10:00</option>
+                                    <option value="12">12:00</option>
+                                    <option value="20">20:00</option>
+                                </select>
+                            </div>
                             <div id="notify-native-status" class="notify-status"></div>
                             <div class="backup-row">
                                 <button id="test-adhan-btn" class="gold-primary-btn" onclick="testAdhanSound()">🔊 Ezanı Test Et</button>
@@ -1037,7 +1079,7 @@
                     </div>
                     <div class="app-info-footer">
                         <div class="footer-logo">🕌</div>
-                        <div class="footer-ver">Namaz Dostu v65.4</div>
+                        <div class="footer-ver">Namaz Dostu v65.6</div>
                         <div style="font-size: 0.8rem; margin-top: 4px;">Tüm Hakları Saklıdır • Diyanet Uyumlu • Çevrimdışı Çalışır</div>
                     </div>
                 </div>
@@ -1083,7 +1125,7 @@
     <script>
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
-          navigator.serviceWorker.register('/sw.js?v=65.4.0')
+          navigator.serviceWorker.register('/sw.js?v=65.6.0')
             .then(reg => {
               reg.onupdatefound = () => {
                 const installingWorker = reg.installing;

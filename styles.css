@@ -593,7 +593,7 @@ input:checked + .toggle-slider::before { transform: translateX(20px); }
   inset: 16px;
   border-radius: 50%;
   border: none;
-  transition: transform 0.08s ease-out;
+  transition: transform 0.16s linear;
   will-change: transform;
 }
 
@@ -662,7 +662,7 @@ input:checked + .toggle-slider::before { transform: translateX(20px); }
   padding-top: 26px;
   pointer-events: none;
   z-index: 10;
-  transition: transform 0.08s ease-out;
+  transition: transform 0.16s linear;
   will-change: transform;
 }
 
@@ -3583,3 +3583,34 @@ body.light-theme .ozel-satir { background: rgba(168,128,28,.10); }
 body.light-theme .warm-home .daily-hadis-card .verse-card-title { color: #6b4a12; text-shadow: none; }
 /* Doğuş/Batış balonları kaldırıldı (v65.1): silüet ile vakit kartları arası boşluk */
 .warm-home .prayer-grid { margin-top: 8px; }
+
+/* ══════════ v65.5 — Diğer Vakitler ana sayfadan İmsakiye sayfasına taşındı; Günün Âyeti yine ekranın kalanını doldurur ══════════ */
+.ek-vakit-kart.sabit { margin: 0 0 12px; padding: 0 0 2px; }
+.ek-vakit-kart.sabit .ek-vakit-ust { cursor: default; padding: 10px 12px 4px; }
+.ek-vakit-kart.sabit .ek-vakit-baslik { font-size: .92rem; }
+.ek-vakit-kart.sabit .ek-vakit-govde { display: block; }
+.ek-vakit-kart.sabit .ek-vakit-satir { font-size: .88rem; padding: 7px 0; }
+/* Günün Âyeti / Hadisi kartı ana sayfada ekranın kalanını doldurur (eski "tam ekran" görünüm):
+   başlık üstte, metin ortada, kaynak altta. v63.9'daki "uzamasın" kuralı yalnızca ana sayfada kalktı. */
+.warm-home .daily-hadis-card { flex: 1 1 auto; justify-content: flex-start; padding-bottom: 12px; }
+.warm-home .daily-hadis-card #daily-verse-turkish { margin-top: auto; margin-bottom: auto; padding: 6px 0; }
+.warm-home .daily-hadis-card #daily-verse-source { margin-top: 2px; }
+.ek-vakit-kart.sabit .ek-vakit-baslik small { display: block; margin: 3px 0 0; font-size: .74rem; }
+
+
+/* ══════════ v65.6 — "Namaz Nedir?" sayfası ══════════ */
+.nn-seg { flex-wrap: wrap; }
+.nn-seg .seg-btn { flex: 1 1 30%; min-width: 0; font-size: .74rem; padding: 7px 4px; white-space: normal; line-height: 1.2; }
+.nn-metin b { color: var(--gold-light); font-weight: 700; }
+.nn-ileri { width: 100%; margin: 6px 0 12px; }
+.nn-baglanti { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0 12px; }
+.nn-baglanti .seg-btn { flex: 1 1 45%; }
+.nn-kaynak { font-size: .72rem; color: var(--text-muted); line-height: 1.45; text-align: center; padding: 4px 6px 10px; }
+.nn-link { display: block; width: 100%; text-align: left; background: rgba(212,175,55,.10); border: 1px solid rgba(212,175,55,.32); color: var(--gold-light);
+  border-radius: 12px; padding: 9px 12px; font-size: .82rem; font-weight: 700; font-family: inherit; cursor: pointer; margin: 0 0 10px; }
+.nn-link:active { transform: scale(.99); }
+body.light-theme .nn-link { background: rgba(168,128,28,.10); color: #6b4a12; border-color: rgba(168,128,28,.3); }
+
+/* ══════════ v65.6 — Uzun âyetlerde ana sayfa KAYMASIN: kart kalan alana sığar, metin önce küçülür, yine sığmazsa kart içinde kayar ══════════ */
+.warm-home .daily-hadis-card { min-height: 150px; overflow: hidden; }   /* küçük ekranda (SE) kart en az 3-4 satır gösterir, sayfa biraz kayar */
+.warm-home .daily-hadis-card #daily-verse-turkish { flex: 0 1 auto; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; }

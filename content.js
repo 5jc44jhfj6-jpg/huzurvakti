@@ -1963,3 +1963,110 @@ const TECVID_DERSLERI = [
     ]
   }
 ];
+
+/* ══════════ NAMAZ NEDİR? (v65.6) — niçin kılınır, farz/vacip/sünnet/nafile, kaza, Peygamberimizin uygulaması ══════════
+   Kaynaklar: DİB Kur'an-ı Kerim Meâli, Diyanet İlmihali (c.1), Riyâzü's-Sâlihîn; hadis yerleri klasik kaynak adlarıyla. */
+const HV_NAMAZ_NEDIR = {
+  giris: 'Namaz nedir, niçin kılınır, farz-sünnet ne demektir, kaza nedir ve Peygamber Efendimiz (s.a.v.) namazı nasıl kılardı? Kısa ve kaynaklı cevaplar.',
+  bolumler: [
+    {
+      ikon: '🕌', ad: 'Namaz Nedir?',
+      kartlar: [
+        { b: 'Namaz nedir?', m: 'Namaz (salât), günde beş vakit Allah\'ın huzurunda durup O\'na kulluk etmektir. İslâm\'ın beş şartından biridir: "İslâm beş temel üzerine kurulmuştur: Allah\'tan başka ilâh olmadığına ve Muhammed\'in O\'nun elçisi olduğuna şahitlik etmek, namazı kılmak, zekâtı vermek, haccetmek ve Ramazan orucunu tutmak." (Buhârî, Îmân 2; Müslim, Îmân 19-22)' },
+        { b: 'Kur\'an ne diyor?', m: '"Şüphesiz namaz, mü\'minlere belirli vakitlere bağlı olarak farz kılınmıştır." (Nisâ 4/103) · "Beni anmak için namaz kıl." (Tâhâ 20/14) · "Şüphesiz namaz, insanı hayâsızlıktan ve kötülükten alıkoyar." (Ankebût 29/45) · "Sabrederek ve namaz kılarak Allah\'tan yardım dileyin." (Bakara 2/45)' },
+        { b: 'Niçin kılınır?', m: 'Allah\'a kul olduğumuzu her gün beş kez hatırlamak, O\'nunla buluşmak ve günahlardan arınmak için. Peygamberimiz sordu: "Birinizin kapısının önünden bir ırmak aksa ve o kimse her gün beş defa orada yıkansa, kirinden bir şey kalır mı?" Ashab "Hayır" deyince şöyle buyurdu: "İşte beş vakit namaz da böyledir; Allah onlarla günahları siler." (Buhârî, Mevâkît 6; Müslim, Mesâcid 283)' },
+        { b: 'Kıyamette ilk hesap', m: '"Kıyamet günü kulun ilk hesaba çekileceği ameli namazdır. Namazı düzgünse diğer amelleri de düzgün olur; bozuksa diğer amelleri de bozuk olur." (Tirmizî, Salât 188; Nesâî, Salât 9)' },
+        { b: 'Kimlere farzdır?', m: 'Müslüman, akıl sağlığı yerinde ve ergenlik çağına girmiş herkese — kadın ve erkeğe — farzdır. Çocuklara yedi yaşında öğretilir, on yaşında alıştırılır (Ebû Dâvûd, Salât 26). Hasta yatarak, yolcu kısaltarak kılar; namaz hiçbir durumda tamamen düşmez.' }
+      ]
+    },
+    {
+      ikon: '📋', ad: 'Farz · Sünnet · Nafile',
+      kartlar: [
+        { b: 'Farz', m: 'Allah\'ın Kur\'an\'da kesin olarak emrettiği namazdır. Kılan sevap kazanır, mazeretsiz terk eden günahkâr olur; farz olduğunu inkâr eden dinden çıkar. Günlük farzlar: Sabah 2, Öğle 4, İkindi 4, Akşam 3, Yatsı 4 = 17 rekât. Cuma günü öğle farzının yerine (erkeklere) 2 rekât cuma namazı farzdır.' },
+        { b: 'Vacip', m: 'Hanefî mezhebine göre farz kadar kesin delille sabit olmamakla birlikte terki günah olan namazlardır: Vitir (yatsıdan sonra 3 rekât), bayram namazları ve adanan namaz. Vitir kılınmazsa kazası gerekir.' },
+        { b: 'Sünnet', m: 'Peygamberimizin farzların önünde ve arkasında devamlı kıldığı namazlardır. Müekked (hiç bırakmadığı): sabah 2, öğle 4 (önce) + 2 (sonra), akşam 2, yatsı 2 = 12 rekât. "Kim bir günde farzlar dışında 12 rekât kılarsa Allah ona cennette bir ev yapar." (Müslim, Müsâfirîn 103) · Gayr-i müekked (ara sıra bıraktığı): ikindi 4, yatsı önündeki 4 — kılan sevap kazanır, kılmayan günahkâr olmaz.' },
+        { b: 'Nafile', m: 'Farz ve vacip dışında, sevap kazanmak için kılınan bütün namazlardır (sünnetler de bu kapsamdadır): tahiyyetü\'l-mescid, kuşluk (duhâ), evvâbîn, teheccüd, tesbih, istihâre, hâcet ve tövbe namazları. Hadis-i kudsî: "Kulum bana nafilelerle yaklaşmaya devam eder; sonunda onu severim." (Buhârî, Rikāk 38) Hesap günü farzların eksiği nafilelerle tamamlanır (Ebû Dâvûd, Salât 145).' },
+        { b: 'Günlük rekât tablosu (Hanefî)', m: '<b>Sabah:</b> 2 sünnet + 2 farz · <b>Öğle:</b> 4 sünnet + 4 farz + 2 sünnet · <b>İkindi:</b> 4 sünnet + 4 farz · <b>Akşam:</b> 3 farz + 2 sünnet · <b>Yatsı:</b> 4 sünnet + 4 farz + 2 sünnet + 3 vitir. Toplam 40 rekât: 17 farz, 3 vacip, 20 sünnet. Kılınışı için Rehber sayfasına bakabilirsin.', html: true }
+      ]
+    },
+    {
+      ikon: '🔄', ad: 'Kaza Nedir?',
+      kartlar: [
+        { b: 'Kazaya bırakmak ne demek?', m: 'Bir farz namazı (ve vitri) kendi vakti içinde kılmayıp sonradan kılmaya "kaza" denir. Namazın asıl olanı vaktinde kılmaktır; kaza, kaçırılan borcu ödemektir.' },
+        { b: 'Mazeretle geçerse', m: 'Uyuyakalma veya unutma gibi bir mazeretle vakit geçmişse hatırlayınca hemen kılınır, bunun günahı yoktur: "Kim bir namazı unutur ya da uyuyup kalırsa, hatırladığı zaman onu kılsın; bunun başka kefareti yoktur." (Buhârî, Mevâkît 37; Müslim, Mesâcid 314)' },
+        { b: 'Mazeretsiz bırakılırsa', m: 'Vakti varken ihmalle namazı kazaya bırakmak büyük günahtır. Kaza kılmak borcu düşürür ama günahı silmez; bunun için ayrıca tövbe etmek gerekir. Kaza, "kılarım nasıl olsa" diye vakti geçirme ruhsatı değildir.' },
+        { b: 'Sünnetler kaza edilir mi?', m: 'Hayır, sünnet ve nafile namazların kazası yoktur. Tek istisna sabah namazının sünnetidir: Sabah namazı bütünüyle kaçırılmışsa aynı gün öğleden önce farzıyla birlikte sünneti de kaza edilir (Tirmizî, Salât 196). Vitir ise vacip olduğu için kaza edilir.' },
+        { b: 'Nasıl kılınır?', m: 'Niyette hangi vaktin kazası olduğu söylenir: "Kaçırdığım ilk sabah namazının farzını kılmaya". Birkaç vakit kaza borcu olan sırayla kılar; borcu çok olan her gün kılabildiği kadar (örneğin bir günlük 5 vakit + vitir) ekleyerek öder. Kaza, kerahet vakitlerinde (güneş doğarken, tam tepedeyken ve batarken) kılınmaz. Borcunu Kaza Namazı sayfasından takip edebilirsin.' }
+      ]
+    },
+    {
+      ikon: '🌟', ad: 'Peygamberimiz Nasıl Kılardı?',
+      kartlar: [
+        { b: 'Namazı ondan öğreniriz', m: '"Beni namaz kılarken nasıl görüyorsanız, siz de öyle kılın." (Buhârî, Ezân 18) Namazın şekli, rükûsu, secdesi ve sözleri bize Peygamberimizden (s.a.v.) gelmiştir; Rehber sayfasındaki kılınış da bu esasa dayanır.' },
+        { b: 'Farzları cemaatle kıldı', m: 'Farz namazları mescitte cemaatle kılar, cemaate teşvik ederdi: "Cemaatle kılınan namaz, tek başına kılınan namazdan yirmi yedi derece daha üstündür." (Buhârî, Ezân 30; Müslim, Mesâcid 249) Sünnet ve nafileleri ise çoğunlukla evinde kılardı: "Namazın bir kısmını evlerinizde kılın, evlerinizi kabirlere çevirmeyin." (Buhârî, Salât 52; Müslim, Müsâfirîn 208)' },
+        { b: 'Sabah sünnetine en çok önem verdi', m: 'Hz. Âişe anlatır: "Resûlullah nafile namazların hiçbirine, sabah namazının iki rekât sünneti kadar devam etmezdi." (Buhârî, Teheccüd 27; Müslim, Müsâfirîn 94) · "Sabah namazının iki rekât sünneti, dünyadan ve içindeki her şeyden daha hayırlıdır." (Müslim, Müsâfirîn 96)' },
+        { b: 'Vitri ve geceyi bırakmadı', m: 'Vitir namazını yolculukta bile, devesinin üstünde dahi kılardı (Buhârî, Vitr 6). Geceleri ayakları şişinceye kadar namaz kılar; "Allah senin geçmiş ve gelecek günahlarını bağışladı, niçin bu kadar yoruyorsun?" denilince "Şükreden bir kul olmayayım mı?" buyururdu. (Buhârî, Teheccüd 6; Müslim, Münâfikīn 79-81)' },
+        { b: 'Huşû ile, acele etmeden', m: '"Gözümün nuru namazda kılındı." (Nesâî, İşretü\'n-nisâ 1) Namazı aceleyle, rükû ve secdeyi tam yapmadan kılan bir sahâbîye "Dön, yeniden kıl; çünkü sen namaz kılmadın." buyurdu (Buhârî, Ezân 95; Müslim, Salât 45). İmam olduğunda cemaati yormamak için namazı kısa tutar, tek başına kıldığında uzatırdı (Buhârî, Ezân 62).' },
+        { b: 'Mazeretle kaçırınca kaza etti', m: 'Hendek Savaşı\'nda düşman yüzünden kılamadığı ikindiyi akşamdan sonra kaza etti (Buhârî, Mevâkît 36; Müslim, Mesâcid 205). Bir yolculukta ashâbıyla uyuyakalıp sabah namazını kaçırdıklarında güneş yükseldikten sonra ezan okutup cemaatle kaza etti (Müslim, Mesâcid 311). Yani mazeret olunca kaza etti; mazeretsiz hiçbir namazı geçirmedi.' },
+        { b: 'Son vasiyeti', m: 'Vefatına yakın son sözleri arasında şu vardı: "Namaz, namaz! Elinizin altındakiler hakkında Allah\'tan korkun." (Ebû Dâvûd, Edeb 123; İbn Mâce, Vasâyâ 1) Namaz, Peygamberimizin ümmetine son emanetidir.' }
+      ]
+    },
+    {
+      ikon: '💛', ad: 'Bize Ne Kazandırır?',
+      kartlar: [
+        { b: 'Günde beş kez huzur', m: 'Namaz, koşturmacanın ortasında günde beş kez durup Allah\'ı anmaktır: "…Bilesiniz ki kalpler ancak Allah\'ı anmakla huzur bulur." (Ra\'d 13/28)' },
+        { b: 'Kötülükten koruma', m: 'Namaz insanı hayâsızlıktan ve kötülükten alıkoyar (Ankebût 29/45). Günde beş kez Allah\'ın huzurunda duran kişi, O\'nun yasakladığı şeylere yaklaşmakta zorlanır.' },
+        { b: 'Düzen ve disiplin', m: 'Vakitler günü böler: erken kalkmak, günü planlamak, temiz olmak (abdest), toplulukla buluşmak (cemaat). Namaz Takibi ve 30 Günde Namaz programı bu düzene alışmana yardım eder.' },
+        { b: 'Başlamak için geç değil', m: 'Hiç kılmadıysan bugün bir vakitle başla; kılınan her namaz kabul kapısıdır, eksikler zamanla tamamlanır. Peygamberimiz: "Amellerin Allah\'a en sevimli olanı, az da olsa devamlı yapılanıdır." (Buhârî, Rikāk 18; Müslim, Müsâfirîn 218)' }
+      ]
+    }
+  ],
+  kaynak: 'Kaynaklar: Kur\'an-ı Kerim Meâli (DİB), Diyanet İlmihali (c. 1, Namaz), Riyâzü\'s-Sâlihîn; hadisler Buhârî, Müslim, Ebû Dâvûd, Tirmizî, Nesâî ve İbn Mâce\'den.'
+};
+
+/* ══════════ KUR'AN NEDİR? (v65.6) — nedir, niçin okunur, nasıl okunur, Peygamberimiz ve Kur'an ══════════ */
+const HV_KURAN_NEDIR = {
+  giris: 'Kur\'an nedir, niçin ve nasıl okunur, Peygamber Efendimiz (s.a.v.) Kur\'an\'la nasıl yaşardı? Kısa ve kaynaklı cevaplar.',
+  bolumler: [
+    {
+      ikon: '📖', ad: 'Kur\'an Nedir?',
+      kartlar: [
+        { b: 'Allah\'ın son kitabı', m: 'Kur\'an-ı Kerim, Allah\'ın Cebrail (a.s.) aracılığıyla Hz. Muhammed\'e (s.a.v.) 23 yılda, Arapça olarak indirdiği son ilâhî kitaptır: 114 sûre, 6236 âyet, 30 cüz. İnmeye Kadir Gecesi\'nde başladı: "Biz onu Kadir Gecesi\'nde indirdik." (Kadir 97/1) İlk inen âyetler "Oku!" diye başlar (Alak 96/1-5).' },
+        { b: 'Harfi harfine korunmuş', m: '"Şüphesiz o Zikr\'i (Kur\'an\'ı) biz indirdik biz! Onun koruyucusu da elbette biziz." (Hicr 15/9) İndiği günden beri hem ezberle hem yazıyla korundu; Hz. Ebû Bekir döneminde tek mushafta toplandı, Hz. Osman döneminde çoğaltıldı. Bugün okuduğun metin, Peygamberimizin okuduğu metindir.' },
+        { b: 'Niçin Arapça?', m: '"Biz onu, akıl erdiresiniz diye Arapça bir Kur\'an olarak indirdik." (Yûsuf 12/2) Kur\'an indiği toplumun diliyle geldi; aslı Arapça metindir. Meal (Türkçe anlamı) Kur\'an\'ın kendisi değil, onu anlamanın yoludur; bu yüzden hem Arapçasını okumak hem mealini anlamak güzeldir.' },
+        { b: 'Neyi anlatır?', m: 'Allah\'ı tanıtır, kulluğu ve ahireti öğretir; peygamber kıssalarıyla ders verir; namaz, oruç, zekât gibi ibadetlerin ve adalet, dürüstlük, merhamet gibi ahlâkın ölçülerini koyar: "Bu Kur\'an, insanlar için bir açıklama, Allah\'a karşı gelmekten sakınanlar için bir hidayet ve öğüttür." (Âl-i İmrân 3/138)' }
+      ]
+    },
+    {
+      ikon: '💡', ad: 'Niçin Okunur?',
+      kartlar: [
+        { b: 'Yol gösterici', m: '"Bu, kendisinde şüphe olmayan kitaptır. Allah\'a karşı gelmekten sakınanlar için yol göstericidir." (Bakara 2/2) Kur\'an okumak, hayatın haritasına bakmaktır.' },
+        { b: 'Şifa ve huzur', m: '"Biz Kur\'an\'dan, mü\'minler için şifa ve rahmet olacak şeyler indiriyoruz." (İsrâ 17/82) · "…Bilesiniz ki kalpler ancak Allah\'ı anmakla huzur bulur." (Ra\'d 13/28)' },
+        { b: 'Her harfine on sevap', m: '"Kim Allah\'ın Kitabı\'ndan bir harf okursa ona bir sevap vardır; her sevap da on misliyle karşılanır. \'Elif lâm mîm\' bir harftir demiyorum; elif bir harf, lâm bir harf, mîm bir harftir." (Tirmizî, Fezâilü\'l-Kur\'ân 16)' },
+        { b: 'Kıyamette şefaatçi', m: '"Kur\'an okuyun; çünkü o, kıyamet günü okuyanlarına şefaatçi olarak gelir." (Müslim, Müsâfirîn 252) · "Sizin en hayırlınız Kur\'an\'ı öğrenen ve öğretendir." (Buhârî, Fezâilü\'l-Kur\'ân 21)' },
+        { b: 'Düşünmek için', m: '"Onlar Kur\'an\'ı düşünmüyorlar mı? Yoksa kalplerin üzerinde kilitleri mi var?" (Muhammed 47/24) Kur\'an yalnızca okunmak için değil, anlaşılıp yaşanmak için indirildi; bu yüzden meal okumak da önemlidir.' }
+      ]
+    },
+    {
+      ikon: '🤲', ad: 'Nasıl Okunur?',
+      kartlar: [
+        { b: 'Edeple ve besmeleyle', m: 'Mushafa dokunmak için abdest alınır; ezberden ya da telefondan okumak için abdest şart değildir ama güzeldir. Okumaya eûzü-besmele ile başlanır: "Kur\'an okuyacağın zaman kovulmuş şeytandan Allah\'a sığın." (Nahl 16/98)' },
+        { b: 'Tane tane (tertil)', m: '"Kur\'an\'ı ağır ağır, tane tane oku." (Müzzemmil 73/4) Harfleri yerinden çıkararak, acele etmeden okumak gerekir; tecvid bunun kurallarıdır. Uygulamadaki Tecvid ve Elifbâ bölümleri bunun için.' },
+        { b: 'Dinlemek de ibadettir', m: '"Kur\'an okunduğu zaman ona kulak verin ve susun ki size merhamet edilsin." (A\'râf 7/204) Okuyamıyorsan dinle: Kur\'an Dinle bölümünde hoca okurken kelime kelime takip edebilirsin.' },
+        { b: 'Zorlanana iki sevap', m: '"Kur\'an\'ı güzel okuyan, değerli ve itaatkâr meleklerle beraberdir. Zorlanarak, kekeleyerek okuyana ise iki sevap vardır." (Buhârî, Tevhîd 52; Müslim, Müsâfirîn 244) Yeni başlıyorsan utanma; her harf sevaptır. Sıfırdan Dua Öğren ve Elifbâ seninle başlar.' },
+        { b: 'Az da olsa her gün', m: '"Amellerin Allah\'a en sevimli olanı, az da olsa devamlı yapılanıdır." (Buhârî, Rikāk 18; Müslim, Müsâfirîn 218) Günde bir sayfa bile olsa düzenli oku; Hatim Planı bunu takip eder. Mealiyle birlikte okumak anlamanı sağlar — uygulamada Diyanet meali vardır.' }
+      ]
+    },
+    {
+      ikon: '🌟', ad: 'Peygamberimiz ve Kur\'an',
+      kartlar: [
+        { b: 'İlk vahiy: "Oku!"', m: 'Hira mağarasında Cebrail (a.s.) geldi ve "Oku!" dedi; Peygamberimiz "Ben okuma bilmem" deyince onu üç kez sıktı ve Alak sûresinin ilk âyetleri indi (Buhârî, Bed\'ü\'l-vahy 3). Vahiy 23 yıl boyunca ihtiyaca göre parça parça geldi.' },
+        { b: 'Her Ramazan mukabele', m: 'Her Ramazan\'da Cebrail ile Kur\'an\'ı baştan sona karşılıklı okurdu; vefat ettiği yıl iki kez okudu (Buhârî, Fezâilü\'l-Kur\'ân 7). Bugünkü mukabele geleneği buradan gelir.' },
+        { b: 'Gece uzun uzun okurdu', m: 'Gece namazında rahmet âyetine gelince durup Allah\'tan ister, azap âyetine gelince sığınır, tesbih âyetinde tesbih ederdi (Müslim, Müsâfirîn 203). Kur\'an\'ı düşünerek okurdu.' },
+        { b: 'Dinlemeyi severdi', m: 'İbn Mes\'ûd\'a "Bana Kur\'an oku" dedi. "Sana indirilmişken ben mi okuyayım?" deyince "Başkasından dinlemeyi seviyorum" buyurdu. Nisâ sûresinin 41. âyetine gelince "Yeter" dedi; gözlerinden yaşlar akıyordu (Buhârî, Fezâilü\'l-Kur\'ân 33).' },
+        { b: '"Ahlâkı Kur\'an\'dı"', m: 'Hz. Âişe\'ye Peygamberimizin ahlâkı sorulunca "Onun ahlâkı Kur\'an\'dı" dedi (Müslim, Müsâfirîn 139). Kur\'an\'ı okumak başlangıçtır; asıl olan onu yaşamaktır.' }
+      ]
+    }
+  ],
+  kaynak: 'Kaynaklar: Kur\'an-ı Kerim Meâli (DİB), Diyanet İlmihali, Riyâzü\'s-Sâlihîn; hadisler Buhârî, Müslim ve Tirmizî\'den.'
+};

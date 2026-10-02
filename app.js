@@ -21,6 +21,8 @@ const APP_STATE = {
   notifyBoth: false,
   notifyCuma: true,
   notifyKandil: true,
+  notifyAyet: true,      // v65.6: sabah Günün Âyeti bildirimi
+  notifyAyetSaat: 8,     // saat (0-23)
   lightTheme: false,
   bigText: false,
   qari: 'afs'
@@ -102,7 +104,7 @@ function setupNavTabs() {
 // Maps every sub-page to its parent bottom-nav tab so the correct tab stays highlighted
 const PAGE_PARENT = {
   home: 'home',
-  kurandua: 'kurandua', quran: 'kurandua', 'dua-ogrenme': 'kurandua', 'sifirdan': 'kurandua', esma: 'kurandua', ezkar: 'kurandua', 'gunluk-dua': 'kurandua', 'onemli-sureler': 'kurandua', 'ayet-arama': 'kurandua', 'kirk-hadis': 'kurandua', qibla: 'kurandua', guide: 'kurandua', mushaf: 'kurandua', ezber: 'kurandua', dinle: 'kurandua', elifba: 'kurandua', tecvid: 'kurandua',
+  kurandua: 'kurandua', quran: 'kurandua', 'dua-ogrenme': 'kurandua', 'sifirdan': 'kurandua', esma: 'kurandua', ezkar: 'kurandua', 'gunluk-dua': 'kurandua', 'onemli-sureler': 'kurandua', 'ayet-arama': 'kurandua', 'kirk-hadis': 'kurandua', qibla: 'kurandua', guide: 'kurandua', 'namaz-nedir': 'kurandua', 'kuran-nedir': 'kurandua', mushaf: 'kurandua', ezber: 'kurandua', dinle: 'kurandua', elifba: 'kurandua', tecvid: 'kurandua',
   ibadet: 'ibadet', 'namaz-programi': 'ibadet', zikirmatik: 'ibadet', 'namaz-takibi': 'ibadet', kaza: 'ibadet', hatim: 'ibadet', oruc: 'ibadet', taharet: 'ibadet', 'ozel-namaz': 'ibadet', iman: 'ibadet', peygamberler: 'ibadet', siyer: 'ibadet', 'hac-umre': 'ibadet', geceler: 'ibadet',
   araclar: 'araclar', cevirici: 'araclar', zekat: 'araclar', fitre: 'araclar', quiz: 'araclar', bebek: 'araclar', takvim: 'araclar', paylasim: 'araclar', cuma: 'araclar', sozluk: 'araclar', imsakiye: 'araclar',
   settings: 'settings', kaynaklar: 'settings'
@@ -204,6 +206,8 @@ function saveSettings() {
     notifyBoth: APP_STATE.notifyBoth,
     notifyCuma: APP_STATE.notifyCuma,
     notifyKandil: APP_STATE.notifyKandil,
+    notifyAyet: APP_STATE.notifyAyet,
+    notifyAyetSaat: APP_STATE.notifyAyetSaat,
     lightTheme: APP_STATE.lightTheme,
     bigText: APP_STATE.bigText,
     qari: APP_STATE.qari,
@@ -251,6 +255,10 @@ function applyStateSettings() {
   if (notifyCuma) notifyCuma.checked = APP_STATE.notifyCuma !== false;
   const notifyKandil = document.getElementById('notify-kandil');
   if (notifyKandil) notifyKandil.checked = APP_STATE.notifyKandil !== false;
+  const notifyAyet = document.getElementById('notify-ayet');
+  if (notifyAyet) notifyAyet.checked = APP_STATE.notifyAyet !== false;
+  const notifyAyetSaat = document.getElementById('notify-ayet-saat');
+  if (notifyAyetSaat) notifyAyetSaat.value = String(parseInt(APP_STATE.notifyAyetSaat, 10) || 8);
 
   const settingsQariSelect = document.getElementById('settings-qari-select');
   if (settingsQariSelect) {
@@ -523,7 +531,8 @@ window.addEventListener('offline', () => setOfflineBadge(true));
    Tarayıcıda bu köprü yoktur; o durumda sessizce devre dışı kalır.
    ──────────────────────────────────────────────────────────── */
 const HV_NOTIFY_DAYS = 12;   // kaç gün ileriye kurulacak
-const HV_NOTIFY_MAX = 57;    // iOS sınırı 64; Cuma + kandil bildirimlerine yer bırakılır
+const HV_NOTIFY_MAX = 50;    // iOS sınırı 64; Cuma + kandil + günün âyeti (7 gün) bildirimlerine yer bırakılır
+const HV_NOTIFY_AYET_GUN = 7; // günün âyeti kaç gün ileriye kurulur (her açılışta tazelenir)
 const HV_NOTIFY_PRAYERS = ['Fajr', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'];
 
 function hvNativeHandler(name) {
@@ -703,6 +712,30 @@ function scheduleNativePrayerNotifications() {
     }
   }
 
+  // ── Günün Âyeti (v65.6): her sabah seçilen saatte, o günün âyeti (Diyanet meali) ──
+  if (APP_STATE.notifyAyet !== false && typeof hvGununAyeti === 'function') {
+    const saat = Math.max(0, Math.min(23, parseInt(APP_STATE.notifyAyetSaat, 10) || 8));
+    for (let d = 0; d < HV_NOTIFY_AYET_GUN; d++) {
+      const day = new Date();
+      day.setHours(0, 0, 0, 0);
+      day.setDate(day.getDate() + d);
+      const at = new Date(day); at.setHours(saat, 0, 0, 0);
+      if (at.getTime() <= now + 20000) continue;
+      let v = null;
+      try { v = hvGununAyeti(day); } catch (e) { v = null; }
+      if (!v || !v.turkish) continue;
+      let metin = String(v.turkish).replace(/\s+/g, ' ').trim();
+      if (metin.length > 220) metin = metin.slice(0, 217).replace(/\s+\S*$/, '') + '…';
+      const kaynak = (typeof hvKartKaynak === 'function') ? hvKartKaynak(v) : (v.surah + ' Sûresi, ' + v.ayah + '. Âyet');
+      const dayKey = `${day.getFullYear()}${hvPad2(day.getMonth() + 1)}${hvPad2(day.getDate())}`;
+      try {
+        sched.postMessage({ id: `hv_ayet_${dayKey}`, title: '📖 Günün Âyeti', body: `${metin} — ${kaynak}`,
+          timestamp: Math.floor(at.getTime() / 1000), sound: 'default' });
+        count++;
+      } catch (e) {}
+    }
+  }
+
   try { localStorage.setItem('hv_notif_count', String(count)); } catch (e) {}
   updateNotifyStatusUI(count, daysCovered.size);
   return count;
@@ -734,7 +767,7 @@ window.updateNotifyStatusUI = updateNotifyStatusUI;
 
 // Ayarlar → Geri Bildirim Gönder (doğrudan e-posta açar)
 function hvSendFeedback() {
-  const ver = 'v65.4';
+  const ver = 'v65.6';
   let ortam = 'Tarayıcı';
   try {
     if (window.hvIsAndroid) ortam = 'Android uygulaması';
@@ -1180,10 +1213,11 @@ function hvEkVakitleriCiz(t) {
   if (serit) { serit.innerHTML = ozel; serit.style.display = ozel ? '' : 'none'; }
 }
 
-/* Diğer Vakitler kartı: kapalı/açık (tercih hatırlanır) */
+/* Diğer Vakitler kartı: v65.5'te İmsakiye sayfasına taşındı ve hep açık (.sabit).
+   Aç/kapa mantığı eski (katlanır) kart için duruyor; sabit kartta hiçbir şey yapmaz. */
 function hvEkVakitDurumUygula() {
   const kart = document.getElementById('ek-vakit-kart');
-  if (!kart) return;
+  if (!kart || kart.classList.contains('sabit')) return;
   let acik = false;
   try { acik = localStorage.getItem('hv_ek_acik') === '1'; } catch (e) {}
   kart.classList.toggle('acik', acik);
@@ -1858,6 +1892,44 @@ function hvManyetikSapma(lat, lng) {
   return Math.max(-30, Math.min(30, d));
 }
 
+/* v65.5 — Android yön hesabı (alpha, beta, gamma'nın üçünden).
+   Eskiden yön yalnızca alpha'dan alınıyordu (360 − alpha). Telefon dik ya da
+   dike yakın tutulunca (beta ≈ 90°) sensör, dönüşü alpha ile gamma arasında
+   paylaştırır ("gimbal kilidi"); alpha tek başına bazen ters yöne, bazen hiç
+   gitmez — kullanıcı "sağa çeviriyorum sola gidiyor" diyordu.
+   Çözüm: cihazın dönüş matrisinden iki yön vektörü alınır —
+     • düz tutuşta ekranın üst kenarının baktığı yön,
+     • dik tutuşta telefonun ARKA yüzünün baktığı yön (kamera yönü);
+   ikisi eğime göre harmanlanır. Dönüş matrisi Euler açılarından bağımsız olduğu
+   için dik tutuşta da yön, telefonla birebir aynı miktarda döner. */
+function hvPusulaYon(alpha, beta, gamma, ekranAcisi) {
+  const r = Math.PI / 180;
+  const a = (Number(alpha) || 0) * r, b = (Number(beta) || 0) * r, g = (Number(gamma) || 0) * r;
+  const cA = Math.cos(a), sA = Math.sin(a), cB = Math.cos(b), sB = Math.sin(b), cG = Math.cos(g), sG = Math.sin(g);
+  // Dönüş matrisi R = Rz(alpha)·Rx(beta)·Ry(gamma); sütunlar = cihaz eksenlerinin dünya (Doğu, Kuzey, Yukarı) bileşenleri
+  const xE = cA * cG - sA * sB * sG, xN = sA * cG + cA * sB * sG;          // cihazın sağ kenarı
+  const yE = -sA * cB,               yN = cA * cB;                          // cihazın üst kenarı
+  const zE = cA * sG + sA * sB * cG, zN = sA * sG - cA * sB * cG, zU = cB * cG; // ekranın baktığı yön
+  // Ekran döndürülmüşse (yatay mod) "üst kenar" ekranın üstü olsun
+  const t = ((Number(ekranAcisi) || 0) % 360) * r;
+  const uE = Math.cos(t) * yE + Math.sin(t) * xE, uN = Math.cos(t) * yN + Math.sin(t) * xN;
+  // Arka yüzün yönü = −z
+  const bE = -zE, bN = -zN;
+  // Eğim: ekran normali ile düşey arasındaki açı (0° = masada düz, 90° = dik)
+  const egim = Math.acos(Math.max(-1, Math.min(1, Math.abs(zU)))) / r;
+  let w = (egim - 45) / 30; w = Math.max(0, Math.min(1, w)); // 45° altı düz, 75° üstü dik, arası geçiş
+  const uL = Math.hypot(uE, uN), bL = Math.hypot(bE, bN);
+  let vE = 0, vN = 0;
+  if (uL > 1e-6) { vE += (1 - w) * uE / uL; vN += (1 - w) * uN / uL; }
+  if (bL > 1e-6) { vE += w * bE / bL;       vN += w * bN / bL; }
+  if (Math.hypot(vE, vN) < 0.25) {
+    // İki vektör birbirini götürdü (ekran kullanıcıdan öteye bakıyor gibi nadir tutuşlar): ağır basanı kullan
+    if (w >= 0.5 && bL > 1e-6) { vE = bE; vN = bN; } else if (uL > 1e-6) { vE = uE; vN = uN; } else return null;
+  }
+  return ((Math.atan2(vE, vN) / r) % 360 + 360) % 360;
+}
+window.hvPusulaYon = hvPusulaYon;
+
 function handleOrientationEvent(e) {
   if (isDraggingCompass) return; // parmakla ayar yapılırken sensör devreye girmesin
 
@@ -1870,8 +1942,13 @@ function handleOrientationEvent(e) {
     mutlak = true;
   } else if (e.alpha != null && !isNaN(e.alpha)) {
     mutlak = (e.absolute === true || e.type === 'deviceorientationabsolute');
-    // Android: alpha cihaz gövdesine göre; ekran döndürülmüşse telafi et
-    compassHeading = (360 - e.alpha + hvEkranAcisi()) % 360;
+    // Android: üç açıdan eğime dayanıklı yön (v65.5); beta/gamma yoksa eski formül
+    if (e.beta != null && e.gamma != null && !isNaN(e.beta) && !isNaN(e.gamma)) {
+      compassHeading = hvPusulaYon(e.alpha, e.beta, e.gamma, hvEkranAcisi());
+      if (compassHeading == null) compassHeading = (360 - e.alpha + hvEkranAcisi()) % 360;
+    } else {
+      compassHeading = (360 - e.alpha + hvEkranAcisi()) % 360;
+    }
     if (mutlak) {
       // Manyetik → gerçek kuzey düzeltmesi
       const u = APP_STATE.userLocation || {};
@@ -2808,6 +2885,24 @@ function setupSettingsListeners() {
       e.target.checked ? '🕌 Cuma hatırlatması açık' : '🕌 Cuma hatırlatması kapalı',
       e.target.checked ? 'Cuma sabahı 09:00\'da hatırlatma gelecek.' : ''
     );
+  });
+
+  // v65.6: Sabah Günün Âyeti bildirimi
+  document.getElementById('notify-ayet')?.addEventListener('change', (e) => {
+    APP_STATE.notifyAyet = e.target.checked;
+    saveSettings();
+    setTimeout(scheduleNativePrayerNotifications, 300);
+    const saat = String(parseInt(APP_STATE.notifyAyetSaat, 10) || 8).padStart(2, '0') + ':00';
+    showToastNotification(
+      e.target.checked ? '📖 Günün Âyeti bildirimi açık' : '📖 Günün Âyeti bildirimi kapalı',
+      e.target.checked ? `Her sabah ${saat}'de günün âyeti gelecek.` : ''
+    );
+  });
+  document.getElementById('notify-ayet-saat')?.addEventListener('change', (e) => {
+    APP_STATE.notifyAyetSaat = parseInt(e.target.value, 10) || 8;
+    saveSettings();
+    setTimeout(scheduleNativePrayerNotifications, 300);
+    showToastNotification('📖 Günün Âyeti saati', `Her gün ${String(APP_STATE.notifyAyetSaat).padStart(2, '0')}:00'de gelecek.`);
   });
 
   const syncQari = (e) => {

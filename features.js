@@ -173,39 +173,48 @@ const HV_KART_AYET = [
    ("anlayasınız diye Arapça bir Kur'an indirdik" mealindeki âyetler —
    HV_ONCELIKLI_AYET, data.js). Her gün sıradaki öncelikli âyet ilk gelir; karta
    dokundukça önce öncelikli listenin kalanı, sonra karıştırılmış genel havuz. */
-/* v65.4: Ana ekran kartı — âyet ve sahih hadis karışık, RASTGELE.
-   Havuz: kart âyetleri (HV_KART_AYET + HV_ONCELIKLI_AYET) + Buhârî/Müslim hadisleri (HADIS_HAVUZU, ≤200 harf).
-   Her açılışta karışık sıra kurulur; yaklaşık her 3 karttan 1'i hadis. Karta dokundukça sıradaki gelir. */
+/* v65.5: Ana ekran kartı — yalnızca Kur'an'ın öğüt âyetleri, RASTGELE.
+   Havuz: kart âyetleri (HV_KART_AYET + HV_ONCELIKLI_AYET). Her açılışta karışık sıra kurulur;
+   karta dokundukça sıradaki gelir.
+   v65.6: "Günün Âyeti" — her güne sabit bir âyet (hvGununAyeti); sabah bildirimi bunu gönderir ve
+   o günkü İLK açılışta kart bu âyetle başlar (bildirime dokunan aynı âyeti görür), sonrası rastgele. */
 let _hvAyetSirasi = null, _hvAyetK = 0;
 function hvKaristir(d) { for (let i = d.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); const t = d[i]; d[i] = d[j]; d[j] = t; } return d; }
-function hvAyetSirasiKur() {
+function hvAyetHavuzu() {
   const hepsi = (typeof DAILY_VERSES !== 'undefined') ? DAILY_VERSES : [];
   const oncelik = (typeof HV_ONCELIKLI_AYET !== 'undefined') ? HV_ONCELIKLI_AYET : [];
   let ayetler = hepsi.filter(v => HV_KART_AYET.indexOf(v.surahNumber + ':' + v.ayah) >= 0);
   if (ayetler.length < 10) ayetler = hepsi.slice();
-  ayetler = hvKaristir(ayetler.concat(oncelik).map(v => Object.assign({ tip: 'ayet' }, v)));
-  // Sahih hadisler: yalnız Buhârî / Müslim kaynaklı, karta sığacak uzunlukta
-  let hadisler = [];
-  try {
-    const havuz = (typeof HADIS_HAVUZU !== 'undefined') ? HADIS_HAVUZU : [];
-    hadisler = havuz.filter(h => h && h.t && /Buh[aâ]r[iî]|M[uü]slim/i.test(h.s || '') && h.t.length <= 200)
-      .map(h => ({ tip: 'hadis', turkish: h.t, arabic: h.a || '', kaynak: h.s }));
-    hvKaristir(hadisler);
-    hadisler = hadisler.slice(0, Math.max(10, Math.round(ayetler.length / 2)));   // her açılışta farklı ~80 hadis; oran ≈ 2 âyet : 1 hadis
-  } catch (e) {}
-  // Karışık sıra: her 3 karttan yaklaşık 1'i hadis (rastgele yerlerde)
-  const sira = [];
-  let ai = 0, hi = 0;
-  while (ai < ayetler.length || hi < hadisler.length) {
-    const hadisSirasi = hi < hadisler.length && (ai >= ayetler.length || Math.random() < 0.34);
-    sira.push(hadisSirasi ? hadisler[hi++] : ayetler[ai++]);
-  }
-  // Açılışta rastgele yerden başla; bir önceki açılıştaki ilk kartı tekrarlama
-  let son = '';
-  try { son = localStorage.getItem('hv_kart_son') || ''; } catch (e) {}
-  const kimlik = (v) => v.tip === 'hadis' ? 'h:' + v.turkish.slice(0, 40) : 'a:' + v.surahNumber + ':' + v.ayah;
+  return ayetler.concat(oncelik).map(v => Object.assign({ tip: 'ayet' }, v));
+}
+/* Günün âyeti: tarihe göre sabit seçim (aynı gün herkeste aynı âyet; bildirim ile kart birbirini tutar) */
+function hvGununAyeti(d) {
+  const havuz = hvAyetHavuzu();
+  if (!havuz.length) return null;
+  const t = d ? new Date(d) : new Date();
+  const gun = Math.round(new Date(t.getFullYear(), t.getMonth(), t.getDate()).getTime() / 86400000);
+  return havuz[((gun * 48271) % 2147483647) % havuz.length];
+}
+window.hvGununAyeti = hvGununAyeti;
+function hvAyetSirasiKur() {
+  const sira = hvKaristir(hvAyetHavuzu());
+  const kimlik = (v) => 'a:' + v.surahNumber + ':' + v.ayah;
+  // Günün ilk açılışı → günün âyeti başa (bildirimdeki âyet). Sonraki açılışlar rastgele yerden başlar.
+  const bugun = hvTodayKey();
+  let ilkAcilis = false;
+  try { ilkAcilis = localStorage.getItem('hv_ayet_gun') !== bugun; } catch (e) {}
   let bas = sira.length ? Math.floor(Math.random() * sira.length) : 0;
-  if (sira.length > 1 && kimlik(sira[bas]) === son) bas = (bas + 1) % sira.length;
+  if (ilkAcilis) {
+    const g = hvGununAyeti();
+    const gi = g ? sira.findIndex(v => kimlik(v) === kimlik(g)) : -1;
+    if (gi >= 0) bas = gi;
+    try { localStorage.setItem('hv_ayet_gun', bugun); } catch (e) {}
+  } else {
+    // bir önceki açılıştaki ilk kartı tekrarlama
+    let son = '';
+    try { son = localStorage.getItem('hv_kart_son') || ''; } catch (e) {}
+    if (sira.length > 1 && kimlik(sira[bas]) === son) bas = (bas + 1) % sira.length;
+  }
   _hvAyetSirasi = sira.slice(bas).concat(sira.slice(0, bas));
   _hvAyetK = 0;
   try { if (_hvAyetSirasi.length) localStorage.setItem('hv_kart_son', kimlik(_hvAyetSirasi[0])); } catch (e) {}
@@ -236,6 +245,7 @@ function hvAyetCiz(v, animasyon) {
     const tirnakli = /[“”"«»]/.test(met);   // metinde zaten tırnak varsa ekleme
     if (tr)  tr.textContent  = tirnakli ? met : ('"' + met + '"');
     if (src) src.textContent = '— ' + hvKartKaynak(v);
+    hvAyetSigdir();
   };
   if (animasyon && kart) {
     kart.classList.add('hadis-swap');
@@ -243,6 +253,25 @@ function hvAyetCiz(v, animasyon) {
   } else uygula();
   window._currentAyet = v;
 }
+/* v65.6: Uzun âyet sayfayı aşağı kaydırmasın — metin, karttaki alana sığana kadar kademeli küçülür
+   (en fazla %24), yine sığmazsa yalnızca metin kutusu kartın içinde kayar; sayfa yerinde durur. */
+function hvAyetSigdir() {
+  const tr = document.getElementById('daily-verse-turkish');
+  if (!tr) return;
+  tr.style.fontSize = '';
+  if (!tr.clientHeight) return;                       // ana sayfa görünür değilse ölçülemez
+  const taban = parseFloat(getComputedStyle(tr).fontSize) || 16;
+  let boyut = taban;
+  for (let i = 0; i < 10 && tr.scrollHeight > tr.clientHeight + 1; i++) {
+    boyut -= 0.5;
+    if (boyut < taban * 0.76) { boyut = taban * 0.76; tr.style.fontSize = boyut + 'px'; break; }
+    tr.style.fontSize = boyut + 'px';
+  }
+  tr.scrollTop = 0;
+}
+window.hvAyetSigdir = hvAyetSigdir;
+let _hvSigdirZaman = null;
+window.addEventListener('resize', () => { clearTimeout(_hvSigdirZaman); _hvSigdirZaman = setTimeout(hvAyetSigdir, 150); });
 function loadDailyAyet() { hvAyetCiz(hvAyetSec(), false); }
 window.loadDailyAyet = loadDailyAyet;
 function nextDailyAyet() {
@@ -545,6 +574,7 @@ function toggleNamaz(key) {
   hvVibrate(15);
 }
 window.toggleNamaz = toggleNamaz;
+
 function calcNamazStreak(data) {
   let streak = 0;
   const d = new Date();
@@ -1144,6 +1174,40 @@ function renderOzelNamazlar() {
 
 /* ══════════ HAC & UMRE REHBERİ (v65.0) ══════════ */
 let _hacBolum = 0;
+/* ══════════ BİLGİ SAYFALARI (v65.6): "Namaz Nedir?" ve "Kur'an Nedir?" — bölümlü, kaynaklı kartlar ══════════ */
+let _nnBolum = 0, _knBolum = 0;
+function hvBilgiSayfasiCiz(veri, contentId, pageId, bolum, secFn, sonBaglanti) {
+  const c = document.getElementById(contentId);
+  if (!c || !veri) return;
+  const B = veri.bolumler;
+  if (bolum >= B.length) bolum = 0;
+  const seg = B.map((b, i) => `<button class="seg-btn${i === bolum ? ' active' : ''}" onclick="${secFn}(${i})">${b.ikon} ${hvEsc(b.ad)}</button>`).join('');
+  const b = B[bolum];
+  const kartlar = b.kartlar.map(k => `<div class="feature-card"><div class="fc-title">${hvEsc(k.b)}</div><div class="fc-tr nn-metin">${k.html ? k.m : hvEsc(k.m)}</div></div>`).join('');
+  const ileri = bolum < B.length - 1
+    ? `<button class="gold-primary-btn nn-ileri" onclick="${secFn}(${bolum + 1})">Sonraki: ${B[bolum + 1].ikon} ${hvEsc(B[bolum + 1].ad)} →</button>`
+    : `<div class="nn-baglanti">${sonBaglanti}</div>`;
+  c.innerHTML = `<div class="info-note">${hvEsc(veri.giris)}</div><div class="share-type-switch hac-seg nn-seg">${seg}</div>` +
+    `<div class="section-mini-title">${b.ikon} ${hvEsc(b.ad)}</div>${kartlar}${ileri}<div class="nn-kaynak">${hvEsc(veri.kaynak)}</div>`;
+  const kok = document.getElementById(pageId); const box = kok && kok.querySelector('.hero-frame-box'); if (box) box.scrollTop = 0;
+}
+function nnBolumSec(i) { _nnBolum = i; renderNamazNedir(); }
+window.nnBolumSec = nnBolumSec;
+function renderNamazNedir() {
+  if (typeof HV_NAMAZ_NEDIR === 'undefined') return;
+  hvBilgiSayfasiCiz(HV_NAMAZ_NEDIR, 'namaz-nedir-content', 'page-namaz-nedir', _nnBolum, 'nnBolumSec',
+    `<button class="seg-btn" onclick="navigateTo('guide')">🤲 Kılınışı (Rehber)</button><button class="seg-btn" onclick="navigateTo('namaz-takibi')">✅ Namaz Takibi</button><button class="seg-btn" onclick="navigateTo('kaza')">🔄 Kaza Takibi</button><button class="seg-btn" onclick="navigateTo('namaz-programi')">🌱 30 Günde Namaz</button><button class="seg-btn" onclick="navigateTo('kuran-nedir')">📖 Kur'an Nedir?</button>`);
+}
+window.renderNamazNedir = renderNamazNedir;
+function knBolumSec(i) { _knBolum = i; renderKuranNedir(); }
+window.knBolumSec = knBolumSec;
+function renderKuranNedir() {
+  if (typeof HV_KURAN_NEDIR === 'undefined') return;
+  hvBilgiSayfasiCiz(HV_KURAN_NEDIR, 'kuran-nedir-content', 'page-kuran-nedir', _knBolum, 'knBolumSec',
+    `<button class="seg-btn" onclick="navigateTo('quran')">📖 Kur'an Oku</button><button class="seg-btn" onclick="navigateTo('dinle')">🎧 Kur'an Dinle</button><button class="seg-btn" onclick="navigateTo('elifba')">🔤 Elifbâ</button><button class="seg-btn" onclick="navigateTo('tecvid')">🎼 Tecvid</button><button class="seg-btn" onclick="navigateTo('hatim')">📅 Hatim Planı</button><button class="seg-btn" onclick="navigateTo('namaz-nedir')">❓ Namaz Nedir?</button>`);
+}
+window.renderKuranNedir = renderKuranNedir;
+
 function hacBolumSec(i) { _hacBolum = i; renderHacUmre(); }
 window.hacBolumSec = hacBolumSec;
 function renderHacUmre() {
@@ -1975,8 +2039,11 @@ window.orucKazaAdjust = orucKazaAdjust;
 /* ══════════ FEATURE ROUTE KAYIT & BAŞLATMA ══════════ */
 try { if (document.readyState !== 'loading') renderHizliErisim(); else document.addEventListener('DOMContentLoaded', renderHizliErisim); } catch (e) {}
 window.FEATURE_ROUTES = {
+  'home': () => { if (typeof hvAyetSigdir === 'function') setTimeout(hvAyetSigdir, 0); },
   'onemli-sureler': renderOnemliSureler,
   'hac-umre': renderHacUmre,
+  'namaz-nedir': renderNamazNedir,
+  'kuran-nedir': renderKuranNedir,
   'tecvid': renderTecvid,
   'geceler': renderGeceler,
   'sifirdan': renderSifirdan,
