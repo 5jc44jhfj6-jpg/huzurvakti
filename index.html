@@ -16,18 +16,18 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Namaz Dostu">
-    <link rel="apple-touch-icon" href="apple-touch-icon.png?v=66.0.0">
-    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png?v=66.0.0">
+    <link rel="apple-touch-icon" href="apple-touch-icon.png?v=66.2.0">
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png?v=66.2.0">
     <meta name="description" content="Namaz Dostu: Namaz vakitleri, ezan, Kur'an-ı Kerim, kıble, dualar, zikirmatik ve yeni başlayanlar için adım adım namaz rehberi. Ücretsiz, reklamsız, çevrimdışı.">
 
-    <link rel="stylesheet" href="styles.css?v=66.0.0">
-    <script>window.HV_SURUM = '66.0.0';</script>
-    <script src="cities.js?v=66.0.0" defer></script>
-    <script src="data.js?v=66.0.0" defer></script>
-    <script src="content.js?v=66.0.0" defer></script>
-    <script src="hadisler.js?v=66.0.0" defer></script>
-    <script src="app.js?v=66.0.0" defer></script>
-    <script src="features.js?v=66.0.0" defer></script>
+    <link rel="stylesheet" href="styles.css?v=66.2.0">
+    <script>window.HV_SURUM = '66.2.0';</script>
+    <script src="cities.js?v=66.2.0" defer></script>
+    <script src="data.js?v=66.2.0" defer></script>
+    <script src="content.js?v=66.2.0" defer></script>
+    <script src="hadisler.js?v=66.2.0" defer></script>
+    <script src="app.js?v=66.2.0" defer></script>
+    <script src="features.js?v=66.2.0" defer></script>
 </head>
 <body class="dark-theme">
     <!-- Loading Screen -->
@@ -177,7 +177,7 @@
                         <span class="hub-icon">📖</span><span class="hub-title">Kuran-ı Kerim</span><span class="hub-sub">Sayfa Sayfa • Sure Sure • Meal & Ses</span>
                     </button>
                     <button class="hub-card" onclick="navigateTo('dinle')">
-                        <span class="hub-icon">🎧</span><span class="hub-title">Kuran Dinle</span><span class="hub-sub">Kesintisiz • 4 Hafız</span>
+                        <span class="hub-icon">🎧</span><span class="hub-title">Kuran Dinle</span><span class="hub-sub">Kesintisiz • 10 Hafız</span>
                     </button>
                     <button class="hub-card" onclick="navigateTo('ezber')">
                         <span class="hub-icon">🌱</span><span class="hub-title">Dua &amp; Sure Öğren</span><span class="hub-sub">Satır Satır Oku • Parça Parça Ezberle</span>
@@ -449,6 +449,12 @@
                             <option value="afs" data-server="server8">Mishary Rashid Alafasy</option>
                             <option value="minsh" data-server="server10">Muhammed Sıddık el-Minşâvî</option>
                             <option value="yasser" data-server="server11">Yâsir ed-Devserî</option>
+                            <option value="alfaqih" data-server="server16" data-path="M_Alfaqih/Rewayat-Hafs-A-n-Assem">Muhammed el-Fakih</option>
+                            <option value="mousa" data-server="server14" data-path="mousa/Rewayat-Hafs-A-n-Assem">Abdullah el-Mûsâ</option>
+                            <option value="basit" data-server="server7">Abdülbâsıt Abdüssamed</option>
+                            <option value="sds" data-server="server11">Abdurrahman es-Sudeys</option>
+                            <option value="s_gmd" data-server="server7">Saad el-Ğâmidî</option>
+                            <option value="maher" data-server="server12">Mâhir el-Muaykılî</option>
                         </select>
                         </div>
                         <audio id="surah-audio-player" controls style="width: 100%; height: 36px; outline: none; border-radius: 20px;"></audio>
@@ -848,7 +854,7 @@
                     </div>
                     <div class="kaynak-card">
                         <h3>🎧 Kuran Dinle</h3>
-                        <p>Sesli okuyuşlar <b>mp3quran.net</b> üzerinden sunulur: Mishary Rashid Alafasy, Abdulbasit Abdussamed, Maher Al Muaiqly, Saad El Ghamidi. Kayıtlar ilgili hâfızlara aittir; uygulama yalnızca yayın bağlantısını kullanır.</p>
+                        <p>Sesli okuyuşlar <b>mp3quran.net</b> ve <b>everyayah.com</b> üzerinden sunulur: Mahmud Halil el-Husarî, Mishary Rashid Alafasy, Muhammed Sıddık el-Minşâvî, Yâsir ed-Devserî, Muhammed el-Fakih, Abdullah el-Mûsâ, Abdülbâsıt Abdüssamed, Abdurrahman es-Sudeys, Saad el-Ğâmidî, Mâhir el-Muaykılî. Kayıtlar ilgili hâfızlara aittir; uygulama yalnızca yayın bağlantısını kullanır.</p>
                     </div>
                     <div class="kaynak-card">
                         <h3>🔤 Elifbâ</h3>
@@ -1020,6 +1026,12 @@
                                     <option value="afs">Mishary Rashid Alafasy</option>
                                     <option value="minsh">Muhammed Sıddık el-Minşâvî</option>
                                     <option value="yasser">Yâsir ed-Devserî</option>
+                                    <option value="alfaqih">Muhammed el-Fakih</option>
+                                    <option value="mousa">Abdullah el-Mûsâ</option>
+                                    <option value="basit">Abdülbâsıt Abdüssamed</option>
+                                    <option value="sds">Abdurrahman es-Sudeys</option>
+                                    <option value="s_gmd">Saad el-Ğâmidî</option>
+                                    <option value="maher">Mâhir el-Muaykılî</option>
                                 </select>
                             </div>
                         </div>
@@ -1079,7 +1091,7 @@
                     </div>
                     <div class="app-info-footer">
                         <div class="footer-logo">🕌</div>
-                        <div class="footer-ver">Namaz Dostu v66.0</div>
+                        <div class="footer-ver">Namaz Dostu v66.2</div>
                         <div style="font-size: 0.8rem; margin-top: 4px;">Tüm Hakları Saklıdır • Diyanet Uyumlu • Çevrimdışı Çalışır</div>
                     </div>
                 </div>
@@ -1125,7 +1137,7 @@
     <script>
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
-          navigator.serviceWorker.register('/sw.js?v=66.0.0')
+          navigator.serviceWorker.register('/sw.js?v=66.2.0')
             .then(reg => {
               reg.onupdatefound = () => {
                 const installingWorker = reg.installing;

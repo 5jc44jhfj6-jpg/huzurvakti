@@ -3491,6 +3491,7 @@ async function renderMushaf(calmayaDevam) {
         ${HV_DINLE_QARILER.map(q => `<option value="${q.id}" ${q.id === hvDnQari().id ? 'selected' : ''}>${q.ad}</option>`).join('')}
       </select>
     </div>
+    ${!hvDnAyetKaydiVar(hvDnQari().id) ? `<div class="mv-tts-not">ℹ️ ${hvEsc(hvDnQari().ad)}'in âyet âyet kaydı bulunmuyor; sayfa okurken Husarî okur. Tam sûre dinlemek için Kur'an Dinle.</div>` : ''}
     ${mod !== 'ar' ? `<div class="mv-tts-not">🔊 Meâli telefonunun Türkçe sesi okur.${hvTtsTurkceVarMi() ? '' : ' <b>Bu cihazda Türkçe konuşma sesi bulunamadı.</b> <button class="tts-yardim-btn" onclick="hvTtsYardim()">🔧 Ücretsiz nasıl düzeltirim?</button>'}</div>` : ''}
 
     <div class="mv-ilerleme">
@@ -3956,8 +3957,18 @@ const HV_DINLE_QARILER = [
   { id: 'husr',   sunucu: 'server13', ad: 'Mahmud Halil el-Husarî' },
   { id: 'afs',    sunucu: 'server8',  ad: 'Mishary Rashid Alafasy' },
   { id: 'minsh',  sunucu: 'server10', ad: 'Muhammed Sıddık el-Minşâvî' },
-  { id: 'yasser', sunucu: 'server11', ad: 'Yâsir ed-Devserî' }
+  { id: 'yasser', sunucu: 'server11', ad: 'Yâsir ed-Devserî' },
+  // v66.1 — kullanıcı isteğiyle eklendi (mp3quran.net, 114 sûre tam; âyet âyet kayıtları yok → o modlarda Husarî okur)
+  { id: 'alfaqih', sunucu: 'server16', yol: 'M_Alfaqih/Rewayat-Hafs-A-n-Assem', ad: 'Muhammed el-Fakih' },
+  { id: 'mousa',   sunucu: 'server14', yol: 'mousa/Rewayat-Hafs-A-n-Assem',     ad: 'Abdullah el-Mûsâ' },
+  // v66.2 — 10 hâfız (hepsi mp3quran 114 sûre + everyayah âyet âyet, doğrulandı)
+  { id: 'basit',   sunucu: 'server7',  ad: 'Abdülbâsıt Abdüssamed' },
+  { id: 'sds',     sunucu: 'server11', ad: 'Abdurrahman es-Sudeys' },
+  { id: 's_gmd',   sunucu: 'server7',  ad: 'Saad el-Ğâmidî' },
+  { id: 'maher',   sunucu: 'server12', ad: 'Mâhir el-Muaykılî' }
 ];
+/* Seçili hâfızın âyet âyet (everyayah) kaydı var mı? Yoksa âyet modları Husarî ile okur. */
+function hvDnAyetKaydiVar(id) { return !!(typeof HV_AA_KLASOR !== 'undefined' && HV_AA_KLASOR[id]); }
 
 let hvDnSes = null;
 let hvDnSure = 0;          // 0 = seçilmemiş
@@ -3977,7 +3988,7 @@ function hvDnQari() {
 }
 function hvDnUrl(no) {
   const q = hvDnQari();
-  return 'https://' + q.sunucu + '.mp3quran.net/' + q.id + '/' + String(no).padStart(3, '0') + '.mp3';
+  return 'https://' + q.sunucu + '.mp3quran.net/' + (q.yol || q.id) + '/' + String(no).padStart(3, '0') + '.mp3';
 }
 function hvDnSure2(sn) { const m = Math.floor(sn / 60), s = Math.floor(sn % 60); return m + ':' + (s < 10 ? '0' : '') + s; }
 
@@ -4128,7 +4139,11 @@ const HV_AA_KLASOR = {
   husr:   'Husary_128kbps',
   afs:    'Alafasy_128kbps',
   minsh:  'Minshawy_Murattal_128kbps',
-  yasser: 'Yasser_Ad-Dussary_128kbps'
+  yasser: 'Yasser_Ad-Dussary_128kbps',
+  basit:  'Abdul_Basit_Murattal_192kbps',
+  sds:    'Abdurrahmaan_As-Sudais_192kbps',
+  s_gmd:  'Ghamadi_40kbps',
+  maher:  'MaherAlMuaiqly128kbps'
 };
 function hvAaUrl(sure, ayet) {
   const q = hvDnQari();
@@ -4430,6 +4445,7 @@ function renderDinle() {
       <select class="mv-qari" onchange="hvDnQariDegistir(this.value)">
         ${HV_DINLE_QARILER.map(q => `<option value="${q.id}" ${q.id === qari ? 'selected' : ''}>${q.ad}</option>`).join('')}
       </select>
+      ${(mod !== 'ar' && !hvDnAyetKaydiVar(qari)) ? `<div class="mv-tts-not">ℹ️ Bu hâfızın âyet âyet kaydı bulunmuyor; "Arapça + Meal" modunda Husarî okur. Kendi sesi için "Arapça" modunu seç.</div>` : ''}
       <label class="dn-switch">
         <input type="checkbox" ${surekli ? 'checked' : ''} onchange="hvDnSurekliDegistir(this)">
         <span>Bitince sıradaki sûre</span>

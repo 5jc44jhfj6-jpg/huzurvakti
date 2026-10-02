@@ -767,7 +767,7 @@ window.updateNotifyStatusUI = updateNotifyStatusUI;
 
 // Ayarlar → Geri Bildirim Gönder (doğrudan e-posta açar)
 function hvSendFeedback() {
-  const ver = 'v66.0';
+  const ver = 'v66.2';
   let ortam = 'Tarayıcı';
   try {
     if (window.hvIsAndroid) ortam = 'Android uygulaması';
@@ -2227,7 +2227,7 @@ async function loadSurahDetail(id, localSurahObj) {
     const setAudioSource = () => {
       const option = qariSelect.options[qariSelect.selectedIndex];
       const server = option.getAttribute('data-server');
-      const qari = option.value;
+      const qari = option.getAttribute('data-path') || option.value;
       audioPlayer.src = `https://${server}.mp3quran.net/${qari}/${paddedId}.mp3`;
       audioPlayer.load();
     };
