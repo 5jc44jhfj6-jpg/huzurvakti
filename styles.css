@@ -3592,8 +3592,9 @@ body.light-theme .warm-home .daily-hadis-card .verse-card-title { color: #6b4a12
 .ek-vakit-kart.sabit .ek-vakit-satir { font-size: .88rem; padding: 7px 0; }
 /* Günün Âyeti / Hadisi kartı ana sayfada ekranın kalanını doldurur (eski "tam ekran" görünüm):
    başlık üstte, metin ortada, kaynak altta. v63.9'daki "uzamasın" kuralı yalnızca ana sayfada kalktı. */
-.warm-home .daily-hadis-card { flex: 0 0 auto; justify-content: flex-start; padding-bottom: 12px; }   /* v65.8: kart içeriği kadar — uzamaz, boşluk bırakmaz */
-.warm-home .daily-hadis-card #daily-verse-turkish { margin: 0; padding: 4px 0 2px; }
+.warm-home .daily-hadis-card { flex: 1 1 auto; min-height: 120px; overflow: hidden; justify-content: flex-start; padding-bottom: 12px; }   /* v65.9: kart ekranın kalanını doldurur; yazı boyutu alana göre otomatik (hvAyetSigdir) */
+.warm-home .daily-hadis-card #daily-verse-turkish { margin: 0; padding: 4px 0 2px; flex: 1 1 auto; min-height: 0; overflow: hidden; display: flex; align-items: center; line-height: 1.45; }
+.warm-home .daily-hadis-card #daily-verse-source { flex: 0 0 auto; }
 .warm-home .daily-hadis-card #daily-verse-source { margin-top: 2px; }
 .ek-vakit-kart.sabit .ek-vakit-baslik small { display: block; margin: 3px 0 0; font-size: .74rem; }
 
