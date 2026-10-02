@@ -180,7 +180,7 @@ const HV_KART_AYET = [
    o günkü İLK açılışta kart bu âyetle başlar (bildirime dokunan aynı âyeti görür), sonrası rastgele. */
 let _hvAyetSirasi = null, _hvAyetK = 0;
 function hvKaristir(d) { for (let i = d.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); const t = d[i]; d[i] = d[j]; d[j] = t; } return d; }
-const HV_KART_AZAMI_HARF = 260;   // ana ekran kartına girecek âyetin en fazla harf sayısı
+const HV_KART_AZAMI_HARF = 180;   // ana ekran kartına girecek âyetin en fazla harf sayısı
 function hvAyetHavuzu() {
   const hepsi = (typeof DAILY_VERSES !== 'undefined') ? DAILY_VERSES : [];
   const oncelik = (typeof HV_ONCELIKLI_AYET !== 'undefined') ? HV_ONCELIKLI_AYET : [];
@@ -247,7 +247,6 @@ function hvAyetCiz(v, animasyon) {
     const tirnakli = /[“”"«»]/.test(met);   // metinde zaten tırnak varsa ekleme
     if (tr)  tr.textContent  = tirnakli ? met : ('"' + met + '"');
     if (src) src.textContent = '— ' + hvKartKaynak(v);
-    hvAyetSigdir();
   };
   if (animasyon && kart) {
     kart.classList.add('hadis-swap');
@@ -255,27 +254,6 @@ function hvAyetCiz(v, animasyon) {
   } else uygula();
   window._currentAyet = v;
 }
-/* v65.9: Ana sayfa HEP tek ekran — Günün Âyeti kartı kalan alanı doldurur, yazı boyutu alana göre
-   otomatik ayarlanır: kısa âyet büyür (en çok 1,55×), uzun âyet küçülür (en az 0,8×), sayfa kaymaz. */
-function hvAyetSigdir() {
-  const tr = document.getElementById('daily-verse-turkish');
-  if (!tr) return;
-  tr.style.fontSize = '';
-  const alan = tr.clientHeight;
-  if (!alan) return;                                    // ana sayfa görünür değilse ölçülemez
-  const taban = parseFloat(getComputedStyle(tr).fontSize) || 16;
-  const enKucuk = taban * 0.8, enBuyuk = taban * 1.55;
-  const sigar = (px) => { tr.style.fontSize = px + 'px'; return tr.scrollHeight <= tr.clientHeight + 1; };
-  if (sigar(enBuyuk)) return;                           // kısa âyet: en büyük boy
-  let alt = enKucuk, ust = enBuyuk;                     // ikili arama: sığan en büyük boy
-  if (!sigar(alt)) { tr.style.fontSize = alt + 'px'; return; }
-  for (let i = 0; i < 8; i++) { const orta = (alt + ust) / 2; if (sigar(orta)) alt = orta; else ust = orta; }
-  tr.style.fontSize = alt + 'px';
-}
-window.hvAyetSigdir = hvAyetSigdir;
-let _hvSigdirZaman = null;
-window.addEventListener('resize', () => { clearTimeout(_hvSigdirZaman); _hvSigdirZaman = setTimeout(hvAyetSigdir, 120); });
-try { if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => setTimeout(hvAyetSigdir, 50)); } catch (e) {}
 function loadDailyAyet() { hvAyetCiz(hvAyetSec(), false); }
 window.loadDailyAyet = loadDailyAyet;
 function nextDailyAyet() {
@@ -1285,12 +1263,15 @@ const HV_HE_KATALOG = [
   { id: 'paylasim', ikon: '📤', ad: 'Paylaşım' }, { id: 'sozluk', ikon: '📚', ad: 'Sözlük' }, { id: 'cevirici', ikon: '🔄', ad: 'Tarih Çevirici' },
   { id: 'quiz', ikon: '❓', ad: 'Bilgi Quizi' }, { id: 'bebek', ikon: '👶', ad: 'Bebek İsimleri' }, { id: 'settings', ikon: '⚙️', ad: 'Ayarlar' }
 ];
-const HV_HE_VARSAYILAN = ['qibla', 'quran', 'dinle', 'ezber'];   // tek sıra: Kıble · Kur'an Oku · Kur'an Dinle · Dua Öğren
-const HV_HE_MAX = 4;
+const HV_HE_VARSAYILAN = ['qibla', 'quran', 'dinle', 'ezber', 'namaz-takibi', 'zikirmatik', 'guide', 'gunluk-dua'];   // v65.9: iki sıra, 8 kısayol
+const HV_HE_MAX = 8;
 function hvHeListe() {
   let l = null; try { l = JSON.parse(localStorage.getItem('hv_hizli') || 'null'); } catch (e) {}
   if (!Array.isArray(l) || !l.length) l = HV_HE_VARSAYILAN.slice();
-  return l.filter(id => HV_HE_KATALOG.some(k => k.id === id)).slice(0, HV_HE_MAX);
+  l = l.filter(id => HV_HE_KATALOG.some(k => k.id === id));
+  // Eski 4'lü kayıtları 8'e tamamla (ana sayfa iki sıra olacak şekilde dolsun)
+  HV_HE_VARSAYILAN.forEach(id => { if (l.length < HV_HE_MAX && l.indexOf(id) < 0) l.push(id); });
+  return l.slice(0, HV_HE_MAX);
 }
 function renderHizliErisim() {
   const c = document.getElementById('hizli-erisim');
@@ -2043,7 +2024,6 @@ window.orucKazaAdjust = orucKazaAdjust;
 /* ══════════ FEATURE ROUTE KAYIT & BAŞLATMA ══════════ */
 try { if (document.readyState !== 'loading') renderHizliErisim(); else document.addEventListener('DOMContentLoaded', renderHizliErisim); } catch (e) {}
 window.FEATURE_ROUTES = {
-  'home': () => { if (typeof hvAyetSigdir === 'function') setTimeout(hvAyetSigdir, 0); },
   'onemli-sureler': renderOnemliSureler,
   'hac-umre': renderHacUmre,
   'namaz-nedir': renderNamazNedir,

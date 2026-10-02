@@ -224,7 +224,6 @@ function applyStateSettings() {
   document.body.classList.toggle('dark-theme', !gunduz);
   document.body.classList.toggle('green-theme', !gunduz && !!APP_STATE.greenTheme);
   document.documentElement.classList.toggle('hv-buyuk', !!APP_STATE.bigText);
-  try { if (typeof hvAyetSigdir === 'function') setTimeout(hvAyetSigdir, 0); } catch (e) {}
   const lightToggle = document.getElementById('light-toggle');
   if (lightToggle) lightToggle.checked = gunduz;
   const bigToggle = document.getElementById('big-text-toggle');
@@ -768,7 +767,7 @@ window.updateNotifyStatusUI = updateNotifyStatusUI;
 
 // Ayarlar → Geri Bildirim Gönder (doğrudan e-posta açar)
 function hvSendFeedback() {
-  const ver = 'v65.9';
+  const ver = 'v66.0';
   let ortam = 'Tarayıcı';
   try {
     if (window.hvIsAndroid) ortam = 'Android uygulaması';

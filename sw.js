@@ -10,10 +10,10 @@
      takılıp kalmaz.
    • Dış kaynaklar (font, API) çevrimdışıyken sessizce boş geçilir.
    ══════════════════════════════════════════════════════════════ */
-const CACHE_NAME = 'namaz-dostu-v65.9';
+const CACHE_NAME = 'namaz-dostu-v66.0';
 
 // Sürüm etiketli çekirdek dosyalar (sayfanın gerçekte istediği URL'ler)
-const V = '65.9.0';
+const V = '66.0.0';
 const CORE_ASSETS = [
   './',
   './index.html',
