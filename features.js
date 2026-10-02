@@ -180,12 +180,14 @@ const HV_KART_AYET = [
    o günkü İLK açılışta kart bu âyetle başlar (bildirime dokunan aynı âyeti görür), sonrası rastgele. */
 let _hvAyetSirasi = null, _hvAyetK = 0;
 function hvKaristir(d) { for (let i = d.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); const t = d[i]; d[i] = d[j]; d[j] = t; } return d; }
+const HV_KART_AZAMI_HARF = 170;   // ana ekran kartına girecek âyetin en fazla harf sayısı
 function hvAyetHavuzu() {
   const hepsi = (typeof DAILY_VERSES !== 'undefined') ? DAILY_VERSES : [];
   const oncelik = (typeof HV_ONCELIKLI_AYET !== 'undefined') ? HV_ONCELIKLI_AYET : [];
   let ayetler = hepsi.filter(v => HV_KART_AYET.indexOf(v.surahNumber + ':' + v.ayah) >= 0);
   if (ayetler.length < 10) ayetler = hepsi.slice();
-  return ayetler.concat(oncelik).map(v => Object.assign({ tip: 'ayet' }, v));
+  // v65.6: ana ekran kartı tek ekrana sığsın diye yalnızca 170 harfe kadar olan âyetler (135 âyet); uzunlar kartta çıkmaz
+  return ayetler.concat(oncelik).filter(v => (v.turkish || '').length <= HV_KART_AZAMI_HARF).map(v => Object.assign({ tip: 'ayet' }, v));
 }
 /* Günün âyeti: tarihe göre sabit seçim (aynı gün herkeste aynı âyet; bildirim ile kart birbirini tutar) */
 function hvGununAyeti(d) {
@@ -245,7 +247,6 @@ function hvAyetCiz(v, animasyon) {
     const tirnakli = /[“”"«»]/.test(met);   // metinde zaten tırnak varsa ekleme
     if (tr)  tr.textContent  = tirnakli ? met : ('"' + met + '"');
     if (src) src.textContent = '— ' + hvKartKaynak(v);
-    hvAyetSigdir();
   };
   if (animasyon && kart) {
     kart.classList.add('hadis-swap');
@@ -253,25 +254,6 @@ function hvAyetCiz(v, animasyon) {
   } else uygula();
   window._currentAyet = v;
 }
-/* v65.6: Uzun âyet sayfayı aşağı kaydırmasın — metin, karttaki alana sığana kadar kademeli küçülür
-   (en fazla %24), yine sığmazsa yalnızca metin kutusu kartın içinde kayar; sayfa yerinde durur. */
-function hvAyetSigdir() {
-  const tr = document.getElementById('daily-verse-turkish');
-  if (!tr) return;
-  tr.style.fontSize = '';
-  if (!tr.clientHeight) return;                       // ana sayfa görünür değilse ölçülemez
-  const taban = parseFloat(getComputedStyle(tr).fontSize) || 16;
-  let boyut = taban;
-  for (let i = 0; i < 10 && tr.scrollHeight > tr.clientHeight + 1; i++) {
-    boyut -= 0.5;
-    if (boyut < taban * 0.76) { boyut = taban * 0.76; tr.style.fontSize = boyut + 'px'; break; }
-    tr.style.fontSize = boyut + 'px';
-  }
-  tr.scrollTop = 0;
-}
-window.hvAyetSigdir = hvAyetSigdir;
-let _hvSigdirZaman = null;
-window.addEventListener('resize', () => { clearTimeout(_hvSigdirZaman); _hvSigdirZaman = setTimeout(hvAyetSigdir, 150); });
 function loadDailyAyet() { hvAyetCiz(hvAyetSec(), false); }
 window.loadDailyAyet = loadDailyAyet;
 function nextDailyAyet() {
@@ -2039,7 +2021,6 @@ window.orucKazaAdjust = orucKazaAdjust;
 /* ══════════ FEATURE ROUTE KAYIT & BAŞLATMA ══════════ */
 try { if (document.readyState !== 'loading') renderHizliErisim(); else document.addEventListener('DOMContentLoaded', renderHizliErisim); } catch (e) {}
 window.FEATURE_ROUTES = {
-  'home': () => { if (typeof hvAyetSigdir === 'function') setTimeout(hvAyetSigdir, 0); },
   'onemli-sureler': renderOnemliSureler,
   'hac-umre': renderHacUmre,
   'namaz-nedir': renderNamazNedir,
