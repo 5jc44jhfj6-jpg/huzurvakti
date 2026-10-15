@@ -3623,3 +3623,15 @@ body.light-theme .nn-link { background: rgba(168,128,28,.10); color: #6b4a12; bo
 html.hv-buyuk .warm-home .daily-hadis-card { height: auto; min-height: 180px; }
 html.hv-buyuk .warm-home .daily-hadis-card #daily-verse-turkish { overflow: visible; }
 @media (max-width: 380px) { .warm-home .daily-hadis-card { height: auto; min-height: 180px; } .warm-home .daily-hadis-card #daily-verse-turkish { overflow: visible; } }   /* dar ekran (SE): sayfa zaten kayar, metin kesilmesin */
+
+
+/* ═══ v66.3 — Sabah ezanı özel saati + "Tamamını Dinle" ═══ */
+.sabah-saat-input { min-width: 110px; text-align: center; }
+.sabah-aralik { font-size: .76rem; color: var(--text-sub); padding: 2px 14px 10px; line-height: 1.45; }
+#notify-sabah-ozel-row.sabah-vurgu { box-shadow: 0 0 0 2px var(--gold); border-radius: 12px; transition: box-shadow .3s ease; }
+body.light-theme input[type="time"].select-input { background: #fff; color: #1f1408; border-color: rgba(168,128,28,.4); }
+.ez-tumu-kontrol { margin: 12px 0 14px; }
+.ez-tumu-durum { font-size: .82rem; color: var(--text-sub); text-align: center; min-height: 1em; }
+.ez-tp { border-radius: 8px; padding: 0 3px; transition: background .25s ease, box-shadow .25s ease; }
+.ez-tp.on { background: rgba(240,180,131,.28); box-shadow: 0 0 0 1px rgba(240,180,131,.5); }
+body.light-theme .ez-tp.on { background: rgba(201,107,42,.18); box-shadow: 0 0 0 1px rgba(201,107,42,.42); }

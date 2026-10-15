@@ -3626,7 +3626,7 @@ function hvEzSesNesnesi() {
   }
   return hvEzSes;
 }
-function hvEzSesDurdur() { try { if (hvEzSes) hvEzSes.pause(); } catch (e) {} hvEzKalan = 0; hvEzDugmeTazele(false); }
+function hvEzSesDurdur() { try { if (hvEzSes) hvEzSes.pause(); } catch (e) {} hvEzKalan = 0; hvEzDugmeTazele(false); try { hvEzTumuDurdur(true); } catch (e) {} }
 window.hvEzSesDurdur = hvEzSesDurdur;
 
 function hvEzDugmeTazele(caliyor) {
@@ -3726,15 +3726,105 @@ function hvEzTekilBirlestir(dizi) {
   return tekil.join(' ');
 }
 
+/* v66.3 — "Tamamını oku" ekranında da Dinle: sesi olan parçalar (sûreler, Kur'an'dan dualar)
+   sırayla, kesintisiz çalar; çalan parça Arapça metinde vurgulanır. */
+let hvEzTumuSes = null, hvEzTumuIdx = 0, hvEzTumuCalan = false, hvEzTumuDuraklatildi = false;
+
+function hvEzTumuDugme() {
+  const b = document.getElementById('ez-tumu-play');
+  if (!b) return;
+  b.innerHTML = hvEzTumuCalan ? '⏸ Durdur' : (hvEzTumuDuraklatildi ? '▶ Devam Et' : '🔊 Tamamını Dinle');
+}
+function hvEzTumuVurgu(i) {
+  document.querySelectorAll('.ez-tp.on').forEach(e => e.classList.remove('on'));
+  if (i < 0) return;
+  const e = document.getElementById('ez-tp-' + i);
+  if (!e) return;
+  e.classList.add('on');
+  try { e.scrollIntoView({ block: 'center', behavior: 'smooth' }); } catch (x) {}
+}
+function hvEzTumuDurdur(sifirla) {
+  hvEzTumuCalan = false;
+  try { if (hvEzTumuSes) hvEzTumuSes.pause(); } catch (e) {}
+  if (sifirla) {
+    hvEzTumuIdx = 0; hvEzTumuDuraklatildi = false;
+    try { if (hvEzTumuSes) { hvEzTumuSes.removeAttribute('src'); hvEzTumuSes.load(); } } catch (e) {}
+    hvEzTumuVurgu(-1);
+  }
+  hvEzTumuDugme();
+}
+function hvEzTumuNesne() {
+  if (hvEzTumuSes) return hvEzTumuSes;
+  hvEzTumuSes = new Audio();
+  hvEzTumuSes.addEventListener('ended', () => { if (hvEzTumuCalan) hvEzTumuParcaCal(hvEzTumuIdx + 1); });
+  hvEzTumuSes.addEventListener('error', () => {
+    if (!hvEzTumuCalan) return;
+    hvEzTumuCalan = false; hvEzTumuDuraklatildi = false;
+    hvEzTumuDugme();
+    const d = document.getElementById('ez-tumu-durum');
+    if (d) d.textContent = 'Ses yüklenemedi. İnternet bağlantını kontrol edip tekrar dene.';
+  });
+  return hvEzTumuSes;
+}
+function hvEzTumuParcaCal(i) {
+  const p = hvEzKayit && hvEzKayit.parcalar;
+  if (!p) return;
+  while (i < p.length && !p[i].ses) i++;          // sesi olmayan parçayı atla
+  if (i >= p.length) {                              // bitti
+    hvEzTumuCalan = false; hvEzTumuDuraklatildi = false; hvEzTumuIdx = 0;
+    hvEzTumuVurgu(-1); hvEzTumuDugme();
+    return;
+  }
+  hvEzTumuIdx = i;
+  const s = hvEzTumuNesne();
+  s.src = p[i].ses;
+  hvEzTumuCalan = true; hvEzTumuDuraklatildi = false;
+  const pr = s.play(); if (pr && pr.catch) pr.catch(() => {});
+  hvEzTumuVurgu(i);
+  hvEzTumuDugme();
+}
+function hvEzTumuCal() {
+  const d = document.getElementById('ez-tumu-durum');
+  if (hvEzTumuCalan) {                               // çalıyor → duraklat
+    hvEzTumuCalan = false; hvEzTumuDuraklatildi = true;
+    try { hvEzTumuSes.pause(); } catch (e) {}
+    hvEzTumuDugme();
+    return;
+  }
+  if (d) d.textContent = '';
+  if (hvEzTumuDuraklatildi && hvEzTumuSes && hvEzTumuSes.getAttribute('src')) {   // kaldığı yerden devam
+    hvEzTumuCalan = true; hvEzTumuDuraklatildi = false;
+    const pr = hvEzTumuSes.play(); if (pr && pr.catch) pr.catch(() => {});
+    hvEzTumuDugme();
+    return;
+  }
+  hvEzTumuParcaCal(0);
+}
+window.hvEzTumuCal = hvEzTumuCal;
+
 function hvEzTumu() {
   hvEzSesDurdur();
   const kutu = document.getElementById('ez-step');
   if (!kutu || !hvEzKayit) return;
+  const parcalar = hvEzKayit.parcalar;
+  const sesli = parcalar.some(p => p.ses);
+  // Her parçanın Arapçası farklıysa (sûreler, Kur'an'dan dualar) parça parça işaretlenir → çalanı vurgulanır
+  const ayri = parcalar.every(p => p.ar) && new Set(parcalar.map(p => p.ar)).size === parcalar.length;
+  const arHtml = ayri
+    ? parcalar.map((p, i) => `<span class="ez-tp" id="ez-tp-${i}">${p.ar}</span>`).join(' ')
+    : hvEzTekilBirlestir(parcalar.map(p => p.ar));
+  const dinle = sesli
+    ? `<div class="ez-controls ez-tumu-kontrol">
+         <button id="ez-tumu-play" class="ez-play" onclick="hvEzTumuCal()">🔊 Tamamını Dinle</button>
+         <div id="ez-tumu-durum" class="ez-tumu-durum"></div>
+       </div>`
+    : `<div class="ez-controls ez-tumu-kontrol"><div class="ez-nosound">Bu dua Kur'an'dan olmadığı için hazır ses kaydı yok — okunuşundan tekrar edin.</div></div>`;
   kutu.innerHTML = `
     <div class="ez-done-title">🎉 ${hvEzKayit.baslik} — tamamı</div>
-    <div class="ez-ar ez-ar-full">${hvEzTekilBirlestir(hvEzKayit.parcalar.map(p => p.ar))}</div>
-    <div class="ez-ok">${hvEzKayit.parcalar.map(p => p.ok).filter(Boolean).join(' ')}</div>
-    <div class="ez-tr">${hvEzTekilBirlestir(hvEzKayit.parcalar.map(p => p.tr))}</div>
+    ${dinle}
+    <div class="ez-ar ez-ar-full">${arHtml}</div>
+    <div class="ez-ok">${parcalar.map(p => p.ok).filter(Boolean).join(' ')}</div>
+    <div class="ez-tr">${hvEzTekilBirlestir(parcalar.map(p => p.tr))}</div>
     <div class="ez-nav">
       <button class="gold-outline-btn" onclick="hvEzGit(0)">↺ Baştan Başla</button>
       <button class="gold-primary-btn" onclick="renderEzber()">← Listeye Dön</button>

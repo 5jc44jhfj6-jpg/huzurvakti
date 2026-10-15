@@ -23,6 +23,8 @@ const APP_STATE = {
   notifyKandil: true,
   notifyAyet: true,      // v65.6: sabah Günün Âyeti bildirimi
   notifyAyetSaat: 8,     // saat (0-23)
+  sabahOzel: false,      // v66.3: sabah ezanı için kullanıcının kendi saati
+  sabahOzelSaat: '',     // 'HH:MM' (İmsak ile Güneş arasında)
   lightTheme: false,
   bigText: false,
   qari: 'afs'
@@ -159,6 +161,7 @@ function navigateTo(pageId) {
   if (pageId === 'qibla') {
     initQiblaCompass();
   }
+  if (pageId === 'settings') { try { hvSabahOzelUIYaz(); } catch (e) {} }
 
   // Lazy-initialise feature pages (defined in features.js)
   if (window.FEATURE_ROUTES && typeof window.FEATURE_ROUTES[pageId] === 'function') {
@@ -208,6 +211,8 @@ function saveSettings() {
     notifyKandil: APP_STATE.notifyKandil,
     notifyAyet: APP_STATE.notifyAyet,
     notifyAyetSaat: APP_STATE.notifyAyetSaat,
+    sabahOzel: APP_STATE.sabahOzel,
+    sabahOzelSaat: APP_STATE.sabahOzelSaat,
     lightTheme: APP_STATE.lightTheme,
     bigText: APP_STATE.bigText,
     qari: APP_STATE.qari,
@@ -259,6 +264,7 @@ function applyStateSettings() {
   if (notifyAyet) notifyAyet.checked = APP_STATE.notifyAyet !== false;
   const notifyAyetSaat = document.getElementById('notify-ayet-saat');
   if (notifyAyetSaat) notifyAyetSaat.value = String(parseInt(APP_STATE.notifyAyetSaat, 10) || 8);
+  try { hvSabahOzelUIYaz(); } catch (e) {}
 
   const settingsQariSelect = document.getElementById('settings-qari-select');
   if (settingsQariSelect) {
@@ -554,6 +560,73 @@ function hvClearNativeNotifications() {
 
 function hvPad2(n) { return String(n).padStart(2, '0'); }
 
+/* ── v66.3 — Sabah ezanı için kendi saatim ─────────────────────────────
+   Kullanıcı sabah namazı bildirimini İmsak ile Güneş arasında istediği saate
+   kurabilir (örn. 06:30). İmsak/Güneş her gün kaydığı için seçilen saat sabit
+   tutulur, o günün aralığına göre uyarlanır:
+     • İmsak'tan önceye denk gelirse → İmsak'a,
+     • Güneş'ten sonraya denk gelirse → Güneş'ten 5 dk öncesine çekilir. */
+function hvSabahDk(s) {
+  const p = String(s || '').split(':');
+  const h = parseInt(p[0], 10), m = parseInt(p[1], 10);
+  return (isNaN(h) || isNaN(m)) ? null : h * 60 + m;
+}
+function hvSabahDkYaz(dk) { return hvPad2(Math.floor(dk / 60)) + ':' + hvPad2(dk % 60); }
+function hvSabahOzelZaman(day, imsakStr, gunesStr, ozelStr) {
+  const im = hvSabahDk(imsakStr), gn = hvSabahDk(gunesStr), oz = hvSabahDk(ozelStr);
+  if (im === null || gn === null || oz === null || gn <= im) return null;
+  let dk = oz;
+  if (dk < im) dk = im;
+  if (dk >= gn) dk = Math.max(im, gn - 5);
+  const at = new Date(day);
+  at.setHours(Math.floor(dk / 60), dk % 60, 0, 0);
+  const kalan = gn - dk;
+  const body = kalan > 0 ? `Sabah namazı vakti. Güneşin doğmasına ${kalan} dakika var.` : 'Sabah namazı vakti.';
+  return { at: at, body: body };
+}
+// Bugünün (ince ayarlı) İmsak ve Güneş saatleri
+function hvSabahAralik() {
+  const t = APP_STATE.prayerTimes;
+  if (!t || !t.Fajr || !t.Sunrise) return null;
+  return { imsak: t.Fajr, gunes: t.Sunrise };
+}
+function hvSabahOzelUIYaz() {
+  const cb = document.getElementById('notify-sabah-ozel');
+  const blok = document.getElementById('notify-sabah-blok');
+  const inp = document.getElementById('notify-sabah-saat');
+  const ipucu = document.getElementById('notify-sabah-aralik');
+  const acik = !!APP_STATE.sabahOzel;
+  if (cb) cb.checked = acik;
+  if (blok) blok.style.display = acik ? '' : 'none';
+  if (inp && APP_STATE.sabahOzelSaat) inp.value = APP_STATE.sabahOzelSaat;
+  if (!ipucu) return;
+  const a = hvSabahAralik();
+  if (!a) { ipucu.textContent = 'Saat, İmsak ile Güneş arasında olmalı.'; return; }
+  let metin = `Bugünkü aralık: İmsak ${a.imsak} – Güneş ${a.gunes}.`;
+  const ozel = hvSabahDk(APP_STATE.sabahOzelSaat), im = hvSabahDk(a.imsak), gn = hvSabahDk(a.gunes);
+  if (ozel !== null && im !== null && gn !== null) {
+    if (ozel < im) metin += ` Seçtiğin saat bugün İmsak'tan önce kalıyor; o günlerde ezan İmsak'ta gelir.`;
+    else if (ozel >= gn) metin += ` Seçtiğin saat bugün Güneş'ten sonra kalıyor; o günlerde ezan Güneş'ten 5 dakika önce gelir.`;
+    else metin += ' Seçtiğin saatte gelecek.';
+  }
+  ipucu.textContent = metin;
+}
+window.hvSabahOzelUIYaz = hvSabahOzelUIYaz;
+
+// Alt paneldeki (Sabah) "Ayarla" düğmesi: Ayarlar'da ilgili satıra götürür
+function hvSabahOzelAyaraGit() {
+  try { closePrayerSheet(); } catch (e) {}
+  navigateTo('settings');
+  setTimeout(() => {
+    const r = document.getElementById('notify-sabah-ozel-row');
+    if (!r) return;
+    try { r.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch (e) { r.scrollIntoView(); }
+    r.classList.add('sabah-vurgu');
+    setTimeout(() => r.classList.remove('sabah-vurgu'), 2600);
+  }, 400);
+}
+window.hvSabahOzelAyaraGit = hvSabahOzelAyaraGit;
+
 // Önümüzdeki günlerin vakitlerini telefona bildirim olarak kurar
 function scheduleNativePrayerNotifications() {
   if (!hvHasNativeNotifications()) { updateNotifyStatusUI(0); return 0; }
@@ -591,8 +664,17 @@ function scheduleNativePrayerNotifications() {
       // kullanıcının vakit ince ayarını uygula → vaktin kendisi
       const adjusted = addMinutes(rawTime, parseInt(timeOffs[id], 10) || 0);
       const parts = adjusted.split(':');
-      const exactAt = new Date(day);
+      let exactAt = new Date(day);
       exactAt.setHours(parseInt(parts[0], 10), parseInt(parts[1], 10), 0, 0);
+
+      // v66.3 — Sabah namazı için kullanıcının kendi seçtiği saat (İmsak–Güneş arası)
+      let sabahOzelBody = null;
+      if (id === 'Fajr' && APP_STATE.sabahOzel && APP_STATE.sabahOzelSaat) {
+        const gunesHam = entry.t.Sunrise;
+        const gunesAyar = gunesHam ? addMinutes(gunesHam, parseInt(timeOffs.Sunrise, 10) || 0) : null;
+        const oz = hvSabahOzelZaman(day, adjusted, gunesAyar, APP_STATE.sabahOzelSaat);
+        if (oz) { exactAt = oz.at; sabahOzelBody = oz.body; }
+      }
 
       let label = (typeof PRAYER_NAMES !== 'undefined' && PRAYER_NAMES[id]) ? PRAYER_NAMES[id].name : id;
       if (ramazan && id === 'Maghrib') label = 'İftar';
@@ -610,7 +692,10 @@ function scheduleNativePrayerNotifications() {
       //  • "Hem önceden hem vaktinde" açıksa → önce hatırlatma (sessiz-ötesi kısa), sonra ezan
       //  • kapalıysa → tek bildirim (seçilen zamanda)
       const jobs = [];
-      if (both && early > 0) {
+      if (sabahOzelBody) {
+        // Kendi saatini seçmiş: tek bildirim, tam o saatte (öncesi/hatırlatma yok)
+        jobs.push({ sfx: '', at: exactAt, body: sabahOzelBody, sound: sound });
+      } else if (both && early > 0) {
         jobs.push({
           sfx: '_pre',
           at: new Date(exactAt.getTime() - early * 60000),
@@ -767,7 +852,7 @@ window.updateNotifyStatusUI = updateNotifyStatusUI;
 
 // Ayarlar → Geri Bildirim Gönder (doğrudan e-posta açar)
 function hvSendFeedback() {
-  const ver = 'v66.2';
+  const ver = 'v66.3';
   let ortam = 'Tarayıcı';
   try {
     if (window.hvIsAndroid) ortam = 'Android uygulaması';
@@ -1293,6 +1378,8 @@ function showPrayerTimeDetailsModal(prayerId, prayerName, timeStr) {
   if (tm) tm.textContent = timeStr;
   if (st) st.textContent = msg;
   if (cb) cb.checked = getPrayerAdhan(prayerId);
+  const sbr = document.getElementById('sheet-sabah-satir');
+  if (sbr) sbr.style.display = (prayerId === 'Fajr') ? 'flex' : 'none';
   sheet.style.display = 'flex';
   requestAnimationFrame(() => sheet.classList.add('open'));
 }
@@ -1660,7 +1747,50 @@ function initQiblaCompass() {
 function hvPusulaDurdur() {
   try { window.removeEventListener('deviceorientation', handleOrientationEvent, true); } catch (e) {}
   try { window.removeEventListener('deviceorientationabsolute', handleOrientationEvent, true); } catch (e) {}
+  hvPusulaNativeDurdur();
 }
+
+/* v66.3 — Android: yön, WebView'in tarayıcı olayları yerine telefonun kendi sensöründen
+   (Android kabuğu 1.3.3+) okunur. Bazı telefonlarda WebView yön olayı hiç gelmiyor ya da
+   göreceli geliyordu → pusula çalışmıyordu. Eski kabukta (1.3.2) ya da native sensör
+   3 sn içinde yön vermezse eski tarayıcı yolu devreye girer. */
+let hvPusulaNativeAlindi = false;
+let hvPusulaNativeZamanlayici = null;
+let hvPusulaKalibUyarildi = false;
+function hvPusulaNativeVar() {
+  try { return !!(window.hvIsAndroid && window.NamazDostuBridge && typeof window.NamazDostuBridge.startCompass === 'function'); } catch (e) { return false; }
+}
+function hvPusulaNativeBaslat() {
+  if (!hvPusulaNativeVar()) return false;
+  try { return !!window.NamazDostuBridge.startCompass(); } catch (e) { return false; }
+}
+function hvPusulaNativeDurdur() {
+  if (hvPusulaNativeZamanlayici) { clearTimeout(hvPusulaNativeZamanlayici); hvPusulaNativeZamanlayici = null; }
+  hvPusulaNativeAlindi = false;
+  hvPusulaKalibUyarildi = false;
+  try { if (hvPusulaNativeVar() && typeof window.NamazDostuBridge.stopCompass === 'function') window.NamazDostuBridge.stopCompass(); } catch (e) {}
+}
+function hvPusulaWebSensorBaslat() {
+  if ('ondeviceorientationabsolute' in window) {
+    window.addEventListener('deviceorientationabsolute', handleOrientationEvent, true);
+  } else if (window.DeviceOrientationEvent) {
+    window.addEventListener('deviceorientation', handleOrientationEvent, true);
+  }
+}
+// Android kabuğu çağırır: deg = manyetik kuzeye göre yön (0-360), acc = sensör doğruluğu (0-3)
+window.hvNativeHeading = function (deg, acc) {
+  if (isDraggingCompass) return;
+  deg = Number(deg);
+  if (isNaN(deg)) return;
+  hvPusulaNativeAlindi = true;
+  const u = APP_STATE.userLocation || {};
+  const h = (deg + hvManyetikSapma(u.lat, u.lng) + 360) % 360;   // manyetik → gerçek kuzey
+  hvPusulaIsle(h, true);
+  if (acc != null && Number(acc) <= 1 && !hvPusulaKalibUyarildi) {
+    hvPusulaKalibUyarildi = true;
+    try { showToastNotification('🧭 Pusula kalibrasyonu', 'Telefonu havada 8 çizer gibi birkaç kez çevirin.'); } catch (e) {}
+  }
+};
 window.hvPusulaDurdur = hvPusulaDurdur;
 
 /* Düğmeye dokunuş = kullanıcı hareketi → iOS izni tam burada istenebilir.
@@ -1849,10 +1979,16 @@ function startCompassSensors(isAutoStart = false) {
     }
   } else {
     hvPusulaDurdur();
-    if ('ondeviceorientationabsolute' in window) {
-      window.addEventListener('deviceorientationabsolute', handleOrientationEvent, true);
-    } else if (window.DeviceOrientationEvent) {
-      window.addEventListener('deviceorientation', handleOrientationEvent, true);
+    if (hvPusulaNativeBaslat()) {
+      // Android kabuğu: telefonun sensörü. 3 sn içinde yön gelmezse tarayıcı sensörüne dön.
+      hvPusulaNativeZamanlayici = setTimeout(() => {
+        hvPusulaNativeZamanlayici = null;
+        if (hvPusulaNativeAlindi) return;
+        try { window.NamazDostuBridge.stopCompass(); } catch (e) {}
+        hvPusulaWebSensorBaslat();
+      }, 3000);
+    } else {
+      hvPusulaWebSensorBaslat();
     }
     if (btn) btn.innerHTML = "✅ CANLI SENSÖR AKTİF";
     if (status) status.innerHTML = "✅ <b>Pusula sensörü aktif!</b> Telefonunuzu çevirin veya parmağınızla yönü ayarlayın.";
@@ -1956,6 +2092,11 @@ function handleOrientationEvent(e) {
     }
   }
 
+  hvPusulaIsle(compassHeading, mutlak);
+}
+
+// Ortak: bulunan yönü yumuşatıp ekrana yansıtır (tarayıcı olayı da, Android native sensör de buraya gelir)
+function hvPusulaIsle(compassHeading, mutlak) {
   if (compassHeading == null || isNaN(compassHeading)) return;
   compassHeading = ((compassHeading % 360) + 360) % 360;
 
@@ -2865,6 +3006,46 @@ function setupSettingsListeners() {
       e.target.checked ? '🔔 Çift bildirim açık' : '🔔 Tek bildirim',
       e.target.checked ? 'Hem önceden hatırlatma hem vakit girince ezan gelecek.' : 'Sadece seçtiğin zamanda bildirim gelecek.'
     );
+  });
+
+  // v66.3: Sabah ezanı için kendi saatim
+  document.getElementById('notify-sabah-ozel')?.addEventListener('change', (e) => {
+    APP_STATE.sabahOzel = e.target.checked;
+    if (e.target.checked && !APP_STATE.sabahOzelSaat) {
+      // Varsayılan: bugünkü İmsak + 30 dk (Güneş'ten önce kalacak şekilde)
+      const a = hvSabahAralik();
+      const im = a ? hvSabahDk(a.imsak) : null, gn = a ? hvSabahDk(a.gunes) : null;
+      APP_STATE.sabahOzelSaat = (im !== null && gn !== null) ? hvSabahDkYaz(Math.max(im, Math.min(im + 30, gn - 10))) : '05:30';
+    }
+    if (e.target.checked && !APP_STATE.notifyEnabled) {
+      // Özel saat bildirim gerektirir: vakit bildirimleri kapalıysa aç
+      APP_STATE.notifyEnabled = true;
+      if (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers['push-permission-request']) {
+        try { window.webkit.messageHandlers['push-permission-request'].postMessage(''); } catch (err) {}
+      }
+    }
+    saveSettings();
+    try { applyStateSettings(); } catch (err) {}
+    setTimeout(scheduleNativePrayerNotifications, 300);
+    showToastNotification(
+      e.target.checked ? '🌅 Sabah ezanı kendi saatinde' : '🌅 Sabah ezanı İmsak vaktinde',
+      e.target.checked ? `Sabah namazı bildirimi her gün ${APP_STATE.sabahOzelSaat}'de gelecek.` : 'Sabah bildirimi yine İmsak vaktinde gelecek.'
+    );
+  });
+  document.getElementById('notify-sabah-saat')?.addEventListener('change', (e) => {
+    const v = String(e.target.value || '');
+    if (!/^\d{2}:\d{2}$/.test(v)) return;
+    APP_STATE.sabahOzelSaat = v;
+    saveSettings();
+    hvSabahOzelUIYaz();
+    setTimeout(scheduleNativePrayerNotifications, 300);
+    const a = hvSabahAralik();
+    const dk = hvSabahDk(v);
+    let mesaj = `Sabah namazı bildirimi her gün ${v}'de gelecek.`;
+    if (a && dk !== null && (dk < hvSabahDk(a.imsak) || dk >= hvSabahDk(a.gunes))) {
+      mesaj = `Bugünkü aralık ${a.imsak}–${a.gunes}. ${v} bu aralığın dışında kalan günlerde ezan en yakın uygun saate çekilir.`;
+    }
+    showToastNotification('🌅 Sabah ezanı saati', mesaj);
   });
 
   document.getElementById('notify-kandil')?.addEventListener('change', (e) => {
