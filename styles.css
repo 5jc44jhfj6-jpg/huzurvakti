@@ -1,4 +1,5 @@
-@import url('https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&family=Outfit:wght@300;400;500;600;700&display=swap');
+/* v66.4: Google Fonts @import kaldırıldı — yazı tipleri index.html'de sayfa açıldıktan sonra yükleniyor
+   (@import sayfanın çizilmesini bekletiyordu; yavaş Wi-Fi'de uygulama açılmıyordu). */
 
 :root {
   --bg-main: #040d0a;
@@ -2637,14 +2638,15 @@ body.te-modda #bottom-nav, body.te-modda #app-header, body.te-modda header { dis
   box-shadow:0 18px 50px rgba(0,0,0,.55); text-align:center; }
 .kn-rozet { width:56px; height:56px; line-height:56px; margin:0 auto 10px;
   border-radius:50%; background:rgba(212,175,55,.16); font-size:1.6rem; }
-.kn-kart h3 { margin:0 0 6px; color:var(--gold-light); font-size:1.15rem; }
-.kn-alt { margin:0 0 16px; color:var(--text-muted); font-size:.86rem; line-height:1.5; }
+.kn-kart h3 { margin:0 0 8px; color:var(--gold-light); font-size:1.4rem; font-weight:700; }
+.kn-alt { margin:0 0 16px; color:var(--text-primary); opacity:.9; font-size:1rem; line-height:1.55; }
+.kn-alt b { color:var(--gold-light); font-weight:700; }
 
 .kn-gps { width:100%; height:50px; border-radius:25px; border:none; cursor:pointer;
   background:var(--gold); color:#1a0e05; font-size:.95rem; font-weight:700;
   font-family:inherit; }
 .kn-gps:disabled { opacity:.5; }
-.kn-durum { min-height:18px; margin:8px 0 0; font-size:.8rem; color:var(--text-muted); }
+.kn-durum { min-height:18px; margin:8px 0 0; font-size:.9rem; color:var(--text-muted); }
 .kn-durum.bekle { color:var(--gold-light); }
 .kn-durum.uyari { color:#e0a355; }
 
@@ -2653,32 +2655,34 @@ body.te-modda #bottom-nav, body.te-modda #app-header, body.te-modda header { dis
 .kn-ayrac::before, .kn-ayrac::after { content:''; flex:1 1 auto; height:1px;
   background:var(--border-light); }
 
-.kn-ara { display:flex; align-items:center; gap:8px; padding:0 12px; height:46px;
-  border-radius:23px; background:var(--bg-deep, rgba(0,0,0,.25));
-  border:1px solid var(--border-light); }
-.kn-ara:focus-within { border-color:var(--gold); }
-.kn-ara span { opacity:.75; flex:0 0 auto; }
-.kn-ara input { flex:1 1 auto; min-width:0; height:44px; border:none; outline:none;
-  background:transparent; color:var(--text-primary); font-size:.92rem;
+/* v66.4: daha okunaklı arama ve liste (iOS'ta 16px altı yazı odaklanınca ekranı büyütüyordu) */
+.kn-ara { display:flex; align-items:center; gap:10px; padding:0 14px; height:54px;
+  border-radius:27px; background:var(--bg-deep, rgba(0,0,0,.25));
+  border:1.5px solid rgba(212,175,55,.45); }
+.kn-ara:focus-within { border-color:var(--gold); box-shadow:0 0 0 3px rgba(212,175,55,.18); }
+.kn-ara span { opacity:.9; flex:0 0 auto; font-size:1.1rem; }
+.kn-ara input { flex:1 1 auto; min-width:0; height:50px; border:none; outline:none;
+  background:transparent; color:var(--text-primary); font-size:1.06rem; font-weight:500;
   font-family:inherit; -webkit-appearance:none; }
+.kn-ara input::placeholder { color:var(--text-muted); opacity:.95; }
 .kn-ara input::-webkit-search-cancel-button { display:none; }
 
-.kn-liste { margin-top:10px; max-height:230px; overflow-y:auto;
-  -webkit-overflow-scrolling:touch; border-radius:14px;
-  border:1px solid var(--border-light); text-align:left; }
-.kn-baslik { padding:9px 13px; color:var(--gold); font-size:.72rem; font-weight:700;
-  letter-spacing:.4px; border-bottom:1px solid var(--border-light); }
-.kn-sat { display:flex; align-items:baseline; gap:8px; width:100%; cursor:pointer;
-  padding:11px 13px; background:transparent; border:none; text-align:left;
+.kn-liste { margin-top:12px; max-height:min(46vh, 340px); overflow-y:auto;
+  -webkit-overflow-scrolling:touch; border-radius:16px;
+  border:1px solid rgba(212,175,55,.28); text-align:left; }
+.kn-baslik { padding:11px 15px; color:var(--gold-light); font-size:.86rem; font-weight:700;
+  letter-spacing:.3px; border-bottom:1px solid var(--border-light); }
+.kn-sat { display:flex; align-items:center; gap:10px; width:100%; cursor:pointer;
+  min-height:54px; padding:12px 15px; background:transparent; border:none; text-align:left;
   border-bottom:1px solid var(--border-light); font-family:inherit; }
 .kn-sat:last-child { border-bottom:none; }
-.kn-sat:active { background:rgba(212,175,55,.14); }
-.kn-ilce { flex:1 1 auto; color:var(--text-primary); font-size:.92rem; }
-.kn-il { flex:0 0 auto; color:var(--text-muted); font-size:.76rem; }
-.kn-yok { padding:16px 13px; color:var(--text-muted); font-size:.84rem; text-align:center; }
+.kn-sat:active { background:rgba(212,175,55,.16); }
+.kn-ilce { flex:1 1 auto; color:var(--text-primary); font-size:1.1rem; font-weight:600; }
+.kn-il { flex:0 0 auto; color:var(--gold-light); font-size:.92rem; font-weight:500; opacity:.95; }
+.kn-yok { padding:18px 15px; color:var(--text-primary); opacity:.85; font-size:1rem; text-align:center; }
 
-.kn-sonra { margin-top:12px; padding:10px 16px; border:none; background:transparent;
-  color:var(--text-muted); font-size:.82rem; cursor:pointer;
+.kn-sonra { margin-top:14px; padding:12px 18px; border:none; background:transparent;
+  color:var(--text-muted); font-size:.95rem; cursor:pointer;
   text-decoration:underline; font-family:inherit; }
 
 /* ── v63.9 — Günün Âyeti kartı ────────────────────────────────────────
@@ -3623,3 +3627,100 @@ body.light-theme .nn-link { background: rgba(168,128,28,.10); color: #6b4a12; bo
 html.hv-buyuk .warm-home .daily-hadis-card { height: auto; min-height: 180px; }
 html.hv-buyuk .warm-home .daily-hadis-card #daily-verse-turkish { overflow: visible; }
 @media (max-width: 380px) { .warm-home .daily-hadis-card { height: auto; min-height: 180px; } .warm-home .daily-hadis-card #daily-verse-turkish { overflow: visible; } }   /* dar ekran (SE): sayfa zaten kayar, metin kesilmesin */
+
+/* ── v66.4 — Dua & Sure Öğren: hoca seçimi, tam görünüm, Tamamını Dinle ── */
+.og-qari { display:inline-flex; align-items:center; gap:6px; max-width:100%;
+  border:1px solid var(--border-gold); border-radius:20px; padding:0 4px 0 12px; height:40px;
+  background:var(--bg-card); }
+.og-qari-et { font-size:.8rem; font-weight:700; color:var(--gold-light); white-space:nowrap; }
+.og-qari select { min-width:0; max-width:220px; height:36px; border:none; outline:none; background:transparent;
+  color:var(--text-main, var(--text-primary)); font-size:.88rem; font-weight:600; font-family:inherit;
+  text-overflow:ellipsis; -webkit-appearance:none; appearance:none; padding:0 18px 0 4px;
+  background-image:linear-gradient(45deg, transparent 50%, var(--gold) 50%), linear-gradient(135deg, var(--gold) 50%, transparent 50%);
+  background-position:calc(100% - 9px) 52%, calc(100% - 4px) 52%; background-size:5px 5px, 5px 5px; background-repeat:no-repeat; }
+.og-qari select option { color:#111; }
+.og-yedek-not { margin:10px 0 4px; padding:8px 12px; border-radius:10px; font-size:.8rem; line-height:1.5;
+  color:var(--text-sub); background:rgba(212,175,55,.08); border:1px dashed rgba(212,175,55,.3); text-align:left; }
+
+.ez-hoca-ust { display:flex; justify-content:center; margin:2px 0 12px; }
+.ez-secim-satir { display:flex; flex-wrap:wrap; align-items:center; justify-content:center; gap:8px; margin-top:12px; }
+.ez-gorunum { margin:0; padding:3px; flex:0 0 auto; }
+.ez-gorunum .seg-btn { padding:7px 14px; font-size:.84rem; flex:0 0 auto; }
+.ez-hoca-kutu:empty { display:none; }
+
+.ez-tam-arac { display:flex; justify-content:center; margin-bottom:6px; }
+.ez-tam-cal { min-width:220px; font-size:1.05rem; padding:12px 26px; border-radius:24px; }
+.ez-tam-cal.on { background:rgba(212,175,55,.2); color:var(--gold-light); border:1px solid var(--gold); }
+.ez-tam-liste { display:flex; flex-direction:column; gap:10px; margin:12px 0 16px; }
+.ez-tam-satir { border:1px solid var(--border-light); border-radius:12px; padding:10px 12px 4px;
+  background:rgba(0,0,0,.12); transition:background .25s ease, border-color .25s ease; scroll-margin:90px; }
+.ez-tam-satir.ez-caliyor { background:rgba(212,175,55,.14); border-color:var(--gold); box-shadow:0 0 0 2px rgba(212,175,55,.18); }
+.ez-tam-ust { display:flex; align-items:center; justify-content:space-between; margin-bottom:2px; }
+.ez-tam-no { min-width:26px; height:26px; line-height:26px; padding:0 8px; border-radius:13px; text-align:center;
+  background:rgba(212,175,55,.16); color:var(--gold-light); font-size:.74rem; font-weight:700; }
+.ez-tam-tek { width:38px; height:38px; border-radius:50%; border:1px solid var(--border-gold); background:transparent;
+  color:var(--gold-light); font-size:1rem; cursor:pointer; }
+.ez-tam-satir .ez-ar { font-size:1.6rem; margin-bottom:8px; }
+.ez-tam-satir .ez-ok { margin-bottom:6px; }
+.ez-tam-satir .ez-tr { margin-bottom:8px; font-size:.86rem; }
+.ez-tam-besmele .ez-ar { font-size:1.4rem; }
+.ez-tam-blok .ez-ar-full { margin-bottom:12px; }
+.ez-tam-ok { display:flex; flex-direction:column; gap:6px; margin-bottom:12px; }
+.ez-tam-ok-satir { color:var(--gold); font-size:1rem; line-height:1.7; text-align:center; font-style:italic; }
+.sd-hoca-satir { display:flex; justify-content:center; margin-top:10px; }
+#sd-yedek-not:empty { display:none; }
+.light-theme .ez-tam-satir { background:rgba(255,255,255,.55); }
+.light-theme .og-qari select option { color:#111; }
+
+/* ── v66.4 — Sabah ezanı alarmı ── */
+.sa-saat { max-width:140px; text-align:center; font-size:1.05rem; font-weight:700; letter-spacing:.5px; }
+.sa-bilgi { padding:4px 14px 10px; font-size:.82rem; line-height:1.65; color:var(--text-sub); }
+.sa-bilgi b { color:var(--gold-light); }
+.sa-uyari { color:#e0a355; }
+.sa-not { color:var(--text-muted); font-size:.76rem; }
+#sabah-ezani-grup { transition: box-shadow .4s ease; border-radius:16px; }
+#sabah-ezani-grup.sa-vurgu { box-shadow:0 0 0 2px var(--gold), 0 0 22px rgba(212,175,55,.35); }
+.sheet-sabah-durum { display:block; font-size:.76rem; color:rgba(42,26,16,.62); font-weight:500; margin-top:2px; }
+
+/* v66.4 — --text-primary hiç tanımlanmamıştı: düğme/giriş içindeki yazılar (konum
+   sihirbazı listesi, Mushaf arama sonuçları vb.) koyu zeminde SİYAH görünüyordu.
+   Artık temanın ana yazı rengine bağlı (gündüz temasında koyu, gecede açık). */
+body { --text-primary: var(--text-main); }
+
+/* ── v66.4 — Dua & Sure Öğren tam görünüm: hepsi tek sayfada, kesintisiz ── */
+.ez-tam-kart { margin:10px 0 16px; padding:4px 2px 0; }
+.ez-tk-besmele { font-family:'Amiri Quran','Amiri',serif; direction:rtl; text-align:center;
+  color:var(--gold-light); font-size:1.45rem; line-height:2; margin-bottom:4px; border-radius:8px; cursor:pointer; }
+.ez-tk-ar { font-family:'Amiri Quran','Amiri',serif; direction:rtl; text-align:center;
+  color:var(--gold-light); font-size:1.7rem; line-height:2.3; word-spacing:.04em; }
+.ez-a { cursor:pointer; border-radius:8px; padding:0 2px; transition:background .2s;
+  -webkit-box-decoration-break:clone; box-decoration-break:clone; }
+.ez-a.ez-caliyor, .ez-tk-besmele.ez-caliyor { background:rgba(212,175,55,.17); }
+.ez-ayno { font-size:.6em; color:var(--gold); border:1px solid var(--gold); border-radius:50%;
+  display:inline-block; min-width:1.65em; line-height:1.6; text-align:center; margin:0 .22em; vertical-align:middle; }
+.ez-w { transition:color .15s ease; }
+.ez-w.gecti { color:var(--text-main); }
+.ez-tk-baslik { display:flex; align-items:center; gap:10px; margin:16px 0 8px; color:var(--gold);
+  font-size:.78rem; font-weight:700; letter-spacing:.5px; text-transform:uppercase; }
+.ez-tk-baslik::before, .ez-tk-baslik::after { content:''; flex:1 1 auto; height:1px; background:var(--border-light); }
+.ez-tk-ok { color:var(--gold); font-size:1.04rem; line-height:1.9; font-style:italic; text-align:center; }
+.ez-tk-tr { color:var(--text-sub); font-size:.93rem; line-height:1.8; text-align:center; }
+.ez-o, .ez-m { border-radius:6px; padding:1px 2px; transition:background .2s, color .2s;
+  -webkit-box-decoration-break:clone; box-decoration-break:clone; }
+.ez-o { cursor:pointer; }
+.ez-o.ez-caliyor, .ez-m.ez-caliyor { background:rgba(212,175,55,.17); color:var(--gold-light); }
+.ez-tk-ok sup, .ez-tk-tr sup { font-size:.62em; color:var(--gold); font-style:normal; font-weight:700; margin-right:2px; }
+.ez-tk-ipucu { text-align:center; font-size:.75rem; color:var(--text-muted); margin-top:6px; }
+.ez-step .ez-tam-arac + .ez-tk-ipucu { margin-bottom:2px; }
+#page-ezber .ez-secim-satir { margin-top:8px; }
+
+/* v66.4 (kullanıcı isteği): Arapça küçük, okunuş belirgin — tam görünüm ve parça parça */
+.ez-tk-besmele { font-size:1.12rem; line-height:1.9; }
+.ez-tk-ar { font-size:1.22rem; line-height:2.05; opacity:.92; }
+.ez-tk-ok { color:var(--text-main); font-size:1.24rem; line-height:1.85; font-style:normal; font-weight:600; }
+.ez-o.ez-caliyor { color:var(--text-main); }
+.ez-ow { transition:color .15s ease; }
+.ez-ow.gecti { color:var(--gold); }
+.ez-step .ez-ar { font-size:1.3rem; line-height:2; margin-bottom:10px; }
+.ez-step .ez-ar-full { font-size:1.15rem; }
+.ez-step .ez-ok { color:var(--text-main); font-size:1.24rem; font-weight:600; font-style:normal; line-height:1.7; margin-bottom:12px; }

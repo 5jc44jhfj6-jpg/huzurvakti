@@ -5,10 +5,29 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Namaz Dostu - Namaz Vakitleri, Ezan & Kuran</title>
 
-    <!-- Google Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <!-- Google Fonts
+         v66.4: yazı tipleri sayfa AÇILDIKTAN SONRA yüklenir. Eskiden sayfanın
+         başında bekletiliyordu; Google'a yavaş/takılan bir Wi-Fi'de uygulama
+         açılış ekranında kalıyordu. Yazı tipi gelene kadar telefonun kendi
+         yazısı görünür, gelince yerine geçer (bir kez indikten sonra önbellekten). -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&family=Amiri+Quran&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+      (function () {
+        var adres = 'https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&family=Amiri+Quran&family=Outfit:wght@300;400;500;600;700&display=swap';
+        function yukle() {
+          if (document.getElementById('hv-yazitipi')) return;
+          var l = document.createElement('link');
+          l.id = 'hv-yazitipi';
+          l.rel = 'stylesheet';
+          l.crossOrigin = 'anonymous';
+          l.href = adres;
+          document.head.appendChild(l);
+        }
+        if (document.readyState === 'complete') yukle();
+        else window.addEventListener('load', function () { setTimeout(yukle, 0); });
+      })();
+    </script>
 
     <!-- PWA -->
     <link rel="manifest" href="manifest.json">
@@ -16,18 +35,18 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Namaz Dostu">
-    <link rel="apple-touch-icon" href="apple-touch-icon.png?v=66.2.0">
-    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png?v=66.2.0">
+    <link rel="apple-touch-icon" href="apple-touch-icon.png?v=66.4.0">
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png?v=66.4.0">
     <meta name="description" content="Namaz Dostu: Namaz vakitleri, ezan, Kur'an-ı Kerim, kıble, dualar, zikirmatik ve yeni başlayanlar için adım adım namaz rehberi. Ücretsiz, reklamsız, çevrimdışı.">
 
-    <link rel="stylesheet" href="styles.css?v=66.2.0">
-    <script>window.HV_SURUM = '66.2.0';</script>
-    <script src="cities.js?v=66.2.0" defer></script>
-    <script src="data.js?v=66.2.0" defer></script>
-    <script src="content.js?v=66.2.0" defer></script>
-    <script src="hadisler.js?v=66.2.0" defer></script>
-    <script src="app.js?v=66.2.0" defer></script>
-    <script src="features.js?v=66.2.0" defer></script>
+    <link rel="stylesheet" href="styles.css?v=66.4.0">
+    <script>window.HV_SURUM = '66.4.0';</script>
+    <script src="cities.js?v=66.4.0" defer></script>
+    <script src="data.js?v=66.4.0" defer></script>
+    <script src="content.js?v=66.4.0" defer></script>
+    <script src="hadisler.js?v=66.4.0" defer></script>
+    <script src="app.js?v=66.4.0" defer></script>
+    <script src="features.js?v=66.4.0" defer></script>
 </head>
 <body class="dark-theme">
     <!-- Loading Screen -->
@@ -1015,18 +1034,56 @@
                             <div style="font-size: 0.75rem; color: var(--text-sub); margin-top: 8px; padding: 0 14px 12px;">* Bildirim gelmiyorsa telefon Ayarlar → Bildirimler → Namaz Dostu'dan izni aç. Ses seçimi "Gerçek Ezan" ise uygulama kapalıyken de ezan sesiyle bildirim gelir.</div>
                         </div>
                     </div>
+                    <!-- v66.4: Sabah ezanı alarmı -->
+                    <div class="settings-group" id="sabah-ezani-grup">
+                        <div class="group-title">⏰ Sabah Ezanı Alarmı</div>
+                        <div class="settings-card-box">
+                            <div class="setting-row" style="display: flex; justify-content: space-between; align-items: center;">
+                                <label for="sabah-alarm-toggle" style="margin: 0; font-weight: 600;">Sabah ezanıyla uyan
+                                    <span style="display:block;font-weight:400;font-size:.78rem;color:var(--text-sub);margin-top:3px;">Seçtiğin saatte ezan sesiyle bildirim gelir — uygulama kapalıyken de. Saat, o günün İmsak ile Güneş arasına sığdırılır.</span>
+                                </label>
+                                <label class="switch">
+                                    <input type="checkbox" id="sabah-alarm-toggle">
+                                    <span class="slider round"></span>
+                                </label>
+                            </div>
+                            <div class="setting-row" id="sabah-alarm-saat-row">
+                                <label for="sabah-alarm-saat">Alarm Saati</label>
+                                <input type="time" id="sabah-alarm-saat" class="select-input sa-saat" value="06:30" step="60">
+                            </div>
+                            <div id="sabah-alarm-bilgi" class="sa-bilgi"></div>
+                            <div class="backup-row">
+                                <button class="gold-outline-btn" onclick="testAdhanSound()">🔊 Ezan sesini dinle</button>
+                            </div>
+                        </div>
+                    </div>
 
                     <div class="settings-group">
                         <div class="group-title">🎙️ Ses ve Okuma</div>
                         <div class="settings-card-box">
                             <div class="setting-row">
-                                <label for="settings-qari-select">Hafız (Kuran Oku, Dinle, Dua Öğren)</label>
+                                <label for="settings-qari-select">Hafız (Kuran Oku, Kuran Dinle)</label>
                                 <select id="settings-qari-select" class="select-input">
                                     <option value="husr">Mahmud Halil el-Husarî</option>
                                     <option value="afs">Mishary Rashid Alafasy</option>
                                     <option value="minsh">Muhammed Sıddık el-Minşâvî</option>
                                     <option value="yasser">Yâsir ed-Devserî</option>
                                     <option value="alfaqih">Muhammed el-Fakih</option>
+                                    <option value="mousa">Abdullah el-Mûsâ</option>
+                                    <option value="basit">Abdülbâsıt Abdüssamed</option>
+                                    <option value="sds">Abdurrahman es-Sudeys</option>
+                                    <option value="s_gmd">Saad el-Ğâmidî</option>
+                                    <option value="maher">Mâhir el-Muaykılî</option>
+                                </select>
+                            </div>
+                            <div class="setting-row">
+                                <label for="settings-ogren-qari-select">Dua &amp; Sure Öğren hocası</label>
+                                <select id="settings-ogren-qari-select" class="select-input">
+                                    <option value="alfaqih">Muhammed el-Fakih</option>
+                                    <option value="husr">Mahmud Halil el-Husarî</option>
+                                    <option value="afs">Mishary Rashid Alafasy</option>
+                                    <option value="minsh">Muhammed Sıddık el-Minşâvî</option>
+                                    <option value="yasser">Yâsir ed-Devserî</option>
                                     <option value="mousa">Abdullah el-Mûsâ</option>
                                     <option value="basit">Abdülbâsıt Abdüssamed</option>
                                     <option value="sds">Abdurrahman es-Sudeys</option>
@@ -1091,7 +1148,7 @@
                     </div>
                     <div class="app-info-footer">
                         <div class="footer-logo">🕌</div>
-                        <div class="footer-ver">Namaz Dostu v66.2</div>
+                        <div class="footer-ver">Namaz Dostu v66.4</div>
                         <div style="font-size: 0.8rem; margin-top: 4px;">Tüm Hakları Saklıdır • Diyanet Uyumlu • Çevrimdışı Çalışır</div>
                     </div>
                 </div>
@@ -1124,6 +1181,10 @@
                     <span class="toggle-slider"></span>
                 </label>
             </div>
+            <div id="sheet-sabah-satir" class="sheet-row" style="display:none;">
+                <span class="sheet-row-label">⏰ Sabah ezanı alarmı <small id="sheet-sabah-durum" class="sheet-sabah-durum"></small></span>
+                <button class="sheet-btn" style="flex:0 0 auto;padding:8px 16px;" onclick="hvSabahAlarmaGit()">Ayarla</button>
+            </div>
             <div class="sheet-actions">
                 <button class="sheet-btn primary" onclick="setPrayerReminder()">Hatırlatıcı kur</button>
                 <button class="sheet-btn" onclick="closePrayerSheet()">Kapat</button>
@@ -1137,7 +1198,7 @@
     <script>
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
-          navigator.serviceWorker.register('/sw.js?v=66.2.0')
+          navigator.serviceWorker.register('/sw.js?v=66.4.0')
             .then(reg => {
               reg.onupdatefound = () => {
                 const installingWorker = reg.installing;

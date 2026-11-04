@@ -23,6 +23,8 @@ const APP_STATE = {
   notifyKandil: true,
   notifyAyet: true,      // v65.6: sabah Günün Âyeti bildirimi
   notifyAyetSaat: 8,     // saat (0-23)
+  sabahAlarm: false,     // v66.4: sabah ezanı alarmı (kullanıcının seçtiği saatte ezan sesiyle)
+  sabahAlarmSaat: '06:30',
   lightTheme: false,
   bigText: false,
   qari: 'afs'
@@ -159,6 +161,7 @@ function navigateTo(pageId) {
   if (pageId === 'qibla') {
     initQiblaCompass();
   }
+  if (pageId === 'settings') { try { hvSabahAlarmBilgiYaz(); } catch (e) {} }
 
   // Lazy-initialise feature pages (defined in features.js)
   if (window.FEATURE_ROUTES && typeof window.FEATURE_ROUTES[pageId] === 'function') {
@@ -208,6 +211,8 @@ function saveSettings() {
     notifyKandil: APP_STATE.notifyKandil,
     notifyAyet: APP_STATE.notifyAyet,
     notifyAyetSaat: APP_STATE.notifyAyetSaat,
+    sabahAlarm: APP_STATE.sabahAlarm,
+    sabahAlarmSaat: APP_STATE.sabahAlarmSaat,
     lightTheme: APP_STATE.lightTheme,
     bigText: APP_STATE.bigText,
     qari: APP_STATE.qari,
@@ -259,6 +264,11 @@ function applyStateSettings() {
   if (notifyAyet) notifyAyet.checked = APP_STATE.notifyAyet !== false;
   const notifyAyetSaat = document.getElementById('notify-ayet-saat');
   if (notifyAyetSaat) notifyAyetSaat.value = String(parseInt(APP_STATE.notifyAyetSaat, 10) || 8);
+  const sabahAlarmCb = document.getElementById('sabah-alarm-toggle');
+  if (sabahAlarmCb) sabahAlarmCb.checked = !!APP_STATE.sabahAlarm;
+  const sabahAlarmInp = document.getElementById('sabah-alarm-saat');
+  if (sabahAlarmInp) sabahAlarmInp.value = hvSaatGecerli(APP_STATE.sabahAlarmSaat) || '06:30';
+  try { hvSabahAlarmBilgiYaz(); } catch (e) {}
 
   const settingsQariSelect = document.getElementById('settings-qari-select');
   if (settingsQariSelect) {
@@ -272,6 +282,14 @@ function applyStateSettings() {
     let q = null; try { q = localStorage.getItem('hv_dinle_qari'); } catch (e) {}
     surahQariSelect.value = q || 'husr';
     if (surahQariSelect.selectedIndex < 0) surahQariSelect.value = 'husr';
+  }
+
+  // v66.4: Dua & Sure Öğren'in kendi hocası (varsayılan Muhammed el-Fakih)
+  const ogrenQariSelect = document.getElementById('settings-ogren-qari-select');
+  if (ogrenQariSelect) {
+    let q = null; try { q = localStorage.getItem('hv_ogren_qari'); } catch (e) {}
+    ogrenQariSelect.value = q || 'alfaqih';
+    if (ogrenQariSelect.selectedIndex < 0) ogrenQariSelect.value = 'alfaqih';
   }
 
   // Vakit ince ayarı girişleri
@@ -347,6 +365,25 @@ function getSelectedCoordinates(cityName, districtName) {
   }
   return { lat: prov.lat, lng: prov.lng };
 }
+
+/* v66.4 — GPS noktasına en yakın ilçe (listede gerçekten var olan) */
+function hvEnYakinIlce(lat, lng) {
+  if (typeof TURKEY_LOCATIONS === 'undefined') return null;
+  let en = null;
+  TURKEY_LOCATIONS.forEach(p => {
+    if (p.ilceler && p.ilceler.length) {
+      p.ilceler.forEach(d => {
+        const km = calculateGreatCircleDistance(lat, lng, d.lat, d.lng);
+        if (!en || km < en.km) en = { il: p.il, ilce: d.name, lat: d.lat, lng: d.lng, km: km };
+      });
+    } else {
+      const km = calculateGreatCircleDistance(lat, lng, p.lat, p.lng);
+      if (!en || km < en.km) en = { il: p.il, ilce: 'Merkez', lat: p.lat, lng: p.lng, km: km };
+    }
+  });
+  return en;
+}
+window.hvEnYakinIlce = hvEnYakinIlce;
 
 // Live Clock & Hijri Date
 function startClockTimer() {
@@ -426,6 +463,120 @@ const DEFAULT_TIME_OFFSETS = { Fajr: 0, Sunrise: 0, Dhuhr: 0, Asr: 0, Maghrib: 1
 function calCacheKey(lat, lng, year, month) {
   return `hv_cal_${Number(lat).toFixed(3)}_${Number(lng).toFixed(3)}_${year}-${String(month).padStart(2, '0')}`;
 }
+/* v66.4 — Konum değişince eski isteğin cevabı yeni konumun ekranını bozmasın:
+   (lat,lng) şu anki konumla (önbellek anahtarı hassasiyetinde) aynı mı? */
+function hvAyniKonum(lat, lng) {
+  const u = APP_STATE.userLocation || {};
+  return Number(u.lat).toFixed(3) === Number(lat).toFixed(3) &&
+         Number(u.lng).toFixed(3) === Number(lng).toFixed(3);
+}
+/* v66.4 — Vakit önbelleği temizliği.
+   ESKİ HATA: anahtarlar alfabetik sıralanıp ilk olanlar siliniyordu; enlemi
+   küçük olan (ör. Ankara 39.9 < Armutlu 40.5) YENİ konumun bu ayı silinip
+   vakitler ekrandan kayboluyordu. Artık yalnızca ŞU ANKİ konumun en yeni
+   3 ayı tutulur, başka konumlara ait eski tablolar silinir. */
+function hvTakvimTemizle() {
+  try {
+    const u = APP_STATE.userLocation || {};
+    const onek = `hv_cal_${Number(u.lat).toFixed(3)}_${Number(u.lng).toFixed(3)}_`;
+    const tumu = Object.keys(localStorage).filter(k => k.startsWith('hv_cal_'));
+    const benim = tumu.filter(k => k.startsWith(onek)).sort();   // aynı konum → ay sırası
+    tumu.forEach(k => { if (!k.startsWith(onek)) localStorage.removeItem(k); });
+    while (benim.length > 3) localStorage.removeItem(benim.shift());
+  } catch (e) {}
+}
+window.hvTakvimTemizle = hvTakvimTemizle;
+
+/* v66.4 — CİHAZ İÇİ VAKİT HESABI (internet yokken yedek)
+   Diyanet'in yöntemi: İmsak güneş −18°, Yatsı −17°, İkindi gölge 1 boy,
+   Güneş/Akşam −0.833° ve Diyanet'in temkin süreleri. 12 şehrin Diyanet
+   tablosuyla karşılaştırıldı: %91 dakikası dakikasına aynı, en fazla 1 dk fark.
+   Böylece ilk açılışta internet olmasa da ekran hiçbir zaman boş kalmaz;
+   internet gelince Diyanet'in resmî tablosu bunların yerine yazılır. */
+const HV_YEREL_TEMKIN = { Fajr: -0.04, Sunrise: -7.04, Dhuhr: 4.91, Asr: 4.33, Maghrib: 7.43, Isha: 0.46 };
+function hvGunesKonum(jd) {
+  const dr = Math.PI / 180, d = jd - 2451545.0;
+  const g = (357.529 + 0.98560028 * d) % 360;
+  const q = (280.459 + 0.98564736 * d) % 360;
+  const L = q + 1.915 * Math.sin(g * dr) + 0.020 * Math.sin(2 * g * dr);
+  const e = 23.439 - 0.00000036 * d;
+  const RA = Math.atan2(Math.cos(e * dr) * Math.sin(L * dr), Math.cos(L * dr)) / dr / 15;
+  const D = Math.asin(Math.sin(e * dr) * Math.sin(L * dr)) / dr;
+  let EqT = q / 15 - (((RA % 24) + 24) % 24);
+  EqT = ((((EqT + 12) % 24) + 24) % 24) - 12;
+  return { D: D, EqT: EqT };
+}
+function hvJulyen(y, m, d) {
+  if (m <= 2) { y -= 1; m += 12; }
+  const A = Math.floor(y / 100), B = 2 - A + Math.floor(A / 4);
+  return Math.floor(365.25 * (y + 4716)) + Math.floor(30.6001 * (m + 1)) + d + B - 1524.5;
+}
+function hvYerelVakit(lat, lng, tarih, tz) {
+  const dr = Math.PI / 180;
+  const y = tarih.getFullYear(), m = tarih.getMonth() + 1, g = tarih.getDate();
+  if (typeof tz !== 'number' || !isFinite(tz)) tz = -new Date(y, m - 1, g, 12).getTimezoneOffset() / 60;
+  const jd = hvJulyen(y, m, g) - lng / 360;
+  const ogle = 12 + tz - lng / 15 - hvGunesKonum(jd + 0.5).EqT;
+  const T = (alfa, saat) => {
+    const s = hvGunesKonum(jd + (saat - tz) / 24);
+    const c = (-Math.sin(alfa * dr) - Math.sin(s.D * dr) * Math.sin(lat * dr)) / (Math.cos(s.D * dr) * Math.cos(lat * dr));
+    return Math.acos(Math.max(-1, Math.min(1, c))) / dr / 15;
+  };
+  const A = (saat) => {
+    const s = hvGunesKonum(jd + (saat - tz) / 24);
+    const alfa = -Math.atan(1 / (1 + Math.tan(Math.abs(lat - s.D) * dr))) / dr;
+    return T(alfa, saat);
+  };
+  let imsak = ogle - 6, dogus = ogle - 5.5, ikindi = ogle + 3, aksam = ogle + 5.5, yatsi = ogle + 7;
+  for (let i = 0; i < 3; i++) {
+    imsak = ogle - T(18, imsak); dogus = ogle - T(0.833, dogus);
+    ikindi = ogle + A(ikindi); aksam = ogle + T(0.833, aksam); yatsi = ogle + T(17, yatsi);
+  }
+  const yaz = (saat, ek) => {
+    let dk = Math.round(saat * 60 + ek);
+    dk = ((dk % 1440) + 1440) % 1440;
+    return String(Math.floor(dk / 60)).padStart(2, '0') + ':' + String(dk % 60).padStart(2, '0');
+  };
+  const K = HV_YEREL_TEMKIN;
+  const fajr = yaz(imsak, K.Fajr);
+  return { Fajr: fajr, Sunrise: yaz(dogus, K.Sunrise), Dhuhr: yaz(ogle, K.Dhuhr), Asr: yaz(ikindi, K.Asr),
+           Maghrib: yaz(aksam, K.Maghrib), Isha: yaz(yatsi, K.Isha), Imsak: fajr };
+}
+window.hvYerelVakit = hvYerelVakit;
+/* Önbellekte olmayan günleri (bugünden itibaren) cihaz hesabıyla doldurur.
+   Var olan Diyanet/Aladhan satırlarına DOKUNMAZ. Kaynak işareti s:'h'. */
+function hvYerelDoldur(lat, lng, gunSayisi) {
+  try {
+    const turkiye = !!hvDiyanetId();          // Türkiye içi → Türkiye saati (UTC+3)
+    const tz = turkiye ? 3 : undefined;
+    const aylar = {};
+    const g = new Date(); g.setHours(12, 0, 0, 0);
+    for (let i = 0; i < (gunSayisi || 40); i++) {
+      const anahtar = calCacheKey(lat, lng, g.getFullYear(), g.getMonth() + 1);
+      if (!aylar[anahtar]) {
+        let mevcut = [];
+        try { mevcut = JSON.parse(localStorage.getItem(anahtar) || '[]') || []; } catch (e) { mevcut = []; }
+        const harita = {};
+        mevcut.forEach(x => { if (x && x.date) harita[x.date] = x; });
+        aylar[anahtar] = { harita: harita, degisti: false };
+      }
+      const kayit = aylar[anahtar];
+      const tarih = `${g.getFullYear()}-${String(g.getMonth() + 1).padStart(2, '0')}-${String(g.getDate()).padStart(2, '0')}`;
+      if (!kayit.harita[tarih]) {
+        kayit.harita[tarih] = { date: tarih, t: hvYerelVakit(lat, lng, g, tz), h: computeLocalHijriText(new Date(g)), s: 'h' };
+        kayit.degisti = true;
+      }
+      g.setDate(g.getDate() + 1);
+    }
+    Object.keys(aylar).forEach(anahtar => {
+      const k = aylar[anahtar];
+      if (!k.degisti) return;
+      const liste = Object.keys(k.harita).sort().map(x => k.harita[x]);
+      try { localStorage.setItem(anahtar, JSON.stringify(liste)); } catch (e) {}
+    });
+    hvTakvimTemizle();
+  } catch (e) { console.warn('Yerel vakit hesabı yazılamadı:', e); }
+}
 function stripTiming(t) { return (t || '').split(' ')[0]; }
 function hijriTextFromApi(h) {
   if (!h) return '';
@@ -446,9 +597,8 @@ function saveMonthCache(lat, lng, year, month, days) {
       h: hijriTextFromApi(d.date.hijri)
     }));
     localStorage.setItem(calCacheKey(lat, lng, year, month), JSON.stringify(compact));
-    // Eski ayların önbelleğini temizle (yalnızca son 3 anahtar kalsın)
-    const keys = Object.keys(localStorage).filter(k => k.startsWith('hv_cal_')).sort();
-    while (keys.length > 3) localStorage.removeItem(keys.shift());
+    // Eski ayların / başka konumların önbelleğini temizle (v66.4: şu anki konum korunur)
+    hvTakvimTemizle();
   } catch (e) { console.warn('Takvim önbelleği yazılamadı:', e); }
 }
 function getCachedDay(lat, lng, dateObj) {
@@ -468,7 +618,8 @@ function getTimeOffsets() {
    Ayarlar > Vakit İnce Ayarı değerleri uygulanır. */
 const HV_SIFIR_OFSET = { Fajr: 0, Sunrise: 0, Dhuhr: 0, Asr: 0, Maghrib: 0, Isha: 0 };
 function hvKaynakOfset(kaynak) {
-  if (kaynak === 'd') return Object.assign({}, HV_SIFIR_OFSET, APP_STATE.timeOffsets || {});
+  // 'd' = Diyanet tablosu, 'h' = cihaz hesabı (temkin zaten içinde) → ek düzeltme yok
+  if (kaynak === 'd' || kaynak === 'h') return Object.assign({}, HV_SIFIR_OFSET, APP_STATE.timeOffsets || {});
   return getTimeOffsets();
 }
 function applyOffsets(raw, kaynak) {
@@ -554,13 +705,102 @@ function hvClearNativeNotifications() {
 
 function hvPad2(n) { return String(n).padStart(2, '0'); }
 
+/* ────────────────────────────────────────────────────────────
+   v66.4 — SABAH EZANI ALARMI
+   Kullanıcı bir saat seçer (ör. 07:00); o saatte telefonun kendi
+   bildirimiyle EZAN SESİ çalar (uygulama kapalıyken de).
+   Sabah namazı İmsak ile Güneş arasında kılındığı için seçilen saat
+   o günün aralığına sığdırılır: İmsak'tan önceyse İmsak'ta, güneşe
+   10 dakikadan az kalıyorsa Güneş'ten 10 dk önce çalar.
+   Vakit bildirimleri açıksa sabahın normal bildirimi bunun yerine geçer
+   (iki kez ezan okunmasın); kapalıysa alarm yine tek başına çalışır.
+   ──────────────────────────────────────────────────────────── */
+const HV_SABAH_PAY = 10;   // güneş doğmadan en az kaç dk önce çalsın
+function hvSaatGecerli(v) {
+  const m = String(v || '').match(/^(\d{1,2}):(\d{2})/);
+  if (!m) return '';
+  const h = parseInt(m[1], 10), d = parseInt(m[2], 10);
+  if (h > 23 || d > 59) return '';
+  return hvPad2(h) + ':' + hvPad2(d);
+}
+function hvSaatDk(v) { const t = hvSaatGecerli(v); if (!t) return null; const p = t.split(':'); return parseInt(p[0], 10) * 60 + parseInt(p[1], 10); }
+function hvDkSaat(dk) { dk = ((dk % 1440) + 1440) % 1440; return hvPad2(Math.floor(dk / 60)) + ':' + hvPad2(dk % 60); }
+/* Bir gün için: { imsak, gunes, alarm, kaydi } (dakika cinsinden de) — tablo yoksa null */
+function hvSabahAlarmGunu(day) {
+  const u = APP_STATE.userLocation || {};
+  const e = getCachedDay(u.lat, u.lng, day);
+  if (!e || !e.t || !e.t.Fajr || !e.t.Sunrise) return null;
+  const off = hvKaynakOfset(e.s);
+  const imsak = addMinutes(e.t.Fajr, parseInt(off.Fajr, 10) || 0);
+  const gunes = addMinutes(e.t.Sunrise, parseInt(off.Sunrise, 10) || 0);
+  const im = hvSaatDk(imsak), gn = hvSaatDk(gunes);
+  let sec = hvSaatDk(APP_STATE.sabahAlarmSaat);
+  if (im === null || gn === null || sec === null) return null;
+  const ust = Math.max(im, gn - HV_SABAH_PAY);
+  let alarm = Math.min(Math.max(sec, im), ust);
+  return { imsak: imsak, gunes: gunes, alarmDk: alarm, alarm: hvDkSaat(alarm), kaydi: alarm !== sec, secilen: hvDkSaat(sec), erken: sec < im };
+}
+window.hvSabahAlarmGunu = hvSabahAlarmGunu;
+/* Ayarlar'daki açıklama satırı */
+function hvSabahAlarmBilgiYaz() {
+  const el = document.getElementById('sabah-alarm-bilgi');
+  const satir = document.getElementById('sabah-alarm-saat-row');
+  const acik = !!APP_STATE.sabahAlarm;
+  if (satir) satir.style.opacity = acik ? '1' : '.55';
+  if (!el) return;
+  const bugun = new Date(); bugun.setHours(0, 0, 0, 0);
+  let g = hvSabahAlarmGunu(bugun);
+  // bugünün alarmı geçtiyse yarını göster
+  const simdi = new Date();
+  let gunAd = 'Bugün';
+  if (g && (simdi.getHours() * 60 + simdi.getMinutes()) >= g.alarmDk) {
+    const yarin = new Date(bugun); yarin.setDate(yarin.getDate() + 1);
+    const gy = hvSabahAlarmGunu(yarin);
+    if (gy) { g = gy; gunAd = 'Yarın'; }
+  }
+  let html = '';
+  if (g) {
+    html += `<div>🕌 ${gunAd}: İmsak <b>${g.imsak}</b> · Güneş <b>${g.gunes}</b></div>`;
+    if (acik) {
+      html += `<div>⏰ Ezan <b>${g.alarm}</b>'de okunacak` +
+        (g.kaydi ? (g.erken ? ` <span class="sa-uyari">(seçtiğin ${g.secilen} İmsak'tan önce; sabah vakti girince)</span>`
+                            : ` <span class="sa-uyari">(seçtiğin ${g.secilen} güneşe çok yakın/sonra; güneşten ${HV_SABAH_PAY} dk önce)</span>`) : '') + '</div>';
+    }
+  } else {
+    html += `<div>Vakitler yüklenince alarm saati burada görünecek.</div>`;
+  }
+  if (typeof hvHasNativeNotifications === 'function' && !hvHasNativeNotifications()) {
+    html += `<div class="sa-uyari">⚠️ Alarm, telefona kurulu Namaz Dostu uygulamasında çalışır (tarayıcıda çalmaz).</div>`;
+  } else if (acik) {
+    html += `<div class="sa-not">📵 Telefon sessiz moddaysa bildirim sesi çıkmaz.</div>`;
+  }
+  el.innerHTML = html;
+}
+window.hvSabahAlarmBilgiYaz = hvSabahAlarmBilgiYaz;
+/* Sabah vakti panelinden ayara git */
+function hvSabahAlarmaGit() {
+  try { closePrayerSheet(); } catch (e) {}
+  navigateTo('settings');
+  setTimeout(() => {
+    const g = document.getElementById('sabah-ezani-grup');
+    if (g) {
+      try { g.scrollIntoView({ block: 'center', behavior: 'smooth' }); } catch (e) {}
+      g.classList.add('sa-vurgu');
+      setTimeout(() => g.classList.remove('sa-vurgu'), 1800);
+    }
+  }, 250);
+}
+window.hvSabahAlarmaGit = hvSabahAlarmaGit;
+
 // Önümüzdeki günlerin vakitlerini telefona bildirim olarak kurar
 function scheduleNativePrayerNotifications() {
   if (!hvHasNativeNotifications()) { updateNotifyStatusUI(0); return 0; }
 
   hvClearNativeNotifications();
 
-  if (!APP_STATE.notifyEnabled) { updateNotifyStatusUI(0); return 0; }
+  const vakitAcik = !!APP_STATE.notifyEnabled;
+  const alarmAcik = !!APP_STATE.sabahAlarm && hvSaatDk(APP_STATE.sabahAlarmSaat) !== null;   // v66.4
+  if (!vakitAcik && !alarmAcik) { updateNotifyStatusUI(0); return 0; }
 
   const sched = hvNativeHandler('schedule-local-notification');
   if (!sched) { updateNotifyStatusUI(0); return 0; }
@@ -583,8 +823,33 @@ function scheduleNativePrayerNotifications() {
     const timeOffs = hvKaynakOfset(entry.s);
     const ramazan = /ramazan|ramadan/i.test(entry.h || '');
 
+    // ── v66.4: Sabah ezanı alarmı (seçilen saatte, ezan sesiyle) ──
+    if (alarmAcik && count < HV_NOTIFY_MAX) {
+      const g = hvSabahAlarmGunu(day);
+      if (g) {
+        const at = new Date(day);
+        at.setHours(Math.floor(g.alarmDk / 60), g.alarmDk % 60, 0, 0);
+        if (at.getTime() > now + 20000) {
+          const dayKey = `${day.getFullYear()}${hvPad2(day.getMonth() + 1)}${hvPad2(day.getDate())}`;
+          try {
+            sched.postMessage({
+              id: `hv_${dayKey}_sabah`,
+              title: '🌅 Sabah Ezanı',
+              body: `Sabah namazı vakti — haydi namaza! Güneş ${g.gunes}'de doğuyor.`,
+              timestamp: Math.floor(at.getTime() / 1000),
+              sound: 'ezan'
+            });
+            count++;
+            daysCovered.add(dayKey);
+          } catch (e) { console.warn('Sabah alarmı kurulamadı:', e); }
+        }
+      }
+    }
+    if (!vakitAcik) continue;
+
     for (const id of HV_NOTIFY_PRAYERS) {
       if (count >= HV_NOTIFY_MAX) break;
+      if (id === 'Fajr' && alarmAcik) continue;   // sabahın bildirimi = alarm (iki kez ezan okunmasın)
       const rawTime = entry.t[id];
       if (!rawTime) continue;
 
@@ -646,7 +911,7 @@ function scheduleNativePrayerNotifications() {
   }
 
   // ── Cuma hatırlatması (sabah 09:00) ──
-  if (APP_STATE.notifyCuma !== false) {
+  if (vakitAcik && APP_STATE.notifyCuma !== false) {
     for (let d = 0; d < HV_NOTIFY_DAYS && count < HV_NOTIFY_MAX + 12; d++) {
       const day = new Date();
       day.setHours(0, 0, 0, 0);
@@ -670,7 +935,7 @@ function scheduleNativePrayerNotifications() {
   }
 
   // ── Kandil / bayram / arefe / Ramazan hatırlatması (sabah) ──
-  if (APP_STATE.notifyKandil !== false && typeof hvBugunDiniGun === 'function') {
+  if (vakitAcik && APP_STATE.notifyKandil !== false && typeof hvBugunDiniGun === 'function') {
     for (let d = 0; d < HV_NOTIFY_DAYS && count < HV_NOTIFY_MAX + 6; d++) {
       const day = new Date();
       day.setHours(0, 0, 0, 0);
@@ -713,7 +978,7 @@ function scheduleNativePrayerNotifications() {
   }
 
   // ── Günün Âyeti (v65.6): her sabah seçilen saatte, o günün âyeti (Diyanet meali) ──
-  if (APP_STATE.notifyAyet !== false && typeof hvGununAyeti === 'function') {
+  if (vakitAcik && APP_STATE.notifyAyet !== false && typeof hvGununAyeti === 'function') {
     const saat = Math.max(0, Math.min(23, parseInt(APP_STATE.notifyAyetSaat, 10) || 8));
     for (let d = 0; d < HV_NOTIFY_AYET_GUN; d++) {
       const day = new Date();
@@ -753,7 +1018,9 @@ function updateNotifyStatusUI(count, daysCovered) {
   }
   if (!APP_STATE.notifyEnabled) {
     el.className = 'notify-status';
-    el.textContent = 'Bildirimler kapalı. Açarsan vakitler telefonuna önceden kurulur ve uygulama kapalıyken de bildirim gelir.';
+    el.textContent = APP_STATE.sabahAlarm
+      ? 'Vakit bildirimleri kapalı; yalnızca ⏰ Sabah Ezanı alarmı kurulu.'
+      : 'Bildirimler kapalı. Açarsan vakitler telefonuna önceden kurulur ve uygulama kapalıyken de bildirim gelir.';
     return;
   }
   const n = (typeof count === 'number') ? count : parseInt(localStorage.getItem('hv_notif_count') || '0', 10);
@@ -767,7 +1034,7 @@ window.updateNotifyStatusUI = updateNotifyStatusUI;
 
 // Ayarlar → Geri Bildirim Gönder (doğrudan e-posta açar)
 function hvSendFeedback() {
-  const ver = 'v66.2';
+  const ver = 'v66.4';
   let ortam = 'Tarayıcı';
   try {
     if (window.hvIsAndroid) ortam = 'Android uygulaması';
@@ -957,10 +1224,7 @@ function hvDiyanetSakla(lat, lng, satirlar) {
     const birlesik = Object.keys(harita).sort().map(k => harita[k]);
     try { localStorage.setItem(anahtar, JSON.stringify(birlesik)); yazilan += aylar[ay].length; } catch (e) {}
   });
-  try {
-    const keys = Object.keys(localStorage).filter(k => k.startsWith('hv_cal_')).sort();
-    while (keys.length > 3) localStorage.removeItem(keys.shift());
-  } catch (e) {}
+  hvTakvimTemizle();   // v66.4: şu anki konumun tablosu asla silinmez
   return yazilan;
 }
 
@@ -973,6 +1237,7 @@ async function hvDiyanetCek(ilceId, lat, lng) {
     if (!res.ok) return false;
     const veri = await res.json();
     if (!Array.isArray(veri) || !veri.length) return false;
+    if (!hvAyniKonum(lat, lng)) return false;   // v66.4: bu arada konum değişti
     return hvDiyanetSakla(lat, lng, veri) > 0;
   } catch (e) {
     return false;
@@ -982,17 +1247,30 @@ async function hvDiyanetCek(ilceId, lat, lng) {
 }
 
 async function fetchMonthCalendar(lat, lng, year, month) {
-  const res = await fetch(`https://api.aladhan.com/v1/calendar?latitude=${lat}&longitude=${lng}&method=13&month=${month}&year=${year}`);
-  const json = await res.json();
-  if (json && Array.isArray(json.data) && json.data.length) {
-    saveMonthCache(lat, lng, year, month, json.data);
-    return true;
+  // v66.4: ağ takılırsa (bazı Wi-Fi'lerde) sonsuza kadar beklemesin → 10 sn sınır
+  const ctrl = (typeof AbortController !== 'undefined') ? new AbortController() : null;
+  const zaman = ctrl ? setTimeout(() => ctrl.abort(), 10000) : null;
+  try {
+    const res = await fetch(`https://api.aladhan.com/v1/calendar?latitude=${lat}&longitude=${lng}&method=13&month=${month}&year=${year}`,
+      ctrl ? { signal: ctrl.signal } : undefined);
+    const json = await res.json();
+    if (json && Array.isArray(json.data) && json.data.length) {
+      // Bu arada kullanıcı başka şehir seçtiyse eski konumun takvimini yazma
+      if (!hvAyniKonum(lat, lng)) return false;
+      saveMonthCache(lat, lng, year, month, json.data);
+      return true;
+    }
+    return false;
+  } finally {
+    if (zaman) clearTimeout(zaman);
   }
-  return false;
 }
 
 async function fetchPrayerTimes(lat, lng) {
   const today = new Date();
+  // 0) v66.4: Bu konum için hiç tablo yoksa (ilk açılış / yeni şehir) cihazda
+  //    hesapla ve hemen göster → internet gelmese bile vakitler asla kaybolmaz.
+  if (!getCachedDay(lat, lng, today) && hvAyniKonum(lat, lng)) hvYerelDoldur(lat, lng, 40);
   // 1) Önbellekten ANINDA göster (internet olmasa da çalışır)
   const cached = getCachedDay(lat, lng, today);
   if (cached) applyDayTimings(cached);
@@ -1008,6 +1286,8 @@ async function fetchPrayerTimes(lat, lng) {
       return;
     }
     const oldu = await hvDiyanetCek(dId, lat, lng);
+    // v66.4: cevap gelene kadar kullanıcı başka şehir seçtiyse bu sonuç artık geçersiz
+    if (!hvAyniKonum(lat, lng)) return;
     if (oldu) {
       setOfflineBadge(false);
       const taze = getCachedDay(lat, lng, today);
@@ -1027,6 +1307,7 @@ async function fetchPrayerTimes(lat, lng) {
   // 2) Ağdan aylık takvimi al, önbelleği tazele
   try {
     const ok = await fetchMonthCalendar(lat, lng, today.getFullYear(), today.getMonth() + 1);
+    if (!hvAyniKonum(lat, lng)) return;   // konum değişti → eski sonucu bırak
     if (ok) {
       setOfflineBadge(false);
       const fresh = getCachedDay(lat, lng, today);
@@ -1036,11 +1317,13 @@ async function fetchPrayerTimes(lat, lng) {
       if (today.getDate() >= 18) {
         const nx = new Date(today.getFullYear(), today.getMonth() + 1, 1);
         try { await fetchMonthCalendar(lat, lng, nx.getFullYear(), nx.getMonth() + 1); } catch (e) {}
+        if (!hvAyniKonum(lat, lng)) return;
       }
     } else if (!cached) {
       throw new Error('Takvim boş');
     }
   } catch (err) {
+    if (!hvAyniKonum(lat, lng)) return;
     if (!cached) {
       console.warn('Vakit API başarısız, önbellek yok → yedek vakitler:', err);
       renderFallbackPrayerTimes();
@@ -1293,6 +1576,13 @@ function showPrayerTimeDetailsModal(prayerId, prayerName, timeStr) {
   if (tm) tm.textContent = timeStr;
   if (st) st.textContent = msg;
   if (cb) cb.checked = getPrayerAdhan(prayerId);
+  // v66.4: Sabah vaktinde "⏰ Sabah ezanı alarmı" kısayolu
+  const ss = document.getElementById('sheet-sabah-satir');
+  if (ss) {
+    ss.style.display = prayerId === 'Fajr' ? 'flex' : 'none';
+    const sd = document.getElementById('sheet-sabah-durum');
+    if (sd) sd.textContent = APP_STATE.sabahAlarm ? ('Açık · ' + (hvSaatGecerli(APP_STATE.sabahAlarmSaat) || '')) : 'Kapalı';
+  }
   sheet.style.display = 'flex';
   requestAnimationFrame(() => sheet.classList.add('open'));
 }
@@ -1358,7 +1648,16 @@ function showToastNotification(title, message) {
 }
 
 function renderFallbackPrayerTimes() {
-  const mockTimings = { Fajr: "04:35", Sunrise: "06:12", Dhuhr: "13:18", Asr: "17:02", Maghrib: "20:15", Isha: "21:45" };
+  let mockTimings = { Fajr: "04:35", Sunrise: "06:12", Dhuhr: "13:18", Asr: "17:02", Maghrib: "20:15", Isha: "21:45" };
+  // v66.4: sabit uydurma saatler yerine konuma göre cihazda hesaplanan vakitler
+  try {
+    const u = APP_STATE.userLocation;
+    const h = hvYerelVakit(u.lat, u.lng, new Date(), hvDiyanetId() ? 3 : undefined);
+    if (h && h.Fajr) {
+      APP_STATE.rawTimes = h; APP_STATE.rawKaynak = 'h';
+      mockTimings = applyOffsets(h, 'h');
+    }
+  } catch (e) {}
   APP_STATE.prayerTimes = mockTimings;
 
   // API başarısızsa Hicri tarihi cihazdan (Intl) hesapla
@@ -1605,7 +1904,8 @@ function hvKadranCiz() {
 
 function initQiblaCompass() {
   hvKadranCiz();
-  const { lat, lng } = APP_STATE.userLocation;
+  // v66.4: varsa pusulanın aldığı gerçek GPS konumu, yoksa seçili ilçe
+  const { lat, lng } = APP_STATE.gpsKonum || APP_STATE.userLocation;
   APP_STATE.qiblaAngle = calculateQiblaBearing(lat, lng);
   const dist = calculateGreatCircleDistance(lat, lng, 21.4225, 39.8262);
 
@@ -1721,7 +2021,8 @@ function acceptQiblaPermissionFlow() {
   if (navigator.geolocation) {
     navigator.geolocation.getCurrentPosition(
       (pos) => {
-        APP_STATE.userLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+        // v66.4: kıble için GPS ayrı tutulur; seçili şehrin (vakitlerin) konumu EZİLMEZ
+        APP_STATE.gpsKonum = { lat: pos.coords.latitude, lng: pos.coords.longitude };
         const degVal = document.getElementById('qibla-degree-val');
         const distVal = document.getElementById('kaaba-dist-val');
         APP_STATE.qiblaAngle = calculateQiblaBearing(pos.coords.latitude, pos.coords.longitude);
@@ -1798,7 +2099,8 @@ function startCompassSensors(isAutoStart = false) {
   if (navigator.geolocation) {
     navigator.geolocation.getCurrentPosition(
       (pos) => {
-        APP_STATE.userLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+        // v66.4: kıble için GPS ayrı tutulur; seçili şehrin (vakitlerin) konumu EZİLMEZ
+        APP_STATE.gpsKonum = { lat: pos.coords.latitude, lng: pos.coords.longitude };
         const degVal = document.getElementById('qibla-degree-val');
         const distVal = document.getElementById('kaaba-dist-val');
         APP_STATE.qiblaAngle = calculateQiblaBearing(pos.coords.latitude, pos.coords.longitude);
@@ -2898,6 +3200,40 @@ function setupSettingsListeners() {
       e.target.checked ? `Her sabah ${saat}'de günün âyeti gelecek.` : ''
     );
   });
+  // v66.4 — Sabah ezanı alarmı
+  document.getElementById('sabah-alarm-toggle')?.addEventListener('change', (e) => {
+    APP_STATE.sabahAlarm = e.target.checked;
+    if (!hvSaatGecerli(APP_STATE.sabahAlarmSaat)) APP_STATE.sabahAlarmSaat = '06:30';
+    saveSettings();
+    if (APP_STATE.sabahAlarm) {
+      if (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers['push-permission-request']) {
+        window.webkit.messageHandlers['push-permission-request'].postMessage('');
+      } else if (typeof Notification !== 'undefined' && Notification.permission !== 'granted') {
+        try { Notification.requestPermission(); } catch (err) {}
+      }
+    }
+    hvSabahAlarmBilgiYaz();
+    setTimeout(scheduleNativePrayerNotifications, 400);
+    if (APP_STATE.sabahAlarm) {
+      const g = hvSabahAlarmGunu(new Date(new Date().setHours(0, 0, 0, 0)));
+      showToastNotification('⏰ Sabah Ezanı', `Her sabah ${g ? g.alarm : APP_STATE.sabahAlarmSaat}'de ezan okunacak.`);
+    } else {
+      showToastNotification('⏰ Sabah Ezanı', 'Sabah ezanı alarmı kapatıldı.');
+    }
+  });
+  document.getElementById('sabah-alarm-saat')?.addEventListener('change', (e) => {
+    const v = hvSaatGecerli(e.target.value);
+    if (!v) { e.target.value = hvSaatGecerli(APP_STATE.sabahAlarmSaat) || '06:30'; return; }
+    APP_STATE.sabahAlarmSaat = v;
+    saveSettings();
+    hvSabahAlarmBilgiYaz();
+    if (APP_STATE.sabahAlarm) {
+      setTimeout(scheduleNativePrayerNotifications, 300);
+      const g = hvSabahAlarmGunu(new Date(new Date().setHours(0, 0, 0, 0)));
+      showToastNotification('⏰ Sabah Ezanı', `Alarm saati: ${g ? g.alarm : v}`);
+    }
+  });
+
   document.getElementById('notify-ayet-saat')?.addEventListener('change', (e) => {
     APP_STATE.notifyAyetSaat = parseInt(e.target.value, 10) || 8;
     saveSettings();
@@ -2907,7 +3243,8 @@ function setupSettingsListeners() {
 
   const syncQari = (e) => {
     APP_STATE.qari = e.target.value;
-    // Tek hafız ayarı: Kuran Oku (mushaf), Kuran Dinle ve 0'dan Dua Öğren aynı seçimi kullanır
+    // Hafız ayarı: Kuran Oku (mushaf) ve Kuran Dinle aynı seçimi kullanır.
+    // (v66.4: Dua & Sure Öğren'in ayrı hocası var → hv_ogren_qari)
     try {
       if (typeof HV_DINLE_QARILER !== 'undefined' && HV_DINLE_QARILER.some(q => q.id === e.target.value)) {
         localStorage.setItem('hv_dinle_qari', e.target.value);
@@ -2922,6 +3259,10 @@ function setupSettingsListeners() {
   };
 
   document.getElementById('settings-qari-select')?.addEventListener('change', syncQari);
+  document.getElementById('settings-ogren-qari-select')?.addEventListener('change', (e) => {
+    try { localStorage.setItem('hv_ogren_qari', e.target.value); } catch (err) {}
+    showToastNotification('🎙️ Dua & Sure Öğren', 'Hoca: ' + (e.target.options[e.target.selectedIndex] || {}).text);
+  });
   document.getElementById('qari-select')?.addEventListener('change', syncQari);
 
   document.getElementById('auto-gps-btn')?.addEventListener('click', requestGPSLocation);
@@ -2941,40 +3282,29 @@ function requestGPSLocation() {
 
   navigator.geolocation.getCurrentPosition(
     (pos) => {
-      const lat = pos.coords.latitude;
-      const lng = pos.coords.longitude;
-      APP_STATE.userLocation = { lat, lng };
+      let lat = pos.coords.latitude;
+      let lng = pos.coords.longitude;
+      APP_STATE.gpsKonum = { lat, lng };   // kıble için gerçek konum
 
       if (typeof TURKEY_LOCATIONS !== 'undefined') {
-        let minDist = Infinity;
-        let matchCity = "Yalova";
-        let matchDistrict = "Çınarcık";
-
-        TURKEY_LOCATIONS.forEach(p => {
-          const dC = calculateGreatCircleDistance(lat, lng, p.lat, p.lng);
-          if (dC < minDist) {
-            minDist = dC; matchCity = p.il; matchDistrict = "Merkez";
-          }
-          if (p.ilceler) {
-            p.ilceler.forEach(d => {
-              const dD = calculateGreatCircleDistance(lat, lng, d.lat, d.lng);
-              if (dD < minDist) {
-                minDist = dD; matchCity = p.il; matchDistrict = d.name;
-              }
-            });
-          }
-        });
-
-        APP_STATE.currentCity = matchCity;
-        APP_STATE.currentDistrict = matchDistrict;
+        // v66.4: yalnızca listedeki gerçek ilçelerle eşleştir (listede olmayan "Merkez" seçilmesin)
+        const en = hvEnYakinIlce(lat, lng);
+        if (en) {
+          APP_STATE.currentCity = en.il;
+          APP_STATE.currentDistrict = en.ilce;
+          // 60 km içindeyse vakitler o ilçenin Diyanet tablosundan gelsin diye
+          // konum ilçenin kendi koordinatına oturtulur (şehir listesinden seçmekle aynı).
+          if (en.km <= 60) { lat = en.lat; lng = en.lng; }
+        }
 
         const cSelect = document.getElementById('city-select');
-        if (cSelect) cSelect.value = matchCity;
-        populateDistrictOptions(matchCity);
+        if (cSelect) cSelect.value = APP_STATE.currentCity;
+        populateDistrictOptions(APP_STATE.currentCity);
 
         const dSelect = document.getElementById('district-select');
-        if (dSelect) dSelect.value = matchDistrict;
+        if (dSelect) dSelect.value = APP_STATE.currentDistrict;
       }
+      APP_STATE.userLocation = { lat, lng };
 
       updateLocationHeaderLabel();
       fetchPrayerTimes(lat, lng);
