@@ -1,5 +1,5 @@
 /* ══════════════════════════════════════════════════════════════
-   NAMAZ DOSTU — Service Worker (v66.4)
+   NAMAZ DOSTU — Service Worker (v67.0)
    iOS/Safari uyumlu çevrimdışı çekirdek:
    • Çekirdek dosyalar kurulumda önbelleğe alınır (tek tek; biri
      başarısız olsa bile diğerleri kaydolur).
@@ -19,14 +19,15 @@
        – Ses akışları (Range istekleri) tarayıcıya bırakılır; kendi
          ezan/zil sesimiz çevrimdışıyken önbellekten parça parça verilir.
    ══════════════════════════════════════════════════════════════ */
-const CACHE_NAME = 'namaz-dostu-v66.4';
+const CACHE_NAME = 'namaz-dostu-v67.0';
 
 // Sürüm etiketli çekirdek dosyalar (sayfanın gerçekte istediği URL'ler)
-const V = '66.4.0';
+const V = '67.0.0';
 const CORE_ASSETS = [
   './',
   './index.html',
   './styles.css?v=' + V,
+  './yeni.css?v=' + V,
   './cities.js?v=' + V,
   './data.js?v=' + V,
   './content.js?v=' + V,
@@ -40,7 +41,28 @@ const CORE_ASSETS = [
   './favicon-32.png?v=' + V,
   './bg-mosque.jpg',
   './zil.mp3',
-  './ezan.mp3'   // kendi ezan sesi — çevrimdışı da çalar (v64.8)
+  './ezan.mp3',   // kendi ezan sesi — çevrimdışı da çalar (v64.8)
+  // v67.0 yeni arayüz görselleri
+  './img/acilis.jpg',
+  './img/ikon_k_dua.png',
+  './img/ikon_k_kible.png',
+  './img/ikon_k_takip.png',
+  './img/ikon_k_zikir.png',
+  './img/ikon_n_ayar.png',
+  './img/ikon_n_bugun.png',
+  './img/ikon_n_kuran.png',
+  './img/ikon_n_ogren.png',
+  './img/ikon_n_takip.png',
+  './img/kart_anlayarak.jpg',
+  './img/kart_dinle.jpg',
+  './img/kart_dua.jpg',
+  './img/kart_kuran.jpg',
+  './img/vakit_aksam.jpg',
+  './img/vakit_gece.jpg',
+  './img/vakit_ikindi.jpg',
+  './img/vakit_ogle.jpg',
+  './img/vakit_sabah.jpg',
+  './img/vakit_safak.jpg'
 ];
 
 const SAYFA_SURE = 3500;   // sayfa açılışında ağı en fazla bu kadar bekle (ms)

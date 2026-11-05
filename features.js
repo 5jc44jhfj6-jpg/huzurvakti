@@ -242,11 +242,13 @@ function hvAyetCiz(v, animasyon) {
   const uygula = () => {
     // Kartta yalnızca Türkçe metin gösterilir; paylaşım kartında Arapça (varsa) yer alır.
     if (ar) { ar.textContent = ''; ar.style.display = 'none'; }
-    if (bas) bas.textContent = v.tip === 'hadis' ? '📿 Günün Hadisi' : '📖 Günün Âyeti';
+    const yeni = !!(kart && kart.classList.contains('ya-ayet'));   // v67.0 yeni ana sayfa kartı
+    if (bas) bas.textContent = yeni ? (v.tip === 'hadis' ? 'GÜNÜN HADİSİ' : 'GÜNÜN ÂYETİ') : (v.tip === 'hadis' ? '📿 Günün Hadisi' : '📖 Günün Âyeti');
     const met = (v.turkish || '').trim();
     const tirnakli = /[“”"«»]/.test(met);   // metinde zaten tırnak varsa ekleme
-    if (tr)  tr.textContent  = tirnakli ? met : ('"' + met + '"');
-    if (src) src.textContent = '— ' + hvKartKaynak(v);
+    if (tr)  tr.textContent  = tirnakli ? met : (yeni ? ('“' + met + '”') : ('"' + met + '"'));
+    if (src) src.textContent = yeni ? hvKartKaynak(v).replace(', ', ' · ') : ('— ' + hvKartKaynak(v));
+    if (yeni && typeof hvYaAyetSigdir === 'function') hvYaAyetSigdir();
   };
   if (animasyon && kart) {
     kart.classList.add('hadis-swap');
@@ -255,6 +257,19 @@ function hvAyetCiz(v, animasyon) {
   window._currentAyet = v;
 }
 function loadDailyAyet() { hvAyetCiz(hvAyetSec(), false); }
+/* v67.0: Günün Âyeti yeni kartta sabit puntoda; yalnızca kutuya sığmazsa biraz küçülür (taşma olmasın) */
+function hvYaAyetSigdir() {
+  const tr = document.getElementById('daily-verse-turkish');
+  if (!tr) return;
+  tr.style.fontSize = '';
+  requestAnimationFrame(() => {
+    let fs = parseFloat(getComputedStyle(tr).fontSize) || 17;
+    let n = 0;
+    while (tr.scrollHeight > tr.clientHeight + 1 && fs > 12.5 && n < 12) { fs -= 0.5; tr.style.fontSize = fs + 'px'; n++; }
+  });
+}
+window.hvYaAyetSigdir = hvYaAyetSigdir;
+window.addEventListener('resize', () => { try { hvYaAyetSigdir(); } catch (e) {} });
 window.loadDailyAyet = loadDailyAyet;
 function nextDailyAyet() {
   hvAyetCiz(hvAyetSec(), true);
