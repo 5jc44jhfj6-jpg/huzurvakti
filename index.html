@@ -35,20 +35,57 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Namaz Dostu">
-    <link rel="apple-touch-icon" href="apple-touch-icon.png?v=67.2.0">
-    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png?v=67.2.0">
+    <link rel="apple-touch-icon" href="apple-touch-icon.png?v=67.3.0">
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png?v=67.3.0">
     <meta name="description" content="Namaz Dostu: Namaz vakitleri, ezan, Kur'an-ı Kerim, kıble, dualar, zikirmatik ve yeni başlayanlar için adım adım namaz rehberi. Ücretsiz, reklamsız, çevrimdışı.">
 
-    <link rel="stylesheet" href="styles.css?v=67.2.0">
-    <link rel="stylesheet" href="yeni.css?v=67.2.0">
-    <script>window.HV_SURUM = '67.2.0';</script>
-    <script src="cities.js?v=67.2.0" defer></script>
-    <script src="data.js?v=67.2.0" defer></script>
-    <script src="content.js?v=67.2.0" defer></script>
-    <script src="hadisler.js?v=67.2.0" defer></script>
-    <script src="app.js?v=67.2.0" defer></script>
-    <script src="features.js?v=67.2.0" defer></script>
-    <script src="yeni.js?v=67.2.0" defer></script>
+    <link rel="stylesheet" href="styles.css?v=67.3.0">
+    <link rel="stylesheet" href="yeni.css?v=67.3.0">
+    <!-- v67.3: Adres taşıma. Uygulama yeni adrese (github.io) geçince, eski adresteki
+         (vercel.app) kayıtlar — namaz takibi, zikir, ayarlar — bir kereliğine taşınır.
+         Eski adrese ulaşılamıyorsa hiçbir şey beklenmez, uygulama normal açılır. -->
+    <script>
+      (function () {
+        var GH = '5jc44jhfj6-jpg.github.io', VC = 'huzurvaktinamazuygulamasi.vercel.app';
+        var GH_URL = 'https://5jc44jhfj6-jpg.github.io/huzurvakti/', VC_URL = 'https://huzurvaktinamazuygulamasi.vercel.app/';
+        try {
+          var h = location.host;
+          if (h === VC && /[?&]tasi=1/.test(location.search)) {
+            var o = {};
+            for (var i = 0; i < localStorage.length; i++) { var k = localStorage.key(i); o[k] = localStorage.getItem(k); }
+            location.replace(GH_URL + '#hvtasi=' + encodeURIComponent(JSON.stringify(o)));
+            return;
+          }
+          if (h === GH) {
+            var m = /^#hvtasi=(.*)$/.exec(location.hash);
+            if (m) {
+              var veri = JSON.parse(decodeURIComponent(m[1]) || '{}');
+              Object.keys(veri).forEach(function (k) { if (localStorage.getItem(k) === null) localStorage.setItem(k, veri[k]); });
+              localStorage.setItem('hv_tasima', 'ok');
+              history.replaceState(null, '', location.pathname);
+              return;
+            }
+            var uygulama = /PWAShell|wv\)/.test(navigator.userAgent);
+            if (uygulama && !localStorage.getItem('hv_tasima') && !localStorage.getItem('namaz_vakti_v25')) {
+              localStorage.setItem('hv_tasima', 'denendi');
+              var bitti = false;
+              var t = setTimeout(function () { bitti = true; }, 3500);
+              fetch(VC_URL + 'manifest.json?t=' + Date.now(), { mode: 'no-cors', cache: 'no-store' })
+                .then(function () { if (!bitti) { clearTimeout(t); location.replace(VC_URL + '?tasi=1'); } })
+                .catch(function () {});
+            }
+          }
+        } catch (e) {}
+      })();
+    </script>
+    <script>window.HV_SURUM = '67.3.0';</script>
+    <script src="cities.js?v=67.3.0" defer></script>
+    <script src="data.js?v=67.3.0" defer></script>
+    <script src="content.js?v=67.3.0" defer></script>
+    <script src="hadisler.js?v=67.3.0" defer></script>
+    <script src="app.js?v=67.3.0" defer></script>
+    <script src="features.js?v=67.3.0" defer></script>
+    <script src="yeni.js?v=67.3.0" defer></script>
 </head>
 <body class="dark-theme">
     <!-- v67.0: altın simge rengi (vakit simgeleri bunu kullanır) -->
@@ -1091,7 +1128,7 @@
                     </div>
                     <div class="app-info-footer">
                         <div class="footer-logo">🕌</div>
-                        <div class="footer-ver">Namaz Dostu v67.2</div>
+                        <div class="footer-ver">Namaz Dostu v67.3</div>
                         <div style="font-size: 0.8rem; margin-top: 4px;">Tüm Hakları Saklıdır • Diyanet Uyumlu • Çevrimdışı Çalışır</div>
                     </div>
                 </div>
@@ -1141,7 +1178,7 @@
     <script>
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
-          navigator.serviceWorker.register('sw.js?v=67.2.0')
+          navigator.serviceWorker.register('sw.js?v=67.3.0')
             .then(reg => {
               // v67.2: uygulama her öne geldiğinde yeni sürüm var mı diye bak
               try { reg.update(); } catch (e) {}
