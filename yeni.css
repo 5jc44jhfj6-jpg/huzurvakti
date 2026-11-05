@@ -126,10 +126,10 @@ body.dark-theme .yn-nav .nav-tab.active .tab-label { color: #2b1d14; }
 #page-home .ya-ana > * { flex: 0 0 auto; }
 .ya-hero {
   position: relative; overflow: hidden; background: #3a2a1c;
-  height: min(calc(min(100vw, 560px) * 0.6), 33vh); min-height: 190px;
+  height: min(calc(min(100vw, 560px) * 0.69), 38vh); min-height: 190px;
 }
 .ya-foto {
-  position: absolute; inset: 0; background-size: cover; background-position: center 62%;
+  position: absolute; inset: 0; background-size: cover; background-position: center 59%;
   background-image: url(img/vakit_ogle.jpg); filter: saturate(1.1);
   transition: background-image .8s ease;
 }
@@ -235,14 +235,14 @@ body[data-foto="gece"] .ya-foto { background-image: url(img/vakit_gece.jpg); }
 /* Kur'an Oku · Kur'an Dinle */
 .ya-ikili { display: flex; border-bottom: 1px solid var(--ya-cizgi); }
 .ya-ikili button {
-  flex: 1 1 0; min-width: 0; height: 56px; display: flex; align-items: center; gap: 9px; padding: 0 8px 0 10px;
+  flex: 1 1 0; min-width: 0; height: 68px; display: flex; align-items: center; gap: 8px; padding: 0 6px 0 9px;
   background: linear-gradient(#fffdf8, #fbf3e4); border: none; text-align: left; cursor: pointer;
 }
 .ya-ikili button + button { border-left: 1.4px solid var(--ya-altin); }
-.ya-ikili .ya-m b { font-size: .98rem; }
-.ya-ikili .ya-m small { font-size: .7rem; }
-.ya-ikili .ya-git { font-size: 1.25rem; }
-.ya-kt { position: relative; width: 44px; height: 44px; flex: 0 0 auto; border-radius: 10px; background-size: cover; box-shadow: 0 2px 6px rgba(60, 30, 10, .25); }
+.ya-ikili .ya-m b { font-size: 1.03rem; }
+.ya-ikili .ya-m small { font-size: .76rem; }
+.ya-ikili .ya-git { font-size: 1.15rem; }
+.ya-kt { position: relative; width: 50px; height: 50px; flex: 0 0 auto; border-radius: 10px; background-size: cover; box-shadow: 0 2px 6px rgba(60, 30, 10, .25); }
 .ya-kitap { background-image: url(img/kart_kuran.jpg); background-position: 30% 60%; }
 .ya-dinle { background-image: url(img/kart_dinle.jpg); background-position: center 45%; }
 .ya-dinle i {
@@ -252,7 +252,7 @@ body[data-foto="gece"] .ya-foto { background-image: url(img/vakit_gece.jpg); }
 
 /* Günün Âyeti: geniş alanı doldurur */
 .ya-ayet {
-  position: relative; flex: 1 1 auto !important; min-height: 118px; display: flex; flex-direction: column; justify-content: space-between;
+  position: relative; flex: 1 1 auto !important; min-height: 112px; display: flex; flex-direction: column; justify-content: space-between;
   padding: 10px 18px 9px; text-align: center; cursor: pointer;
   background: radial-gradient(120% 90% at 50% 50%, #fffdf6, #f6e6c6); border-bottom: 1px solid var(--ya-cizgi);
   transition: opacity .18s ease;
@@ -273,7 +273,7 @@ body[data-foto="gece"] .ya-foto { background-image: url(img/vakit_gece.jpg); }
 }
 .ya-metin {
   flex: 1 1 auto; min-height: 0; overflow: hidden; display: flex; align-items: center; justify-content: center;
-  font-family: var(--ya-serif); font-style: italic; font-size: 1.06rem; font-weight: 500; line-height: 1.42;
+  font-family: var(--ya-serif); font-style: italic; font-size: .98rem; font-weight: 500; line-height: 1.4;
   color: #2b1d14; margin: 6px 2px 4px;
 }
 .ya-af { display: flex; justify-content: space-between; align-items: center; gap: 8px; font-family: var(--ya-serif); font-size: .78rem; color: #5c4532; }
@@ -328,7 +328,8 @@ body.dark-theme .ya-kisa b { color: #f1e3cc; }
   .ya-saat { font-size: 2.45rem; }
   #page-home .ya-t { height: 58px; }
   .ya-anl { height: 58px; }
-  .ya-ikili button { height: 50px; }
+  .ya-ikili button { height: 58px; }
+  .ya-kt { width: 46px; height: 46px; }
   .ya-kisa button { height: 64px; }
   .ya-kisa img { width: 27px; height: 27px; margin-top: 15px; }
   .ya-ayet { min-height: 96px; }
