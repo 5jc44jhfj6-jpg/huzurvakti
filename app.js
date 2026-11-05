@@ -75,8 +75,15 @@ function initApp() {
 
   // Açılış ekranı kaldırıldı: telefonun kendi açılış görselinden sonra
   // ikinci bir "Namaz Dostu" ekranı gösterilmiyor, doğrudan ana sayfa açılıyor.
+  // v67.2: Kul Şerif açılış görseli kısa bir süre görünür, sonra yumuşakça kaybolur
   const loader = document.getElementById('loading-screen');
-  if (loader) loader.style.display = 'none';
+  if (loader) {
+    const kalan = Math.max(0, 1400 - (performance.now ? performance.now() : 0));
+    setTimeout(() => {
+      loader.style.opacity = '0';
+      setTimeout(() => { loader.style.display = 'none'; }, 520);
+    }, kalan);
+  }
 
   setTimeout(() => {
 

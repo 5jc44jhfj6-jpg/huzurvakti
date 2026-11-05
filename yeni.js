@@ -1,5 +1,5 @@
 /* ══════════════════════════════════════════════════════════════
-   NAMAZ DOSTU — v67.1 YENİ BÖLÜMLER
+   NAMAZ DOSTU — v67.2 YENİ BÖLÜMLER
    • Anlayarak Namaz (fotoğraflı adım adım)
    • Takibim panosu (bu hafta, aylık durum, seri, mazeretli gün) + Rozetler
    • Zikirmatik yeni görünüm
@@ -121,8 +121,8 @@ function renderAnlayarak() {
     <div class="an-kapak" style="background-image:url(img/kart_anlayarak.jpg)"><div><small>ANLAYARAK NAMAZ</small><b>Hareketi gör, anlamını öğren</b><span>Her adımda fotoğraf · Arapça · okunuş · anlam</span></div></div>
     <div class="yh-grup">Hangi namazı öğrenmek istersin?</div>
     <div class="an-namaz">${keys.map(n => `<button class="${n === AN.n ? 'on' : ''}" onclick="hvAnNamaz('${n}')"><b>${esc(PRAYER_GUIDE_DATA[n].name.replace(' Namazı', ''))}</b><small>${kisa(n)}</small></button>`).join('')}</div>
-    <div class="yh-grup">${esc(g.name)} · ${g.totalRakat} rekât</div>
-    <div class="yh-liste">${g.parts.map((p, i) => `<button class="yh-sat an-kisim ${i === AN.p ? 'on' : ''}" onclick="hvAnKisim(${i})"><span class="yh-ik an-rek">${rekatSay(p)}</span><span class="yh-m"><b>${esc(p.description)}</b><small>${p.type === 'farz' ? 'Farz' : p.type === 'vitir' ? 'Vitir (vacip)' : 'Sünnet'} · ${anAdimlar(AN.n, i).length} adım</small></span><span class="yh-ok">${i === AN.p ? '✓' : '›'}</span></button>`).join('')}</div>
+    <div class="yh-grup">${esc(g.name)} · ${g.totalRakat} rekât <small class="an-ipucu">Bir bölüme dokun, fotoğraflı anlatım başlasın</small></div>
+    <div class="yh-liste">${g.parts.map((p, i) => `<button class="yh-sat an-kisim ${i === AN.p ? 'on' : ''}" onclick="hvAnKisim(${i});hvAnBasla(0)"><span class="yh-ik an-rek an-rek-f" style="background-image:url(${foto(['kiyam', 'ruku', 'secde', 'oturus'][i % 4])})"><i>${rekatSay(p)}</i></span><span class="yh-m"><b>${esc(p.description)}</b><small>${p.type === 'farz' ? 'Farz' : p.type === 'vitir' ? 'Vitir (vacip)' : 'Sünnet'} · ${anAdimlar(AN.n, i).length} adım</small></span><span class="an-git">Başla ›</span></button>`).join('')}</div>
     <div class="an-not"><b>Mezhep notu:</b> Anlatım Hanefî mezhebine göredir. Kadınlar için farklı olan yerler (el kaldırma, el bağlama, rükû ve secdede toplu durma) ilgili adımda yazılıdır.</div>
     <button class="an-basla" onclick="hvAnBasla(0)">Öğrenmeye başla ›</button>
     ${kayit && kayit.i > 0 && PRAYER_GUIDE_DATA[kayit.n] ? `<button class="an-devam" onclick="hvAnDevam()">Kaldığın yerden devam et · ${esc(PRAYER_GUIDE_DATA[kayit.n].name)} · ${kayit.i + 1}. adım</button>` : ''}
@@ -491,6 +491,77 @@ function renderCocuk() {
 }
 window.hvCkAd = (sil) => { if (sil) kaydet('cocuk_ad', ''); else kaydet('cocuk_ad', (($('ck-ad') || {}).value || '').trim()); renderCocuk(); };
 rota('cocuk', renderCocuk);
+
+
+/* ═════════════════════════ v67.2 · DUA & SÛRE ÖĞREN (yeni liste) ═════════════════════════ */
+let _ezSekme = 'namaz';
+function ezYeniCiz() {
+  const kok = $('ezber-root'); if (!kok || typeof HV_SURE_NO === 'undefined') return;
+  try { if (typeof hvEzSesDurdur === 'function') hvEzSesDurdur(); } catch (e) {}
+  try { hvEzKayit = null; } catch (e) {}
+  const ogr = (tur, ad) => (typeof hvEzOgrenildiMi === 'function') && hvEzOgrenildiMi((tur + '_' + ad).replace(/\s+/g, '_'));
+  const sureler = Object.keys(HV_SURE_NO);
+  const kuranDua = Object.keys(typeof HV_DUA_AYET !== 'undefined' ? HV_DUA_AYET : {});
+  const namazDua = (typeof DUA_LEARN !== 'undefined' ? DUA_LEARN : []).map(d => d.title).filter(t => !(typeof HV_DUA_AYET !== 'undefined' && HV_DUA_AYET[t]));
+  const namazda = [['sure', 'Fâtiha Sûresi']].concat(namazDua.map(t => ['dua', t]), [['sure', 'İhlâs Sûresi'], ['sure', 'Kevser Sûresi'], ['sure', 'Fîl Sûresi'], ['sure', 'Felâk Sûresi'], ['sure', 'Nâs Sûresi']]).filter(x => x[0] !== 'sure' || HV_SURE_NO[x[1]]);
+  const L = { namaz: namazda, sure: sureler.map(t => ['sure', t]), kuran: kuranDua.map(t => ['kurandua', t]) }[_ezSekme] || namazda;
+  const hepsi = namazda.concat(sureler.map(t => ['sure', t]), kuranDua.map(t => ['kurandua', t]));
+  const tekil = {}; hepsi.forEach(x => { tekil[x[0] + x[1]] = x; });
+  const toplam = Object.keys(tekil).length; const bilinen = Object.values(tekil).filter(x => ogr(x[0], x[1])).length;
+  const kisalt = (ad) => ad.replace(/ Sûresi$/, '').replace(/ Duası$/, '').replace(/ Duaları$/, '').replace(/ \(Selamdan Sonra\)/, '');
+  const alt = (tur, ad) => tur === 'sure' ? 'Sûresi' : /Duaları/.test(ad) ? 'Duaları' : /Duası/.test(ad) ? 'Duası' : tur === 'kurandua' ? "Kur'an'dan" : /Tesbih/.test(ad) ? 'Selamdan sonra' : 'Dua';
+  kok.innerHTML = `
+    <div class="yh-bas"><h2>Dua &amp; Sûre Öğren</h2><p>Dokun, tamamı tek sayfada açılsın</p></div>
+    <div class="ez-hoca-ust">${typeof hvOgrenQariSecim === 'function' ? hvOgrenQariSecim('hvEzHocaDegistir') : ''}</div>
+    <div class="yn-seg">${[['namaz', 'Namazda'], ['sure', 'Sûreler'], ['kuran', "Kur'an Duaları"]].map(t => `<button class="${t[0] === _ezSekme ? 'on' : ''}" onclick="hvEzSekme('${t[0]}')">${t[1]}</button>`).join('')}</div>
+    <div class="ez-ilerle"><div><small>İlerlemen</small><b>${bilinen} / ${toplam} ezberlendi</b></div><span><i style="width:${toplam ? Math.round(bilinen / toplam * 100) : 0}%"></i></span></div>
+    <div class="ez-yeni">${L.map((x, i) => `<button class="ez-k ${ogr(x[0], x[1]) ? 'ok' : ''}" onclick="hvEzAc('${x[0]}','${x[1].replace(/'/g, "\\'")}')"><span class="ez-kf" style="background-image:url(img/kucuk_${String((i % 10) + 1).padStart(2, '0')}.jpg)"></span><span class="ez-km"><b>${esc(kisalt(x[1]))}</b><small>${alt(x[0], x[1])}</small></span><span class="ez-ki">${ogr(x[0], x[1]) ? '✓' : '›'}</span></button>`).join('')}</div>
+    <div class="ez-alt-not">✓ ezberlediklerin · dokun, tek sayfada açılsın</div>`;
+  try { if (typeof hvEzBasaSar === 'function') hvEzBasaSar(); } catch (e) {}
+}
+window.hvEzSekme = (t) => { _ezSekme = t; ezYeniCiz(); };
+window.renderEzber = ezYeniCiz;
+rota('ezber', ezYeniCiz);
+
+/* ═════════════════════════ v67.2 · KUR'AN OKU sayfasına kısayollar + Önemli Sûreler ═════════════════════════ */
+function kuranEkle() {
+  const v = $('surah-list-view'); if (!v || v.querySelector('.kq-ek')) return;
+  const ara = v.querySelector('.quran-search-bar'); if (!ara) return;
+  const d = document.createElement('div'); d.className = 'kq-ek';
+  const ON = [[36, 'Yâsîn', 83, 4], [67, 'Mülk', 30, 7], [18, 'Kehf', 110, 3], [55, 'Rahmân', 78, 6], [48, 'Fetih', 29, 9], [56, 'Vâkıa', 96, 1]];
+  d.innerHTML = `<div class="yh-izgara n4 kq-t">
+      <button class="yh-tile" onclick="hvKuranModu('sayfa')"><span class="yh-ti">📜</span><b>Mushaf</b></button>
+      <button class="yh-tile" onclick="navigateTo('dinle')"><span class="yh-ti">🎧</span><b>Dinle</b></button>
+      <button class="yh-tile" onclick="navigateTo('ayet-arama')"><span class="yh-ti">🔎</span><b>Meal Arama</b></button>
+      <button class="yh-tile" onclick="navigateTo('hatim')"><span class="yh-ti">📗</span><b>Hatim</b></button></div>
+    <div class="yh-grup">Önemli Sûreler</div>
+    <div class="kq-on">${ON.map(o => `<button onclick="openSurahById(${o[0]})"><span style="background-image:url(img/kucuk_${String(o[3]).padStart(2, '0')}.jpg)"></span><b>${o[1]}</b><small>${o[2]} âyet</small></button>`).join('')}</div>
+    <div class="yh-grup">Bütün Sûreler</div>`;
+  ara.before(d);
+}
+
+/* ═════════════════════════ v67.2 · Sayfa başlıkları: emojisiz, sola yaslı ═════════════════════════ */
+const EMOJI_BAS = /^[\s‍️\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{2B00}-\u{2BFF}]+/u;
+function basliklariDuzelt(kok) {
+  (kok || document).querySelectorAll('.page-header-title h2').forEach(h => {
+    if (h.dataset.yn) return; h.dataset.yn = '1';
+    const t = h.textContent.replace(EMOJI_BAS, '').trim(); if (t) h.textContent = t;
+  });
+}
+const _eskiNav = window.navigateTo;
+if (typeof _eskiNav === 'function') {
+  window.navigateTo = function (id) {
+    const r = _eskiNav.apply(this, arguments);
+    try {
+      const sec = $('page-' + id);
+      if (id === 'quran') kuranEkle();
+      setTimeout(() => basliklariDuzelt(sec), 0);
+      setTimeout(() => basliklariDuzelt(sec), 400);
+    } catch (e) {}
+    return r;
+  };
+}
+document.addEventListener('DOMContentLoaded', () => { basliklariDuzelt(document); try { kuranEkle(); } catch (e) {} });
 
 /* ═════════════════════════ AYARLAR: Rozetler göster/gizle ═════════════════════════ */
 document.addEventListener('DOMContentLoaded', () => {

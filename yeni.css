@@ -605,3 +605,108 @@ body.dark-theme .kk-ok { color: #f3cf86; }
 .ck-izgara button { height: 104px; border-radius: 22px; border: none; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; cursor: pointer; box-shadow: 0 4px 10px rgba(0, 0, 0, .08); }
 .ck-izgara span { font-size: 2.2rem; } .ck-izgara b { font-family: var(--ya-serif); font-size: 1.02rem; color: #2b1d14; }
 body.dark-theme .yh-cip button.on, body.dark-theme .kk-mod button.on { background: linear-gradient(#f2d79f, #c99645); color: #2b1d14; border-color: #f6dca6; }
+
+/* ══════════ v67.2 · İÇ SAYFALAR: tek tip başlık, sekme ve yazı ══════════ */
+.page-header-title { text-align: left !important; margin: 2px 2px 14px !important; padding: 0 !important; background: none !important; border: none !important; }
+.page-header-title h2 { font-size: 1.8rem !important; font-weight: 600 !important; line-height: 1.15 !important; letter-spacing: 0 !important;
+  background: none !important; -webkit-text-fill-color: currentColor !important; text-shadow: none !important; justify-content: flex-start !important; }
+.page-header-title p { font-family: var(--ya-serif) !important; font-size: .9rem !important; margin-top: 3px !important; opacity: 1 !important; }
+.hero-frame-box h3, .hero-frame-box h4, .fc-title, .gece-ad, .summary-heading, .surah-title-tr, .ez-card-t, .section-mini-title,
+.ezkar-title, .dua-title, .esma-tr, .zf-baslik, .hc-title, .step-body h4, .active-part-header-banner h3 { font-family: var(--ya-serif) !important; }
+.hero-frame-box p, .fc-tr, .step-body p { line-height: 1.5; }
+
+/* Sekme (segment) düğmeleri: krem iz + beyaz seçili */
+.segmented-switch, .share-type-switch, .qmode, .yn-seg, .dn-mod, .guide-view-switcher {
+  display: flex !important; gap: 2px !important; padding: 4px !important; margin: 0 0 14px !important; border-radius: 16px !important;
+  background: rgba(226, 189, 115, .22) !important; border: none !important; box-shadow: none !important;
+}
+.segmented-switch .seg-btn, .share-type-switch .seg-btn, .qmode button, .yn-seg button, .dn-mod button, .guide-view-switcher .guide-switch-btn {
+  flex: 1 1 0 !important; min-width: 0; border: none !important; background: transparent !important; box-shadow: none !important;
+  border-radius: 12px !important; padding: 9px 6px !important; font-family: var(--ya-serif) !important; font-size: .9rem !important;
+  font-weight: 600 !important; color: var(--text-sub) !important; cursor: pointer;
+}
+.segmented-switch .seg-btn.active, .share-type-switch .seg-btn.active, .qmode button.on, .yn-seg button.on, .dn-mod button.on, .guide-view-switcher .guide-switch-btn.active {
+  background: var(--bg-card) !important; color: var(--text-main) !important; box-shadow: 0 2px 6px rgba(120, 75, 25, .15) !important;
+}
+body.dark-theme .segmented-switch .seg-btn.active, body.dark-theme .share-type-switch .seg-btn.active, body.dark-theme .qmode button.on,
+body.dark-theme .yn-seg button.on, body.dark-theme .dn-mod button.on, body.dark-theme .guide-view-switcher .guide-switch-btn.active { background: #3a2818 !important; color: #f3e4c8 !important; }
+.ogren-mod { margin: 0 0 0 auto !important; width: auto !important; }
+.ogren-mod .seg-btn { padding: 6px 12px !important; font-size: .8rem !important; }
+.sd-ust { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+
+/* Genel butonlar */
+body.light-theme .gold-primary-btn { background: linear-gradient(#3b2414, #241509) !important; color: #f6dca6 !important; border: none !important; box-shadow: 0 5px 12px rgba(40, 20, 5, .25), inset 0 0 0 1px #c99a4b !important; font-family: var(--ya-serif); }
+body.light-theme .gold-outline-btn { background: var(--bg-card) !important; color: var(--text-main) !important; border: 1.2px solid var(--border-gold) !important; font-family: var(--ya-serif); }
+.search-input-field, .quran-search-bar input { font-family: var(--ya-serif); }
+body.light-theme .quran-search-bar, body.light-theme .search-bar-wrap { background: var(--bg-card) !important; border: 1.2px solid var(--border-light) !important; box-shadow: none !important; }
+
+/* ══════════ KUR'AN OKU ══════════ */
+#page-quran .qmode button { font-size: .95rem !important; }
+#page-quran .quran-tools { background: var(--bg-card) !important; border: 1.2px solid var(--border-light) !important; border-radius: 18px !important; box-shadow: none !important; }
+.kq-t { margin-bottom: 2px; } .kq-t .yh-tile { min-height: 72px; } .kq-t .yh-ti { font-size: 1.35rem; } .kq-t .yh-tile b { font-size: .76rem; }
+.kq-on { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; scrollbar-width: none; }
+.kq-on button { flex: 0 0 92px; border: 1.2px solid var(--border-light); background: var(--bg-card); border-radius: 14px; overflow: hidden; padding: 0 0 7px; text-align: left; cursor: pointer; }
+.kq-on span { display: block; height: 70px; background: center / cover; margin-bottom: 5px; }
+.kq-on b { display: block; font-family: var(--ya-serif); font-size: .9rem; color: var(--text-main); padding: 0 8px; }
+.kq-on small { display: block; font-size: .7rem; color: var(--text-sub); padding: 0 8px; }
+#surah-list-wrap { display: flex; flex-direction: column; gap: 0 !important; background: var(--bg-card); border: 1.2px solid var(--border-light); border-radius: 18px; overflow: hidden; }
+#surah-list-wrap .surah-card { border: none !important; border-radius: 0 !important; box-shadow: none !important; background: none !important; margin: 0 !important; padding: 11px 14px !important; }
+#surah-list-wrap .surah-card + .surah-card { border-top: 1px solid var(--border-light) !important; }
+#surah-list-wrap .surah-badge-num {
+  width: 38px; height: 38px; border: none !important; border-radius: 0 !important; color: var(--ya-bakir) !important; font-family: var(--ya-serif); font-size: .82rem;
+  background: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'><g fill='none' stroke='%23d6a85c' stroke-width='1.4'><rect x='9' y='9' width='22' height='22' rx='2'/><rect x='9' y='9' width='22' height='22' rx='2' transform='rotate(45 20 20)'/></g></svg>") center / contain no-repeat !important;
+}
+body.dark-theme #surah-list-wrap .surah-badge-num { color: #f3cf86 !important; }
+#surah-list-wrap .surah-title-tr { font-size: 1.02rem; font-weight: 600; color: var(--text-main) !important; }
+#surah-list-wrap .surah-title-ar { color: var(--ya-bakir) !important; font-size: 1.35rem; }
+body.dark-theme #surah-list-wrap .surah-title-ar { color: #f3cf86 !important; }
+
+/* ══════════ KUR'AN DİNLE (fotoğraflı çalar) ══════════ */
+#page-dinle .dn-player {
+  position: relative; overflow: hidden; border: none !important; border-radius: 22px !important; padding: 0 0 14px !important;
+  background: var(--bg-card) !important; box-shadow: 0 8px 20px rgba(60, 30, 10, .16) !important;
+}
+#page-dinle .dn-simdi, #page-dinle .dn-qari-ad { position: relative; z-index: 1; color: #fff !important; text-align: left !important; padding: 0 18px; }
+#page-dinle .dn-player::before {
+  content: ''; display: block; height: 190px; margin-bottom: -86px;
+  background: linear-gradient(rgba(20, 10, 4, 0) 35%, rgba(20, 10, 4, .82)), url(img/kart_dinle.jpg) center 45% / cover no-repeat;
+}
+#page-dinle .dn-simdi::before { content: 'ŞU AN ÇALIYOR'; display: block; font-family: var(--font-ui); font-size: .62rem; letter-spacing: 1.6px; font-weight: 700; color: #e8b968; margin-bottom: 2px; }
+#page-dinle .dn-simdi { font-family: var(--ya-serif) !important; font-size: 1.55rem !important; font-weight: 600 !important; line-height: 1.2; }
+#page-dinle .dn-qari-ad { font-family: var(--ya-serif); font-size: .9rem !important; color: #f3dfb8 !important; margin-bottom: 26px; }
+#page-dinle .dn-cizgi, #page-dinle .dn-zaman, #page-dinle .dn-ayet-kutu, #page-dinle .dn-btns, #page-dinle .dn-devam { position: relative; z-index: 1; margin-left: 16px !important; margin-right: 16px !important; }
+#page-dinle .dn-cizgi { accent-color: #b97a35; width: calc(100% - 32px) !important; }
+#page-dinle .dn-play { width: 66px !important; height: 66px !important; background: linear-gradient(#3b2414, #1e1007) !important; color: #f6dca6 !important; font-size: 1.5rem !important; box-shadow: 0 6px 16px rgba(40, 20, 5, .35), inset 0 0 0 1.5px #c99a4b !important; }
+#page-dinle .dn-yan { background: none !important; border: none !important; color: var(--text-main) !important; font-size: 1.5rem !important; }
+#page-dinle .dn-devam { border-radius: 14px !important; font-family: var(--ya-serif); }
+#page-dinle .dn-ayar { background: var(--bg-card) !important; border: 1.2px solid var(--border-light) !important; border-radius: 18px !important; }
+
+/* ══════════ DUA & SÛRE ÖĞREN (yeni liste) ══════════ */
+.ez-ilerle { display: flex; align-items: center; gap: 14px; padding: 12px 14px; margin-bottom: 10px; border-radius: 16px; background: var(--bg-card); border: 1.2px solid var(--border-light); }
+.ez-ilerle div { display: flex; flex-direction: column; } .ez-ilerle small { font-size: .74rem; color: var(--text-sub); }
+.ez-ilerle b { font-family: var(--ya-serif); font-size: 1.08rem; color: var(--text-main); white-space: nowrap; }
+.ez-ilerle > span { flex: 1; height: 5px; border-radius: 3px; background: rgba(226, 189, 115, .3); overflow: hidden; }
+.ez-ilerle > span i { display: block; height: 100%; background: linear-gradient(90deg, #c08a3e, #e0b468); }
+.ez-yeni { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.ez-k { display: flex; align-items: center; gap: 9px; padding: 6px; border-radius: 16px; border: 1.2px solid var(--border-light); background: var(--bg-card); cursor: pointer; text-align: left; min-height: 66px; }
+.ez-k.ok { background: rgba(79, 138, 91, .08); border-color: #b9d7bf; }
+.ez-kf { width: 54px; height: 54px; flex: 0 0 auto; border-radius: 11px; background: center / cover no-repeat; }
+.ez-km { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.ez-km b { font-family: var(--ya-serif); font-size: .98rem; font-weight: 600; color: var(--text-main); line-height: 1.2; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+.ez-km small { font-family: var(--ya-serif); font-size: .74rem; color: var(--text-sub); margin-top: 2px; }
+.ez-ki { flex: 0 0 auto; color: #a88d6e; font-size: 1.15rem; padding-right: 4px; } .ez-k.ok .ez-ki { color: #4f8a5b; font-weight: 700; }
+.ez-alt-not { text-align: center; font-family: var(--ya-serif); font-size: .82rem; color: var(--text-sub); margin: 12px 0 4px; }
+.ez-hoca-ust { margin-bottom: 10px; }
+
+/* Anlayarak: bölüm satırında fotoğraf */
+.an-rek-f { position: relative; background-color: #2b1a10 !important; background-position: center 22% !important; background-size: cover !important; background-repeat: no-repeat !important; overflow: hidden; width: 48px !important; height: 48px !important; }
+.an-rek-f i { position: absolute; right: 3px; bottom: 3px; min-width: 18px; height: 18px; border-radius: 9px; background: #2b1a10; color: #f6dca6; font-style: normal; font-size: .72rem; display: flex; align-items: center; justify-content: center; }
+.an-git { flex: 0 0 auto; font-family: var(--ya-serif); font-weight: 700; font-size: .85rem; color: var(--ya-bakir); }
+.an-ipucu { display: block; font-family: var(--font-ui); font-size: .74rem; font-weight: 400; color: var(--text-sub); margin-top: 2px; }
+#loading-screen { transition: opacity .5s ease !important; }
+
+/* Paylaşım penceresi düğmeleri */
+.hv-sc-box { background: var(--bg-card) !important; border: 1.2px solid var(--border-gold) !important; }
+.hv-sc-btn { font-family: var(--ya-serif) !important; border-radius: 14px !important; background: var(--bg-card) !important; color: var(--text-main) !important; border: 1.2px solid var(--border-gold) !important; box-shadow: none !important; }
+.hv-sc-btn.hv-sc-primary { background: linear-gradient(#3b2414, #241509) !important; color: #f6dca6 !important; border-color: #c99a4b !important; }
+.hv-sc-close { font-family: var(--ya-serif) !important; color: var(--text-sub) !important; }

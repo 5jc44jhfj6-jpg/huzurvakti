@@ -1927,7 +1927,7 @@ function hvImsakiyeGorselPaylas() {
   rg.addColorStop(0, '#5C3B25'); rg.addColorStop(0.5, '#2A170C'); rg.addColorStop(1, '#160B04');
   ctx.fillStyle = rg; ctx.fillRect(0, 0, W, H);
   ctx.strokeStyle = 'rgba(227,173,130,0.45)'; ctx.lineWidth = 3; hvCardRoundRect(ctx, 40, 40, W - 80, H - 80, 40); ctx.stroke();
-  const GOLD = '#E3AD82', CREAM = '#F7DDC4', WHITE = '#FDF6EE';
+  const GOLD = '#F3CF86', CREAM = '#F6E4C0', WHITE = '#FFFFFF';
   ctx.textAlign = 'center';
   hvCardMoon(ctx, W / 2 - 250, 132, 26, GOLD, 0.95);
   ctx.fillStyle = CREAM; ctx.font = "700 62px 'Outfit', system-ui, sans-serif"; ctx.fillText('İMSAKİYE', W / 2 + 10, 152);
@@ -2514,13 +2514,14 @@ const HV_CARD_W = 1080, HV_CARD_H = 1920;
 let _hvCardBg = null, _hvCardBgTried = false;
 
 function hvCardLoadBg() {
+  // v67.2: paylaşım kartının arkası, o anki vaktin İstanbul fotoğrafı
+  const foto = (document.body && document.body.dataset.foto) || 'ikindi';
   return new Promise((resolve) => {
-    if (_hvCardBg || _hvCardBgTried) return resolve(_hvCardBg);
-    _hvCardBgTried = true;
+    if (_hvCardBg && _hvCardBg._foto === foto) return resolve(_hvCardBg);
     const img = new Image();
-    img.onload = () => { _hvCardBg = img; resolve(img); };
+    img.onload = () => { img._foto = foto; _hvCardBg = img; resolve(img); };
     img.onerror = () => resolve(null);
-    img.src = 'bg-mosque.jpg';
+    img.src = 'img/paylas_' + foto + '.jpg';
   });
 }
 
@@ -2587,11 +2588,6 @@ async function hvBuildShareCard(data) {
     const s = Math.max(HV_CARD_W / bg.width, HV_CARD_H / bg.height);
     const w = bg.width * s, h = bg.height * s;
     ctx.drawImage(bg, (HV_CARD_W - w) / 2, (HV_CARD_H - h) / 2, w, h);
-    // yeşil tonu bakıra çevir
-    ctx.globalCompositeOperation = 'color';
-    ctx.fillStyle = '#9A6634';
-    ctx.fillRect(0, 0, HV_CARD_W, HV_CARD_H);
-    ctx.globalCompositeOperation = 'source-over';
   } else {
     const rg = ctx.createRadialGradient(HV_CARD_W/2, HV_CARD_H*0.34, 60, HV_CARD_W/2, HV_CARD_H*0.34, HV_CARD_H*0.72);
     rg.addColorStop(0, '#5C3B25'); rg.addColorStop(0.55, '#2A170C'); rg.addColorStop(1, '#160B04');
@@ -2600,17 +2596,17 @@ async function hvBuildShareCard(data) {
 
   // ── Okunurluk perdesi (A2: açık zemin, desen görünsün) ──
   const vg = ctx.createLinearGradient(0, 0, 0, HV_CARD_H);
-  vg.addColorStop(0, 'rgba(26,13,5,0.50)');
-  vg.addColorStop(0.45, 'rgba(26,13,5,0.30)');
-  vg.addColorStop(1, 'rgba(14,7,2,0.76)');
+  vg.addColorStop(0, 'rgba(20,10,4,0.55)');
+  vg.addColorStop(0.45, 'rgba(20,10,4,0.62)');
+  vg.addColorStop(1, 'rgba(12,6,2,0.82)');
   ctx.fillStyle = vg; ctx.fillRect(0, 0, HV_CARD_W, HV_CARD_H);
 
-  const GOLD = '#E3AD82', CREAM = '#F7DDC4', WHITE = '#FDF6EE';
+  const GOLD = '#F3CF86', CREAM = '#F6E4C0', WHITE = '#FFFFFF';
   const M = 82;
   const cx = HV_CARD_W / 2;
 
   // ── İnce altın çerçeve ──
-  ctx.strokeStyle = 'rgba(227,173,130,0.45)';
+  ctx.strokeStyle = 'rgba(243,207,134,0.6)';
   ctx.lineWidth = 3;
   hvCardRoundRect(ctx, 48, 48, HV_CARD_W - 96, HV_CARD_H - 96, 44);
   ctx.stroke();
@@ -2639,7 +2635,7 @@ async function hvBuildShareCard(data) {
   }
 
   const bodyFit = hvCardFit(ctx, '\u201C' + (d.text || '') + '\u201D', boxW,
-    avail - lblH - arH - 130, { max: 80, min: 34, weight: '500', lineHeight: 1.36 });
+    avail - lblH - arH - 130, { max: 80, min: 34, weight: '500', lineHeight: 1.36, family: "'Lora', Georgia, serif" });
   const bodyH = bodyFit.lines.length * bodyFit.size * bodyFit.lh;
   const srcH = d.source ? 118 : 0;
 
@@ -2648,7 +2644,7 @@ async function hvBuildShareCard(data) {
   if (label) {
     y += LBL;
     ctx.fillStyle = GOLD;
-    ctx.font = `600 ${LBL}px 'Outfit', system-ui, sans-serif`;
+    ctx.font = `600 ${LBL}px 'Lora', Georgia, serif`;
     ctx.letterSpacing = '6px';
     ctx.fillText(label, cx, y);
     ctx.letterSpacing = '0px';
@@ -2674,7 +2670,7 @@ async function hvBuildShareCard(data) {
   if (d.source) {
     y += 82;
     ctx.fillStyle = GOLD;
-    ctx.font = "600 42px 'Outfit', system-ui, sans-serif";
+    ctx.font = "600 42px 'Lora', Georgia, serif";
     ctx.fillText('\u2014 ' + d.source, cx, y);
   }
 
@@ -3117,9 +3113,9 @@ window.hvMvDurdur = hvMvDurdur;
 
 function hvMvDugmeTazele() {
   const b = document.getElementById('mv-play');
-  if (b) b.innerHTML = hvMvCalisiyor ? '⏸ Duraklat' : '▶️ Dinle';
+  if (b) b.innerHTML = hvMvCalisiyor ? '⏸︎ Duraklat' : '▶︎ Dinle';
   const t = document.getElementById('te-play');
-  if (t) t.innerHTML = hvMvCalisiyor ? '⏸' : '▶️';
+  if (t) t.innerHTML = hvMvCalisiyor ? '⏸︎' : '▶︎';
 }
 
 function hvMvBasDurdur() {
@@ -3478,9 +3474,9 @@ async function renderMushaf(calmayaDevam) {
     </div>
 
     <div class="mv-ses">
-      <button class="mv-ses-yan" onclick="hvMvAtla(-1)" title="Önceki âyet">⏮</button>
-      <button id="mv-play" class="mv-play" onclick="hvMvBasDurdur()">${hvMvCalisiyor ? '⏸ Duraklat' : '▶️ Dinle'}</button>
-      <button class="mv-ses-yan" onclick="hvMvAtla(1)" title="Sonraki âyet">⏭</button>
+      <button class="mv-ses-yan" onclick="hvMvAtla(-1)" title="Önceki âyet">⏮︎</button>
+      <button id="mv-play" class="mv-play" onclick="hvMvBasDurdur()">${hvMvCalisiyor ? '⏸︎ Duraklat' : '▶︎ Dinle'}</button>
+      <button class="mv-ses-yan" onclick="hvMvAtla(1)" title="Sonraki âyet">⏭︎</button>
     </div>
     <div class="mv-ses2">
       <span id="mv-gecen">0:00</span>
@@ -3883,9 +3879,9 @@ function hvEzCalmaBitti() {
 }
 function hvEzDugmeleriTazele() {
   const b = document.getElementById('ez-play');
-  if (b) b.innerHTML = hvEzCalan === 'parca' ? '⏸ Durdur' : '🔊 Dinle';
+  if (b) b.innerHTML = hvEzCalan === 'parca' ? '⏸︎ Durdur' : '🔊 Dinle';
   const t = document.getElementById('ez-tam-cal');
-  if (t) { t.innerHTML = hvEzCalan === 'tam' ? '⏸ Durdur' : '▶️ Tamamını Dinle'; t.classList.toggle('on', hvEzCalan === 'tam'); }
+  if (t) { t.innerHTML = hvEzCalan === 'tam' ? '⏸︎ Durdur' : '▶︎ Tamamını Dinle'; t.classList.toggle('on', hvEzCalan === 'tam'); }
 }
 function hvEzVurgula(i) {
   document.querySelectorAll('.ez-tam-kart .ez-caliyor').forEach(e => e.classList.remove('ez-caliyor'));
@@ -4112,7 +4108,7 @@ function hvEzTamCiz() {
   }
   kutu.innerHTML = `
     ${sesli
-      ? `<div class="ez-tam-arac"><button id="ez-tam-cal" class="ez-play ez-tam-cal" onclick="hvEzTamCal()">▶️ Tamamını Dinle</button></div>
+      ? `<div class="ez-tam-arac"><button id="ez-tam-cal" class="ez-play ez-tam-cal" onclick="hvEzTamCal()">▶︎ Tamamını Dinle</button></div>
          <div class="ez-tk-ipucu">Bir âyete dokunursan yalnız o âyet okunur.</div>`
       : (refVar
         ? `<div class="ez-tam-arac"><button id="ez-tam-cal" class="ez-play ez-tam-cal" disabled>⏳ Ses hazırlanıyor…</button></div>`
@@ -4599,7 +4595,7 @@ window.hvDnSurekliDegistir = hvDnSurekliDegistir;
 function hvDnTazele() {
   const ayetMod = hvDnMod() !== 'ar';
   const b = document.getElementById('dn-play');
-  if (b) b.innerHTML = (ayetMod ? hvAaCaliyor : hvDnCaliyor) ? '⏸' : '▶️';
+  if (b) b.innerHTML = (ayetMod ? hvAaCaliyor : hvDnCaliyor) ? '⏸︎' : '▶︎';
   const ad = document.getElementById('dn-simdi');
   const aktif = ayetMod ? hvAaSure : hvDnSure;
   if (ad) ad.textContent = aktif ? (hvDnSureAdi(aktif) + ' Sûresi') : 'Bir sûre seçin';
@@ -4720,7 +4716,7 @@ function hvTtsParcala(metin) {
 function hvTtsDurdur() { try { speechSynthesis.cancel(); } catch (e) {} }
 
 /* iOS/Safari konuşmayı yalnızca kullanıcı dokunuşundan sonra başlatır.
-   ▶️ tuşuna basıldığında sessiz bir cümle söyleyip izni açarız. */
+   ▶︎ tuşuna basıldığında sessiz bir cümle söyleyip izni açarız. */
 let hvTtsIsitildi = false;
 function hvTtsIsit() {
   if (hvTtsIsitildi || !hvTtsVar()) return;
@@ -4879,12 +4875,12 @@ function hvAaEkran() {
   const k = document.getElementById('dn-ayet-kutu');
   if (!k) return;
   const p = hvAaListe[hvAaIdx];
-  if (!p) { k.innerHTML = '<div class="dn-ayet-bos">Bir sûre seçip ▶️ tuşuna bas.</div>'; return; }
+  if (!p) { k.innerHTML = '<div class="dn-ayet-bos">Bir sûre seçip ▶︎ tuşuna bas.</div>'; return; }
   k.innerHTML = `
     <div class="dn-ayet-ust">${hvDnSureAdi(hvAaSure)} Sûresi • ${p.v}. âyet <span class="dn-ayet-sayac">${hvAaIdx + 1}/${hvAaListe.length}</span></div>
     <div class="dn-ayet-meal">${hvEsc(p.tr || '—')}</div>`;
   const b = document.getElementById('dn-play');
-  if (b) b.innerHTML = hvAaCaliyor ? '⏸' : '▶️';
+  if (b) b.innerHTML = hvAaCaliyor ? '⏸︎' : '▶︎';
   const ad = document.getElementById('dn-simdi');
   if (ad) ad.textContent = hvDnSureAdi(hvAaSure) + ' Sûresi';
 }
@@ -4925,9 +4921,9 @@ function renderDinle() {
       <div class="dn-zaman"><span id="dn-gecen">0:00</span><span id="dn-toplam">--:--</span></div>`}
 
       <div class="dn-btns">
-        <button class="dn-yan" onclick="hvDnAtla(-1)" title="${ayetMod ? 'Önceki âyet' : 'Önceki sûre'}">⏮</button>
-        <button id="dn-play" class="dn-play" onclick="hvDnBasDurdur()">${(ayetMod ? hvAaCaliyor : hvDnCaliyor) ? '⏸' : '▶️'}</button>
-        <button class="dn-yan" onclick="hvDnAtla(1)" title="${ayetMod ? 'Sonraki âyet' : 'Sonraki sûre'}">⏭</button>
+        <button class="dn-yan" onclick="hvDnAtla(-1)" title="${ayetMod ? 'Önceki âyet' : 'Önceki sûre'}">⏮︎</button>
+        <button id="dn-play" class="dn-play" onclick="hvDnBasDurdur()">${(ayetMod ? hvAaCaliyor : hvDnCaliyor) ? '⏸︎' : '▶︎'}</button>
+        <button class="dn-yan" onclick="hvDnAtla(1)" title="${ayetMod ? 'Sonraki âyet' : 'Sonraki sûre'}">⏭︎</button>
       </div>
 
       ${kayitli && !hvDnSure ? `<button class="dn-devam" onclick="hvDnCal(${kayitli}, ${kayitliSn})">📍 Kaldığın yerden devam et — ${hvDnSureAdi(kayitli)} ${kayitliSn ? '(' + hvDnSure2(kayitliSn) + ')' : ''}</button>` : ''}
@@ -5366,15 +5362,15 @@ async function hvTamEkranCiz(calmayaDevam) {
     </div>
 
     <div class="te-sure">
-      <button class="te-mini" onclick="hvMvAtla(-1)">⏮</button>
+      <button class="te-mini" onclick="hvMvAtla(-1)">⏮︎</button>
       <span id="te-gecen">0:00</span><span class="te-sure-ayrac">/</span><span id="te-toplam">--:--</span>
-      <button class="te-mini" onclick="hvMvAtla(1)">⏭</button>
+      <button class="te-mini" onclick="hvMvAtla(1)">⏭︎</button>
     </div>
 
     <div class="te-alt">
       <button class="te-yan" onclick="hvTeGit(${sayfa - 1})" ${sayfa <= 1 ? 'disabled' : ''}>‹</button>
       <button class="te-kucuk" onclick="hvMushafPunto(-2); hvTamEkranCiz();">A−</button>
-      <button id="te-play" class="te-play" onclick="hvMvBasDurdur()">${hvMvCalisiyor ? '⏸' : '▶️'}</button>
+      <button id="te-play" class="te-play" onclick="hvMvBasDurdur()">${hvMvCalisiyor ? '⏸︎' : '▶︎'}</button>
       <button class="te-kucuk" onclick="hvMushafPunto(2); hvTamEkranCiz();">A+</button>
       <button class="te-kucuk" onclick="hvTeKagit()">${kagit ? '🌙' : '📄'}</button>
       <button class="te-yan" onclick="hvTeGit(${sayfa + 1})" ${sayfa >= HV_MUSHAF_SON ? 'disabled' : ''}>›</button>
@@ -5875,7 +5871,7 @@ function hvSdSesCal() {
     onBasla: () => {
       hvSdCaliyor = true;
       const b = document.getElementById('sd-ses');
-      if (b) { b.innerHTML = '⏸ Durdur'; b.classList.add('on'); }
+      if (b) { b.innerHTML = '⏸︎ Durdur'; b.classList.add('on'); }
     },
     onSira: (k) => { hvSdSesSira = k; hvSdSatirlariIsaretle(k, 0); },
     onIlerle: (oran, k) => hvSdSatirlariIsaretle(k, oran),
