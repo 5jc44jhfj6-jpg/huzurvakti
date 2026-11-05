@@ -35,19 +35,20 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Namaz Dostu">
-    <link rel="apple-touch-icon" href="apple-touch-icon.png?v=67.0.1">
-    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png?v=67.0.1">
+    <link rel="apple-touch-icon" href="apple-touch-icon.png?v=67.1.0">
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png?v=67.1.0">
     <meta name="description" content="Namaz Dostu: Namaz vakitleri, ezan, Kur'an-ı Kerim, kıble, dualar, zikirmatik ve yeni başlayanlar için adım adım namaz rehberi. Ücretsiz, reklamsız, çevrimdışı.">
 
-    <link rel="stylesheet" href="styles.css?v=67.0.1">
-    <link rel="stylesheet" href="yeni.css?v=67.0.1">
-    <script>window.HV_SURUM = '67.0.1';</script>
-    <script src="cities.js?v=67.0.1" defer></script>
-    <script src="data.js?v=67.0.1" defer></script>
-    <script src="content.js?v=67.0.1" defer></script>
-    <script src="hadisler.js?v=67.0.1" defer></script>
-    <script src="app.js?v=67.0.1" defer></script>
-    <script src="features.js?v=67.0.1" defer></script>
+    <link rel="stylesheet" href="styles.css?v=67.1.0">
+    <link rel="stylesheet" href="yeni.css?v=67.1.0">
+    <script>window.HV_SURUM = '67.1.0';</script>
+    <script src="cities.js?v=67.1.0" defer></script>
+    <script src="data.js?v=67.1.0" defer></script>
+    <script src="content.js?v=67.1.0" defer></script>
+    <script src="hadisler.js?v=67.1.0" defer></script>
+    <script src="app.js?v=67.1.0" defer></script>
+    <script src="features.js?v=67.1.0" defer></script>
+    <script src="yeni.js?v=67.1.0" defer></script>
 </head>
 <body class="dark-theme">
     <!-- v67.0: altın simge rengi (vakit simgeleri bunu kullanır) -->
@@ -117,7 +118,7 @@
                 <!-- Özel gün şeridi: bayram namazı / kandil / Ramazan (yalnızca o günlerde) -->
                 <div id="ozel-gun-serit" class="ozel-serit" style="display:none;"></div>
 
-                <button class="ya-anl" onclick="navigateTo('guide')">
+                <button class="ya-anl" onclick="navigateTo('anlayarak')">
                     <span class="ya-anl-foto"></span>
                     <span class="ya-m"><b>Anlayarak Namaz</b><small>Hareketi gör, anlamını öğren</small></span>
                     <span class="ya-git">›</span>
@@ -159,42 +160,91 @@
         <!-- ═══ ÖĞREN SEKMESİ (v67.0) ═══ -->
         <section id="page-ogren" class="page-section">
             <div class="hero-frame-box yh-hub">
-<div class="yh-bas"><h2>Öğren</h2></div><button class="yh-buyuk" onclick="navigateTo('namaz-ogren')" style="--foto:url(img/kart_anlayarak.jpg);--fp:center 30%"><span class="yh-bf"></span><span class="yh-bm"><small>NAMAZ</small><b>Namaz Öğren</b><span>Anlayarak Namaz · Rehber · Abdest</span></span><span class="yh-bo">›</span></button><button class="yh-buyuk" onclick="navigateTo('kuran-ogren')" style="--foto:url(img/kart_kuran.jpg);--fp:center 60%"><span class="yh-bf"></span><span class="yh-bm"><small>KUR'AN</small><b>Kur'an ve Sûre Öğren</b><span>Sûre ezberi · Elifbâ · Tecvid</span></span><span class="yh-bo">›</span></button><button class="yh-buyuk" onclick="navigateTo('dualar')" style="--foto:url(img/kart_dua.jpg);--fp:center 55%"><span class="yh-bf"></span><span class="yh-bm"><small>DUA</small><b>Dualar ve Zikirler</b><span>Ezkâr · Günlük dualar · Esmâ</span></span><span class="yh-bo">›</span></button><div class="yh-grup">Diğer içerikler</div><div class="yh-cip"><button onclick="navigateTo('kirk-hadis')">1000 Hadis</button><button onclick="navigateTo('esma')">Esmâül Hüsnâ</button><button onclick="navigateTo('iman')">İman Esasları</button><button onclick="navigateTo('peygamberler')">Peygamberler</button><button onclick="navigateTo('siyer')">Siyer</button><button onclick="navigateTo('kuran-nedir')">Kur'an Nedir?</button><button onclick="navigateTo('namaz-nedir')">Namaz Nedir?</button><button onclick="navigateTo('sozluk')">Dinî Sözlük</button><button onclick="navigateTo('quiz')">Bilgi Yarışması</button></div>
+<div class="yh-bas"><h2>Öğren</h2></div><button class="yh-buyuk" onclick="navigateTo('namaz-ogren')" style="--foto:url(img/kart_anlayarak.jpg);--fp:center 30%"><span class="yh-bf"></span><span class="yh-bm"><small>NAMAZ</small><b>Namaz Öğren</b><span>Anlayarak Namaz · Rehber · Abdest</span></span><span class="yh-bo">›</span></button><button class="yh-buyuk" onclick="navigateTo('kuran-ogren')" style="--foto:url(img/kart_kuran.jpg);--fp:center 60%"><span class="yh-bf"></span><span class="yh-bm"><small>KUR'AN</small><b>Kur'an ve Sûre Öğren</b><span>Sûre ezberi · Elifbâ · Tecvid</span></span><span class="yh-bo">›</span></button><button class="yh-buyuk" onclick="navigateTo('dualar')" style="--foto:url(img/kart_dua.jpg);--fp:center 55%"><span class="yh-bf"></span><span class="yh-bm"><small>DUA</small><b>Dualar ve Zikirler</b><span>Ezkâr · Günlük dualar · Esmâ</span></span><span class="yh-bo">›</span></button><div class="yh-grup">Diğer içerikler</div><div class="yh-cip"><button onclick="navigateTo('kirk-hadis')">1000 Hadis</button><button onclick="navigateTo('esma')">Esmâül Hüsnâ</button><button onclick="navigateTo('iman')">İman Esasları</button><button onclick="navigateTo('peygamberler')">Peygamberler</button><button onclick="navigateTo('siyer')">Siyer</button><button onclick="navigateTo('kuran-nedir')">Kur'an Nedir?</button><button onclick="navigateTo('namaz-nedir')">Namaz Nedir?</button><button onclick="navigateTo('sozluk')">Dinî Sözlük</button><button onclick="navigateTo('quiz')">Bilgi Yarışması</button><button onclick="navigateTo('cocuk')">👧 Çocuk Modu</button></div>
             </div>
         </section>
 
         <!-- ═══ NAMAZ ÖĞREN (v67.0) ═══ -->
         <section id="page-namaz-ogren" class="page-section">
             <div class="hero-frame-box yh-hub">
-<button class="hub-back-btn yh-geri" onclick="navigateTo('ogren')">‹ Öğren</button><div class="yh-bas"><h2>Namaz Öğren</h2></div><button class="yh-buyuk" onclick="navigateTo('guide')" style="--foto:url(img/kart_anlayarak.jpg);--fp:center 30%"><span class="yh-bf"></span><span class="yh-bm"><small>EN ÇOK KULLANILAN</small><b>Anlayarak Namaz</b><span>Vakit vakit kılınış · okunan dualar</span></span><span class="yh-bo">›</span></button><div class="yh-liste"><button class="yh-sat" onclick="navigateTo('namaz-programi')"><span class="yh-ik">🌱</span><span class="yh-m"><b>30 Günde Namaz</b><small>Sıfırdan adım adım başla</small></span><span class="yh-ok">›</span></button><button class="yh-sat" onclick="navigateTo('namaz-nedir')"><span class="yh-ik">❓</span><span class="yh-m"><b>Namaz Nedir?</b><small>Neden kılarız, farz · vacip · sünnet</small></span><span class="yh-ok">›</span></button><button class="yh-sat" onclick="navigateTo('taharet')"><span class="yh-ik">💧</span><span class="yh-m"><b>Abdest ve Taharet</b><small>Abdest, gusül, teyemmüm adım adım</small></span><span class="yh-ok">›</span></button><button class="yh-sat" onclick="navigateTo('ozel-namaz')"><span class="yh-ik">🕌</span><span class="yh-m"><b>Özel Namazlar</b><small>Vitir, teheccüd, Cuma, bayram, cenaze…</small></span><span class="yh-ok">›</span></button></div>
+<button class="hub-back-btn yh-geri" onclick="navigateTo('ogren')">‹ Öğren</button><div class="yh-bas"><h2>Namaz Öğren</h2></div><button class="yh-buyuk" onclick="navigateTo('anlayarak')" style="--foto:url(img/kart_anlayarak.jpg);--fp:center 30%"><span class="yh-bf"></span><span class="yh-bm"><small>EN ÇOK KULLANILAN</small><b>Anlayarak Namaz</b><span>Fotoğraflı adım adım · Arapça · anlam</span></span><span class="yh-bo">›</span></button><div class="yh-liste"><button class="yh-sat" onclick="navigateTo('guide')"><span class="yh-ik">📋</span><span class="yh-m"><b>Namaz Rehberi</b><small>5 vaktin kılınışı · yazılı anlatım</small></span><span class="yh-ok">›</span></button><button class="yh-sat" onclick="navigateTo('namaz-programi')"><span class="yh-ik">🌱</span><span class="yh-m"><b>30 Günde Namaz</b><small>Sıfırdan adım adım başla</small></span><span class="yh-ok">›</span></button><button class="yh-sat" onclick="navigateTo('namaz-nedir')"><span class="yh-ik">❓</span><span class="yh-m"><b>Namaz Nedir?</b><small>Neden kılarız, farz · vacip · sünnet</small></span><span class="yh-ok">›</span></button><button class="yh-sat" onclick="navigateTo('taharet')"><span class="yh-ik">💧</span><span class="yh-m"><b>Abdest ve Taharet</b><small>Abdest, gusül, teyemmüm adım adım</small></span><span class="yh-ok">›</span></button><button class="yh-sat" onclick="navigateTo('ozel-namaz')"><span class="yh-ik">🕌</span><span class="yh-m"><b>Özel Namazlar</b><small>Vitir, teheccüd, Cuma, bayram, cenaze…</small></span><span class="yh-ok">›</span></button></div>
             </div>
         </section>
 
         <!-- ═══ KUR'AN VE SÛRE ÖĞREN (v67.0) ═══ -->
         <section id="page-kuran-ogren" class="page-section">
             <div class="hero-frame-box yh-hub">
-<button class="hub-back-btn yh-geri" onclick="navigateTo('ogren')">‹ Öğren</button><div class="yh-bas"><h2>Kur'an ve Sûre Öğren</h2></div><div class="yh-liste"><button class="yh-sat" onclick="navigateTo('ezber')"><span class="yh-ik">🌱</span><span class="yh-m"><b>Dua & Sûre Öğren</b><small>Satır satır oku · parça parça ezberle</small></span><span class="yh-ok">›</span></button><button class="yh-sat" onclick="navigateTo('sifirdan')"><span class="yh-ik">🔰</span><span class="yh-m"><b>0'dan Dua Öğren</b><small>Hece hece, kelime takibiyle</small></span><span class="yh-ok">›</span></button><button class="yh-sat" onclick="navigateTo('elifba')"><span class="yh-ik">🔤</span><span class="yh-m"><b>Elifbâ</b><small>Kur'an okumayı öğren</small></span><span class="yh-ok">›</span></button><button class="yh-sat" onclick="navigateTo('tecvid')"><span class="yh-ik">🎓</span><span class="yh-m"><b>Tecvid Dersleri</b><small>Med, idgam, ihfa… kurallar</small></span><span class="yh-ok">›</span></button><button class="yh-sat" onclick="navigateTo('onemli-sureler')"><span class="yh-ik">⭐</span><span class="yh-m"><b>Önemli Sûreler</b><small>Yâsîn, Mülk, Fetih…</small></span><span class="yh-ok">›</span></button></div>
+<button class="hub-back-btn yh-geri" onclick="navigateTo('ogren')">‹ Öğren</button><div class="yh-bas"><h2>Kur'an ve Sûre Öğren</h2></div><div class="yh-liste"><button class="yh-sat" onclick="navigateTo('ezber')"><span class="yh-ik">🌱</span><span class="yh-m"><b>Dua & Sûre Öğren</b><small>Satır satır oku · parça parça ezberle</small></span><span class="yh-ok">›</span></button><button class="yh-sat" onclick="navigateTo('sifirdan')"><span class="yh-ik">🔰</span><span class="yh-m"><b>0'dan Dua Öğren</b><small>Hece hece, kelime takibiyle</small></span><span class="yh-ok">›</span></button><button class="yh-sat" onclick="navigateTo('kelime')"><span class="yh-ik">🔠</span><span class="yh-m"><b>Kur'an Kelime Kartları</b><small>En sık geçen 100 kelime · dokun, çevir</small></span><span class="yh-ok">›</span></button><button class="yh-sat" onclick="navigateTo('elifba')"><span class="yh-ik">🔤</span><span class="yh-m"><b>Elifbâ</b><small>Kur'an okumayı öğren</small></span><span class="yh-ok">›</span></button><button class="yh-sat" onclick="navigateTo('tecvid')"><span class="yh-ik">🎓</span><span class="yh-m"><b>Tecvid Dersleri</b><small>Med, idgam, ihfa… kurallar</small></span><span class="yh-ok">›</span></button><button class="yh-sat" onclick="navigateTo('onemli-sureler')"><span class="yh-ik">⭐</span><span class="yh-m"><b>Önemli Sûreler</b><small>Yâsîn, Mülk, Fetih…</small></span><span class="yh-ok">›</span></button></div>
             </div>
         </section>
 
         <!-- ═══ DUALAR VE ZİKİRLER (v67.0) ═══ -->
         <section id="page-dualar" class="page-section">
             <div class="hero-frame-box yh-hub">
-<button class="hub-back-btn yh-geri" onclick="navigateTo('ogren')">‹ Öğren</button><div class="yh-bas"><h2>Dualar ve Zikirler</h2></div><div class="yh-liste"><button class="yh-sat" onclick="navigateTo('ezkar')"><span class="yh-ik">🌅</span><span class="yh-m"><b>Sabah · Akşam Ezkârı</b><small>Günlük zikirler</small></span><span class="yh-ok">›</span></button><button class="yh-sat" onclick="navigateTo('gunluk-dua')"><span class="yh-ik">📔</span><span class="yh-m"><b>Günlük Dualar</b><small>Uyanınca, yemek, yolculuk, uyku…</small></span><span class="yh-ok">›</span></button><button class="yh-sat" onclick="navigateTo('esma')"><span class="yh-ik">🕋</span><span class="yh-m"><b>Esmâül Hüsnâ</b><small>99 isim, anlamlarıyla</small></span><span class="yh-ok">›</span></button><button class="yh-sat" onclick="navigateTo('zikirmatik')"><span class="yh-ik">📿</span><span class="yh-m"><b>Zikirmatik</b><small>Dijital tesbih</small></span><span class="yh-ok">›</span></button></div>
+<button class="hub-back-btn yh-geri" onclick="navigateTo('ogren')">‹ Öğren</button><div class="yh-bas"><h2>Dualar ve Zikirler</h2></div><div class="yh-liste"><button class="yh-sat" onclick="navigateTo('ezkar')"><span class="yh-ik">🌅</span><span class="yh-m"><b>Sabah · Akşam Ezkârı</b><small>Günlük zikirler</small></span><span class="yh-ok">›</span></button><button class="yh-sat" onclick="navigateTo('gece-rutini')"><span class="yh-ik">🌙</span><span class="yh-m"><b>Gece Rutini</b><small>Mülk · Âyete'l-Kürsî · İhlâs-Felak-Nâs · yatma duası</small></span><span class="yh-ok">›</span></button><button class="yh-sat" onclick="navigateTo('dua-defteri')"><span class="yh-ik">✍️</span><span class="yh-m"><b>Dua Defterim</b><small>Kendi dualarını ve dua edeceğin kişileri yaz</small></span><span class="yh-ok">›</span></button><button class="yh-sat" onclick="navigateTo('gunluk-dua')"><span class="yh-ik">📔</span><span class="yh-m"><b>Günlük Dualar</b><small>Uyanınca, yemek, yolculuk, uyku…</small></span><span class="yh-ok">›</span></button><button class="yh-sat" onclick="navigateTo('esma')"><span class="yh-ik">🕋</span><span class="yh-m"><b>Esmâül Hüsnâ</b><small>99 isim, anlamlarıyla</small></span><span class="yh-ok">›</span></button><button class="yh-sat" onclick="navigateTo('zikirmatik')"><span class="yh-ik">📿</span><span class="yh-m"><b>Zikirmatik</b><small>Dijital tesbih</small></span><span class="yh-ok">›</span></button></div>
             </div>
         </section>
 
         <!-- ═══ TAKİBİM SEKMESİ (v67.0) ═══ -->
         <section id="page-ibadet" class="page-section">
             <div class="hero-frame-box yh-hub">
-<div class="yh-bas"><h2>Takibim</h2><p>Namaz, kaza, oruç ve zikir</p></div><div class="yh-izgara n3"><button class="yh-tile" onclick="navigateTo('namaz-takibi')"><span class="yh-ti">✅</span><b>Namaz Takibi</b></button><button class="yh-tile" onclick="navigateTo('kaza')"><span class="yh-ti">🔄</span><b>Kaza Namazı</b></button><button class="yh-tile" onclick="navigateTo('oruc')"><span class="yh-ti">🌙</span><b>Oruç Takibi</b></button><button class="yh-tile" onclick="navigateTo('zikirmatik')"><span class="yh-ti">📿</span><b>Zikirmatik</b></button><button class="yh-tile" onclick="navigateTo('qibla')"><span class="yh-ti">🧭</span><b>Kıble</b></button><button class="yh-tile" onclick="navigateTo('hatim')"><span class="yh-ti">📗</span><b>Hatim</b></button></div><div class="yh-grup">Rehber ve takvim</div><div class="yh-izgara n3"><button class="yh-tile" onclick="navigateTo('hac-umre')"><span class="yh-ti">🕋</span><b>Hac & Umre</b></button><button class="yh-tile" onclick="navigateTo('geceler')"><span class="yh-ti">🕯️</span><b>Kandil Rehberi</b></button><button class="yh-tile" onclick="navigateTo('ozel-namaz')"><span class="yh-ti">🕌</span><b>Özel Namazlar</b></button><button class="yh-tile" onclick="navigateTo('imsakiye')"><span class="yh-ti">🍽️</span><b>İmsakiye</b></button><button class="yh-tile" onclick="navigateTo('takvim')"><span class="yh-ti">📅</span><b>Hicri Takvim</b></button><button class="yh-tile" onclick="navigateTo('zekat')"><span class="yh-ti">💰</span><b>Zekât & Fitre</b></button></div>
+<div class="yh-bas"><h2>Takibim</h2><p>Namaz, kaza, oruç ve zikir</p></div><div id="tk-pano"></div><div class="yh-izgara n3"><button class="yh-tile" onclick="navigateTo('namaz-takibi')"><span class="yh-ti">✅</span><b>Namaz Takibi</b></button><button class="yh-tile" onclick="navigateTo('kaza')"><span class="yh-ti">🔄</span><b>Kaza Namazı</b></button><button class="yh-tile" onclick="navigateTo('oruc')"><span class="yh-ti">🌙</span><b>Oruç Takibi</b></button><button class="yh-tile" onclick="navigateTo('zikirmatik')"><span class="yh-ti">📿</span><b>Zikirmatik</b></button><button class="yh-tile" onclick="navigateTo('qibla')"><span class="yh-ti">🧭</span><b>Kıble</b></button><button class="yh-tile" onclick="navigateTo('hatim')"><span class="yh-ti">📗</span><b>Hatim</b></button></div><div class="yh-grup">Rehber ve takvim</div><div class="yh-izgara n3"><button class="yh-tile" onclick="navigateTo('hac-umre')"><span class="yh-ti">🕋</span><b>Hac & Umre</b></button><button class="yh-tile" onclick="navigateTo('geceler')"><span class="yh-ti">🕯️</span><b>Kandil Rehberi</b></button><button class="yh-tile" onclick="navigateTo('ozel-namaz')"><span class="yh-ti">🕌</span><b>Özel Namazlar</b></button><button class="yh-tile" onclick="navigateTo('imsakiye')"><span class="yh-ti">🍽️</span><b>İmsakiye</b></button><button class="yh-tile" onclick="navigateTo('takvim')"><span class="yh-ti">📅</span><b>Hicri Takvim</b></button><button class="yh-tile" onclick="navigateTo('zekat')"><span class="yh-ti">💰</span><b>Zekât & Fitre</b></button></div>
             </div>
         </section>
 
         <!-- ═══ ARAÇLAR (Ayarlar'dan açılır) (v67.0) ═══ -->
         <section id="page-araclar" class="page-section">
             <div class="hero-frame-box yh-hub">
-<button class="hub-back-btn yh-geri" onclick="navigateTo('settings')">‹ Ayarlar</button><div class="yh-bas"><h2>Araçlar</h2><p>Hesaplayıcılar ve faydalı araçlar</p></div><div class="yh-izgara n3"><button class="yh-tile" onclick="navigateTo('zekat')"><span class="yh-ti">💰</span><b>Zekât & Fitre</b></button><button class="yh-tile" onclick="navigateTo('imsakiye')"><span class="yh-ti">🍽️</span><b>İmsakiye</b></button><button class="yh-tile" onclick="navigateTo('takvim')"><span class="yh-ti">📅</span><b>Hicri Takvim</b></button><button class="yh-tile" onclick="navigateTo('paylasim')"><span class="yh-ti">📤</span><b>Paylaşım Kartları</b></button><button class="yh-tile" onclick="navigateTo('quiz')"><span class="yh-ti">🧠</span><b>Bilgi Yarışması</b></button><button class="yh-tile" onclick="navigateTo('sozluk')"><span class="yh-ti">📚</span><b>Dinî Sözlük</b></button><button class="yh-tile" onclick="navigateTo('bebek')"><span class="yh-ti">👶</span><b>Bebek İsimleri</b></button></div>
+<button class="hub-back-btn yh-geri" onclick="navigateTo('settings')">‹ Ayarlar</button><div class="yh-bas"><h2>Araçlar</h2><p>Hesaplayıcılar ve faydalı araçlar</p></div><div class="yh-izgara n3"><button class="yh-tile" onclick="navigateTo('zekat')"><span class="yh-ti">💰</span><b>Zekât & Fitre</b></button><button class="yh-tile" onclick="navigateTo('imsakiye')"><span class="yh-ti">🍽️</span><b>İmsakiye</b></button><button class="yh-tile" onclick="navigateTo('takvim')"><span class="yh-ti">📅</span><b>Hicri Takvim</b></button><button class="yh-tile" onclick="navigateTo('paylasim')"><span class="yh-ti">📤</span><b>Paylaşım Kartları</b></button><button class="yh-tile" onclick="navigateTo('quiz')"><span class="yh-ti">🧠</span><b>Bilgi Yarışması</b></button><button class="yh-tile" onclick="navigateTo('sozluk')"><span class="yh-ti">📚</span><b>Dinî Sözlük</b></button><button class="yh-tile" onclick="navigateTo('bebek')"><span class="yh-ti">👶</span><b>Bebek İsimleri</b></button><button class="yh-tile" onclick="navigateTo('duvar')"><span class="yh-ti">🖼️</span><b>Duvar Kâğıtları</b></button></div>
+            </div>
+        </section>
+
+        <!-- ═══ v67.1 YENİ BÖLÜMLER ═══ -->
+        <section id="page-anlayarak" class="page-section">
+            <div class="hero-frame-box yh-hub an-kok">
+                
+                
+                <div id="anlayarak-root"></div>
+            </div>
+        </section>
+
+        <section id="page-gece-rutini" class="page-section">
+            <div class="hero-frame-box yh-hub ">
+                <button class="hub-back-btn yh-geri" onclick="hvGeri('dualar')">‹ Dualar ve Zikirler</button>
+                
+                <div id="gece-rutini-content"></div>
+            </div>
+        </section>
+
+        <section id="page-dua-defteri" class="page-section">
+            <div class="hero-frame-box yh-hub ">
+                <button class="hub-back-btn yh-geri" onclick="hvGeri('dualar')">‹ Dualar ve Zikirler</button>
+                <div class="yh-bas"><h2>Dua Defterim</h2><p>Yalnızca bu telefonda saklanır</p></div>
+                <div id="dua-defteri-content"></div>
+            </div>
+        </section>
+
+        <section id="page-kelime" class="page-section">
+            <div class="hero-frame-box yh-hub ">
+                <button class="hub-back-btn yh-geri" onclick="hvGeri('kuran-ogren')">‹ Kur'an ve Sûre Öğren</button>
+                <div class="yh-bas"><h2>Kelime Kartları</h2><p>Kur'an'da en sık geçen kelimeler</p></div>
+                <div id="kelime-content"></div>
+            </div>
+        </section>
+
+        <section id="page-duvar" class="page-section">
+            <div class="hero-frame-box yh-hub ">
+                <button class="hub-back-btn yh-geri" onclick="hvGeri('settings')">‹ Ayarlar</button>
+                <div class="yh-bas"><h2>Duvar Kâğıtları</h2><p>Cami fotoğrafları · istersen sûreli</p></div>
+                <div id="duvar-content"></div>
+            </div>
+        </section>
+
+        <section id="page-cocuk" class="page-section">
+            <div class="hero-frame-box yh-hub ">
+                <button class="hub-back-btn yh-geri" onclick="hvGeri('ogren')">‹ Öğren</button>
+                <div class="yh-bas"><h2>Çocuk Modu</h2></div>
+                <div id="cocuk-content"></div>
             </div>
         </section>
 
@@ -797,7 +847,7 @@
         <!-- ═══ SETTINGS SECTION ═══ -->
         <section id="page-settings" class="page-section">
             <div class="hero-frame-box yh-ayar">
-                <div class="yh-ayar-arac"><div class="yh-bas"><h2>Ayarlar</h2></div><div class="yh-grup">Araçlar</div><div class="yh-izgara n3"><button class="yh-tile" onclick="navigateTo('zekat')"><span class="yh-ti">💰</span><b>Zekât & Fitre</b></button><button class="yh-tile" onclick="navigateTo('imsakiye')"><span class="yh-ti">🍽️</span><b>İmsakiye</b></button><button class="yh-tile" onclick="navigateTo('takvim')"><span class="yh-ti">📅</span><b>Hicri Takvim</b></button><button class="yh-tile" onclick="navigateTo('paylasim')"><span class="yh-ti">📤</span><b>Paylaşım Kartları</b></button><button class="yh-tile" onclick="navigateTo('quiz')"><span class="yh-ti">🧠</span><b>Bilgi Yarışması</b></button><button class="yh-tile" onclick="navigateTo('sozluk')"><span class="yh-ti">📚</span><b>Dinî Sözlük</b></button></div><button class="yh-diger" onclick="navigateTo('araclar')">Tüm araçlar · Bebek İsimleri ›</button></div>
+                <div class="yh-ayar-arac"><div class="yh-bas"><h2>Ayarlar</h2></div><div class="yh-grup">Araçlar</div><div class="yh-izgara n3"><button class="yh-tile" onclick="navigateTo('zekat')"><span class="yh-ti">💰</span><b>Zekât & Fitre</b></button><button class="yh-tile" onclick="navigateTo('imsakiye')"><span class="yh-ti">🍽️</span><b>İmsakiye</b></button><button class="yh-tile" onclick="navigateTo('takvim')"><span class="yh-ti">📅</span><b>Hicri Takvim</b></button><button class="yh-tile" onclick="navigateTo('paylasim')"><span class="yh-ti">📤</span><b>Paylaşım Kartları</b></button><button class="yh-tile" onclick="navigateTo('duvar')"><span class="yh-ti">🖼️</span><b>Duvar Kâğıtları</b></button><button class="yh-tile" onclick="navigateTo('quiz')"><span class="yh-ti">🧠</span><b>Bilgi Yarışması</b></button></div><button class="yh-diger" onclick="navigateTo('araclar')">Diğer: Dinî Sözlük · Bebek İsimleri ›</button></div>
                 <div class="yh-grup">Ayarlar</div>
                 <div class="settings-group-wrapper">
                     <div class="settings-group">
@@ -989,6 +1039,13 @@
                             </div>
                             <input type="checkbox" id="light-toggle" hidden>
                             <div class="setting-row">
+                                <label for="rozet-toggle">🏅 Rozetleri göster (Takibim)</label>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" id="rozet-toggle" checked>
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+                            <div class="setting-row">
                                 <label for="big-text-toggle">🔍 Büyük Yazı (yaşlılar için)</label>
                                 <label class="toggle-switch">
                                     <input type="checkbox" id="big-text-toggle">
@@ -1033,7 +1090,7 @@
                     </div>
                     <div class="app-info-footer">
                         <div class="footer-logo">🕌</div>
-                        <div class="footer-ver">Namaz Dostu v67.0</div>
+                        <div class="footer-ver">Namaz Dostu v67.1</div>
                         <div style="font-size: 0.8rem; margin-top: 4px;">Tüm Hakları Saklıdır • Diyanet Uyumlu • Çevrimdışı Çalışır</div>
                     </div>
                 </div>
@@ -1083,7 +1140,7 @@
     <script>
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
-          navigator.serviceWorker.register('/sw.js?v=67.0.1')
+          navigator.serviceWorker.register('/sw.js?v=67.1.0')
             .then(reg => {
               reg.onupdatefound = () => {
                 const installingWorker = reg.installing;
