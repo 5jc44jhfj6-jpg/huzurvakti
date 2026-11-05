@@ -1,9 +1,9 @@
 {
-  "id": "/",
+  "id": "./",
   "name": "Namaz Dostu: Vakitler, Ezan, Kuran",
   "short_name": "Namaz Dostu",
   "description": "Namaz vakitleri, ezan, Kur'an-ı Kerim, kıble, dualar, zikirmatik ve yeni başlayanlar için adım adım namaz rehberi. Ücretsiz, reklamsız, çevrimdışı.",
-  "start_url": "/",
+  "start_url": "./",
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#1c0f07",
@@ -28,5 +28,5 @@
     "education"
   ],
   "dir": "ltr",
-  "scope": "/"
+  "scope": "./"
 }

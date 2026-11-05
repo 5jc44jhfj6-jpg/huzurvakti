@@ -1141,7 +1141,7 @@
     <script>
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
-          navigator.serviceWorker.register('/sw.js?v=67.2.0')
+          navigator.serviceWorker.register('sw.js?v=67.2.0')
             .then(reg => {
               // v67.2: uygulama her öne geldiğinde yeni sürüm var mı diye bak
               try { reg.update(); } catch (e) {}
