@@ -1446,3 +1446,8 @@ body.dark-theme .ez-duvar-btn { background: #2a1c11; color: #f3cf86; border-colo
 body.dark-theme .hv-sc-ipucu { color: #d8c4a3; }
 /* v68.4: Anlayarak kartı — tek, net fotoğraf (tekbir, yakın plan) */
 #page-home .ya-anl-foto { width: 104px !important; background: url(img/namaz_02_tekbir.jpg) 50% 4% / 150% auto no-repeat !important; -webkit-mask: linear-gradient(90deg, #000 85%, transparent) !important; mask: linear-gradient(90deg, #000 85%, transparent) !important; }
+/* v68.4b: erkek + kadın iki net küçük fotoğraf (tekbir, yüz ve eller görünür) */
+#page-home .ya-anl-foto { width: auto !important; display: flex !important; gap: 4px !important; padding: 5px 0 5px 8px !important; background: none !important; -webkit-mask: none !important; mask: none !important; }
+#page-home .ya-anl-foto i { display: block !important; width: 48px; border-radius: 10px; box-shadow: 0 2px 5px rgba(60,30,8,.25), 0 0 0 1.2px #e2bd73; background-repeat: no-repeat; }
+#page-home .ya-anl-foto i.e { background-image: url(img/namaz_02_tekbir.jpg); background-size: 230% auto; background-position: 50% 6%; }
+#page-home .ya-anl-foto i.k { background-image: url(img/namaz_k_02_tekbir.jpg?v=3); background-size: 230% auto; background-position: 50% 4%; }
