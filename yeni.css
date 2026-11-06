@@ -1451,3 +1451,6 @@ body.dark-theme .hv-sc-ipucu { color: #d8c4a3; }
 #page-home .ya-anl-foto i { display: block !important; width: 48px; border-radius: 10px; box-shadow: 0 2px 5px rgba(60,30,8,.25), 0 0 0 1.2px #e2bd73; background-repeat: no-repeat; }
 #page-home .ya-anl-foto i.e { background-image: url(img/namaz_02_tekbir.jpg); background-size: 230% auto; background-position: 50% 6%; }
 #page-home .ya-anl-foto i.k { background-image: url(img/namaz_k_02_tekbir.jpg?v=3); background-size: 230% auto; background-position: 50% 4%; }
+/* v68.4c: aynı seviyede kırpılmış erkek/kadın fotoğrafları */
+#page-home .ya-anl-foto i.e { background: url(img/an_e.jpg) center top / cover no-repeat !important; }
+#page-home .ya-anl-foto i.k { background: url(img/an_k.jpg) center top / cover no-repeat !important; }
