@@ -304,7 +304,7 @@ function renderOnemliSureler() {
     <div class="feature-card onemli-card" onclick="openSurahById(${s.id})">
       <div class="onemli-head">
         <span class="onemli-badge">${s.id}</span>
-        <span class="fc-title">${hvEsc(s.name)} Suresi</span>
+        <span class="fc-title">${hvEsc(s.name)} Sûresi</span>
         <span class="onemli-go">›</span>
       </div>
       <div class="fc-tr">${hvEsc(s.fazilet)}</div>
@@ -1072,7 +1072,7 @@ function paylasimYenile() {
     _paylasimData = { ar: '', tr: m, src: '' };
   } else if (_paylasimTip === 'ayet' && typeof DAILY_VERSES !== 'undefined') {
     const v = DAILY_VERSES[Math.floor(Math.random() * DAILY_VERSES.length)];
-    _paylasimData = { ar: v.arabic, tr: v.turkish, src: `${v.surah} Suresi, ${v.ayah}. Ayet` };
+    _paylasimData = { ar: v.arabic, tr: v.turkish, src: `${v.surah} Sûresi, ${v.ayah}. Âyet` };
   } else if (typeof HADITHS !== 'undefined') {
     const h = HADITHS[Math.floor(Math.random() * HADITHS.length)];
     _paylasimData = { ar: h.ar || '', tr: h.text, src: h.source };
@@ -1193,7 +1193,7 @@ window.nnBolumSec = nnBolumSec;
 function renderNamazNedir() {
   if (typeof HV_NAMAZ_NEDIR === 'undefined') return;
   hvBilgiSayfasiCiz(HV_NAMAZ_NEDIR, 'namaz-nedir-content', 'page-namaz-nedir', _nnBolum, 'nnBolumSec',
-    `<button class="seg-btn" onclick="navigateTo('guide')">🤲 Kılınışı (Rehber)</button><button class="seg-btn" onclick="navigateTo('namaz-takibi')">✅ Namaz Takibi</button><button class="seg-btn" onclick="navigateTo('kaza')">🔄 Kaza Takibi</button><button class="seg-btn" onclick="navigateTo('namaz-programi')">🌱 30 Günde Namaz</button><button class="seg-btn" onclick="navigateTo('kuran-nedir')">📖 Kur'an Nedir?</button>`);
+    `<button class="seg-btn" onclick="navigateTo('anlayarak')">🤲 Anlayarak Namaz</button><button class="seg-btn" onclick="navigateTo('namaz-takibi')">✅ Namaz Takibi</button><button class="seg-btn" onclick="navigateTo('kaza')">🔄 Kaza Takibi</button><button class="seg-btn" onclick="navigateTo('namaz-programi')">🌱 30 Günde Namaz</button><button class="seg-btn" onclick="navigateTo('kuran-nedir')">📖 Kur'an Nedir?</button>`);
 }
 window.renderNamazNedir = renderNamazNedir;
 function knBolumSec(i) { _knBolum = i; renderKuranNedir(); }
@@ -1266,9 +1266,9 @@ function renderGeceler() {
 const HV_HE_KATALOG = [
   { id: 'qibla', ikon: '🧭', ad: 'Kıble' }, { id: 'quran', ikon: '📖', ad: "Kur'an Oku" }, { id: 'dinle', ikon: '🎧', ad: "Kur'an Dinle" },
   { id: 'ezber', ikon: '🌱', ad: 'Dua Öğren' }, { id: 'zikirmatik', ikon: '📿', ad: 'Zikirmatik' }, { id: 'namaz-takibi', ikon: '✅', ad: 'Namaz Takibi' },
-  { id: 'mushaf', ikon: '📜', ad: 'Sayfa Sayfa Mushaf' }, { id: 'sifirdan', ikon: '🗒️', ad: 'Satır Satır Oku' },
+  { id: 'mushaf', ikon: '📜', ad: 'Sayfa Sayfa Mushaf' }, 
   { id: 'kaza', ikon: '🔄', ad: 'Kaza Namazı' }, { id: 'oruc', ikon: '🌙', ad: 'Oruç Takibi' }, { id: 'namaz-programi', ikon: '🗓️', ad: '30 Günde Namaz' },
-  { id: 'guide', ikon: '🤲', ad: 'Namaz Rehberi' }, { id: 'onemli-sureler', ikon: '⭐', ad: 'Önemli Sureler' },
+  { id: 'anlayarak', ikon: '🤲', ad: 'Anlayarak Namaz' }, 
   { id: 'hatim', ikon: '📗', ad: 'Hatim Takibi' }, { id: 'elifba', ikon: '🔤', ad: 'Elifbâ' }, { id: 'tecvid', ikon: '🎓', ad: 'Tecvid' },
   { id: 'ayet-arama', ikon: '🔎', ad: 'Ayet Ara' }, { id: 'ezkar', ikon: '🌅', ad: 'Ezkâr' }, { id: 'gunluk-dua', ikon: '📔', ad: 'Günlük Dualar' },
   { id: 'esma', ikon: '🕋', ad: 'Esmaül Hüsna' }, { id: 'kirk-hadis', ikon: '📜', ad: 'Hadisler' }, { id: 'taharet', ikon: '💧', ad: 'Abdest' },
@@ -1276,9 +1276,9 @@ const HV_HE_KATALOG = [
   { id: 'iman', ikon: '🧾', ad: 'İman Esasları' }, { id: 'peygamberler', ikon: '👳', ad: 'Peygamberler' }, { id: 'siyer', ikon: '🌟', ad: 'Siyer' },
   { id: 'zekat', ikon: '💰', ad: 'Zekât & Fitre' }, { id: 'takvim', ikon: '📅', ad: 'Hicri Takvim' }, { id: 'imsakiye', ikon: '🍽️', ad: 'İmsakiye' },
   { id: 'paylasim', ikon: '📤', ad: 'Paylaşım' }, { id: 'sozluk', ikon: '📚', ad: 'Sözlük' }, { id: 'cevirici', ikon: '🔄', ad: 'Tarih Çevirici' },
-  { id: 'quiz', ikon: '❓', ad: 'Bilgi Quizi' }, { id: 'bebek', ikon: '👶', ad: 'Bebek İsimleri' }, { id: 'settings', ikon: '⚙️', ad: 'Ayarlar' }
+  { id: 'settings', ikon: '⚙️', ad: 'Ayarlar' }
 ];
-const HV_HE_VARSAYILAN = ['qibla', 'quran', 'dinle', 'ezber', 'namaz-takibi', 'zikirmatik', 'guide', 'gunluk-dua'];   // v65.9: iki sıra, 8 kısayol
+const HV_HE_VARSAYILAN = ['qibla', 'quran', 'dinle', 'ezber', 'namaz-takibi', 'zikirmatik', 'anlayarak', 'gunluk-dua'];   // v65.9: iki sıra, 8 kısayol
 const HV_HE_MAX = 8;
 function hvHeListe() {
   let l = null; try { l = JSON.parse(localStorage.getItem('hv_hizli') || 'null'); } catch (e) {}
@@ -1445,7 +1445,7 @@ function doAyetArama(query) {
     if (total > 0) {
       c.innerHTML = `<div class="bebek-count-note">"${hvEsc(q)}" için ${total}${total >= 400 ? '+' : ''} ayet bulundu${total > 60 ? ' (ilk 60 gösteriliyor)' : ''}</div>` +
         goster.map(m => `<div class="ayet-result" onclick="openSurahById(${m.s})">
-              <div class="ayet-ref">${hvEsc(m.ad)} Suresi • ${hvMealEtiket(m.s, m.v)}. Ayet <span class="ayet-go">›</span></div>
+              <div class="ayet-ref">${hvEsc(m.ad)} Sûresi • ${hvMealEtiket(m.s, m.v)}. Âyet <span class="ayet-go">›</span></div>
               <div class="ayet-meal">${hvHighlight(m.t, q)}</div>
             </div>`).join('');
     } else {
@@ -3430,12 +3430,12 @@ async function renderMushaf(calmayaDevam) {
 
   kok.innerHTML = `
     <div class="page-header-title">
-      <h2>📖 Kuran-ı Kerim</h2>
-      <p>Sayfa sayfa • gerçek mushaf düzeni • 604 sayfa</p>
+      <h2>📜 Mushaf · Sayfa Sayfa</h2>
+      <p>Gerçek mushaf düzeni • 604 sayfa</p>
     </div>
     <div class="qmode">
       <button class="on">📜 Sayfa Sayfa</button>
-      <button onclick="hvKuranModu('sure')">📖 Sure Sure</button>
+      <button onclick="hvKuranModu('sure')">📖 Sûre Sûre</button>
     </div>
 
     <div class="mv-ara">
@@ -3463,7 +3463,7 @@ async function renderMushaf(calmayaDevam) {
     <div class="mv-bar mv-bar2">
       <div class="mv-mode">
         <button class="${mod === 'ar' ? 'on' : ''}" onclick="hvMushafModDegistir('ar')">Arapça</button>
-        <button class="${mod === 'both' ? 'on' : ''}" onclick="hvMushafModDegistir('both')">Arapça + Meal</button>
+        <button class="${mod === 'both' ? 'on' : ''}" onclick="hvMushafModDegistir('both')">Arapça + Meâl</button>
         <button class="${mod === 'tr' ? 'on' : ''}" onclick="hvMushafModDegistir('tr')">Meal</button>
       </div>
       <div class="mv-font">
@@ -4442,12 +4442,12 @@ window.hvKuranModu = hvKuranModu;
    ═══════════════════════════════════════════════════════════════════════ */
 
 const HV_DINLE_QARILER = [
+  { id: 'alfaqih', sunucu: 'server16', yol: 'M_Alfaqih/Rewayat-Hafs-A-n-Assem', ad: 'Muhammed el-Fakih' },   // v67.4: ilk hoca hep el-Fakih
   { id: 'husr',   sunucu: 'server13', ad: 'Mahmud Halil el-Husarî' },
   { id: 'afs',    sunucu: 'server8',  ad: 'Mishary Rashid Alafasy' },
   { id: 'minsh',  sunucu: 'server10', ad: 'Muhammed Sıddık el-Minşâvî' },
   { id: 'yasser', sunucu: 'server11', ad: 'Yâsir ed-Devserî' },
   // v66.1 — kullanıcı isteğiyle eklendi (mp3quran.net, 114 sûre tam; âyet âyet kayıtları yok → o modlarda Husarî okur)
-  { id: 'alfaqih', sunucu: 'server16', yol: 'M_Alfaqih/Rewayat-Hafs-A-n-Assem', ad: 'Muhammed el-Fakih' },
   { id: 'mousa',   sunucu: 'server14', yol: 'mousa/Rewayat-Hafs-A-n-Assem',     ad: 'Abdullah el-Mûsâ' },
   // v66.2 — 10 hâfız (hepsi mp3quran 114 sûre + everyayah âyet âyet, doğrulandı)
   { id: 'basit',   sunucu: 'server7',  ad: 'Abdülbâsıt Abdüssamed' },
@@ -4471,7 +4471,7 @@ function hvDnSureAdi(no) {
   return no + '. Sûre';
 }
 function hvDnQari() {
-  const id = hvGet('hv_dinle_qari', 'husr');
+  const id = hvGet('hv_dinle_qari', 'alfaqih');
   return HV_DINLE_QARILER.find(q => q.id === id) || HV_DINLE_QARILER[0];
 }
 function hvDnUrl(no) {
@@ -4901,14 +4901,14 @@ function renderDinle() {
 
   kok.innerHTML = `
     <div class="page-header-title">
-      <h2>🎧 Kuran Dinle</h2>
+      <h2>🎧 Kur'an Dinle</h2>
       <p>Kesintisiz dinle • uygulamada gezerken de çalar</p>
     </div>
 
     <div class="dn-mod">
       <button class="${mod === 'ar' ? 'on' : ''}" onclick="hvDnModDegistir('ar')">Arapça</button>
-      <button class="${mod === 'both' ? 'on' : ''}" onclick="hvDnModDegistir('both')">Arapça + Meal</button>
-      <button class="${mod === 'tr' ? 'on' : ''}" onclick="hvDnModDegistir('tr')">Sadece Meal</button>
+      <button class="${mod === 'both' ? 'on' : ''}" onclick="hvDnModDegistir('both')">Arapça + Türkçe</button>
+      <button class="${mod === 'tr' ? 'on' : ''}" onclick="hvDnModDegistir('tr')">Türkçe</button>
     </div>
 
     <div class="dn-player">
@@ -5631,7 +5631,7 @@ function hvSdSayfaCiz() {
 
   kok.innerHTML = `
     <div class="sd-ust">
-      <button class="hub-back-btn" onclick="hvGeri(\'kurandua\')">← Kuran &amp; Dua</button>
+      <button class="hub-back-btn" onclick="hvGeri(\'kuran-ogren\')">‹ Geri</button>
       <button class="sd-liste-btn" onclick="hvSdListeGoster()">☰ Liste</button>
       <div class="share-type-switch ogren-mod"><button class="seg-btn active">📖 Oku</button><button class="seg-btn" onclick="navigateTo('ezber')">🧠 Ezberle</button></div>
       <div class="sd-sayac">${hvSdIdx + 1} / ${toplam}</div>
@@ -5730,7 +5730,7 @@ function hvSdListeGoster() {
   const ogr = hvSdOgrenilenler();
   let html = `
     <div class="sd-ust">
-      <button class="hub-back-btn" onclick="hvGeri(\'kurandua\')">← Kuran &amp; Dua</button>
+      <button class="hub-back-btn" onclick="hvGeri(\'kuran-ogren\')">‹ Geri</button>
       <button class="sd-liste-btn on" onclick="hvSdGit(${hvSdIdx})">📄 Sayfaya Dön</button>
       <div class="sd-sayac">${ogr.length} / ${hvSdSayfalar.length} ✓</div>
     </div>`;

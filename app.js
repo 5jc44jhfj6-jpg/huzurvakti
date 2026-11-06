@@ -26,7 +26,7 @@ const APP_STATE = {
   sabahAlarm: false,     // v66.4: sabah ezanı alarmı (kullanıcının seçtiği saatte ezan sesiyle)
   sabahAlarmSaat: '06:30',
   lightTheme: false,
-  temaModu: 'oto',     // v67.0: vakte göre / hep açık / hep koyu
+  temaModu: 'acik',    // v67.5: varsayılan hep açık (krem); vakte göre / hep koyu Ayarlar'dan
   bigText: false,
   qari: 'afs'
 };
@@ -121,7 +121,7 @@ const PAGE_PARENT = {
   guide: 'ogren', 'namaz-programi': 'ogren', 'namaz-nedir': 'ogren', taharet: 'ogren', 'ozel-namaz': 'ogren',
   ezber: 'ogren', sifirdan: 'ogren', 'dua-ogrenme': 'ogren', elifba: 'ogren', tecvid: 'ogren',
   ezkar: 'ogren', 'gunluk-dua': 'ogren', esma: 'ogren', 'kirk-hadis': 'ogren', iman: 'ogren', peygamberler: 'ogren', siyer: 'ogren', sozluk: 'ogren', quiz: 'ogren',
-  ibadet: 'ibadet', 'namaz-takibi': 'ibadet', kaza: 'ibadet', oruc: 'ibadet', zikirmatik: 'ibadet', qibla: 'ibadet', 'hac-umre': 'ibadet', geceler: 'ibadet', imsakiye: 'ibadet', takvim: 'ibadet', cevirici: 'ibadet',
+  ibadet: 'ibadet', 'namaz-takibi': 'ibadet', kaza: 'ibadet', oruc: 'ibadet', zikirmatik: 'ibadet', qibla: 'ibadet', 'hac-umre': 'ogren', geceler: 'ogren', imsakiye: 'ibadet', takvim: 'ibadet', cevirici: 'ibadet',
   zekat: 'settings', fitre: 'settings',
   settings: 'settings', araclar: 'settings', kaynaklar: 'settings', paylasim: 'settings', bebek: 'settings', cuma: 'settings'
 };
@@ -147,7 +147,7 @@ window.hvGeceMi = hvGeceMi;
 // Şu anki vakit dilimi → ana sayfa fotoğrafı
 const HV_VAKIT_FOTO = { Fajr: 'safak', Sunrise: 'sabah', Dhuhr: 'ogle', Asr: 'ikindi', Maghrib: 'aksam', Isha: 'gece' };
 // Durum çubuğu rengi (iOS kabuğu theme-color'ı izler)
-const HV_UST_RENK = { safak: '#3b3a78', sabah: '#7d97b8', ogle: '#3f7fc4', ikindi: '#8a7a6a', aksam: '#9b3b1f', gece: '#0f1a38' };
+const HV_UST_RENK = { safak: '#0a0f24', sabah: '#8f8db5', ogle: '#2f75c2', ikindi: '#6e8db5', aksam: '#2a4268', gece: '#050a1c' };   // v67.6 Kul Şerif üst renkleri
 function hvTemaRengi() {
   try {
     let renk;
@@ -290,7 +290,7 @@ function applyStateSettings() {
   // Tema: her zaman koyu zemin; "Lüks Gece" anahtarı bakır ↔ yeşil arasında geçiş yapar
   // Tema: gündüz (açık) ya da gece (bakır / yeşil)
   // v67.0: Tema modu — 'oto' (vakte göre: yatsıdan imsaka koyu), 'acik', 'koyu'
-  const mod = APP_STATE.temaModu || 'oto';
+  const mod = APP_STATE.temaModu || 'acik';
   const gunduz = mod === 'acik' ? true : (mod === 'koyu' ? false : !hvGeceMi());
   APP_STATE.lightTheme = gunduz;
   document.body.classList.toggle('light-theme', gunduz);
@@ -344,15 +344,15 @@ function applyStateSettings() {
   const settingsQariSelect = document.getElementById('settings-qari-select');
   if (settingsQariSelect) {
     let q = null; try { q = localStorage.getItem('hv_dinle_qari'); } catch (e) {}
-    settingsQariSelect.value = q || 'husr';
-    if (settingsQariSelect.selectedIndex < 0) settingsQariSelect.value = 'husr';
+    settingsQariSelect.value = q || 'alfaqih';
+    if (settingsQariSelect.selectedIndex < 0) settingsQariSelect.value = 'alfaqih';
   }
 
   const surahQariSelect = document.getElementById('qari-select');
   if (surahQariSelect) {
     let q = null; try { q = localStorage.getItem('hv_dinle_qari'); } catch (e) {}
-    surahQariSelect.value = q || 'husr';
-    if (surahQariSelect.selectedIndex < 0) surahQariSelect.value = 'husr';
+    surahQariSelect.value = q || 'alfaqih';
+    if (surahQariSelect.selectedIndex < 0) surahQariSelect.value = 'alfaqih';
   }
 
   // v66.4: Dua & Sure Öğren'in kendi hocası (varsayılan Muhammed el-Fakih)
@@ -1918,7 +1918,7 @@ function loadDailyVerse() {
 
     if (ar) ar.textContent = v.arabic;
     if (tr) tr.textContent = `"${v.turkish}"`;
-    if (src) src.textContent = `— ${v.surah} Suresi, ${v.ayah}. Ayet`;
+    if (src) src.textContent = `— ${v.surah} Sûresi, ${v.ayah}. Âyet`;
   }
 }
 
@@ -2564,8 +2564,8 @@ function renderSurahListItems(list) {
     card.innerHTML = `
       <div class="surah-badge-num">${id}</div>
       <div class="surah-info-col">
-        <div class="surah-title-tr">${nameTr} Suresi</div>
-        <div class="surah-sub-info">${verseCnt} Ayet • ${place}</div>
+        <div class="surah-title-tr">${nameTr} Sûresi</div>
+        <div class="surah-sub-info">${verseCnt} Âyet • ${place}</div>
       </div>
       <div class="surah-title-ar">${nameAr}</div>
     `;
@@ -2641,7 +2641,7 @@ async function loadSurahDetail(id, localSurahObj) {
     const aciklama = (typeof SURE_ACIKLAMA !== 'undefined' && SURE_ACIKLAMA[id]) ? SURE_ACIKLAMA[id] : '';
     headerCard.innerHTML = `
       <div class="detail-ar-name">${localSurahObj.name_original || ''}</div>
-      <div class="detail-tr-name">${localSurahObj.name} Suresi</div>
+      <div class="detail-tr-name">${localSurahObj.name} Sûresi</div>
       <div class="detail-meta">${localSurahObj.verse_count} Ayet • ${localSurahObj.revelation_place}</div>
       ${aciklama ? `<div class="sure-hakkinda"><span class="sh-label">📘 Sure Hakkında</span>${aciklama}</div>` : ''}
       ${hvSureFazileti(id)}
@@ -2757,7 +2757,7 @@ function renderSurahVerses(id, verses, ayahWrap) {
     ayahWrap.innerHTML = `
       <div style="text-align:center; padding: 40px; color: var(--text-sub);">
         <p>Ayetler yüklenirken internet bağlantısı kurulamadı.</p>
-        <p style="font-size:.8rem;margin-top:6px;">Bu sure daha önce indirilmediği için çevrimdışı gösterilemiyor. İnternet varken <b>Kuran-ı Kerim → Çevrimdışı İndir</b> ile tüm Kur'an'ı cihazınıza kaydedebilirsiniz.</p>
+        <p style="font-size:.8rem;margin-top:6px;">Bu sure daha önce indirilmediği için çevrimdışı gösterilemiyor. İnternet varken <b>Kur'an → Çevrimdışı Kur'an</b> ile tüm Kur'an'ı cihazınıza kaydedebilirsiniz.</p>
         <button class="gold-primary-btn" style="margin-top: 12px;" onclick="retryLoadSurah(${id})">Tekrar Deneyin</button>
       </div>
     `;
@@ -2846,6 +2846,7 @@ async function hvDownloadWholeQuran() {
   }
   _hvDownloading = false;
   if (btn) btn.disabled = false;
+  try { if (typeof window.renderQuranTools === 'function') setTimeout(window.renderQuranTools, 50); } catch (e) {}
   if (txt) txt.textContent = failed ? `${done}/114 sure indirildi, ${failed} sure alınamadı. Tekrar deneyin.` : '✅ Kur\'an-ı Kerim tamamen çevrimdışı kullanılabilir (114/114).';
   showToastNotification('📖 Çevrimdışı Kur\'an', failed ? `${done} sure indirildi, ${failed} eksik.` : 'Tüm sureler cihazınıza kaydedildi.');
   renderQuranTools();
@@ -2893,13 +2894,13 @@ function hvShareAyah(surah, ayah) {
   const card = document.getElementById('ayah-' + ayah);
   const tr = card ? (card.querySelector('.ayah-tr-text')?.textContent || '').replace(/^\s*\d+\s*📖\s*Anlamı:\s*/, '').trim() : '';
   const ar = card ? (card.querySelector('.ayah-ar-text')?.textContent || '').trim() : '';
-  const text = `${hvSurahName(surah)} Suresi, ${ayah}. Ayet\n\n"${tr}"`;
+  const text = `${hvSurahName(surah)} Sûresi, ${ayah}. Âyet\n\n"${tr}"`;
   if (typeof hvOpenShareCard === 'function') {
     hvOpenShareCard({
       badge: '📖 Ayet-i Kerime',
       arabic: ar,
       text: tr,
-      source: `${hvSurahName(surah)} Suresi, ${ayah}. ayet`,
+      source: `${hvSurahName(surah)} Sûresi, ${ayah}. âyet`,
       fallbackText: text
     });
   }

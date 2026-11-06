@@ -703,7 +703,7 @@ const ALL_114_SURAHS = [
   { id: 96, name: "Alak", name_original: "العلق", verse_count: 19, revelation_place: "Mekke" },
   { id: 97, name: "Kadir", name_original: "القدر", verse_count: 5, revelation_place: "Mekke" },
   { id: 98, name: "Beyyine", name_original: "البينة", verse_count: 8, revelation_place: "Medine" },
-  { id: 99, name: "Zilzâl", name_original: "Zilzal", verse_count: 8, revelation_place: "Medine" },
+  { id: 99, name: "Zilzâl", name_original: "الزلزلة", verse_count: 8, revelation_place: "Medine" },
   { id: 100, name: "Âdiyât", name_original: "العاديات", verse_count: 11, revelation_place: "Mekke" },
   { id: 101, name: "Kâri'a", name_original: "القارعة", verse_count: 11, revelation_place: "Mekke" },
   { id: 102, name: "Tekâsür", name_original: "التكاثر", verse_count: 8, revelation_place: "Mekke" },
