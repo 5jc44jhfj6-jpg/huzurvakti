@@ -117,7 +117,7 @@ const PAGE_PARENT = {
   // v67.0 yeni sekme düzeni: Bugün · Kur'an · Öğren · Takibim · Ayarlar
   kurandua: 'kurandua', quran: 'kurandua', mushaf: 'kurandua', dinle: 'kurandua', hatim: 'kurandua', 'onemli-sureler': 'kurandua', 'ayet-arama': 'kurandua', 'kuran-nedir': 'kurandua',
   ogren: 'ogren', 'namaz-ogren': 'ogren', 'kuran-ogren': 'ogren', dualar: 'ogren',
-  anlayarak: 'ogren', 'gece-rutini': 'ogren', 'dua-defteri': 'ogren', kelime: 'ogren', cocuk: 'ogren', duvar: 'settings',
+  anlayarak: 'ogren', 'gece-rutini': 'ogren', 'dua-defteri': 'ogren', kelime: 'ogren', cocuk: 'ogren', duvar: 'kurandua',
   guide: 'ogren', 'namaz-programi': 'ogren', 'namaz-nedir': 'ogren', taharet: 'ogren', 'ozel-namaz': 'ogren',
   ezber: 'ogren', sifirdan: 'ogren', 'dua-ogrenme': 'ogren', elifba: 'ogren', tecvid: 'ogren',
   ezkar: 'ogren', 'gunluk-dua': 'ogren', esma: 'ogren', 'kirk-hadis': 'ogren', iman: 'ogren', peygamberler: 'ogren', siyer: 'ogren', sozluk: 'ogren', quiz: 'ogren',

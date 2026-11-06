@@ -456,6 +456,7 @@ function renderDuvar() {
     <div class="yh-cip">${DUVAR_SURE.map(s => `<button class="${s[0] === _dv.s ? 'on' : ''}" onclick="hvDvSure('${s[0]}')">${esc(s[1])}</button>`).join('')}${ozel ? `<button class="on">${esc(ozel.ad)}</button>` : ''}</div>
     <div class="dv-ara"><span>🔍</span><input id="dv-ara" type="search" placeholder="Başka sûre ya da dua ara (${dvHavuz().length} seçenek)" value="${esc(_dv.q)}" oninput="hvDvAra(this.value)" autocomplete="off"></div>
     <div class="dv-sonuc" id="dv-sonuc">${dvSonuc()}</div>
+    ${_dv.s ? `<div class="dv-punto"><span>Yazı boyutu</span><button onclick="hvDvPunto(-1)" aria-label="Küçült">A−</button><b>%${Math.round(dvPunto() * 100)}</b><button onclick="hvDvPunto(1)" aria-label="Büyüt">A+</button></div>` : ''}
     <div class="dv-onizle"><canvas id="dv-canvas" width="540" height="960"></canvas></div>
     <button class="an-basla" onclick="hvDvKaydet()">Telefonuma kaydet / paylaş</button>
     <div class="info-note">Kaydettikten sonra telefonunun Ayarlar → Duvar Kâğıdı bölümünden ana ekrana ya da kilit ekranına koyabilirsin.</div>`;
@@ -469,15 +470,21 @@ function sarMetin(ctx, metin, x, y, gen, sat, ciz) {
   return satirlar.length * sat;
 }
 function dvYaz(ctx, s, W, H, f, y0, ciz) {
+  /* v67.7: Arapça küçük · okunuş büyük · Türkçe anlam küçük ve en altta */
   let y = y0;
   ctx.textAlign = 'center';
-  ctx.fillStyle = '#f6dca6'; ctx.font = `600 ${26 * f}px Lora, Georgia, serif`; if (ciz) ctx.fillText(s.ad, W / 2, y); y += 44 * f;
-  ctx.fillStyle = '#fff'; ctx.font = `${27 * f}px Amiri, 'Amiri Quran', serif`; ctx.direction = 'rtl';
-  y += sarMetin(ctx, s.ar.replace(/۝/g, '۞'), W / 2, y, W * 0.84, 46 * f, ciz) + 10 * f; ctx.direction = 'ltr';
-  if (s.ok) { ctx.fillStyle = '#f3e4c8'; ctx.font = `italic ${15 * f}px Lora, Georgia, serif`; y += sarMetin(ctx, s.ok, W / 2, y, W * 0.84, 22 * f, ciz) + 12 * f; }
-  if (s.tr) { ctx.fillStyle = 'rgba(255,255,255,.86)'; ctx.font = `${14 * f}px Lora, Georgia, serif`; y += sarMetin(ctx, s.tr, W / 2, y, W * 0.84, 20 * f, ciz); }
+  ctx.shadowColor = 'rgba(0,0,0,.6)'; ctx.shadowBlur = ciz ? 12 * f : 0; ctx.shadowOffsetY = ciz ? 1.5 * f : 0;
+  ctx.fillStyle = '#f6dca6'; ctx.font = `600 ${16 * f}px Lora, Georgia, serif`; if (ciz) ctx.fillText(s.ad, W / 2, y); y += 36 * f;
+  if (s.ar) {
+    ctx.fillStyle = 'rgba(255,255,255,.93)'; ctx.font = `${20 * f}px Amiri, 'Amiri Quran', serif`; ctx.direction = 'rtl';
+    y += sarMetin(ctx, s.ar.replace(/۝/g, '۞'), W / 2, y, W * 0.86, 35 * f, ciz) + 12 * f; ctx.direction = 'ltr';
+  }
+  if (s.ok) { ctx.fillStyle = '#fffaf0'; ctx.font = `600 ${24 * f}px Lora, Georgia, serif`; y += sarMetin(ctx, s.ok, W / 2, y + 6 * f, W * 0.88, 33 * f, ciz) + 14 * f; }
+  if (s.tr) { ctx.fillStyle = 'rgba(255,244,222,.9)'; ctx.font = `${13.5 * f}px Lora, Georgia, serif`; y += sarMetin(ctx, s.tr, W / 2, y + 4 * f, W * 0.84, 19 * f, ciz); }
+  ctx.shadowBlur = 0; ctx.shadowOffsetY = 0;
   return y - y0;
 }
+const dvPunto = () => { const v = Number(yukle('dv_punto', 1)); return isFinite(v) && v >= 0.7 && v <= 1.5 ? v : 1; };
 function duvarCiz(cv, W, H) {
   return new Promise((res) => {
     if (!cv) return res(null);
@@ -488,14 +495,18 @@ function duvarCiz(cv, W, H) {
       ctx.drawImage(im, (W - w) / 2, (H - h) / 2, w, h);
       let s = dvMetin(_dv.s);
       if (s) {
-        const gr = ctx.createLinearGradient(0, H * 0.3, 0, H); gr.addColorStop(0, 'rgba(10,6,3,0)'); gr.addColorStop(.3, 'rgba(10,6,3,.55)'); gr.addColorStop(1, 'rgba(10,6,3,.88)');
-        ctx.fillStyle = gr; ctx.fillRect(0, 0, W, H);
-        const ust = H * 0.36, alt = H * 0.92, f0 = W / 540;
-        const sigdir = (m) => { let f = f0, y = dvYaz(ctx, m, W, H, f, 0, false); while (y > alt - ust && f > f0 * 0.5) { f -= f0 * 0.03; y = dvYaz(ctx, m, W, H, f, 0, false); } return [f, y]; };
+        const f0 = W / 540, fK = f0 * dvPunto();
+        const ust = H * 0.40, alt = H * 0.915;
+        const sigdir = (m) => { let f = fK, y = dvYaz(ctx, m, W, H, f, 0, false); while (y > alt - ust && f > fK * 0.55) { f -= f0 * 0.03; y = dvYaz(ctx, m, W, H, f, 0, false); } return [f, y]; };
         let [f, yuk] = sigdir(s);
-        if ((f < f0 * 0.92 || (s.ar.length + s.ok.length + s.tr.length) > 650) && s.ok) { const s2 = Object.assign({}, s, { ok: '' }); const r2 = sigdir(s2); s = s2; f = r2[0]; yuk = r2[1]; }
-        const basY = Math.max(H * 0.16, ust + (alt - ust - yuk) / 2 + 20 * f);
-        if (yuk > alt - ust) { const g2 = ctx.createLinearGradient(0, 0, 0, H * 0.5); g2.addColorStop(0, 'rgba(10,6,3,.2)'); g2.addColorStop(1, 'rgba(10,6,3,.5)'); ctx.fillStyle = g2; ctx.fillRect(0, 0, W, H * 0.5); }
+        // Sığmıyorsa önce Arapça çıkar (okunuş ve anlam kalır), yine sığmazsa anlam da çıkar
+        if (yuk > alt - ust || f < fK * 0.8) { const s2 = Object.assign({}, s, { ar: '' }); const r2 = sigdir(s2); if (r2[1] <= alt - ust) { s = s2; f = r2[0]; yuk = r2[1]; } }
+        if (yuk > alt - ust && s.tr) { const s3 = Object.assign({}, s, { tr: '' }); const r3 = sigdir(s3); s = s3; f = r3[0]; yuk = r3[1]; }
+        const basY = Math.max(ust + 16 * f, alt - yuk + 16 * f);
+        // Manzarayı az kapatsın: koyuluk yalnızca yazının arkasında, alttan yukarı
+        const gTop = Math.max(0, basY - 90 * f0);
+        const gr = ctx.createLinearGradient(0, gTop, 0, H); gr.addColorStop(0, 'rgba(10,6,3,0)'); gr.addColorStop(.35, 'rgba(10,6,3,.42)'); gr.addColorStop(1, 'rgba(10,6,3,.72)');
+        ctx.fillStyle = gr; ctx.fillRect(0, gTop, W, H - gTop);
         dvYaz(ctx, s, W, H, f, basY, true);
         ctx.fillStyle = 'rgba(246,220,166,.8)'; ctx.font = `${12 * f0}px Lora, Georgia, serif`; ctx.textAlign = 'center'; ctx.fillText('Namaz Dostu · Oku • Anla • Hatırla', W / 2, H - 30 * f0);
       }
@@ -507,6 +518,7 @@ function duvarCiz(cv, W, H) {
 }
 window.hvDvSec = (i) => { _dv.i = i; renderDuvar(); };
 window.hvDvSure = (s) => { _dv.s = s; renderDuvar(); };
+window.hvDvPunto = (y) => { const v = Math.max(0.7, Math.min(1.5, Math.round((dvPunto() + y * 0.1) * 10) / 10)); kaydet('dv_punto', v); renderDuvar(); };
 window.hvDvAra = (q) => { _dv.q = q; const r = $('dv-sonuc'); if (r) r.innerHTML = dvSonuc(); };
 window.hvDvKaydet = async () => {
   const cv = document.createElement('canvas'); cv.width = 1080; cv.height = 1920;
@@ -707,6 +719,9 @@ function krTemaUygula() {
 const krFoto = () => `img/vakit_${(document.body && document.body.dataset.foto) || 'ikindi'}.jpg`;
 const KR_SERIT = ['05', '01', '02', '06', '07', '03', '08', '10', '04', '09'];
 const krSerit = (id) => `img/duvar_${KR_SERIT[Number(id) % 10]}.jpg`;
+/* v67.7: her caminin kendi gövdesi görünsün diye dikey konum (resme göre) */
+const KR_KONUM = { '01': 47, '02': 47, '03': 44, '04': 47, '05': 39, '06': 44, '07': 41, '08': 47, '09': 53, '10': 36 };
+const krKonum = (id) => (KR_KONUM[KR_SERIT[Number(id) % 10]] || 45) + '%';
 const KR_CUZ = [[1, 1], [2, 142], [2, 253], [3, 93], [4, 24], [4, 148], [5, 82], [6, 111], [7, 88], [8, 41], [9, 93], [11, 6], [12, 53], [15, 1], [17, 1], [18, 75], [21, 1], [23, 1], [25, 21], [27, 56], [29, 46], [33, 31], [36, 28], [39, 32], [41, 47], [46, 1], [51, 31], [58, 1], [67, 1], [78, 1]];
 const KR_ONE = [1, 36, 67, 18, 55, 56, 48, 2];
 const I = (d, f) => `<svg viewBox="0 0 24 24" fill="${f ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
@@ -714,6 +729,7 @@ const IK = {
   kitap: I('<path d="M12 6.5C10 5 7 4.6 3.5 5v13c3.5-.4 6.5 0 8.5 1.5 2-1.5 5-1.9 8.5-1.5V5C17 4.6 14 5 12 6.5z"/><path d="M12 6.5V19"/>'),
   katman: I('<path d="M12 3.5l8.5 4.6L12 12.7 3.5 8.1z"/><path d="M3.5 12.2l8.5 4.6 8.5-4.6"/><path d="M3.5 16.1l8.5 4.6 8.5-4.6"/>'),
   mushaf: I('<path d="M5 4.5h10.5a3 3 0 013 3V20H8a3 3 0 01-3-3z"/><path d="M5 17a3 3 0 013-3h10.5"/><path d="M9 8.5h6"/>'),
+  sayfa: I('<path d="M3 5.5c2.6-.5 5.3-.2 8 1.2v13c-2.7-1.4-5.4-1.7-8-1.2z"/><path d="M21 5.5c-2.6-.5-5.3-.2-8 1.2v13c2.7-1.4 5.4-1.7 8-1.2z"/><path d="M5.5 9.2c1.3-.1 2.5.1 3.6.6M5.5 12.2c1.3-.1 2.5.1 3.6.6M18.5 9.2c-1.3-.1-2.5.1-3.6.6M18.5 12.2c-1.3-.1-2.5.1-3.6.6"/>'),
   takvim: I('<rect x="3.5" y="5" width="17" height="15" rx="2.5"/><path d="M3.5 9.5h17M8 3v4M16 3v4"/><path d="M8.6 14.6l2.3 2.3 4.6-4.6"/>'),
   ara: I('<circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.2-4.2"/>'),
   geri: I('<path d="M15 5l-7 7 7 7"/>'),
@@ -790,6 +806,10 @@ function renderKrHub() {
         <span class="kr-m"><b>${esc(s.name || '')} Sûresi</b><small>${s.verse_count || ''} Âyet • ${esc(s.revelation_place || '')}</small></span>
         <button class="kr-oyna" onclick="event.stopPropagation();hvKrDinle(${no})" aria-label="Dinle">${IK.play}</button>
       </div>`; }).join('')}</div>
+    <button class="kr-duvar" onclick="navigateTo('duvar')">
+      <span class="kr-duvar-ser">${['07', '01', '03', '05', '10'].map(n => `<i style="background-image:url(img/dv_k_${n}.jpg)"></i>`).join('')}</span>
+      <span class="kr-duvar-y"><small>YENİ</small><b>Duvar Kâğıtları</b><em>10 cami · üzerine sûre ya da dua yaz</em></span>${IK.ok}
+    </button>
     <div class="kr-baslik"><h3>Daha fazlası</h3></div>
     <div class="kr-diger">
       <button onclick="navigateTo('dinle')"><span>${IK.kulak}</span><b>Kesintisiz Dinle</b><small>10 hâfız · sırayla</small></button>
@@ -852,12 +872,20 @@ window.hvKrDinle = (no) => {
   setTimeout(() => { try { hvDnCal(no); } catch (e) {} }, 60);
 };
 
+/* v67.7: Okurken çıkmadan sayfa sayfa (mushaf) görünüme geç — sûrenin başladığı sayfa açılır */
+window.hvKrSayfa = (no) => {
+  const id = Number(no || window._krSure || 1);
+  try { hvKrOyna(true); } catch (e) {}
+  try { hvSet('hv_mushaf_page', typeof hvSureSayfasi === 'function' ? hvSureSayfasi(id) : 1); } catch (e) {}
+  navigateTo('mushaf');
+};
 /* ═════════ SÛRE EKRANI ═════════ */
 function krOynaticiHtml() {
   const m0 = hvDnMod(), m = m0 === 'aa' ? 'ar' : m0;
   const q = hvDnQari();
   const hiz = yukle('kr_hiz', 1), tek = yukle('kr_tekrar', false);
-  const not = (m !== 'ar' || m0 === 'aa') && !hvDnAyetKaydiVar(q.id) ? `<div class="kr-not">${esc(q.ad)}'in âyet âyet kaydı yok; bu modda Husarî okur.</div>` : '';
+  const sid = window._krSure || 0;
+  const not = (m === 'both' || m0 === 'aa') && typeof hvAyetKendiSesi === 'function' && !hvAyetKendiSesi(sid, q) ? `<div class="kr-not">ℹ️ ${esc(q.ad)}'in bu sûrede âyet âyet bölünmüş kaydı yok (Fâtiha ve kısa sûrelerde var). Türkçe araya girdiği için bu sûrenin Arapçasını Husarî okur. Kendi sesinden tam sûre için “Arapça Dinle”.</div>` : '';
   return `<div class="kr-oynatici" id="kr-oynatici">
     <div class="kr-om"><span class="kr-kul">${IK.kulak}</span><div class="kr-seg">
       <button class="${m === 'ar' ? 'on' : ''}" onclick="hvKrDinMod('ar')">${IK.kulak}<span>Arapça Dinle</span></button>
@@ -879,10 +907,11 @@ function krOynaticiHtml() {
 function okBaslik(id) {
   const h = $('surah-header-card'); if (!h) return;
   const s = sureBul(id) || {};
+  window._krSure = Number(id) || 0;
   const m = okMod();
   h.className = 'surah-detail-header-card ok-kap';
   h.innerHTML = `
-    <div class="kr-rhero kr-rhero-s" style="background-image:url(${krSerit(id)})">
+    <div class="kr-rhero kr-rhero-s" style="background-image:url(${krSerit(id)});--krk:${krKonum(id)}">
       <button class="kr-yuv kr-sol" onclick="hvKrGeri()" aria-label="Geri">${IK.geri}</button>
       <div class="kr-rbas"><h2>${esc(s.name || '')} Sûresi</h2><p>${id}. Sûre • ${s.verse_count || ''} Âyet • ${esc(s.revelation_place || '')}</p></div>
       <button class="kr-yuv kr-sag2" onclick="hvKrImler()" aria-label="Yer imleri">${IK.imi}</button>
@@ -892,6 +921,7 @@ function okBaslik(id) {
       <button class="${m === 'birlikte' ? 'on' : ''}" onclick="hvOkMod('birlikte')">${IK.kitap}<span>Âyet</span></button>
       <button class="${m === 'meal' ? 'on' : ''}" onclick="hvOkMod('meal')">${IK.mushaf}<span>Meâl</span></button>
       <button class="${m === 'arapca' ? 'on' : ''}" onclick="hvOkMod('arapca')">${IK.harf}<span>Arapça</span></button>
+      <button onclick="hvKrSayfa()">${IK.sayfa}<span>Sayfa</span></button>
       <button class="${m === 'bilgi' ? 'on' : ''}" onclick="hvOkMod('bilgi')">${IK.bilgi}<span>Bilgi</span></button>
     </div>
     ${krOynaticiHtml()}`;
@@ -1224,7 +1254,7 @@ function dinleSus() {
   const ara = kok.querySelector('.quran-search-bar');
   if (ara && !kok.querySelector('.dn-sik')) {
     const s = document.createElement('div');
-    s.innerHTML = `<div class="yh-grup dn-baslik">Sık dinlenenler</div><div class="dn-sik">${DN_SIK.map((x, i) => `<button onclick="hvDnSik(${x[0]})" style="--fp:${(i * 13) % 100}%"><b>${x[1]}</b><small>${(sureBul(x[0]) || {}).verse_count || ''} âyet</small></button>`).join('')}</div><div class="yh-grup dn-baslik">Tüm sûreler</div>`;
+    s.innerHTML = `<div class="yh-grup dn-baslik">Sık dinlenenler</div><div class="dn-sik">${DN_SIK.map((x, i) => `<button onclick="hvDnSik(${x[0]})" style="--dv:url(img/dv_k_${['07', '02', '03', '05', '09', '06', '01', '10'][i] || '04'}.jpg)"><b>${x[1]}</b><small>${(sureBul(x[0]) || {}).verse_count || ''} âyet</small></button>`).join('')}</div><div class="yh-grup dn-baslik">Tüm sûreler</div>`;
     ara.before(...s.children);
   }
   kok.querySelectorAll('.dn-sure').forEach(b => {
@@ -1441,25 +1471,35 @@ function ayarKatla() {
 }
 document.addEventListener('DOMContentLoaded', ayarKatla);
 
-/* ═════════ v67.5 · Günün Âyeti: kısa âyetlerde Arapçası da görünür (kart boş kalmasın) ═════════
-   Sığarsa: Arapça + ayraç + meâl. Sığmazsa Arapça gizlenir, meâl eskisi gibi. */
+/* ═════════ v67.7 · Günün Âyeti: sabit punto, sıkışma/kayma yok ═════════
+   Kısa âyette Arapçası da görünür. Kutuya okunur puntoda (≥14px) sığmayan uzun âyet
+   ana sayfada gösterilmez, sıradaki âyete geçilir (paylaşım vb. etkilenmez). */
 (function () {
-  const eskiSigdir = window.hvYaAyetSigdir;
+  let deneme = 0;
   window.hvYaAyetSigdir = function () {
     const kart = $('daily-ayet-card'), ar = $('daily-verse-arabic'), tr = $('daily-verse-turkish');
-    if (!kart || !ar || !tr || !kart.classList.contains('ya-ayet')) return eskiSigdir && eskiSigdir();
+    if (!kart || !ar || !tr || !kart.classList.contains('ya-ayet')) return;
     requestAnimationFrame(() => {
       const v = window._currentAyet;
       const metin = v && v.arabic ? String(v.arabic).trim() : '';
       tr.style.fontSize = '';
       ar.classList.add('ya-ar');
+      ar.textContent = ''; ar.style.display = 'none'; ar.style.fontSize = '';
+      const tasti = () => tr.scrollHeight > tr.clientHeight + 1;
+      let fs = parseFloat(getComputedStyle(tr).fontSize) || 15, n = 0;
+      while (tasti() && fs > 14 && n < 6) { fs -= 0.5; tr.style.fontSize = fs + 'px'; n++; }
+      if (tasti()) {
+        if (deneme < 40 && typeof hvAyetSec === 'function' && typeof hvAyetCiz === 'function') {
+          deneme++; const yeni = hvAyetSec(); if (yeni) { hvAyetCiz(yeni, false); return; }
+        }
+      }
+      deneme = 0; kart.classList.remove('ar-var');
       if (metin && metin.length <= 170) {
-        ar.textContent = metin; ar.style.display = ''; ar.style.fontSize = '';
-        const tasti = () => tr.scrollHeight > tr.clientHeight + 1 || kart.scrollHeight > kart.clientHeight + 1;
-        if (tasti()) ar.style.fontSize = '1.2rem';
-        if (tasti()) { ar.textContent = ''; ar.style.display = 'none'; ar.style.fontSize = ''; }
-      } else { ar.textContent = ''; ar.style.display = 'none'; }
-      if (eskiSigdir) eskiSigdir();
+        ar.textContent = metin; ar.style.display = ''; kart.classList.add('ar-var');
+        const tasti2 = () => tr.scrollHeight > tr.clientHeight + 1 || kart.scrollHeight > kart.clientHeight + 1;
+        if (tasti2()) ar.style.fontSize = '1.2rem';
+        if (tasti2()) { ar.textContent = ''; ar.style.display = 'none'; ar.style.fontSize = ''; kart.classList.remove('ar-var'); }
+      }
     });
   };
   document.addEventListener('DOMContentLoaded', () => setTimeout(() => { try { window.hvYaAyetSigdir(); } catch (e) {} }, 300));

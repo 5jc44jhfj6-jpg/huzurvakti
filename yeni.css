@@ -1262,7 +1262,7 @@ body.light-theme #page-qibla .hero-frame-box::after { background: none !importan
 #page-qibla .compass-note { background: var(--bg-card) !important; border-color: var(--border-light) !important; }
 #page-qibla .stat-box { background: var(--bg-card) !important; border: 1.2px solid var(--border-light) !important; }
 /* ── v67.5 son düzeltmeler ── */
-.kr-rhero.kr-rhero-s { background-size: cover !important; background-position: center 58% !important; }
+.kr-rhero.kr-rhero-s { background-size: cover !important; background-position: center var(--krk, 45%) !important; }
 .kr-ortak { display: block; font-family: var(--font-ui); font-size: .7rem; font-weight: 700; letter-spacing: .3px; color: #a8692f; margin-bottom: 3px; }
 .ok-mp .kr-ortak { display: block; margin: 4px 0 0; font-weight: 500; font-style: italic; letter-spacing: 0; color: var(--text-muted); }
 .kr-ortak-bos { font-family: var(--font-ui) !important; font-size: .74rem !important; font-style: italic; color: #a08060 !important; }
@@ -1319,3 +1319,50 @@ body.dark-theme .ya-ayet .ya-ar { color: #f3cf86; }
 #page-home .ya-kalan { font-family: var(--ya-serif) !important; font-size: 1.12rem !important; font-weight: 500 !important; font-style: normal !important; color: #f3e6cc !important; letter-spacing: .5px !important; text-shadow: 0 1px 8px rgba(0,0,0,.6) !important; margin-bottom: -2px; }
 #page-home .ya-saat { font-family: var(--ya-serif) !important; font-size: 3.05rem !important; font-weight: 700 !important; color: #f7ebd2 !important; -webkit-text-fill-color: #f7ebd2 !important; letter-spacing: 1.5px !important; line-height: 1.05 !important; text-shadow: 0 3px 14px rgba(0,0,0,.55) !important; }
 @media (max-height: 720px) { #page-home .ya-hero { height: 37vh !important; } #page-home .ya-saat { font-size: 2.6rem !important; } #page-home .ya-kalan { font-size: 1rem !important; } }
+
+/* ── v67.7 Günün Âyeti: sabit, okunur punto; kutu en az 4 satır alır, satırlar biraz sıkılaştı ── */
+#page-home .ya-anl { height: 60px; }
+#page-home .ya-ikili button { height: 60px; }
+#page-home .ya-kt { width: 46px; height: 46px; }
+#page-home .ya-kisa button { height: 66px; }
+#page-home .ya-kisa img { margin-top: 15px; }
+#page-home .ya-ayet { min-height: 150px; padding: 8px 16px 8px; }
+#page-home .ya-metin { font-size: 15px; line-height: 1.38; margin: 4px 0 4px; align-items: safe center; min-height: 62px; }
+#page-home .ya-ayet .ya-ar { font-size: 1.4rem; line-height: 1.75; margin-top: 4px; }
+html.hv-buyuk #page-home .ya-metin { font-size: 17px; }
+@media (max-height: 720px) {
+  #page-home .ya-anl, #page-home .ya-ikili button { height: 54px; }
+  #page-home .ya-kisa button { height: 62px; }
+  #page-home .ya-ayet { min-height: 138px; }
+}
+#page-home .ya-ayet.ar-var .ya-metin { min-height: 0; }
+#page-home .ya-ayet.ar-var .ya-ar { line-height: 1.6; margin: 2px 6px 0; }
+/* v67.7: Sık dinlenenler — her sûreye ayrı cami */
+.dn-sik button { background: linear-gradient(transparent 38%, rgba(20,10,4,.82)), var(--dv, url(img/dv_k_04.jpg)) center 16% / cover no-repeat !important; }
+/* v67.7: Kur'an ana sayfası — arama kutusu ile Sûreler/Cüzler/Mushaf/Hatim birbirine yapışık, boşluklar kapandı */
+.kr-hero { height: 300px; padding-bottom: 8px; }
+.kr-ara-sonuc:empty { margin: 0; }
+.kr-dort { margin-top: 8px; }
+.kr-son { margin-top: 10px !important; }
+.kr-baslik { margin-top: 16px !important; }
+.yh-hub:not(.kr-hub) { padding-top: 10px !important; }
+.yh-hub > .page-header-title:first-child, .yh-hub > h2:first-child { margin-top: 0 !important; }
+/* v67.7: sûre ekranında 5. sekme "Sayfa" (mushaf) */
+.kr-sekme { grid-template-columns: repeat(5, 1fr) !important; gap: 4px !important; }
+.kr-sekme button { font-size: .8rem !important; padding: 8px 0 !important; }
+/* v67.7: Duvar kâğıdı yazı boyutu */
+.dv-punto { display: flex; align-items: center; justify-content: center; gap: 10px; margin: 10px 0 2px; font-family: var(--ya-serif); color: var(--ya-yazi, #2b1d14); }
+.dv-punto span { font-size: .88rem; margin-right: 4px; }
+.dv-punto button { min-width: 46px; height: 36px; border-radius: 12px; border: 1.2px solid #d6a85c; background: #fffaf0; color: #5a3517; font-weight: 700; font-size: .95rem; cursor: pointer; }
+.dv-punto b { min-width: 48px; text-align: center; font-size: .92rem; }
+body.dark-theme .dv-punto { color: #f1e3cc; } body.dark-theme .dv-punto button { background: #2a1c11; color: #f3cf86; border-color: #8a6430; }
+/* v67.7: Duvar Kâğıtları — Kur'an sayfasında görünür kart */
+.kr-duvar { display: flex; align-items: center; gap: 12px; width: 100%; margin-top: 16px; padding: 10px 12px 10px 10px; border-radius: 20px; border: 1.2px solid var(--kr-cizgi, #e6cf9f); background: var(--kr-kart, #fffaf0); color: var(--kr-yazi, #2b1d14); cursor: pointer; text-align: left; box-shadow: 0 6px 16px rgba(60,30,8,.12); }
+.kr-duvar-ser { display: flex; flex: 0 0 auto; }
+.kr-duvar-ser i { width: 30px; height: 54px; border-radius: 9px; background: center 18% / cover no-repeat; box-shadow: 0 2px 6px rgba(40,20,5,.3), 0 0 0 1.5px #fffaf0; }
+.kr-duvar-ser i + i { margin-left: -12px; }
+.kr-duvar-y { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.kr-duvar-y small { font-size: .62rem; font-weight: 700; letter-spacing: 1.5px; color: #b9813a; }
+.kr-duvar-y b { font-family: var(--ya-serif); font-size: 1.12rem; font-weight: 600; }
+.kr-duvar-y em { font-style: normal; font-size: .76rem; opacity: .75; }
+.kr-duvar > svg { width: 20px; height: 20px; flex: 0 0 auto; color: var(--kr-altin2, #b9813a); }

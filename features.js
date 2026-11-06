@@ -2939,6 +2939,7 @@ function hvMvSesNesnesi() {
     hvMvSes = new Audio();
     hvMvSes.preload = 'auto';
     hvMvSes.addEventListener('ended', () => { hvMvAyetBitti(); });
+    hvMvSes.addEventListener('hvsegbitti', () => { hvMvAyetBitti(); });   // v67.7: hoca parçası bitti
     hvMvSes.addEventListener('timeupdate', hvMvIlerleme);
     hvMvSes.addEventListener('loadedmetadata', hvMvIlerleme);
     // Ses gelmezse ayetleri hızla atlamak yerine dur ve haber ver
@@ -2973,7 +2974,9 @@ function hvMvKelimele(el) {
 function hvMvIlerleme() {
   const s = hvMvSes;
   if (!s) return;
-  const oran = (s.duration && isFinite(s.duration)) ? Math.min(1, s.currentTime / s.duration) : 0;
+  const oran = (s._segBas != null && s._segSonu > s._segBas)
+    ? Math.max(0, Math.min(1, (s.currentTime - s._segBas) / (s._segSonu - s._segBas)))
+    : ((s.duration && isFinite(s.duration)) ? Math.min(1, s.currentTime / s.duration) : 0);
   document.querySelectorAll('.mv-ayah.okunuyor').forEach(el => {
     el.style.setProperty('--hv-oran', (oran * 100).toFixed(1) + '%');
     const ks = el.querySelectorAll('.mv-w');
@@ -3079,9 +3082,8 @@ function hvMvCal(i) {
 
   const ses = hvMvSesNesnesi();
   const r = hvMvRef[hvMvSira[i]];
-  ses.src = r ? hvAaUrl(r[0], r[1])
-              : 'https://cdn.islamic.network/quran/audio/128/ar.husary/' + hvMvSira[i];
-  ses.play().catch(() => {});
+  if (r) { const pr = hvSegCal(ses, hvAyetSeg(r[0], r[1])); if (pr && pr.catch) pr.catch(() => {}); }
+  else { ses._segBas = null; ses._segSon = null; ses._segSonu = null; ses.src = 'https://cdn.islamic.network/quran/audio/128/ar.husary/' + hvMvSira[i]; ses.play().catch(() => {}); }
   hvMvCalisiyor = true;
   hvMvVurgula(hvMvSira[i]);
   hvMvDugmeTazele();
@@ -3487,7 +3489,7 @@ async function renderMushaf(calmayaDevam) {
         ${HV_DINLE_QARILER.map(q => `<option value="${q.id}" ${q.id === hvDnQari().id ? 'selected' : ''}>${q.ad}</option>`).join('')}
       </select>
     </div>
-    ${!hvDnAyetKaydiVar(hvDnQari().id) ? `<div class="mv-tts-not">ℹ️ ${hvEsc(hvDnQari().ad)}'in âyet âyet kaydı bulunmuyor; sayfa okurken Husarî okur. Tam sûre dinlemek için Kur'an Dinle.</div>` : ''}
+    ${(!hvDnAyetKaydiVar(hvDnQari().id) && hvDnQari().id !== 'mousa' && !(sayfa <= 1 || sayfa >= 596)) ? `<div class="mv-tts-not">ℹ️ ${hvEsc(hvDnQari().ad)} bu sayfayı âyet âyet okuyamıyor (bölünmüş kaydı yalnızca Fâtiha ve kısa sûrelerde var); bu sayfada Husarî okur.</div>` : ''}
     ${mod !== 'ar' ? `<div class="mv-tts-not">🔊 Meâli telefonunun Türkçe sesi okur.${hvTtsTurkceVarMi() ? '' : ' <b>Bu cihazda Türkçe konuşma sesi bulunamadı.</b> <button class="tts-yardim-btn" onclick="hvTtsYardim()">🔧 Ücretsiz nasıl düzeltirim?</button>'}</div>` : ''}
 
     <div class="mv-ilerleme">
@@ -3740,7 +3742,7 @@ function hvOgYedekNotu(sesler) {
   if (!sesler || !sesler.some(x => x && x.yedek)) return '';
   const q = hvOgrenQari();
   const hepsi = sesler.every(x => !x || x.yedek);
-  return `<div class="og-yedek-not">ℹ️ ${hvEsc(q.ad)} hocanın ${hepsi ? 'bu bölüm' : 'bazı âyetler'} için âyet âyet kaydı yok; ${hepsi ? 'bu bölümü' : 'o kısımları'} Mahmud Halil el-Husarî okuyor.</div>`;
+  return `<div class="og-yedek-not">ℹ️ ${hvEsc(q.ad)}'in ${hepsi ? 'bu bölüm' : 'bazı âyetler'} için ayrı (âyet âyet) kaydı bulunmadığından ${hepsi ? 'bu bölümü' : 'o kısımları'} Mahmud Halil el-Husarî okuyor. Diğer dua ve sûrelerde ${hvEsc(q.ad)} okur.</div>`;
 }
 
 /* ── Ortak parça çalar ──
@@ -4633,6 +4635,68 @@ const HV_AA_KLASOR = {
   s_gmd:  'Ghamadi_40kbps',
   maher:  'MaherAlMuaiqly128kbps'
 };
+/* v67.7 — Âyet sesi çözümleyici: seçili hocanın KENDİ sesi
+   • âyet âyet kaydı olan hoca → o âyetin dosyası
+   • el-Fakih → tam sûre dosyasının içinden o âyetin aralığı (Fâtiha + Duhâ…Nâs)
+   • el-Mûsâ → mp3quran resmî âyet zamanları
+   • hiçbiri yoksa → Husarî (yedek: true) */
+function hvAyetSeg(s, a, q) {
+  q = q || hvDnQari();
+  s = Number(s); a = Number(a);
+  if (HV_AA_KLASOR[q.id]) return { url: hvOgEveryayah(HV_AA_KLASOR[q.id], s, a) };
+  if (q.id === 'alfaqih') {
+    const z = HV_FAKIH_ZAMAN[s], i = (s === 1) ? a - 1 : a;
+    if (z && z[i]) return { url: hvOgSureUrl(q, s), bas: z[i][0], son: z[i][1] };
+  }
+  if (q.id === 'mousa') {
+    let z = hvMusaZamanBellek[s];
+    if (!z) { try { z = JSON.parse(localStorage.getItem('hv_musa_z_' + s) || 'null'); } catch (e) { z = null; } }
+    if (Array.isArray(z) && z.length) {
+      hvMusaZamanBellek[s] = z;
+      const x = z.find(y => y[0] === a);
+      if (x) return { url: hvOgSureUrl(q, s), bas: Math.max(0, x[1] / 1000 - 0.05), son: x[2] / 1000 };
+    } else { try { hvMusaZaman(s).catch(() => {}); } catch (e) {} }
+  }
+  return { url: hvOgEveryayah(HV_AA_KLASOR.husr, s, a), yedek: true };
+}
+window.hvAyetSeg = hvAyetSeg;
+/* Bu sûrede hoca âyet âyet kendi sesiyle okuyabiliyor mu? */
+function hvAyetKendiSesi(s, q) {
+  q = q || hvDnQari();
+  if (HV_AA_KLASOR[q.id] || q.id === 'mousa') return true;
+  if (q.id === 'alfaqih') return !!(s && HV_FAKIH_ZAMAN[Number(s)]);
+  return false;
+}
+window.hvAyetKendiSesi = hvAyetKendiSesi;
+/* Bir ses nesnesinde âyet parçasını çal; parça bitince 'hvsegbitti' olayı gelir */
+function hvSegCal(ses, seg) {
+  const bas = (typeof seg.bas === 'number') ? seg.bas : 0;
+  ses._segBas = (typeof seg.bas === 'number') ? seg.bas : null;
+  ses._segSonu = (typeof seg.son === 'number') ? seg.son : null;
+  ses._segSon = ses._segSonu;
+  if (!ses._segIzle) {
+    ses._segIzle = true;
+    ses.addEventListener('timeupdate', () => {
+      if (ses._segSon != null && ses.currentTime >= ses._segSon) {
+        ses._segSon = null;
+        try { ses.pause(); } catch (e) {}
+        ses.dispatchEvent(new Event('hvsegbitti'));
+      }
+    });
+    ses.addEventListener('ended', () => { ses._segSon = null; });
+  }
+  if (hvOgAyniUrl(ses.currentSrc || ses.src, seg.url) && ses.readyState >= 1) {
+    try { if (Math.abs((ses.currentTime || 0) - bas) > 0.6) ses.currentTime = bas; } catch (e) {}
+    return ses.play();
+  }
+  ses.src = seg.url + (bas > 0 ? '#t=' + bas.toFixed(2) : '');
+  if (bas > 0) {
+    const h = () => { ses.removeEventListener('loadedmetadata', h); try { if (Math.abs((ses.currentTime || 0) - bas) > 0.6) ses.currentTime = bas; } catch (e) {} };
+    ses.addEventListener('loadedmetadata', h);
+  }
+  return ses.play();
+}
+window.hvSegCal = hvSegCal;
 function hvAaUrl(sure, ayet) {
   const q = hvDnQari();
   const k = HV_AA_KLASOR[q.id] || HV_AA_KLASOR.husr;
@@ -4691,7 +4755,7 @@ function hvTtsTurkceSes() {
 }
 try {
   if (window.speechSynthesis && typeof speechSynthesis.addEventListener === 'function') {
-    speechSynthesis.addEventListener('voiceschanged', () => { hvTtsSecili = null; hvTtsTurkceSes(); });
+    speechSynthesis.addEventListener('voiceschanged', () => { hvTtsSecili = null; if (hvTtsTurkceSes()) { try { document.querySelectorAll('.dn-not.uyari').forEach(e => e.remove()); } catch (e) {} } });
   }
 } catch (e) {}
 
@@ -4763,7 +4827,12 @@ function hvTtsOku(metin, bitince) {
 }
 
 /* Cihazda Türkçe ses var mı? (yoksa kullanıcıya söylenir) */
-function hvTtsTurkceVarMi() { return !!(hvTtsVar() && hvTtsTurkceSes()); }
+function hvTtsTurkceVarMi() {
+  if (!hvTtsVar()) return false;
+  if (hvTtsTurkceSes()) return true;
+  // v67.7: ses listesi henüz yüklenmediyse (ilk açılış) "yok" deme — tr-TR ile okumayı dene
+  return hvTtsSesler().length === 0;
+}
 window.hvTtsTurkceVarMi = hvTtsTurkceVarMi;
 
 /* ── Âyet âyet çalar ───────────────────────────────────────────────── */
@@ -4779,6 +4848,10 @@ function hvAaSesNesnesi() {
       else hvAaSonraki();
     });
     hvAaSes.addEventListener('error', () => {
+      if (!hvAaCaliyor) return;
+      if (hvDnMod() === 'both') hvAaMealOku(); else hvAaSonraki();
+    });
+    hvAaSes.addEventListener('hvsegbitti', () => {   // v67.7: tam sûre içinden âyet parçası bitti
       if (!hvAaCaliyor) return;
       if (hvDnMod() === 'both') hvAaMealOku(); else hvAaSonraki();
     });
@@ -4825,8 +4898,8 @@ function hvAaOynat() {
   const mod = hvDnMod();
   if (mod === 'tr') { hvAaMealOku(); return; }
   const s = hvAaSesNesnesi();
-  s.src = hvAaUrl(hvAaSure, hvAaListe[hvAaIdx].v);
-  s.play().catch(() => { if (hvAaCaliyor) { if (mod === 'both') hvAaMealOku(); else hvAaSonraki(); } });
+  const pr = hvSegCal(s, hvAyetSeg(hvAaSure, hvAaListe[hvAaIdx].v));
+  if (pr && pr.catch) pr.catch(() => { if (hvAaCaliyor && s.paused) { if (mod === 'both') hvAaMealOku(); else hvAaSonraki(); } });
 }
 
 function hvAaMealOku() {
@@ -4933,7 +5006,7 @@ function renderDinle() {
       <select class="mv-qari" onchange="hvDnQariDegistir(this.value)">
         ${HV_DINLE_QARILER.map(q => `<option value="${q.id}" ${q.id === qari ? 'selected' : ''}>${q.ad}</option>`).join('')}
       </select>
-      ${(mod !== 'ar' && !hvDnAyetKaydiVar(qari)) ? `<div class="mv-tts-not">ℹ️ Bu hâfızın âyet âyet kaydı bulunmuyor; "Arapça + Meal" modunda Husarî okur. Kendi sesi için "Arapça" modunu seç.</div>` : ''}
+      ${(mod === 'both' && !hvDnAyetKaydiVar(qari) && qari !== 'mousa') ? `<div class="mv-tts-not">ℹ️ ${hvEsc(hvDnQari().ad)}'in âyet âyet bölünmüş kaydı yalnızca Fâtiha ve kısa sûrelerde (Duhâ–Nâs) var. Diğer sûrelerde Türkçe araya girdiği için Arapçayı Husarî okur; kendi sesinden tam sûre için "Arapça" modu.</div>` : ''}
       <label class="dn-switch">
         <input type="checkbox" ${surekli ? 'checked' : ''} onchange="hvDnSurekliDegistir(this)">
         <span>Bitince sıradaki sûre</span>
