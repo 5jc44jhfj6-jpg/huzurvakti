@@ -1509,3 +1509,89 @@ document.addEventListener('DOMContentLoaded', ayarKatla);
   document.addEventListener('DOMContentLoaded', () => setTimeout(() => { try { window.hvYaAyetSigdir(); } catch (e) {} }, 300));
 })();
 })();
+
+/* ═════════ v68.3 · EZBER DUVAR KÂĞIDI (tek sûre / dua) ═════════
+   Krem zemin, üst kısım kilit ekranı saatine boş; altta kart: başlık, OKUNUŞU (numaralı),
+   DİYANET MEALİ. Dua & Sûre Öğren'de açılan her sûre/duada "Duvar kâğıdı yap" düğmesi. */
+(function () {
+  const esc2 = (s) => String(s || '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  function sar(ctx, metin, gen) {
+    const kel = String(metin || '').split(/\s+/); const L = []; let s = '';
+    kel.forEach(k => { const t = s ? s + ' ' + k : k; if (ctx.measureText(t).width > gen && s) { L.push(s); s = k; } else s = t; });
+    if (s) L.push(s); return L;
+  }
+  async function veri(tur, ad) {
+    let p = null;
+    try { if (typeof hvEzYerelGetir === 'function') p = await hvEzYerelGetir(tur, ad); } catch (e) {}
+    if (p && p.length) return { baslik: ad, besmele: tur === 'sure' && !/Fâtiha/.test(ad), satir: p.map(x => x.ok).filter(Boolean), meal: p.map(x => x.tr).filter(Boolean).join(' ') };
+    const K = (typeof hvEzKayit !== 'undefined') ? hvEzKayit : null;
+    if (K && K.baslik === ad && K.parcalar) {
+      const ps = K.parcalar.filter(x => !x.besmele);
+      const tek = ps.length && ps.every(x => x.tr === ps[0].tr);
+      return { baslik: ad, besmele: false, satir: ps.map(x => x.ok).filter(Boolean), meal: tek ? ps[0].tr : ps.map(x => x.tr).join(' ') };
+    }
+    return null;
+  }
+  function ciz(v, W, H) {
+    const cv = document.createElement('canvas'); cv.width = W; cv.height = H; const c = cv.getContext('2d');
+    const f = W / 1080;
+    c.fillStyle = '#f6eedc'; c.fillRect(0, 0, W, H);
+    const g = c.createRadialGradient(W / 2, H * 0.62, 50 * f, W / 2, H * 0.62, H * 0.6); g.addColorStop(0, 'rgba(255,252,244,.9)'); g.addColorStop(1, 'rgba(246,238,220,0)');
+    c.fillStyle = g; c.fillRect(0, 0, W, H);
+    const X = 54 * f, Y = H * 0.355, CW = W - 2 * X, CH = H * 0.575, P = 46 * f, IW = CW - 2 * P;
+    const baslik = v.baslik.replace(/\s*Sûresi$/, '').replace(/\s*\(.*?\)/, '').toLocaleUpperCase('tr');
+    const yerles = (k) => {
+      const L = []; let y = 0;
+      c.font = `700 ${56 * k}px Lora, Georgia, serif`; y += 60 * k; L.push(['t', baslik, y]);
+      y += 46 * k; L.push(['l', 'OKUNUŞU', y]);
+      c.font = `${36 * k}px Outfit, system-ui, sans-serif`;
+      if (v.besmele) { y += 50 * k; L.push(['b', 'Bismillâhirrahmânirrahîm.', y]); }
+      v.satir.forEach((s, i) => { sar(c, (i + 1) + '. ' + s, IW).forEach((ln, j) => { y += 50 * k; L.push(['o', j ? '    ' + ln : ln, y]); }); });
+      y += 38 * k; L.push(['h', '', y]);
+      y += 48 * k; L.push(['l', 'DİYANET MEALİ', y]);
+      c.font = `${34 * k}px Outfit, system-ui, sans-serif`;
+      sar(c, v.meal, IW).forEach(ln => { y += 48 * k; L.push(['m', ln, y]); });
+      return [L, y + 40 * k];
+    };
+    let k = 1.4, R = yerles(k);
+    while (R[1] > CH - 2 * 20 * f && k > 0.45) { k -= 0.03; R = yerles(k); }
+    const ch = Math.min(CH, R[1] + 40 * f), cy = Y + Math.max(0, (CH - ch) * 0.25);
+    c.shadowColor = 'rgba(90,60,20,.12)'; c.shadowBlur = 30 * f; c.shadowOffsetY = 8 * f;
+    c.fillStyle = 'rgba(255,251,242,.96)'; c.beginPath(); c.roundRect(X, cy, CW, ch, 34 * f); c.fill();
+    c.shadowColor = 'transparent'; c.lineWidth = 2.4 * f; c.strokeStyle = '#d9c08a'; c.stroke();
+    c.textAlign = 'left'; c.textBaseline = 'alphabetic';
+    R[0].forEach(([t, s, y]) => {
+      const yy = cy + 20 * f + y;
+      if (t === 't') { c.fillStyle = '#4a3220'; c.font = `700 ${56 * k}px Lora, Georgia, serif`; c.fillText(s, X + P, yy); }
+      else if (t === 'l') { c.fillStyle = '#a07a3c'; c.font = `700 ${26 * k}px Outfit, system-ui, sans-serif`; c.letterSpacing = (1.5 * k) + 'px'; c.fillText(s, X + P, yy); c.letterSpacing = '0px'; }
+      else if (t === 'b') { c.fillStyle = '#6a5a4a'; c.font = `${36 * k}px Outfit, system-ui, sans-serif`; c.fillText(s, X + P, yy); }
+      else if (t === 'o') { c.fillStyle = '#2f2219'; c.font = `${36 * k}px Outfit, system-ui, sans-serif`; c.fillText(s, X + P, yy); }
+      else if (t === 'h') { c.strokeStyle = '#d9c08a'; c.lineWidth = 2 * f; c.beginPath(); c.moveTo(X + P, yy); c.lineTo(X + CW - P, yy); c.stroke(); }
+      else if (t === 'm') { c.fillStyle = '#4a3e34'; c.font = `${34 * k}px Outfit, system-ui, sans-serif`; c.fillText(s, X + P, yy); }
+    });
+    c.textAlign = 'center'; c.fillStyle = '#8a7a66'; c.font = `${24 * f}px Outfit, system-ui, sans-serif`;
+    c.fillText('Meal: Diyanet İşleri Başkanlığı · Namaz Dostu', W / 2, cy + ch + 46 * f);
+    return cv;
+  }
+  window.hvEzDuvar = async (tur, ad) => {
+    if (typeof hvMealHazir === 'function') { try { await hvMealHazir(); } catch (e) {} }
+    const v = await veri(tur, ad);
+    if (!v || !v.satir.length) { if (typeof hvToast === 'function') hvToast('Hazırlanamadı', 'Bu dua için duvar kâğıdı şu an hazırlanamıyor.'); return; }
+    try { await document.fonts.ready; } catch (e) {}
+    const cv = ciz(v, 1179, 2556);
+    if (typeof hvOpenShareCard === 'function') hvOpenShareCard({ canvas: cv, fallbackText: v.baslik });
+  };
+  window.hvEzDuvarCiz = ciz;
+  const eski = window.hvEzAc;
+  if (typeof eski === 'function') window.hvEzAc = async function (tur, ad) {
+    const r = await eski.apply(this, arguments);
+    try {
+      const ust = document.querySelector('#ezber-root .ez-ust-satir');
+      if (ust && !ust.querySelector('.ez-duvar-btn')) {
+        const b = document.createElement('button'); b.className = 'ez-duvar-btn'; b.innerHTML = '📱 Duvar kâğıdı';
+        b.onclick = () => window.hvEzDuvar(tur, ad); ust.appendChild(b);
+      }
+    } catch (e) {}
+    return r;
+  };
+})();

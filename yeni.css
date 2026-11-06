@@ -1423,3 +1423,22 @@ body.dark-theme #page-home .ya-t.vk .prayer-time { background: linear-gradient(#
 #page-home .ya-vakit::before { content: ''; position: absolute; left: 0; right: 0; top: 14px; bottom: 40px; background: linear-gradient(#2a1c11, #3a2616); z-index: -1; }
 #page-home .ya-t.vk .vk-kart { width: calc(100% + 4px); margin: 0 -2px; }
 body.dark-theme #page-home .ya-vakit::before { background: #1a110a; }
+/* v68.3: geri sayım rakamları altın varaklı */
+#page-home .ya-saat { background: linear-gradient(#fff3d1, #e8b85c 55%, #b98326) !important; -webkit-background-clip: text !important; background-clip: text !important;
+  -webkit-text-fill-color: transparent !important; color: #f6d58c !important; text-shadow: none !important; filter: drop-shadow(0 2px 6px rgba(0,0,0,.6)); font-variant-numeric: lining-nums tabular-nums; }
+/* v68.3 Ezber duvar kâğıdı düğmesi */
+.ez-ust-satir { flex-wrap: wrap; }
+.ez-duvar-btn { padding: 8px 12px; border-radius: 12px; border: 1.2px solid #d6a85c; background: #fffaf0; color: #5a3517; font-family: var(--ya-serif); font-weight: 700; font-size: .85rem; cursor: pointer; }
+body.dark-theme .ez-duvar-btn { background: #2a1c11; color: #f3cf86; border-color: #8a6430; }
+/* v68.3: Anlayarak Namaz kartı — kişiler yakın plan, yazı sağa */
+#page-home .ya-anl { gap: 16px; padding-right: 10px; }
+#page-home .ya-anl-foto { gap: 4px; padding: 4px 0 4px 8px; }
+#page-home .ya-anl-foto i { width: 46px; background-size: 175% auto; background-position: 50% 30%; border-radius: 10px; }
+#page-home .ya-anl .ya-m { padding-left: 4px; }
+/* v68.3b: Anlayarak — erkek+kadın tek geniş fotoğraf (sol), yazı sağda */
+#page-home .ya-anl-foto { padding: 0 !important; gap: 0 !important; width: 112px !important; align-self: stretch; background: url(img/an_ikili.jpg) center 25% / cover no-repeat !important;
+  -webkit-mask: linear-gradient(90deg, #000 80%, transparent) !important; mask: linear-gradient(90deg, #000 80%, transparent) !important; }
+#page-home .ya-anl-foto i { display: none !important; }
+#page-home .ya-anl { height: 62px !important; }
+#page-home .ya-anl-foto { width: 128px !important; }
+#page-home .ya-ayet { min-height: 112px !important; }
