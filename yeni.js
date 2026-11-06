@@ -527,7 +527,7 @@ function duvarCiz(cv, W, H) {
       res(cv);
     };
     im.onerror = () => res(cv);
-    im.src = `img/duvar_${String(_dv.i + 1).padStart(2, '0')}.jpg`;
+    im.src = `img/duvar_${W >= 900 ? 'hd_' : ''}${String(_dv.i + 1).padStart(2, '0')}.jpg`;   // v68.6: kaydederken yüksek çözünürlük
   });
 }
 window.hvDvSec = (i) => { _dv.i = i; renderDuvar(); };
