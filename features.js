@@ -2584,6 +2584,7 @@ async function hvBuildShareCard(data) {
 
   // ── Desenli arka plan (varsa) + bakır tonlama ──
   const bg = await hvCardLoadBg();
+  ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';   // v67.9: arka plan keskin
   if (bg) {
     const s = Math.max(HV_CARD_W / bg.width, HV_CARD_H / bg.height);
     const w = bg.width * s, h = bg.height * s;
@@ -2721,7 +2722,8 @@ async function hvOpenShareCard(data) {
   try { cv = d.canvas || await hvBuildShareCard(d); }
   catch (e) { console.warn('Kart üretilemedi:', e); return hvShareText(d.fallbackText || d.text || ''); }
 
-  const dataUrl = cv.toDataURL('image/png');
+  // v67.9: kart yüksek kaliteli JPG (PNG'ye göre ~8 kat küçük → hızlı gönderilir, gözle fark yok)
+  const dataUrl = cv.toDataURL('image/jpeg', 0.95);
   const old = document.getElementById('hv-share-modal');
   if (old) old.remove();
 
@@ -2742,7 +2744,10 @@ async function hvOpenShareCard(data) {
   wrap.addEventListener('click', (e) => { if (e.target === wrap) wrap.remove(); });
   document.getElementById('hv-sc-close').onclick = () => wrap.remove();
 
-  const toBlob = () => new Promise((res) => cv.toBlob(res, 'image/png', 0.95));
+  const toBlob = () => new Promise((res) => cv.toBlob(res, 'image/jpeg', 0.95));
+  // Dosya pencere açılırken hazırlanır → "Paylaş"a basınca beklemeden gider (iOS dokunuş izni de kaybolmaz)
+  let hazirDosya = null;
+  const dosyaSozu = toBlob().then(b => { hazirDosya = b ? new File([b], 'namaz-dostu.jpg', { type: 'image/jpeg' }) : null; return hazirDosya; }).catch(() => null);
 
   document.getElementById('hv-sc-share').onclick = async () => {
     // Android uygulaması: yerel köprü ile paylaş (WebView'de dosya paylaşımı yok)
@@ -2750,16 +2755,15 @@ async function hvOpenShareCard(data) {
       const bridge = window.webkit && window.webkit.messageHandlers
         && window.webkit.messageHandlers['share-image'];
       if (window.hvIsAndroid && bridge) {
-        bridge.postMessage({ data: dataUrl });
+        bridge.postMessage({ data: cv.toDataURL('image/png') });   // Android köprüsü PNG bekliyor
         wrap.remove();
         return;
       }
     } catch (e) { console.warn('Köprü ile paylaşılamadı:', e); }
 
     try {
-      const blob = await toBlob();
-      const file = new File([blob], 'namaz-dostu.png', { type: 'image/png' });
-      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      const file = hazirDosya || await dosyaSozu;
+      if (file && navigator.canShare && navigator.canShare({ files: [file] })) {
         await navigator.share({ files: [file] });
         wrap.remove();
         return;
@@ -2772,7 +2776,7 @@ async function hvOpenShareCard(data) {
 
   document.getElementById('hv-sc-save').onclick = () => {
     const a = document.createElement('a');
-    a.href = dataUrl; a.download = 'namaz-dostu.png';
+    a.href = dataUrl; a.download = 'namaz-dostu.jpg';
     document.body.appendChild(a); a.click(); a.remove();
     if (typeof hvToast === 'function') hvToast('⬇️ Kaydedildi', 'Görsel galerine indi, oradan paylaşabilirsin.');
   };

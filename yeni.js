@@ -1331,7 +1331,7 @@ window.hvHtSifir = (b) => {
 
 /* ─────────────── PAYLAŞIM: 10 CAMİ ARKA PLANI ─────────────── */
 const PB_ADLAR = DUVARLAR.map(d => d[0]);
-const pbSecili = () => yukle('paylas_bg', '');
+const pbSecili = () => yukle('paylas_bg', '07');   // v67.9: varsayılan Kul Şerif (keskin 1080 px)
 const pbKaynak = (sec) => sec ? `img/duvar_${sec}.jpg` : 'img/paylas_' + ((document.body && document.body.dataset.foto) || 'ikindi') + '.jpg';
 const _pbCache = {};
 window.hvCardLoadBg = function () {
