@@ -2735,7 +2735,7 @@ async function hvOpenShareCard(data) {
       <img class="hv-sc-img" src="${dataUrl}" alt="Paylaşım görseli">
       <div class="hv-sc-actions">
         ${d.duvar ? `<button class="hv-sc-btn hv-sc-primary" id="hv-sc-save">📲 Fotoğraflara Kaydet</button>
-        <div class="hv-sc-ipucu">Açılan menüden <b>“Görüntüyü Kaydet”</b> ya da <b>“Duvar Kâğıdı Olarak Kullan”</b>a dokun.</div>
+        <div class="hv-sc-ipucu">Açılan menüden <b>“Görüntüyü Kaydet”</b>e dokun. Duvar kâğıdı yaparken kaymasın diye <b>“Perspektif yakınlaştırma”</b>yı kapat; görsel ekranınla birebir boyutta hazırlandı.</div>
         <button class="hv-sc-btn" id="hv-sc-share">📤 Paylaş</button>`
         : `<button class="hv-sc-btn hv-sc-primary" id="hv-sc-share">📤 Paylaş</button>
         <button class="hv-sc-btn" id="hv-sc-save">📲 Fotoğraflara Kaydet</button>

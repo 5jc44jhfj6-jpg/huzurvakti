@@ -483,12 +483,22 @@ function dvYaz(ctx, s, W, H, f, y0, ciz) {
     ctx.fillStyle = 'rgba(255,255,255,.93)'; ctx.font = `${20 * f}px Amiri, 'Amiri Quran', serif`; ctx.direction = 'rtl';
     y += sarMetin(ctx, s.ar.replace(/۝/g, '۞'), W / 2, y, W * 0.86, 35 * f, ciz) + 12 * f; ctx.direction = 'ltr';
   }
-  if (s.ok) { ctx.fillStyle = '#fffaf0'; ctx.font = `600 ${24 * f}px Lora, Georgia, serif`; y += sarMetin(ctx, s.ok, W / 2, y + 6 * f, W * 0.88, 33 * f, ciz) + 14 * f; }
-  if (s.tr) { ctx.fillStyle = 'rgba(255,244,222,.9)'; ctx.font = `${13.5 * f}px Lora, Georgia, serif`; y += sarMetin(ctx, s.tr, W / 2, y + 4 * f, W * 0.84, 19 * f, ciz); }
+  if (s.ok) { ctx.fillStyle = '#fffaf0'; ctx.font = `600 ${24 * f}px Lora, Georgia, serif`; y += sarMetin(ctx, s.ok, W / 2, y + 6 * f, W * 0.78, 33 * f, ciz) + 14 * f; }
+  if (s.tr) { ctx.fillStyle = 'rgba(255,244,222,.9)'; ctx.font = `${13.5 * f}px Lora, Georgia, serif`; y += sarMetin(ctx, s.tr, W / 2, y + 4 * f, W * 0.76, 19 * f, ciz); }
   ctx.shadowBlur = 0; ctx.shadowOffsetY = 0;
   return y - y0;
 }
 const dvPunto = () => { const v = Number(yukle('dv_punto', 1)); return isFinite(v) && v >= 0.7 && v <= 1.5 ? v : 1; };
+/* v68.6: duvar kâğıdı telefonun ekranıyla birebir boyutta çizilir (kenarlardan taşma / kırpma olmasın) */
+function dvEkran() {
+  try {
+    const dpr = Math.min(3, Math.max(2, window.devicePixelRatio || 3));
+    let w = Math.min(screen.width, screen.height), h = Math.max(screen.width, screen.height);
+    if (!w || !h || h / w < 1.6) { w = 393; h = 852; }
+    return { W: Math.round(w * dpr), H: Math.round(h * dpr) };
+  } catch (e) { return { W: 1179, H: 2556 }; }
+}
+window.hvDvEkran = dvEkran;
 function duvarCiz(cv, W, H) {
   return new Promise((res) => {
     if (!cv) return res(null);
@@ -500,7 +510,7 @@ function duvarCiz(cv, W, H) {
       let s = dvMetin(_dv.s);
       if (s) {
         const f0 = W / 540, fK = f0 * dvPunto();
-        const ust = H * 0.40, alt = H * 0.915;
+        const ust = H * 0.40, alt = H * 0.855;   // alt: kilit ekranı fener/kamera düğmeleri
         const sigdir = (m) => { let f = fK, y = dvYaz(ctx, m, W, H, f, 0, false); while (y > alt - ust && f > fK * 0.55) { f -= f0 * 0.03; y = dvYaz(ctx, m, W, H, f, 0, false); } return [f, y]; };
         let [f, yuk] = sigdir(s);
         // Sığmıyorsa önce Arapça çıkar (okunuş ve anlam kalır), yine sığmazsa anlam da çıkar
@@ -525,11 +535,12 @@ window.hvDvSure = (s) => { _dv.s = s; renderDuvar(); };
 window.hvDvPunto = (y) => { const v = Math.max(0.7, Math.min(1.5, Math.round((dvPunto() + y * 0.1) * 10) / 10)); kaydet('dv_punto', v); renderDuvar(); };
 window.hvDvAra = (q) => { _dv.q = q; const r = $('dv-sonuc'); if (r) r.innerHTML = dvSonuc(); };
 window.hvDvKaydet = async () => {
-  const cv = document.createElement('canvas'); cv.width = 1080; cv.height = 1920;
-  await duvarCiz(cv, 1080, 1920);
+  const cv = document.createElement('canvas'); const E = dvEkran(); cv.width = E.W; cv.height = E.H;
+  await duvarCiz(cv, E.W, E.H);
   if (typeof hvOpenShareCard === 'function') hvOpenShareCard({ canvas: cv, duvar: true, fallbackText: 'Namaz Dostu duvar kâğıdı' });
 };
 rota('duvar', renderDuvar);
+window.hvDuvarCiz = duvarCiz;
 
 /* ═════════════════════════ ÇOCUK MODU ═════════════════════════ */
 function renderCocuk() {
@@ -1538,7 +1549,7 @@ document.addEventListener('DOMContentLoaded', ayarKatla);
     c.fillStyle = '#f6eedc'; c.fillRect(0, 0, W, H);
     const g = c.createRadialGradient(W / 2, H * 0.62, 50 * f, W / 2, H * 0.62, H * 0.6); g.addColorStop(0, 'rgba(255,252,244,.9)'); g.addColorStop(1, 'rgba(246,238,220,0)');
     c.fillStyle = g; c.fillRect(0, 0, W, H);
-    const X = 54 * f, Y = H * 0.355, CW = W - 2 * X, CH = H * 0.575, P = 46 * f, IW = CW - 2 * P;
+    const X = 86 * f, Y = H * 0.35, CW = W - 2 * X, CH = H * 0.52, P = 44 * f, IW = CW - 2 * P;   // v68.6: kenar ve alt güvenli alan
     const baslik = v.baslik.replace(/\s*Sûresi$/, '').replace(/\s*\(.*?\)/, '').toLocaleUpperCase('tr');
     const yerles = (k) => {
       const L = []; let y = 0;
@@ -1578,7 +1589,7 @@ document.addEventListener('DOMContentLoaded', ayarKatla);
     const v = await veri(tur, ad);
     if (!v || !v.satir.length) { if (typeof hvToast === 'function') hvToast('Hazırlanamadı', 'Bu dua için duvar kâğıdı şu an hazırlanamıyor.'); return; }
     try { await document.fonts.ready; } catch (e) {}
-    const cv = ciz(v, 1179, 2556);
+    const E = window.hvDvEkran ? window.hvDvEkran() : { W: 1179, H: 2556 }; const cv = ciz(v, E.W, E.H);
     if (typeof hvOpenShareCard === 'function') hvOpenShareCard({ canvas: cv, duvar: true, fallbackText: v.baslik });
   };
   window.hvEzDuvarCiz = ciz;
