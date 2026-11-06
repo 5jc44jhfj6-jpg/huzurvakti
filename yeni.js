@@ -95,7 +95,10 @@ function anAdimlar(nKey, pIdx) {
 let AN = Object.assign({ n: 'ogle', p: 1, i: 0, mod: 'secim' }, yukle('anlayarak', {}));
 function anKaydet() { kaydet('anlayarak', { n: AN.n, p: AN.p, i: AN.i }); }
 function anGuide() { return (typeof PRAYER_GUIDE_DATA !== 'undefined') ? PRAYER_GUIDE_DATA[AN.n] : null; }
-function foto(f) { return `img/${AF[f] || AF.kiyam}.jpg`; }
+/* v68.1: Erkek / Kadın anlatım (fotoğraflar namaz_k_* ile) */
+const anKadin = () => yukle('an_cins', 'e') === 'k';
+function foto(f) { const n = AF[f] || AF.kiyam; return `img/${anKadin() ? n.replace('namaz_', 'namaz_k_') : n}.jpg`; }
+window.hvAnCins = (c) => { kaydet('an_cins', c); renderAnlayarak(); };
 function duaKart(d) {
   if (!d) return '';
   return `<div class="an-dua">
@@ -119,6 +122,7 @@ function renderAnlayarak() {
   k.innerHTML = `
     <button class="hub-back-btn yh-geri" onclick="hvGeri('namaz-ogren')">‹ Geri</button>
     <div class="an-kapak" style="background-image:url(img/kart_anlayarak.jpg)"><div><small>ANLAYARAK NAMAZ</small><b>Hareketi gör, anlamını öğren</b><span>Her adımda fotoğraf · Arapça · okunuş · anlam</span></div></div>
+    <div class="an-cins"><button class="${anKadin() ? '' : 'on'}" onclick="hvAnCins('e')">👨 Erkek</button><button class="${anKadin() ? 'on' : ''}" onclick="hvAnCins('k')">🧕 Kadın</button></div>
     <div class="yh-grup">Hangi namazı öğrenmek istersin?</div>
     <div class="an-namaz">${keys.map(n => `<button class="${n === AN.n ? 'on' : ''}" onclick="hvAnNamaz('${n}')"><b>${esc(PRAYER_GUIDE_DATA[n].name.replace(' Namazı', ''))}</b><small>${kisa(n)}</small></button>`).join('')}</div>
     <div class="yh-grup">${esc(g.name)} · ${g.totalRakat} rekât <small class="an-ipucu">Bir bölüme dokun, fotoğraflı anlatım başlasın</small></div>

@@ -1389,3 +1389,17 @@ body.dark-theme #page-home .ya-t.vk.active .prayer-time { color: #f3c46a !import
 #page-home .ya-ayet { min-height: 124px; }
 #page-home .ya-kisa button { height: 62px; }
 @media (max-height: 720px) { #page-home .ya-t.vk .prayer-time { font-size: .92rem !important; } }
+/* v68.1: vakit kartları fotoğrafa yapışık — kemerler fotoğrafın altına biner, arada boşluk kalmaz */
+#page-home .ya-vakit { position: relative; z-index: 4; margin-top: -15px !important; border-top: none !important;
+  background: linear-gradient(rgba(251,243,228,0) 15px, var(--ya-krem) 15px) !important; padding-top: 0 !important; }
+#page-home .ya-sayac { bottom: 15px !important; }
+body.dark-theme #page-home .ya-vakit { background: linear-gradient(rgba(33,22,13,0) 15px, #21160d 15px) !important; }
+#page-home .ya-t.vk { -webkit-backdrop-filter: none !important; backdrop-filter: none !important; }
+/* v68.1: kartlar birleşik, aralarında boşluk yok */
+#page-home .ya-vakit { gap: 0 !important; padding-left: 3px !important; padding-right: 3px !important; }
+#page-home .ya-t.vk .vk-kart { width: calc(100% + 2px); margin: 0 -1px; }
+/* v68.1 Anlayarak Namaz: Erkek / Kadın seçimi */
+.an-cins { display: flex; gap: 6px; margin: 12px 0 2px; padding: 4px; border-radius: 14px; background: #fbefd9; border: 1.2px solid #e6cf9f; }
+.an-cins button { flex: 1; height: 40px; border: none; border-radius: 11px; background: none; font-family: var(--ya-serif); font-size: .98rem; font-weight: 700; color: #5c4532; cursor: pointer; }
+.an-cins button.on { background: linear-gradient(#7a4517, #3a1e09); color: #f6dca6; box-shadow: 0 2px 6px rgba(60,30,5,.3); }
+body.dark-theme .an-cins { background: #21160d; border-color: #5a4026; } body.dark-theme .an-cins button { color: #d8c4a3; }
