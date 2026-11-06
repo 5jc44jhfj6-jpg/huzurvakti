@@ -2615,7 +2615,7 @@ async function hvBuildShareCard(data) {
   const cx = HV_CARD_W / 2;
 
   // ── İnce altın çerçeve — v67.8: cami fotoğrafında çizilmez (fotoğrafın içinde kare gibi duruyordu) ──
-  if (!yaziAlt) {
+  if (false) {   // v67.8.1: çerçeve hiçbir kartta çizilmiyor (kullanıcı isteği)
     ctx.strokeStyle = 'rgba(243,207,134,0.6)';
     ctx.lineWidth = 3;
     hvCardRoundRect(ctx, 48, 48, HV_CARD_W - 96, HV_CARD_H - 96, 44);
