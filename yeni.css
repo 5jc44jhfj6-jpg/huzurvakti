@@ -1403,3 +1403,23 @@ body.dark-theme #page-home .ya-vakit { background: linear-gradient(rgba(33,22,13
 .an-cins button { flex: 1; height: 40px; border: none; border-radius: 11px; background: none; font-family: var(--ya-serif); font-size: .98rem; font-weight: 700; color: #5c4532; cursor: pointer; }
 .an-cins button.on { background: linear-gradient(#7a4517, #3a1e09); color: #f6dca6; box-shadow: 0 2px 6px rgba(60,30,5,.3); }
 body.dark-theme .an-cins { background: #21160d; border-color: #5a4026; } body.dark-theme .an-cins button { color: #d8c4a3; }
+/* v68.2: saatler tek şeritte, aynı eksende (kartların altında birleşik bant) */
+#page-home .ya-t.vk .prayer-time { width: 100%; height: 28px; margin: 4px 0 0 !important; display: flex !important; align-items: center; justify-content: center;
+  background: linear-gradient(#fffaf0, #f3e2bf) !important; border-top: 1.3px solid #d6aa5a; border-bottom: 1.3px solid #d6aa5a; box-shadow: 0 2px 4px rgba(90,50,10,.1);
+  font-size: .98rem !important; line-height: 1; letter-spacing: -.3px; position: relative; }
+#page-home .ya-t.vk:first-child .prayer-time { border-left: 1.3px solid #d6aa5a; border-radius: 14px 0 0 14px; }
+#page-home .ya-t.vk:last-child .prayer-time { border-right: 1.3px solid #d6aa5a; border-radius: 0 14px 14px 0; }
+#page-home .ya-t.vk + .ya-t.vk .prayer-time::before { content: ''; position: absolute; left: 0; top: 7px; bottom: 7px; width: 1px; background: #e2c68e; }
+#page-home .ya-t.vk.active .prayer-time { background: linear-gradient(#f9df9e, #dca94f) !important; color: #4a2a08 !important; -webkit-text-fill-color: #4a2a08 !important; }
+#page-home .ya-t.vk.active .prayer-time::before, #page-home .ya-t.vk.active + .ya-t.vk .prayer-time::before { display: none; }
+#page-home .ya-vakit { padding-bottom: 6px !important; }
+body.dark-theme #page-home .ya-t.vk .prayer-time { background: linear-gradient(#2e1f13, #24180e) !important; border-color: #8a6430; color: #f3e4c8 !important; -webkit-text-fill-color: #f3e4c8 !important; }
+/* v68.2: Anlayarak Namaz kartı — erkek + kadın fotoğrafı belirgin, "Başla" düğmesi */
+#page-home .ya-anl { gap: 12px; padding-right: 10px; }
+#page-home .ya-anl-foto { display: flex; gap: 3px; width: auto; padding: 5px 0 5px 8px; background: none !important; -webkit-mask: none; mask: none; }
+#page-home .ya-anl-foto i { width: 38px; border-radius: 9px; background: center 18% / cover no-repeat; box-shadow: 0 2px 5px rgba(60,30,8,.25), 0 0 0 1.2px #e2bd73; }
+#page-home .ya-anl-btn { flex: 0 0 auto; padding: 6px 12px; border-radius: 12px; background: linear-gradient(#7a4517, #3a1e09); color: #f6dca6; font-family: var(--ya-serif); font-size: .82rem; font-weight: 700; box-shadow: 0 2px 6px rgba(60,30,5,.3); }
+/* v68.2: kart araları — krem zemin görünmesin, fotoğrafın koyu tonu devam etsin */
+#page-home .ya-vakit::before { content: ''; position: absolute; left: 0; right: 0; top: 14px; bottom: 40px; background: linear-gradient(#2a1c11, #3a2616); z-index: -1; }
+#page-home .ya-t.vk .vk-kart { width: calc(100% + 4px); margin: 0 -2px; }
+body.dark-theme #page-home .ya-vakit::before { background: #1a110a; }

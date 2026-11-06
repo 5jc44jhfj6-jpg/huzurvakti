@@ -97,7 +97,7 @@ function anKaydet() { kaydet('anlayarak', { n: AN.n, p: AN.p, i: AN.i }); }
 function anGuide() { return (typeof PRAYER_GUIDE_DATA !== 'undefined') ? PRAYER_GUIDE_DATA[AN.n] : null; }
 /* v68.1: Erkek / Kadın anlatım (fotoğraflar namaz_k_* ile) */
 const anKadin = () => yukle('an_cins', 'e') === 'k';
-function foto(f) { const n = AF[f] || AF.kiyam; return `img/${anKadin() ? n.replace('namaz_', 'namaz_k_') : n}.jpg`; }
+function foto(f) { const n = AF[f] || AF.kiyam; return anKadin() ? `img/${n.replace('namaz_', 'namaz_k_')}.jpg?v=2` : `img/${n}.jpg`; }   // v=2: HD kadın seti
 window.hvAnCins = (c) => { kaydet('an_cins', c); renderAnlayarak(); };
 function duaKart(d) {
   if (!d) return '';
