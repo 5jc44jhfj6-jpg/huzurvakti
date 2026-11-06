@@ -1081,7 +1081,6 @@ function paylasimYenile() {
     prev.innerHTML = `
       <div class="scp-inner">
         <div class="scp-badge">${_paylasimTip === 'ayet' ? '📖 Ayet-i Kerime' : (_paylasimTip === 'cuma' ? '🕌 Cuma Mesajı' : '📿 Hadis-i Şerif')}</div>
-        ${_paylasimData.ar ? `<div class="scp-ar">${_paylasimData.ar}</div>` : ''}
         <div class="scp-tr">"${hvEsc(_paylasimData.tr)}"</div>
         ${_paylasimData.src ? `<div class="scp-src">— ${hvEsc(_paylasimData.src)}</div>` : ''}
         <div class="scp-brand">🌙 Namaz Dostu</div>
@@ -2573,7 +2572,8 @@ function hvCardMoon(ctx, cx, cy, r, color, alpha) {
 }
 
 async function hvBuildShareCard(data) {
-  const d = data || {};
+  const d = Object.assign({}, data || {});
+  d.arabic = '';   // v67.8: paylaşım kartlarında Arapça yok (kullanıcı isteği) — cami görünsün
   const cv = document.createElement('canvas');
   cv.width = HV_CARD_W; cv.height = HV_CARD_H;
   const ctx = cv.getContext('2d');
@@ -2594,11 +2594,20 @@ async function hvBuildShareCard(data) {
     ctx.fillStyle = rg; ctx.fillRect(0, 0, HV_CARD_W, HV_CARD_H);
   }
 
+  // v67.8: cami fotoğrafında (duvar_XX) yazı altta durur, cami açıkta kalır
+  const yaziAlt = !!(bg && bg._yaziAlt);
   // ── Okunurluk perdesi (A2: açık zemin, desen görünsün) ──
   const vg = ctx.createLinearGradient(0, 0, 0, HV_CARD_H);
-  vg.addColorStop(0, 'rgba(20,10,4,0.55)');
-  vg.addColorStop(0.45, 'rgba(20,10,4,0.62)');
-  vg.addColorStop(1, 'rgba(12,6,2,0.82)');
+  if (yaziAlt) {
+    vg.addColorStop(0, 'rgba(20,10,4,0.10)');
+    vg.addColorStop(0.42, 'rgba(20,10,4,0.10)');
+    vg.addColorStop(0.6, 'rgba(20,10,4,0.52)');
+    vg.addColorStop(1, 'rgba(12,6,2,0.86)');
+  } else {
+    vg.addColorStop(0, 'rgba(20,10,4,0.55)');
+    vg.addColorStop(0.45, 'rgba(20,10,4,0.62)');
+    vg.addColorStop(1, 'rgba(12,6,2,0.82)');
+  }
   ctx.fillStyle = vg; ctx.fillRect(0, 0, HV_CARD_W, HV_CARD_H);
 
   const GOLD = '#F3CF86', CREAM = '#F6E4C0', WHITE = '#FFFFFF';
@@ -2619,27 +2628,38 @@ async function hvBuildShareCard(data) {
     .trim().toLocaleUpperCase('tr');
 
   const boxW = HV_CARD_W - M * 2;
-  const TOP = 250, BOTTOM = HV_CARD_H - 470;   // Instagram hikayesi güvenli alanı
-  const avail = BOTTOM - TOP;
-
-  const LBL = 52;
+  const BOTTOM = HV_CARD_H - (yaziAlt ? 420 : 470);   // Instagram hikayesi güvenli alanı
+  const LBL = yaziAlt ? 44 : 52;
   const lblH = label ? LBL + 58 : 0;
-
-  let arFit = null, arH = 0;
-  if (d.arabic) {
-    arFit = hvCardFit(ctx, d.arabic, boxW, avail * 0.28, {
-      max: 76, min: 36, weight: '400',
-      family: "'Amiri', 'Traditional Arabic', serif", lineHeight: 1.85
-    });
-    arH = arFit.lines.length * arFit.size * arFit.lh + 112;
-  }
-
-  const bodyFit = hvCardFit(ctx, '\u201C' + (d.text || '') + '\u201D', boxW,
-    avail - lblH - arH - 130, { max: 80, min: 34, weight: '500', lineHeight: 1.36, family: "'Lora', Georgia, serif" });
-  const bodyH = bodyFit.lines.length * bodyFit.size * bodyFit.lh;
   const srcH = d.source ? 118 : 0;
 
-  let y = TOP + Math.max(0, (avail - (lblH + arH + bodyH + srcH)) / 2);
+  // Yerleşim: cami fotoğrafında önce alttaki boşluğa sığdırmaya çalış, olmazsa yukarı doğru genişle
+  const yerlestir = (TOP, bodyMax, arMax) => {
+    const avail = BOTTOM - TOP;
+    let arFit = null, arH = 0;
+    if (d.arabic) {
+      arFit = hvCardFit(ctx, d.arabic, boxW, avail * 0.28, {
+        max: arMax, min: 36, weight: '400',
+        family: "'Amiri', 'Traditional Arabic', serif", lineHeight: 1.85
+      });
+      arH = arFit.lines.length * arFit.size * arFit.lh + 112;
+    }
+    const bodyFit = hvCardFit(ctx, '\u201C' + (d.text || '') + '\u201D', boxW,
+      avail - lblH - arH - 130, { max: bodyMax, min: 34, weight: '500', lineHeight: 1.36, family: "'Lora', Georgia, serif" });
+    const bodyH = bodyFit.lines.length * bodyFit.size * bodyFit.lh;
+    return { TOP, avail, arFit, arH, bodyFit, bodyH, top: lblH + arH + bodyH + srcH };
+  };
+  let L;
+  if (yaziAlt) {
+    for (const t of [0.55, 0.5, 0.45, 0.4, 0.13]) {
+      L = yerlestir(Math.round(HV_CARD_H * t), 62, 54);
+      if (L.top <= L.avail && L.bodyFit.size >= 50) break;
+    }
+  } else L = yerlestir(250, 80, 76);
+  const { TOP, avail, arFit, arH, bodyFit, bodyH } = L;
+
+  let y = yaziAlt ? Math.max(TOP, BOTTOM - L.top)
+                  : TOP + Math.max(0, (avail - (lblH + arH + bodyH + srcH)) / 2);
 
   if (label) {
     y += LBL;

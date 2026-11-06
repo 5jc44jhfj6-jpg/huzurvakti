@@ -1339,7 +1339,7 @@ window.hvCardLoadBg = function () {
   return new Promise((res) => {
     if (_pbCache[src]) return res(_pbCache[src]);
     const im = new Image();
-    im.onload = () => { _pbCache[src] = im; res(im); };
+    im.onload = () => { im._yaziAlt = src.indexOf('duvar_') >= 0; _pbCache[src] = im; res(im); };   // v67.8: cami fotoğrafında yazı alta
     im.onerror = () => res(null);
     im.src = src;
   });
