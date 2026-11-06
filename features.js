@@ -2734,9 +2734,12 @@ async function hvOpenShareCard(data) {
     <div class="hv-sc-box">
       <img class="hv-sc-img" src="${dataUrl}" alt="Paylaşım görseli">
       <div class="hv-sc-actions">
-        <button class="hv-sc-btn hv-sc-primary" id="hv-sc-share">📤 Paylaş</button>
-        <button class="hv-sc-btn" id="hv-sc-save">⬇️ Kaydet</button>
-        <button class="hv-sc-btn hv-sc-ghost" id="hv-sc-text">Yazı olarak paylaş</button>
+        ${d.duvar ? `<button class="hv-sc-btn hv-sc-primary" id="hv-sc-save">📲 Fotoğraflara Kaydet</button>
+        <div class="hv-sc-ipucu">Açılan menüden <b>“Görüntüyü Kaydet”</b> ya da <b>“Duvar Kâğıdı Olarak Kullan”</b>a dokun.</div>
+        <button class="hv-sc-btn" id="hv-sc-share">📤 Paylaş</button>`
+        : `<button class="hv-sc-btn hv-sc-primary" id="hv-sc-share">📤 Paylaş</button>
+        <button class="hv-sc-btn" id="hv-sc-save">📲 Fotoğraflara Kaydet</button>
+        <button class="hv-sc-btn hv-sc-ghost" id="hv-sc-text">Yazı olarak paylaş</button>`}
       </div>
       <button class="hv-sc-close" id="hv-sc-close">Kapat</button>
     </div>`;
@@ -2774,14 +2777,21 @@ async function hvOpenShareCard(data) {
     wrap.remove();
   };
 
-  document.getElementById('hv-sc-save').onclick = () => {
+  document.getElementById('hv-sc-save').onclick = async () => {
+    // v68.4: iPhone'da dosyalara değil, paylaşım menüsü açılır → "Görüntüyü Kaydet" / "Duvar Kâğıdı Olarak Kullan"
+    try {
+      const bridge = window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers['share-image'];
+      if (window.hvIsAndroid && bridge) { bridge.postMessage({ data: cv.toDataURL('image/png') }); return; }
+      const file = hazirDosya || await dosyaSozu;
+      if (file && navigator.canShare && navigator.canShare({ files: [file] })) { await navigator.share({ files: [file] }); return; }
+    } catch (e) { if (e && e.name === 'AbortError') return; }
     const a = document.createElement('a');
     a.href = dataUrl; a.download = 'namaz-dostu.jpg';
     document.body.appendChild(a); a.click(); a.remove();
     if (typeof hvToast === 'function') hvToast('⬇️ Kaydedildi', 'Görsel galerine indi, oradan paylaşabilirsin.');
   };
 
-  document.getElementById('hv-sc-text').onclick = () => {
+  const _t = document.getElementById('hv-sc-text'); if (_t) _t.onclick = () => {
     hvShareText(d.fallbackText || d.text || '');
     wrap.remove();
   };

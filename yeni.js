@@ -97,7 +97,7 @@ function anKaydet() { kaydet('anlayarak', { n: AN.n, p: AN.p, i: AN.i }); }
 function anGuide() { return (typeof PRAYER_GUIDE_DATA !== 'undefined') ? PRAYER_GUIDE_DATA[AN.n] : null; }
 /* v68.1: Erkek / Kadın anlatım (fotoğraflar namaz_k_* ile) */
 const anKadin = () => yukle('an_cins', 'e') === 'k';
-function foto(f) { const n = AF[f] || AF.kiyam; return anKadin() ? `img/${n.replace('namaz_', 'namaz_k_')}.jpg?v=2` : `img/${n}.jpg`; }   // v=2: HD kadın seti
+function foto(f) { const n = AF[f] || AF.kiyam; return anKadin() ? `img/${n.replace('namaz_', 'namaz_k_')}.jpg?v=3` : `img/${n}.jpg`; }   // v=2: HD kadın seti
 window.hvAnCins = (c) => { kaydet('an_cins', c); renderAnlayarak(); };
 function duaKart(d) {
   if (!d) return '';
@@ -479,7 +479,7 @@ function dvYaz(ctx, s, W, H, f, y0, ciz) {
   ctx.textAlign = 'center';
   ctx.shadowColor = 'rgba(0,0,0,.6)'; ctx.shadowBlur = ciz ? 12 * f : 0; ctx.shadowOffsetY = ciz ? 1.5 * f : 0;
   ctx.fillStyle = '#f6dca6'; ctx.font = `600 ${16 * f}px Lora, Georgia, serif`; if (ciz) ctx.fillText(s.ad, W / 2, y); y += 36 * f;
-  if (s.ar) {
+  if (s.ar && false) {   // v68.4: kullanıcı isteği — duvar kâğıdında Arapça yok
     ctx.fillStyle = 'rgba(255,255,255,.93)'; ctx.font = `${20 * f}px Amiri, 'Amiri Quran', serif`; ctx.direction = 'rtl';
     y += sarMetin(ctx, s.ar.replace(/۝/g, '۞'), W / 2, y, W * 0.86, 35 * f, ciz) + 12 * f; ctx.direction = 'ltr';
   }
@@ -527,7 +527,7 @@ window.hvDvAra = (q) => { _dv.q = q; const r = $('dv-sonuc'); if (r) r.innerHTML
 window.hvDvKaydet = async () => {
   const cv = document.createElement('canvas'); cv.width = 1080; cv.height = 1920;
   await duvarCiz(cv, 1080, 1920);
-  if (typeof hvOpenShareCard === 'function') hvOpenShareCard({ canvas: cv, fallbackText: 'Namaz Dostu duvar kâğıdı' });
+  if (typeof hvOpenShareCard === 'function') hvOpenShareCard({ canvas: cv, duvar: true, fallbackText: 'Namaz Dostu duvar kâğıdı' });
 };
 rota('duvar', renderDuvar);
 
@@ -1579,7 +1579,7 @@ document.addEventListener('DOMContentLoaded', ayarKatla);
     if (!v || !v.satir.length) { if (typeof hvToast === 'function') hvToast('Hazırlanamadı', 'Bu dua için duvar kâğıdı şu an hazırlanamıyor.'); return; }
     try { await document.fonts.ready; } catch (e) {}
     const cv = ciz(v, 1179, 2556);
-    if (typeof hvOpenShareCard === 'function') hvOpenShareCard({ canvas: cv, fallbackText: v.baslik });
+    if (typeof hvOpenShareCard === 'function') hvOpenShareCard({ canvas: cv, duvar: true, fallbackText: v.baslik });
   };
   window.hvEzDuvarCiz = ciz;
   const eski = window.hvEzAc;
