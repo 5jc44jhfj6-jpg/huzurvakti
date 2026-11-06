@@ -1366,3 +1366,26 @@ body.dark-theme .dv-punto { color: #f1e3cc; } body.dark-theme .dv-punto button {
 .kr-duvar-y b { font-family: var(--ya-serif); font-size: 1.12rem; font-weight: 600; }
 .kr-duvar-y em { font-style: normal; font-size: .76rem; opacity: .75; }
 .kr-duvar > svg { width: 20px; height: 20px; flex: 0 0 auto; color: var(--kr-altin2, #b9813a); }
+
+/* ── v68.0 Vakit kartları: altın kemerli Kul Şerif resimleri (ad levhada, saat altta) ── */
+#page-home .ya-vakit { gap: 3px !important; padding-left: 5px !important; padding-right: 5px !important; }
+#page-home .ya-t.vk, body.dark-theme #page-home .ya-t.vk, #page-home .ya-t.vk.active, body.dark-theme #page-home .ya-t.vk.active {
+  background: none !important; border: none !important; box-shadow: none !important; animation: none !important;
+  height: auto !important; padding: 2px 0 0 !important; justify-content: flex-start !important; gap: 0 !important; overflow: visible !important;
+}
+#page-home .ya-t.vk .vk-kart { position: relative; display: block; width: 100%; aspect-ratio: 136 / 176; background: center / contain no-repeat; filter: drop-shadow(0 2px 3px rgba(90, 50, 10, .28)); transition: transform .2s ease; }
+#page-home .ya-t.vk .prayer-name {
+  position: absolute; left: 11%; right: 11%; top: 75.5%; height: 18.5%; display: flex; align-items: center; justify-content: center; margin: 0 !important;
+  font-size: .66rem !important; font-weight: 700 !important; color: #3b2412 !important; line-height: 1; white-space: nowrap;
+}
+#page-home .ya-t.vk .prayer-time { font-size: 1.02rem !important; font-weight: 700 !important; color: #2b1d14 !important; -webkit-text-fill-color: #2b1d14 !important; margin-top: 2px; }
+#page-home .ya-t.vk.active .vk-kart { filter: drop-shadow(0 0 5px rgba(245, 175, 50, .95)) drop-shadow(0 0 2px rgba(255, 215, 120, 1)); }
+#page-home .ya-t.vk.active .prayer-name { color: #3b2412 !important; }
+#page-home .ya-t.vk.active .prayer-time { color: #a2600e !important; -webkit-text-fill-color: #a2600e !important; }
+body.dark-theme #page-home .ya-t.vk .prayer-time { color: #f3e4c8 !important; -webkit-text-fill-color: #f3e4c8 !important; }
+body.dark-theme #page-home .ya-t.vk.active .prayer-time { color: #f3c46a !important; -webkit-text-fill-color: #f3c46a !important; }
+/* sığsın diye alt satırlar biraz inceldi */
+#page-home .ya-anl, #page-home .ya-ikili button { height: 54px; }
+#page-home .ya-ayet { min-height: 124px; }
+#page-home .ya-kisa button { height: 62px; }
+@media (max-height: 720px) { #page-home .ya-t.vk .prayer-time { font-size: .92rem !important; } }

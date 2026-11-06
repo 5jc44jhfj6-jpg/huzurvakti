@@ -1455,6 +1455,7 @@ const HV_VAKIT_SIMGE = {
   Maghrib: '<path d="M3 15.5h18M6.5 15.5a5.5 5.5 0 0 1 11 0"/><path d="M5 19h14M12 6v3M9.8 7.8 12 10l2.2-2.2"/>',
   Isha: '<path d="M14.5 4a7.5 7.5 0 1 0 5.5 12.7A6 6 0 0 1 14.5 4z"/><path d="M17.5 4.2l.5 1.1 1.1.5-1.1.5-.5 1.1-.5-1.1-1.1-.5 1.1-.5zM20.3 9l.35.8.8.35-.8.35-.35.8-.35-.8-.8-.35.8-.35z" class="f"/>'
 };
+const HV_VAKIT_RESIM = { Fajr: 'safak', Sunrise: 'gunes', Dhuhr: 'ogle', Asr: 'ikindi', Maghrib: 'aksam', Isha: 'yatsi' };
 function renderPrayerCards(timings) {
   const container = document.getElementById('prayer-times-container');
   if (!container) return;
@@ -1472,9 +1473,10 @@ function renderPrayerCards(timings) {
     card.id = `prayer-card-${id}`;
     card.onclick = () => showPrayerTimeDetailsModal(id, info.name, timeVal);
     // v67.0: altın çizgi simge + ad + saat
+    // v68.0: altın kemerli Kul Şerif vakit kartı (resim) + ad levhada + saat altta
+    card.classList.add('vk');
     card.innerHTML = `
-      <svg class="ya-vi" viewBox="0 0 24 24" width="22" height="22">${HV_VAKIT_SIMGE[id] || ''}</svg>
-      <span class="prayer-name">${info.name}</span>
+      <span class="vk-kart" style="background-image:url(img/vk_${HV_VAKIT_RESIM[id] || 'ogle'}.png)"><span class="prayer-name">${info.name}</span></span>
       <span class="prayer-time">${timeVal}</span>
     `;
     container.appendChild(card);
