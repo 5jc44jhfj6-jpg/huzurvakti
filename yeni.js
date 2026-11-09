@@ -1971,3 +1971,107 @@ document.addEventListener('DOMContentLoaded', ayarKatla);
     return r;
   };
 })();
+
+/* ══════════ v69.0: ANA EKRAN WIDGET KÖPRÜSÜ (iOS WidgetKit + Android AppWidget) ══════════
+   Uygulama açıkken widget'ların ihtiyaç duyduğu veriyi telefona yazar:
+   30 günlük vakitler, 14 günlük günün âyeti, son okunan + meâlden hatim, bugünkü namaz takibi.
+   Widget'tan işaretlenen namazlar uygulama açılınca hvWidgetTakipAl ile buraya geri gelir. */
+(function () {
+  const ios = () => !!(window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers['widget-data']);
+  const android = () => !!(window.NamazDostuBridge && typeof window.NamazDostuBridge.widgetData === 'function');
+  const iki = (n) => String(n).padStart(2, '0');
+  const gunAnahtar = (d) => d.getFullYear() + '-' + iki(d.getMonth() + 1) + '-' + iki(d.getDate());
+  const VK = ['Fajr', 'Sunrise', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'];
+  function veri() {
+    const o = { v: 1, ts: Date.now(), sehir: '', gunler: [], ayetler: [], son: null, takip: null };
+    try { o.sehir = APP_STATE.currentDistrict || APP_STATE.currentCity || ''; } catch (e) {}
+    // Vakitler (30 gün; yalnız elde olanlar)
+    try {
+      const u = APP_STATE.userLocation, g = new Date(); g.setHours(0, 0, 0, 0);
+      for (let i = 0; i < 30; i++) {
+        const e = getCachedDay(u.lat, u.lng, g);
+        if (e && e.t) {
+          const t = applyOffsets(e.t, e.s);
+          if (VK.every(k => t[k])) o.gunler.push({ d: gunAnahtar(g), h: e.h || '', t: VK.map(k => String(t[k]).slice(0, 5)) });
+        }
+        g.setDate(g.getDate() + 1);
+      }
+      if (!o.gunler.length && APP_STATE.prayerTimes) {
+        const t = APP_STATE.prayerTimes, b = new Date();
+        o.gunler.push({ d: gunAnahtar(b), h: APP_STATE.hijriDateText || '', t: VK.map(k => String(t[k] || '').slice(0, 5)) });
+      }
+    } catch (e) {}
+    // Günün âyeti (14 gün, tarihe göre sabit — uygulamadaki kart ve sabah bildirimiyle aynı)
+    try {
+      const g = new Date();
+      for (let i = 0; i < 14; i++) {
+        const v = typeof hvGununAyeti === 'function' ? hvGununAyeti(new Date(g)) : null;
+        if (v) o.ayetler.push({ d: gunAnahtar(g), m: String(v.turkish || '').trim(), k: v.surah + ' Sûresi · ' + v.ayah + '. Âyet', kk: v.surah + ' ' + v.ayah });
+        g.setDate(g.getDate() + 1);
+      }
+    } catch (e) {}
+    // Son okunan + meâlden hatim
+    try {
+      const lr = JSON.parse(localStorage.getItem('hv_last_read') || 'null');
+      const mh = typeof window.hvMealHatim === 'function' ? window.hvMealHatim() : null;
+      if (lr && lr.surah) {
+        let ad = lr.name || (typeof hvSurahName === 'function' ? hvSurahName(lr.surah) : '');
+        ad = String(ad || '').replace(/\s*Sûresi$/, '').replace(/\s*Suresi$/, '');
+        o.son = { ad: ad + ' Sûresi', no: Number(lr.surah), ayet: Number(lr.ayah) || 1,
+          sayfa: typeof window.hvAyetSayfa === 'function' ? window.hvAyetSayfa(lr.surah, lr.ayah || 1) : 0,
+          hatim: mh ? Math.round(mh.okunan / 604 * 100) : 0 };
+      } else if (mh) o.son = { ad: '', no: 0, ayet: 0, sayfa: 0, hatim: Math.round(mh.okunan / 604 * 100) };
+    } catch (e) {}
+    // Bugünkü namaz takibi
+    try {
+      const bug = typeof hvTodayKey === 'function' ? hvTodayKey() : gunAnahtar(new Date());
+      const d = (hvLoad('namaz_takip', {}) || {})[bug] || {};
+      o.takip = { d: bug, sabah: !!d.sabah, ogle: !!d.ogle, ikindi: !!d.ikindi, aksam: !!d.aksam, yatsi: !!d.yatsi };
+    } catch (e) {}
+    return o;
+  }
+  let _son = '', _t = null;
+  window.hvWidgetGonder = function (hemen) {
+    clearTimeout(_t);
+    const f = () => {
+      if (!ios() && !android()) return;   // tarayıcıda (kabuk yok) hiçbir şey yapma
+      let j = '';
+      try { j = JSON.stringify(veri()); } catch (e) { return; }
+      const kiyas = j.replace(/"ts":\d+,/, '');
+      if (kiyas === _son) return;   // değişiklik yoksa widget'ı boşuna yenileme
+      _son = kiyas;
+      try { if (ios()) window.webkit.messageHandlers['widget-data'].postMessage(j); else if (android()) window.NamazDostuBridge.widgetData(j); else _son = ''; } catch (e) {}
+    };
+    if (hemen) f(); else _t = setTimeout(f, 800);
+  };
+  // Widget'ta işaretlenen namazlar → uygulamaya
+  window.hvWidgetTakipAl = function (o) {
+    try {
+      if (typeof o === 'string') o = JSON.parse(o);
+      if (!o || !o.d) return;
+      const data = hvLoad('namaz_takip', {}) || {};
+      const g = data[o.d] || {};
+      ['sabah', 'ogle', 'ikindi', 'aksam', 'yatsi'].forEach(k => { if (typeof o[k] === 'boolean') g[k] = o[k]; });
+      data[o.d] = g; hvSave('namaz_takip', data);
+      try { if (typeof renderNamazTakibi === 'function') renderNamazTakibi(); } catch (e) {}
+      _son = '';
+    } catch (e) {}
+  };
+  // Takip değişince hemen gönder
+  const eski = window.toggleNamaz;
+  if (typeof eski === 'function') window.toggleNamaz = function () { const r = eski.apply(this, arguments); window.hvWidgetGonder(); return r; };
+  // Açılışta (vakitler gelince), arka plana geçerken ve dakikada bir
+  setTimeout(() => window.hvWidgetGonder(true), 4000);
+  setTimeout(() => window.hvWidgetGonder(true), 15000);
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') window.hvWidgetGonder(true); });
+  window.addEventListener('pagehide', () => window.hvWidgetGonder(true));
+  setInterval(() => { if (document.visibilityState === 'visible') window.hvWidgetGonder(); }, 60000);
+})();
+/* Widget'a dokununca açılacak yer (native: namazdostu://ac/<hedef>) */
+window.hvWidgetAc = function (h) {
+  try {
+    const sayfa = { kible: 'qibla', zikir: 'zikirmatik', dua: 'ezber', takip: 'namaz-takibi', vakit: 'home', ayet: 'home' }[h];
+    if (h === 'kuran' && typeof hvYaKuran === 'function') return hvYaKuran();
+    if (sayfa && typeof navigateTo === 'function') navigateTo(sayfa);
+  } catch (e) {}
+};

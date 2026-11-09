@@ -1496,20 +1496,8 @@ function renderPrayerCards(timings) {
 /* Widget köprüsü (v65.1): önümüzdeki 7 günün vakitlerini native tarafa iletir.
    iOS/Android kabuğu 'widget-data' köprüsünü eklediğinde ana ekran widget'ı bunu okur. */
 function hvWidgetVerisiGonder() {
-  try {
-    const h = (typeof hvNativeHandler === 'function') ? hvNativeHandler('widget-data') : null;
-    if (!h || !APP_STATE.userLocation) return;
-    const gunler = [];
-    for (let d = 0; d < 7; d++) {
-      const day = new Date(); day.setHours(0, 0, 0, 0); day.setDate(day.getDate() + d);
-      const e = getCachedDay(APP_STATE.userLocation.lat, APP_STATE.userLocation.lng, day);
-      if (!e || !e.t) continue;
-      const off = hvKaynakOfset(e.s);
-      const t = {}; ['Fajr', 'Sunrise', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'].forEach(k => { t[k] = addMinutes(e.t[k], parseInt(off[k], 10) || 0); });
-      gunler.push({ date: `${day.getFullYear()}-${hvPad2(day.getMonth() + 1)}-${hvPad2(day.getDate())}`, t: t, h: e.h || '' });
-    }
-    h.postMessage({ konum: `${APP_STATE.currentCity || ''}${APP_STATE.currentDistrict ? ', ' + APP_STATE.currentDistrict : ''}`, gunler: gunler });
-  } catch (e) {}
+  // v69.0: yeni widget köprüsü yeni.js'de (hvWidgetGonder) — tek biçim, tek kanal
+  try { if (typeof window.hvWidgetGonder === 'function') window.hvWidgetGonder(); } catch (e) {}
 }
 
 /* ── Ek vakitler (v64.8): İşrak / Kuşluk / Kerahet — Diyanet vakitlerinden türetilir ──
