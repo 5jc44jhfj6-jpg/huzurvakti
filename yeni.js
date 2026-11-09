@@ -426,11 +426,12 @@ rota('kelime', renderKelime);
 /* ═════════════════════════ DUVAR KÂĞITLARI ═════════════════════════ */
 const DUVARLAR = [['Mescid-i Haram', 'Mekke'], ['Mescid-i Nebevî', 'Medine'], ['Ayasofya', 'İstanbul'], ['Sultanahmet', 'İstanbul'], ['Şeyh Zayed', 'Abu Dabi'],
   ['Hasan II', 'Kazablanka'], ['Kul Şerif', 'Kazan'], ['Registan', 'Semerkant'], ['Şeyh Zayed · Havuz', 'Abu Dabi'], ['Putra', 'Putrajaya'],
-  // v68.9: 10 yeni arka plan (kullanıcının ürettiği set)
-  ['Şeyh Zayed · Akşam', 'Abu Dabi'], ['Baiturrahman', 'Açe'], ['Revaklı Avlu', 'Fas'], ['Işık Huzmeleri', 'Cami içi'], ['Ortaköy · Gece', 'İstanbul'],
-  ['Kul Şerif · Akşam', 'Kazan'], ['Hasan II · Akşam', 'Kazablanka'], ['Karlı Avlu', 'Kış'], ['Avlu · Yağmur Sonrası', 'İstanbul'], ['Çini ve Kemer', 'Endülüs']];
-/* v68.9: Yazının yeri — 'ust': gökyüzü / boş duvar ortada geniş → yazı ekranın üst-ortasına (cami görünsün). Diğerleri eskisi gibi altta. */
-const DUVAR_UST = { 11: 1, 12: 1, 13: 1, 16: 1, 17: 1, 18: 1, 20: 1 };   // 15 (Ortaköy): cami üst-ortada, yazı altta suyun üstünde
+  // v68.9.1: kullanıcının ürettiği setten seçilen 12 arka plan (benzerleri elendi)
+  ['Baiturrahman', 'Açe'], ['Revaklı Avlu', 'Fas'], ['Işık Huzmeleri', 'Cami içi'], ['Ortaköy · Gece', 'İstanbul'], ['Kul Şerif · Akşam', 'Kazan'],
+  ['Hasan II · Akşam', 'Kazablanka'], ['Karlı Avlu', 'Kış'], ['Süleymaniye Avlusu', 'İstanbul'], ['Çini ve Kemer', 'Endülüs'], ['Putra · Şafak', 'Putrajaya'],
+  ['Bâdşâhî', 'Lahor'], ['Sultan Kâbus', 'Maskat']];
+/* Yazının yeri: [üst, alt] ekran oranı — gökyüzü / boş duvar olan bantta, cami açıkta kalsın. Listede olmayanlar eskisi gibi altta. */
+const DUVAR_UST = { 11: [0.26, 0.58], 12: [0.25, 0.54], 13: [0.24, 0.46], 15: [0.25, 0.50], 16: [0.25, 0.44], 17: [0.25, 0.48], 19: [0.25, 0.60], 20: [0.25, 0.50], 21: [0.25, 0.56], 22: [0.25, 0.50] };   // üst sınır ≥ %24: kilit ekranı saati
 const DUVAR_SURE = [['', 'Sade (yazısız)'], ['s:Fâtiha', 'Fâtiha Sûresi'], ['d:Âyetel Kürsî', 'Âyetel Kürsî'], ['s:İhlâs', 'İhlâs Sûresi']];
 let _dvHavuz = null;
 function dvHavuz() {
@@ -515,12 +516,17 @@ function duvarCiz(cv, W, H) {
       let s = dvMetin(_dv.s);
       if (s) {
         const f0 = W / 540, fK = f0 * dvPunto();
-        const ustMod = !!DUVAR_UST[_dv.i + 1];
-        const ust = ustMod ? H * 0.27 : H * 0.40, alt = ustMod ? H * 0.64 : H * 0.855;   // alt: kilit ekranı fener/kamera düğmeleri
+        const bant = DUVAR_UST[_dv.i + 1];
+        let ustMod = !!bant;
+        let ust = ustMod ? H * bant[0] : H * 0.40, alt = ustMod ? H * bant[1] : H * 0.855;   // alt: kilit ekranı fener/kamera düğmeleri
         const sigdir = (m) => { let f = fK, y = dvYaz(ctx, m, W, H, f, 0, false); while (y > alt - ust && f > fK * 0.55) { f -= f0 * 0.03; y = dvYaz(ctx, m, W, H, f, 0, false); } return [f, y]; };
         let [f, yuk] = sigdir(s);
         // Sığmıyorsa önce Arapça çıkar (okunuş ve anlam kalır), yine sığmazsa anlam da çıkar
         if (yuk > alt - ust || f < fK * 0.8) { const s2 = Object.assign({}, s, { ar: '' }); const r2 = sigdir(s2); if (r2[1] <= alt - ust) { s = s2; f = r2[0]; yuk = r2[1]; } }
+        if (ustMod && (yuk > alt - ust || f < fK * 0.8)) {   // uzun metin üst banda sığmıyor → eski alt yerleşime geç
+          ustMod = false; ust = H * 0.40; alt = H * 0.855; s = dvMetin(_dv.s); [f, yuk] = sigdir(s);
+          if (yuk > alt - ust || f < fK * 0.8) { const s2 = Object.assign({}, s, { ar: '' }); const r2 = sigdir(s2); if (r2[1] <= alt - ust) { s = s2; f = r2[0]; yuk = r2[1]; } }
+        }
         if (yuk > alt - ust && s.tr) { const s3 = Object.assign({}, s, { tr: '' }); const r3 = sigdir(s3); s = s3; f = r3[0]; yuk = r3[1]; }
         let basY;
         if (ustMod) {   // yazı gökyüzünün ortasında; arkasında yalnız yumuşak bir koyuluk bandı, cami açıkta kalır
@@ -699,7 +705,7 @@ document.addEventListener('DOMContentLoaded', () => {
    • Sûre okuma ekranı (tek renk, kesintisiz akış, âyete dokun → işlemler)
    • Kur'an Dinle: hâfız seçici + sık dinlenenler
    • Hatim Takibi: halka, 30 cüz ızgarası
-   • Paylaşım kartları: 20 cami arka planı
+   • Paylaşım kartları: 22 cami arka planı
    ══════════════════════════════════════════════════════════════ */
 const arNum = (n) => String(n).replace(/[0-9]/g, d => '٠١٢٣٤٥٦٧٨٩'[d]);
 const sureBul = (id) => ((typeof ALL_114_SURAHS !== 'undefined') ? ALL_114_SURAHS : []).find(x => Number(x.id) === Number(id)) || null;
@@ -841,7 +847,7 @@ function renderKrHub() {
         <button class="kr-oyna" onclick="event.stopPropagation();hvKrDinle(${no})" aria-label="Dinle">${IK.play}</button>
       </div>`; }).join('')}</div>
     <button class="kr-duvar" onclick="navigateTo('duvar')">
-      <span class="kr-duvar-ser">${['11', '16', '15', '17', '20'].map(n => `<i style="background-image:url(img/dv_k_${n}.jpg)"></i>`).join('')}</span>
+      <span class="kr-duvar-ser">${['15', '11', '14', '21', '22'].map(n => `<i style="background-image:url(img/dv_k_${n}.jpg)"></i>`).join('')}</span>
       <span class="kr-duvar-y"><small>YENİ</small><b>Duvar Kâğıtları</b><em>${DUVARLAR.length} cami · üzerine sûre ya da dua yaz</em></span>${IK.ok}
     </button>
     <div class="kr-baslik"><h3>Daha fazlası</h3></div>
