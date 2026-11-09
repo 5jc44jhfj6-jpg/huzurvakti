@@ -4169,15 +4169,21 @@ function hvEzOgrendimDegistir() {
   if (!hvEzKayit) return;
   let l = hvEzOgrenilenler();
   const a = hvEzKayit.anahtar;
+  if (window.hvOgAnlik) hvOgAnlik('ez');
   l = l.indexOf(a) >= 0 ? l.filter(x => x !== a) : l.concat([a]);
   try { localStorage.setItem('hv_ezber_ogrenildi', JSON.stringify(l)); } catch (e) {}
-  const b = document.getElementById('ez-ogrendim');
-  if (b) {
-    const on = l.indexOf(a) >= 0;
-    b.classList.toggle('on', on);
-    b.innerHTML = on ? '✓ Öğrendim <small>· geri al</small>' : '○ Öğrendim'; if (on && window.hvGeriAlPil) hvGeriAlPil('✓ Öğrendim olarak işaretlendi', () => { const x = document.getElementById(b.id); if (x) x.click(); });
-  }
+  hvEzOgrendimGuncelle();
+  if (l.indexOf(a) >= 0 && window.hvGeriAlPil) hvGeriAlPil('✓ Öğrendim olarak işaretlendi', () => hvOgGeriAl('ez'));
+  if (window.hvOgCubukGuncelle) hvOgCubukGuncelle('ez');
 }
+function hvEzOgrendimGuncelle() {
+  const b = document.getElementById('ez-ogrendim');
+  if (!b || !hvEzKayit) return;
+  const on = hvEzOgrenildiMi(hvEzKayit.anahtar);
+  b.classList.toggle('on', on);
+  b.innerHTML = on ? '✓ Öğrendim <small>· geri al</small>' : '○ Öğrendim';
+}
+window.hvEzOgrendimGuncelle = hvEzOgrendimGuncelle;
 window.hvEzOgrendimDegistir = hvEzOgrendimDegistir;
 
 function hvEzGit(i) {
@@ -4486,6 +4492,7 @@ async function hvEzAc(tur, ad) {
       <div id="ez-hoca-kutu" class="ez-hoca-kutu"></div>
     </div>
     <div id="ez-step" class="ez-step"><div class="mv-loading">Yükleniyor…</div></div>
+    ${window.hvOgCubuk ? hvOgCubuk('ez') : ''}
   `;
   hvEzBasaSar();
 
@@ -4592,7 +4599,7 @@ function renderEzber() {
       <p>Tamamını dinle, parça parça tekrarla, ezberle</p>
     </div>
     <div class="ez-hoca-ust">${hvOgrenQariSecim('hvEzHocaDegistir')}</div>
-    ${hvEzOgrenilenler().length ? `<div class="ez-sayac">✓ ${hvEzOgrenilenler().length} metin öğrenildi olarak işaretli</div>` : ''}
+    ${window.hvOgCubuk ? hvOgCubuk('ez') : (hvEzOgrenilenler().length ? `<div class="ez-sayac">✓ ${hvEzOgrenilenler().length} metin öğrenildi olarak işaretli</div>` : '')}
     <div class="ez-info">Bir metne dokun: önce tamamı açılır, <b>Tamamını Dinle</b> ile baştan sona dinlersin. İstersen <b>Parça Parça</b>'ya geçip her kısmı ayrı ayrı dinleyip tekrar edebilirsin. Kaldığın yer hatırlanır.</div>
 
     <div class="ez-group-title">📖 Sûreler</div>
@@ -5792,10 +5799,12 @@ function hvSdOgrendimDegistir() {
   const s = hvSdSayfalar && hvSdSayfalar[hvSdIdx];
   if (!s) return;
   let l = hvSdOgrenilenler();
+  if (window.hvOgAnlik) hvOgAnlik('sd');
   l = l.indexOf(s.anahtar) >= 0 ? l.filter(x => x !== s.anahtar) : l.concat([s.anahtar]);
   try { localStorage.setItem('hv_sd_ogrenildi', JSON.stringify(l)); } catch (e) {}
   hvSdOgrendimDugme();
-  if (l.indexOf(s.anahtar) >= 0 && window.hvGeriAlPil) hvGeriAlPil('✓ Öğrendim olarak işaretlendi', hvSdOgrendimDegistir);
+  if (l.indexOf(s.anahtar) >= 0 && window.hvGeriAlPil) hvGeriAlPil('✓ Öğrendim olarak işaretlendi', () => hvOgGeriAl('sd'));
+  if (window.hvOgCubukGuncelle) hvOgCubukGuncelle('sd');
 }
 window.hvSdOgrendimDegistir = hvSdOgrendimDegistir;
 function hvSdOgrendimDugme() {
@@ -5987,6 +5996,7 @@ function hvSdSayfaCiz() {
       <button class="sd-gecis-btn" onclick="hvSdGeri()" ${hvSdIdx === 0 ? 'disabled' : ''}>◀ Önceki</button>
       <button class="sd-gecis-btn" onclick="hvSdIleri()" ${hvSdIdx === toplam - 1 ? 'disabled' : ''}>Sonraki ▶</button>
     </div>
+    ${window.hvOgCubuk ? hvOgCubuk('sd') : ''}
   `;
   hvSdPuntoUygula();
   hvSdOgrendimDugme();
@@ -6077,6 +6087,7 @@ function hvSdListeGoster() {
     });
     html += '</div>';
   });
+  if (window.hvOgCubuk) html += hvOgCubuk('sd');
   kok.innerHTML = html;
   hvSdBasaSar();
 }

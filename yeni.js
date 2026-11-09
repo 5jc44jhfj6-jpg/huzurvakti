@@ -397,7 +397,7 @@ let _kk = { i: 0, ac: false, mod: 'hepsi' };
 function renderKelime() {
   const c = $('kelime-content'); if (!c) return;
   const bil = yukle('kelime_bilinen', []); const liste = _kk.mod === 'kalan' ? KELIMELER.map((k, i) => i).filter(i => bil.indexOf(i) < 0) : KELIMELER.map((k, i) => i);
-  if (!liste.length) { c.innerHTML = `<div class="kk-bitti">🎉 Hepsini öğrendin! <button class="an-basla" onclick="hvKkSifirla()">Baştan başla</button></div>`; return; }
+  if (!liste.length) { c.innerHTML = `<div class="kk-bitti">🎉 Hepsini öğrendin! <button class="an-basla" onclick="hvKkSifirla()">Baştan başla</button></div>${hvOgCubuk('kk')}`; return; }
   if (_kk.i >= liste.length) _kk.i = 0;
   const idx = liste[_kk.i]; const k = KELIMELER[idx];
   c.innerHTML = `
@@ -410,6 +410,7 @@ function renderKelime() {
       ${bil.indexOf(idx) >= 0 ? `<span class="kk-rozet" onclick="event.stopPropagation();hvKkUnut(${idx})">✓ biliyorum · <u>geri al</u></span>` : ''}
     </button>
     <div class="an-alt"><button class="an-btn" onclick="hvKkGit(0)">Tekrar et</button><button class="an-btn an-ileri" onclick="hvKkGit(1)">Biliyorum ✓</button></div>
+    ${hvOgCubuk('kk')}
     <div class="info-note">Kur'an'da en sık geçen kelimeleri öğrenince okuduğun âyetlerin önemli bir kısmını anlamaya başlarsın. Kart önce Arapça yüzüyle gelir; dokununca okunuşu ve anlamı açılır.</div>`;
 }
 window.hvKkCevir = () => { _kk.ac = !_kk.ac; titre(6); renderKelime(); };
@@ -422,20 +423,65 @@ window.hvGeriAlPil = (metin, geriAl) => {
   document.body.appendChild(p); requestAnimationFrame(() => p.classList.add('gor'));
   clearTimeout(window._gaT); window._gaT = setTimeout(() => { p.classList.remove('gor'); setTimeout(() => p.remove(), 300); }, 5000);
 };
-window.hvKkUnut = (idx) => { const bil = yukle('kelime_bilinen', []).filter(x => x !== idx); kaydet('kelime_bilinen', bil); renderKelime(); };
+window.hvKkUnut = (idx) => { hvOgAnlik('kk'); const bil = yukle('kelime_bilinen', []).filter(x => x !== idx); kaydet('kelime_bilinen', bil); renderKelime(); };
+/* v68.9.3: öğrenme alanlarında KALICI "Geri al" + "Sıfırla" çubuğu (kaybolan bildirime ek olarak) */
+const OG_ALAN = {
+  sd: { ls: 'hv_sd_ogrenildi', bir: 'sayfa', yenile: () => { if (typeof hvSdListeAcik !== 'undefined' && hvSdListeAcik) hvSdListeGoster(); else { if (typeof hvSdOgrendimDugme === 'function') hvSdOgrendimDugme(); hvOgCubukGuncelle('sd'); } } },
+  ez: { ls: 'hv_ezber_ogrenildi', bir: 'metin', yenile: () => { if ($('ez-ogrendim')) { hvEzOgrendimGuncelle(); hvOgCubukGuncelle('ez'); } else if (typeof renderEzber === 'function') renderEzber(); } },
+  kk: { ls: 'hv_kelime_bilinen', bir: 'kelime', yenile: () => renderKelime() }
+};
+const ogListe = (a) => { try { const v = JSON.parse(localStorage.getItem(OG_ALAN[a].ls) || '[]'); return Array.isArray(v) ? v : []; } catch (e) { return []; } };
+const ogGecmis = (a) => { try { const v = JSON.parse(localStorage.getItem('hv_og_geri_' + a) || '[]'); return Array.isArray(v) ? v : []; } catch (e) { return []; } };
+window.hvOgAnlik = (a) => {
+  if (!OG_ALAN[a]) return;
+  const g = ogGecmis(a); g.push(localStorage.getItem(OG_ALAN[a].ls) || '[]');
+  try { localStorage.setItem('hv_og_geri_' + a, JSON.stringify(g.slice(-30))); } catch (e) {}
+};
+window.hvOgGeriAl = (a) => {
+  const g = ogGecmis(a); if (!g.length) return;
+  const onceki = g.pop();
+  try { localStorage.setItem(OG_ALAN[a].ls, onceki); localStorage.setItem('hv_og_geri_' + a, JSON.stringify(g)); } catch (e) {}
+  const p = $('geri-al-pil'); if (p) p.remove();
+  titre(8); OG_ALAN[a].yenile();
+  if (typeof hvToast === 'function') hvToast('↩ Geri alındı', 'Son işaretleme geri alındı.');
+};
+window.hvOgSifirla = (a, btn) => {
+  if (!ogListe(a).length) return;
+  if (!btn.classList.contains('emin')) {   // yanlışlıkla basılmasın: iki dokunuş
+    btn.classList.add('emin'); btn.textContent = 'Emin misin? Evet, sıfırla';
+    clearTimeout(btn._t); btn._t = setTimeout(() => { btn.classList.remove('emin'); btn.textContent = '🔄 Sıfırla'; }, 4000);
+    return;
+  }
+  hvOgAnlik(a);
+  try { localStorage.setItem(OG_ALAN[a].ls, '[]'); } catch (e) {}
+  if (a === 'kk') _kk = { i: 0, ac: false, mod: 'hepsi' };
+  titre(12); OG_ALAN[a].yenile();
+  hvGeriAlPil('🔄 İşaretler sıfırlandı', () => hvOgGeriAl(a));
+};
+window.hvOgCubuk = (a) => {
+  const n = ogListe(a).length, g = ogGecmis(a).length;
+  return `<div class="og-cubuk" data-og="${a}">
+    <span class="og-sayi">✓ ${n} ${OG_ALAN[a].bir} öğrenildi</span>
+    <button class="og-geri" onclick="hvOgGeriAl('${a}')" ${g ? '' : 'disabled'}>↩ Geri al</button>
+    <button class="og-sifir" onclick="hvOgSifirla('${a}', this)" ${n ? '' : 'disabled'}>🔄 Sıfırla</button>
+  </div>`;
+};
+window.hvOgCubukGuncelle = (a) => {
+  document.querySelectorAll('.og-cubuk[data-og="' + a + '"]').forEach(el => { el.outerHTML = hvOgCubuk(a); });
+};
 window.hvKkGit = (bildi) => {
   const bil = yukle('kelime_bilinen', []); const liste = _kk.mod === 'kalan' ? KELIMELER.map((k, i) => i).filter(i => bil.indexOf(i) < 0) : KELIMELER.map((k, i) => i);
   const idx = liste[_kk.i];
   if (bildi && bil.indexOf(idx) < 0) {
-    bil.push(idx); kaydet('kelime_bilinen', bil);
+    hvOgAnlik('kk'); bil.push(idx); kaydet('kelime_bilinen', bil);
     const onceki = _kk.i;
-    hvGeriAlPil('“' + KELIMELER[idx][1] + '” öğrenildi', () => { hvKkUnut(idx); _kk.i = Math.max(0, onceki); _kk.ac = false; renderKelime(); });
+    hvGeriAlPil('“' + KELIMELER[idx][1] + '” öğrenildi', () => { _kk.i = Math.max(0, onceki); _kk.ac = false; hvOgGeriAl('kk'); });
     if (_kk.mod === 'kalan') { _kk.ac = false; return renderKelime(); }
   }
   _kk.i = (_kk.i + 1) % Math.max(1, liste.length); _kk.ac = false; renderKelime();
 };
 window.hvKkMod = (m) => { _kk.mod = m; _kk.i = 0; _kk.ac = false; renderKelime(); };
-window.hvKkSifirla = () => { kaydet('kelime_bilinen', []); _kk = { i: 0, ac: false, mod: 'hepsi' }; renderKelime(); };
+window.hvKkSifirla = () => { hvOgAnlik('kk'); kaydet('kelime_bilinen', []); _kk = { i: 0, ac: false, mod: 'hepsi' }; renderKelime(); };
 rota('kelime', renderKelime);
 
 /* ═════════════════════════ DUVAR KÂĞITLARI ═════════════════════════ */
@@ -649,7 +695,8 @@ function ezYeniCiz() {
       <div class="ez2-liste">${kuran.map(x => satir(x)).join('')}${temel.map(x => satir(x)).join('')}</div></div>
     <div class="ez2-bolum" data-b="1"><div class="ez2-bb"><h3>Kısa sûreler</h3><small>${sureler.length} sûre · namazda zamm-ı sûre olarak okunur</small></div>
       <div class="ez2-izgara">${sureler.map(x => { const ok = ogr(x[0], x[1]); const s = sureBul(HV_SURE_NO[x[1]]) || {}; return `<button class="ez2-k ${ok ? 'ok' : ''}" data-ara="${esc(sadeles(x[1]))}" onclick="${ac(x)}"><span class="ez2-kar">${esc(s.name_original || '')}</span><b>${esc(kisalt(x[1]).replace(/\s*\(.*\)/, ''))}</b><small>${s.verse_count ? s.verse_count + ' âyet' : ''}${ok ? ' · ✓' : ''}</small></button>`; }).join('')}</div></div>
-    <div class="ez-alt-not">✓ ezberlediklerin · dokun, tamamı tek sayfada açılsın</div>`;
+    <div class="ez-alt-not">✓ ezberlediklerin · dokun, tamamı tek sayfada açılsın</div>
+    ${hvOgCubuk('ez')}`;
   try { if (typeof hvEzBasaSar === 'function') hvEzBasaSar(); } catch (e) {}
 }
 window.hvEz2Ara = (q) => {

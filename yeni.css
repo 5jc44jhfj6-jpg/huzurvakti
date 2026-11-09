@@ -1549,3 +1549,10 @@ body.dark-theme .app-toast-box .toast-title { color: #f3cf86 !important; } body.
 .geri-al-pil button { border: 0; border-radius: 999px; padding: 5px 12px; background: #2b1a10; color: #f3d999; font-weight: 700; font-size: .8rem; cursor: pointer; }
 .ez-ogrendim small, .sd-ogrendim small { font-weight: 500; opacity: .75; font-size: .75em; }
 .kk-rozet u { text-decoration: underline; cursor: pointer; }
+
+/* v68.9.3 — öğrenme alanları: kalıcı Geri al / Sıfırla çubuğu */
+.og-cubuk { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin: 14px 0 6px; padding: 10px 12px; border-radius: 16px; background: rgba(168,105,47,.08); border: 1px solid rgba(168,105,47,.22); }
+.og-cubuk .og-sayi { flex: 1 1 auto; font-weight: 700; font-size: .88rem; color: var(--gold); min-width: 110px; }
+.og-cubuk button { border: 1px solid rgba(168,105,47,.35); background: transparent; color: var(--gold); border-radius: 999px; padding: 7px 13px; font-weight: 700; font-size: .82rem; cursor: pointer; font-family: inherit; }
+.og-cubuk button:disabled { opacity: .38; cursor: default; }
+.og-cubuk .og-sifir.emin { background: #b3412e; border-color: #b3412e; color: #fff; }
