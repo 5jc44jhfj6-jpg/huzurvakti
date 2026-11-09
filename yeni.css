@@ -1537,3 +1537,9 @@ body.dark-theme .app-toast-box .toast-title { color: #f3cf86 !important; } body.
 .mh-bos { margin-top: 12px; font-size: .84rem; line-height: 1.5; color: #6b4a2a; }
 .mh-not { margin-top: 8px; font-size: .74rem; color: #a8692f; }
 .mh-sifir { display: block; margin: 10px auto 0; border: 0; background: none; color: #8a6a48; font-size: .76rem; text-decoration: underline; cursor: pointer; }
+
+/* v68.8.4 — Sürekli tekrar düğmesi */
+.ez-tam-arac { gap: 8px; flex-wrap: wrap; align-items: center; }
+.og-dongu { height: 40px; padding: 0 14px; border-radius: 20px; border: 1.2px solid var(--border-gold); background: var(--bg-card); color: var(--text-main); font-weight: 600; font-size: .85rem; cursor: pointer; white-space: nowrap; }
+.og-dongu.on { background: linear-gradient(135deg, #f3d999, #e2b866); color: #2b1a10; border-color: #e2b866; }
+.sd-arac .og-dongu { height: 36px; padding: 0 10px; font-size: .78rem; }

@@ -3742,7 +3742,7 @@ async function hvOgrenSesCoz(refs, qari) {
   const yedek = r => ({ url: hvOgEveryayah(husr, besmeleMi(r) ? 1 : r.s, besmeleMi(r) ? 1 : r.a), yedek: true });
   if (HV_AA_KLASOR[q.id]) {
     const k = HV_AA_KLASOR[q.id];
-    return refs.map(r => ((besmeleMi(r) || (r.s === 1 && r.a === 1)) && q.id === 'yasser') ? Object.assign({}, HV_YASIR_BESMELE) : ({ url: hvOgEveryayah(k, besmeleMi(r) ? 1 : r.s, besmeleMi(r) ? 1 : r.a) }));
+    return refs.map(r => (besmeleMi(r) && q.id === 'yasser') ? Object.assign({}, HV_YASIR_BESMELE) : ({ url: hvOgEveryayah(k, besmeleMi(r) ? 1 : r.s, besmeleMi(r) ? 1 : r.a) }));
   }
   if (q.id === 'alfaqih') {
     return refs.map(r => {
@@ -3794,16 +3794,15 @@ function hvOgYedekNotu(sesler) {
    ═══════════════════════════════════════════════════════════════════════ */
 const HVK = { ac: null, nesil: 0, kaynak: [], zaman: [], plan: [], tampon: new Map(), kapali: false };
 const HVK_ARA = 0.05;   // âyetler arası bırakılan nefes (sn)
-/* Yâsir ed-Devserî'nin besmelesi — kendi Yâsîn tam sûre kaydının başından (0.08–3.12 sn).
-   v68.8.3: ses parmak izi karşılaştırmasıyla doğrulandı: Yâsîn/Rahmân başı ile Kehf/Mülk'ün 2. parçası
-   aynı söz (besmele); Kehf/Mülk'ün 1. parçası istiâze; İnşirah başı "Elem neşrah" (besmele yok).
-   Yalnızca dosyanın ilk ~90 KB'ı indirilir. */
-const HV_YASIR_BESMELE = { url: 'https://server11.mp3quran.net/yasser/036.mp3', bas: 0.08, son: 3.12, kisa: true, aralik: 'bytes=0-90000' };
+/* Yâsir ed-Devserî'nin besmelesi: bütün kayıtlarında stüdyoda eklenmiş aynı (robotik duyulan) besmele var.
+   v68.8.4 kullanıcı kararı: sûre başındaki besmele SESLİ OKUNMAZ (yazıda görünür), doğrudan 1. âyetle başlar.
+   Fâtiha'nın 1. âyeti (besmele) âyet olduğu için okunur. */
+const HV_YASIR_BESMELE = { atla: true, url: '' };
 function hvKsDestek() { return !HVK.kapali && !!(window.AudioContext || window.webkitAudioContext) && typeof fetch === 'function'; }
 function hvKsAcik() { return hvGet('hv_durmadan', '1') === '1'; }
 function hvKsUygun(liste) {
   return hvKsDestek() && hvKsAcik() && document.visibilityState !== 'hidden' &&
-    Array.isArray(liste) && liste.length > 0 && liste.every(p => p && p.url && (p.kisa || (typeof p.bas !== 'number' && /everyayah\.com/.test(p.url))));
+    Array.isArray(liste) && liste.length > 0 && liste.every(p => p && (p.atla || (p.url && (p.kisa || (typeof p.bas !== 'number' && /everyayah\.com/.test(p.url))))));
 }
 function hvKsBaglam() {
   if (!HVK.ac) { const C = window.AudioContext || window.webkitAudioContext; HVK.ac = new C(); }
@@ -3811,6 +3810,7 @@ function hvKsBaglam() {
   return HVK.ac;
 }
 function hvKsYukle(url, aralik) {
+  if (!url) return Promise.reject(new Error('adres yok'));
   const anah = url + (aralik ? '#' + aralik : '');
   if (HVK.tampon.has(anah)) return HVK.tampon.get(anah);
   const ac = hvKsBaglam();
@@ -3867,6 +3867,7 @@ function hvKsCal(liste, cb) {
         return;
       }
       if (t - ac.currentTime > 12) { await bekle(400); continue; }   // en fazla ~12 sn ilerisini zamanla
+      if (liste[i].atla) { i++; rep = 0; continue; }   // sessiz geçilecek parça (ör. besmele)
       let x;
       try { x = await hvKsYukle(liste[i].url, liste[i].aralik); if (typeof liste[i].bas === 'number') x = { buf: x.buf, bas: liste[i].bas, son: Math.min(x.buf.duration, liste[i].son || x.buf.duration) }; }
       catch (e) {
@@ -3926,10 +3927,28 @@ function hvOgSesNesnesi() {
   hvOgSes = s;
   return s;
 }
+/* v68.8.4: Sürekli tekrar (döngü) — dua/sûre bitince baştan */
+function hvOgDonguAcik() { return hvGet('hv_og_dongu', '0') === '1'; }
+function hvOgDonguDugme() { return `<button class="og-dongu${hvOgDonguAcik() ? ' on' : ''}" onclick="hvOgDonguDegistir()" title="Bitince baştan başlasın">🔁 Sürekli tekrar</button>`; }
+function hvOgDonguDegistir() {
+  const a = !hvOgDonguAcik(); hvSet('hv_og_dongu', a ? '1' : '0');
+  document.querySelectorAll('.og-dongu').forEach(b => b.classList.toggle('on', a));
+  try { hvToast(a ? '🔁 Sürekli tekrar açık' : 'Sürekli tekrar kapalı', a ? 'Dua / sûre bitince baştan başlar.' : 'Bitince durur.'); } catch (e) {}
+}
+window.hvOgDonguDegistir = hvOgDonguDegistir;
+let hvOgDonguT = null, hvOgDonguA = null;
 function hvOgOynat(liste, ayar) {
   hvOgDurdur();                      // öncekini durdur (onun arayüzü kendini sıfırlar)
   if (!liste || !liste.length) return;
   ayar = ayar || {};
+  if (ayar.dongu && !ayar._dongu) {   // bitince (açıksa) baştan
+    ayar._dongu = true;
+    const asil = ayar.onBitti;
+    ayar.onBitti = function () {
+      if (hvOgDonguAcik()) { hvOgDonguA = ayar; clearTimeout(hvOgDonguT); hvOgDonguT = setTimeout(() => { hvOgDonguT = null; hvOgDonguA = null; hvOgOynat(liste, ayar); }, 700); return; }
+      if (asil) asil.apply(this, arguments);
+    };
+  }
   const tekrar = Math.max(1, parseInt(ayar.tekrar, 10) || 1);
   hvOgDurum = { liste: liste, sira: 0, tekrar: tekrar, kalan: tekrar, ayar: ayar, hazir: false };
   try { if (ayar.onBasla) ayar.onBasla(); } catch (e) {}
@@ -3953,6 +3972,11 @@ function hvOgBaslat(i) {
   if (!d) return;
   d.sira = i;
   const p = d.liste[i];
+  if (p && p.atla) {                 // sessiz geçilecek parça (ör. Yâsir'de besmele)
+    if (i + 1 < d.liste.length) { hvOgBaslat(i + 1); return; }
+    hvOgDurum = null; if (hvOgSaat) { clearInterval(hvOgSaat); hvOgSaat = null; }
+    try { if (d.ayar.onBitti) d.ayar.onBitti(); } catch (e) {} return;
+  }
   const s = hvOgSesNesnesi();
   try { if (d.ayar.onSira) d.ayar.onSira(i, p); } catch (e) {}
   const bas = (typeof p.bas === 'number') ? p.bas : 0;
@@ -4023,6 +4047,7 @@ function hvOgParcaBitti(dosyaBitti) {
 function hvOgDurdur() {
   const d = hvOgDurum;
   hvOgDurum = null;
+  if (hvOgDonguT) { clearTimeout(hvOgDonguT); hvOgDonguT = null; const a = hvOgDonguA; hvOgDonguA = null; if (!d && a && a.onDur) { try { a.onDur(); } catch (e) {} } }
   if (d && d.ks) hvKsDur();
   if (hvOgSaat) { clearInterval(hvOgSaat); hvOgSaat = null; }
   try { if (hvOgSes) hvOgSes.pause(); } catch (e) {}
@@ -4105,6 +4130,7 @@ function hvEzTamCal() {
   hvEzKayit.parcalar.forEach((p, i) => { if (p.ses) liste.push(Object.assign({ i: i }, p.ses)); });
   if (!liste.length) return;
   hvOgOynat(liste, {
+    dongu: true,
     onBasla: () => { hvEzCalan = 'tam'; hvEzDugmeleriTazele(); },
     onSira: (k, x) => hvEzVurgula(x.i),
     onIlerle: (oran, k) => { const x = liste[k]; if (x) hvEzKelimeIlerle(oran, x.i); },
@@ -4279,7 +4305,7 @@ function hvEzTamCiz() {
   }
   kutu.innerHTML = `
     ${sesli
-      ? `<div class="ez-tam-arac"><button id="ez-tam-cal" class="ez-play ez-tam-cal" onclick="hvEzTamCal()">▶︎ Tamamını Dinle</button></div>
+      ? `<div class="ez-tam-arac"><button id="ez-tam-cal" class="ez-play ez-tam-cal" onclick="hvEzTamCal()">▶︎ Tamamını Dinle</button>${hvOgDonguDugme()}</div>
          <div class="ez-tk-ipucu">Bir âyete dokunursan yalnız o âyet okunur.</div>`
       : (refVar
         ? `<div class="ez-tam-arac"><button id="ez-tam-cal" class="ez-play ez-tam-cal" disabled>⏳ Ses hazırlanıyor…</button></div>`
@@ -4835,7 +4861,6 @@ const HV_AA_KLASOR = {
 function hvAyetSeg(s, a, q) {
   q = q || hvDnQari();
   s = Number(s); a = Number(a);
-  if (q.id === 'yasser' && s === 1 && a === 1) return Object.assign({}, HV_YASIR_BESMELE);   // Fâtiha'nın besmelesi de doğal kayıttan
   if (HV_AA_KLASOR[q.id]) return { url: hvOgEveryayah(HV_AA_KLASOR[q.id], s, a) };
   if (q.id === 'alfaqih') {
     const z = HV_FAKIH_ZAMAN[s], i = (s === 1) ? a - 1 : a;
@@ -5105,7 +5130,7 @@ function hvAaKsDene() {
   const bas = hvAaIdx, sure = hvAaSure;
   const liste = hvAaListe.slice(bas).map(p => hvAyetSeg(sure, p.v));
   // sûre başından başlıyorsa hocanın besmelesi önce (Fâtiha ve Tevbe hariç)
-  const bsm = (bas === 0 && sure !== 1 && sure !== 9 && hvDnQari().id === 'yasser') ? 1 : 0;
+  const bsm = 0;   // v68.8.4: Yâsir'de sûre başı besmelesi sesli okunmuyor (kullanıcı kararı)
   if (bsm) liste.unshift(Object.assign({}, HV_YASIR_BESMELE));
   if (!hvKsUygun(liste)) return false;
   try { if (hvAaSes) hvAaSes.pause(); } catch (e) {}
@@ -5952,7 +5977,7 @@ function hvSdSayfaCiz() {
       <button class="sd-punto-btn" onclick="hvSdPuntoAyarla(-0.1)" aria-label="Yazıyı küçült">A−</button>
       <span class="sd-punto-deger" id="sd-punto-deger">${Math.round(hvSdPunto() * 100)}%</span>
       <button class="sd-punto-btn" onclick="hvSdPuntoAyarla(0.1)" aria-label="Yazıyı büyüt">A+</button>
-      ${sesVar ? `<button class="sd-ses-btn" id="sd-ses" onclick="hvSdSesCal()">🔊 Dinle</button>` : ''}
+      ${sesVar ? `<button class="sd-ses-btn" id="sd-ses" onclick="hvSdSesCal()">🔊 Dinle</button>${hvOgDonguDugme()}` : ''}
       <button class="sd-hece-btn${hvSdHeceMi() ? ' on' : ''}" onclick="hvSdHeceDegistir()" title="Yeni öğrenenler için hece hece">${hvSdHeceMi() ? '✓ ' : ''}Hece hece</button>
       <button id="sd-ogrendim" class="ez-ogrendim" onclick="hvSdOgrendimDegistir()">○ Öğrendim</button>
     </div>
@@ -6171,6 +6196,7 @@ function hvSdSesCal() {
   const liste = (s.ses && s.ses.length) ? s.ses : [];
   if (!liste.length) { hvSdSesHazirla(s); return; }
   hvOgOynat(liste.map((x, k) => Object.assign({ i: k }, x)), {
+    dongu: true,
     onBasla: () => {
       hvSdCaliyor = true;
       const b = document.getElementById('sd-ses');
