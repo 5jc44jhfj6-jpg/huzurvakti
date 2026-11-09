@@ -1149,6 +1149,7 @@ window.hvKrMenu = () => {
     <div class="kr-ayar"><span>Okunuşu göster</span><button class="kr-anah ${okOkunus() ? 'on' : ''}" onclick="hvOkOkunus();hvKrMenu()"><i></i></button></div>
     <div class="kr-ayar"><span>Sayfa / cüz ayraçları <small class="kr-ayar-not">Mushaf'ta yeni sayfa nerede başlıyor</small></span><button class="kr-anah ${yukle('ok_ayrac', true) ? 'on' : ''}" onclick="hvOkAyar('ayrac')"><i></i></button></div>
     <div class="kr-ayar"><span>İlerleme ve kalan süre <small class="kr-ayar-not">Üst çubukta: %40 · ~12 dk</small></span><button class="kr-anah ${yukle('ok_ilerle', true) ? 'on' : ''}" onclick="hvOkAyar('ilerle')"><i></i></button></div>
+    <div class="kr-ayar"><span>Durmadan oku <small class="kr-ayar-not">Âyet âyet dinlerken arada boşluk olmasın</small></span><button class="kr-anah ${hvGet('hv_durmadan', '1') === '1' ? 'on' : ''}" onclick="hvDurmadanAyarla(hvGet('hv_durmadan', '1') !== '1');hvKrMenu()"><i></i></button></div>
     <div class="kr-ayar"><span>Okurken ekran kararmasın</span><button class="kr-anah ${yukle('ok_uyanik', true) ? 'on' : ''}" onclick="hvOkAyar('uyanik')"><i></i></button></div>
     <div class="kr-ayar"><span>Okudukça hatim ilerlesin <small class="kr-ayar-not">Hatim Takibi'nde “Meâlden Hatim”</small></span><button class="kr-anah ${yukle('ok_mhatim', true) ? 'on' : ''}" onclick="hvOkAyar('mhatim')"><i></i></button></div>
     <div class="kr-ayar kr-ayar-d"><span>Görünüm <small class="kr-ayar-not">Ayarlar'daki “Yeşil tema” ile aynı</small></span><div class="kr-temalar">
@@ -1692,19 +1693,36 @@ document.addEventListener('DOMContentLoaded', ayarKatla);
       e.before(d);
     });
   }
+  /* v68.8: Kaydırmaya göre izleme (IntersectionObserver bazı telefonlarda güvenilmez).
+     Bir âyet ekranda en az ~0.3 sn göründükten sonra okuma çizgisinin üstüne geçtiyse ya da
+     ekranda 1 sn durduysa "okundu" sayılır. Çok hızlı savurmalar sayılmaz. */
+  let izD = null;
   function izle(els) {
     if (io) { io.disconnect(); io = null; } Object.values(sayac).forEach(clearTimeout); sayac = {};
-    if (!ayar('mhatim') || !els.length || !window.IntersectionObserver) return;
-    const N = OK.v.length || vc(OK.id), sid = OK.id, ara = {};
+    izD = null;
+    if (!ayar('mhatim') || !els.length) return;
+    const N = OK.v.length || vc(OK.id), ara = {};
     els.forEach((e, i) => { const n = Number(e.id.slice(5)); ara[n] = [n, i + 1 < els.length ? Number(els[i + 1].id.slice(5)) - 1 : N]; });
-    io = new IntersectionObserver((es) => es.forEach((e) => {
-      const n = Number(e.target.id.slice(5)), rh = e.rootBounds ? e.rootBounds.height : innerHeight;
-      const gor = e.isIntersecting && (e.intersectionRatio >= 0.55 || e.intersectionRect.height >= rh * 0.45);
-      if (gor && !sayac[n]) sayac[n] = setTimeout(() => { if (OK.id === sid && ara[n]) isaretle(sid, ara[n][0], ara[n][1]); }, 1300);
-      else if (!gor && sayac[n]) { clearTimeout(sayac[n]); delete sayac[n]; }
-    }), { root: kap, threshold: [0, 0.55, 1] });
-    els.forEach((e) => io.observe(e));
+    izD = { sid: OK.id, els, ara, ilk: {}, tamam: {} };
+    setTimeout(izKontrol, 300);
   }
+  function izKontrol() {
+    const D = izD; if (!D || !kap || D.sid !== OK.id || APP_STATE.currentPage !== 'quran') return;
+    const kr = kap.getBoundingClientRect(), cizgi = kr.top + kap.clientHeight * 0.35, simdi = Date.now();
+    let bas = 0, son = 0;
+    for (const e of D.els) {
+      const n = Number(e.id.slice(5)); if (D.tamam[n]) continue;
+      const r = e.getBoundingClientRect();
+      const gorunur = r.bottom > kr.top + 10 && r.top < kr.bottom - 10;
+      if (gorunur && !D.ilk[n]) D.ilk[n] = simdi;
+      const sure = D.ilk[n] ? simdi - D.ilk[n] : 0;
+      if ((r.bottom < cizgi && sure >= 300) || (gorunur && sure >= 1000)) {
+        D.tamam[n] = 1; const a = D.ara[n]; if (!bas || a[0] < bas) bas = a[0]; if (a[1] > son) son = a[1];
+      } else if (!gorunur && r.top >= kr.bottom) break;   // aşağıdakiler henüz gelmedi
+    }
+    if (bas) isaretle(D.sid, bas, son);
+  }
+  setInterval(() => { try { if (izD) izKontrol(); } catch (e) {} }, 700);
   function ilerle() {
     ilerleTik = 0;
     if (!ayar('ilerle') || !kap || APP_STATE.currentPage !== 'quran') { if (window._okIlerle) { window._okIlerle = null; try { krSenk(true); } catch (e) {} } return; }
@@ -1725,7 +1743,7 @@ document.addEventListener('DOMContentLoaded', ayarKatla);
     const w = $('ayah-list-wrap'); const k = w ? w.closest('.hero-frame-box') : null;
     if (k === kap) return; if (kap) kap.removeEventListener('scroll', kaydir); kap = k; if (kap) kap.addEventListener('scroll', kaydir, { passive: true });
   }
-  function kaydir() { if (!ilerleTik) ilerleTik = requestAnimationFrame(ilerle); }
+  function kaydir() { if (!ilerleTik) ilerleTik = requestAnimationFrame(() => { ilerle(); try { izKontrol(); } catch (e) {} }); }
 
   /* ── Ekran kararmasın (Screen Wake Lock) ── */
   let kilit = null;

@@ -3742,7 +3742,7 @@ async function hvOgrenSesCoz(refs, qari) {
   const yedek = r => ({ url: hvOgEveryayah(husr, besmeleMi(r) ? 1 : r.s, besmeleMi(r) ? 1 : r.a), yedek: true });
   if (HV_AA_KLASOR[q.id]) {
     const k = HV_AA_KLASOR[q.id];
-    return refs.map(r => ({ url: hvOgEveryayah(k, besmeleMi(r) ? 1 : r.s, besmeleMi(r) ? 1 : r.a) }));
+    return refs.map(r => (besmeleMi(r) && q.id === 'yasser') ? Object.assign({}, HV_YASIR_BESMELE) : ({ url: hvOgEveryayah(k, besmeleMi(r) ? 1 : r.s, besmeleMi(r) ? 1 : r.a) }));
   }
   if (q.id === 'alfaqih') {
     return refs.map(r => {
@@ -3784,6 +3784,123 @@ function hvOgYedekNotu(sesler) {
 /* ── Ortak parça çalar ──
    liste: [{ url, bas?, son?, i? }]
    ayar: { tekrar, onBasla(), onSira(k, parca), onIlerle(oran, k), onBitti(), onDur(), onHata() } */
+/* ═══════════════════════════════════════════════════════════════════════
+   v68.8 — DURMADAN OKU (Web Audio)
+   Âyet âyet kayıtlar (everyayah) tek tek indirilip çözülür, baştaki/sondaki
+   sessizlik kırpılır ve hepsi ses kartında art arda, boşluksuz zamanlanır.
+   Böylece Yâsir ed-Devserî vb. hocalar tek parça kayıt gibi durmadan okur.
+   Desteklenmezse / hata olursa eski oynatıcıya sessizce döner.
+   Ayar: hv_durmadan ('1' açık, '0' kapalı).
+   ═══════════════════════════════════════════════════════════════════════ */
+const HVK = { ac: null, nesil: 0, kaynak: [], zaman: [], plan: [], tampon: new Map(), kapali: false };
+const HVK_ARA = 0.05;   // âyetler arası bırakılan nefes (sn)
+/* Yâsir ed-Devserî'nin besmelesi: everyayah'taki (Fâtiha 1) kayıt yerine kendi tam sûre kaydından (İnşirah başı) — daha doğal */
+const HV_YASIR_BESMELE = { url: 'https://server11.mp3quran.net/yasser/094.mp3', bas: 0.05, son: 2.82, kisa: true };
+function hvKsDestek() { return !HVK.kapali && !!(window.AudioContext || window.webkitAudioContext) && typeof fetch === 'function'; }
+function hvKsAcik() { return hvGet('hv_durmadan', '1') === '1'; }
+function hvKsUygun(liste) {
+  return hvKsDestek() && hvKsAcik() && document.visibilityState !== 'hidden' &&
+    Array.isArray(liste) && liste.length > 0 && liste.every(p => p && p.url && (p.kisa || (typeof p.bas !== 'number' && /everyayah\.com/.test(p.url))));
+}
+function hvKsBaglam() {
+  if (!HVK.ac) { const C = window.AudioContext || window.webkitAudioContext; HVK.ac = new C(); }
+  try { if (HVK.ac.state !== 'running') HVK.ac.resume(); } catch (e) {}   // dokunuşun içinde çağrılmalı (iOS)
+  return HVK.ac;
+}
+function hvKsYukle(url) {
+  if (HVK.tampon.has(url)) return HVK.tampon.get(url);
+  const ac = hvKsBaglam();
+  const p = (async () => {
+    const r = await fetch(url);
+    if (!r.ok) throw new Error('ses ' + r.status);
+    const ab = await r.arrayBuffer();
+    const buf = await new Promise((ok, no) => { try { const x = ac.decodeAudioData(ab, ok, no); if (x && x.then) x.then(ok, no); } catch (e) { no(e); } });
+    // 10 ms'lik pencerelerle ses gücü → baştaki / sondaki sessizliği bul
+    const d = buf.getChannelData(0), sr = buf.sampleRate, w = Math.max(1, Math.round(sr * 0.01));
+    const g = []; let mx = 0;
+    for (let i = 0; i < d.length; i += w) { let t = 0; const e = Math.min(d.length, i + w); for (let j = i; j < e; j += 2) t += d[j] * d[j]; const v = Math.sqrt(t / Math.max(1, (e - i) / 2)); g.push(v); if (v > mx) mx = v; }
+    const esik = Math.max(0.002, mx * 0.025);
+    let b = 0; while (b < g.length && g[b] < esik) b++;
+    let z = g.length - 1; while (z > b && g[z] < esik) z--;
+    const bas = Math.max(0, (b - 2) * 0.01), son = Math.min(buf.duration, (z + 12) * 0.01);
+    return { buf, bas, son: son > bas + 0.2 ? son : buf.duration };
+  })();
+  HVK.tampon.set(url, p);
+  p.catch(() => HVK.tampon.delete(url));
+  if (HVK.tampon.size > 6) {   // çözülmüş ses çok yer kaplar (telefon belleği)
+    const k = HVK.tampon.keys().next().value; HVK.tampon.delete(k); }
+  return p;
+}
+function hvKsDur() {
+  HVK.nesil++;
+  HVK.kaynak.forEach(s => { try { s.onended = null; s.stop(); } catch (e) {} });
+  HVK.kaynak = []; HVK.zaman.forEach(clearTimeout); HVK.zaman = []; HVK.plan = [];
+}
+window.hvKsDur = hvKsDur;
+function hvKsCaliyor() { return HVK.plan.length > 0; }
+/* Şu an çalan parça ve içindeki ilerleme (0–1) */
+function hvKsKonum() {
+  if (!HVK.ac || !HVK.plan.length) return null;
+  const t = HVK.ac.currentTime; let x = null;
+  for (const p of HVK.plan) { if (p.t <= t + 0.01) x = p; else break; }
+  if (!x) return { i: HVK.plan[0].i, oran: 0 };
+  return { i: x.i, oran: Math.max(0, Math.min(1, (t - x.t) / x.d)) };
+}
+window.hvKsKonum = hvKsKonum;
+/* liste: [{url}]  ·  cb: { tekrar, onSira(i), onBitti(), onHata(i) } */
+function hvKsCal(liste, cb) {
+  hvKsDur();
+  cb = cb || {};
+  const n = HVK.nesil, ac = hvKsBaglam(), tekrar = Math.max(1, parseInt(cb.tekrar, 10) || 1);
+  let i = 0, rep = 0, t = ac.currentTime + 0.12;
+  const bekle = (ms) => new Promise(r => setTimeout(r, ms));
+  hvKsYukle(liste[0].url).catch(() => {});
+  if (liste[1]) hvKsYukle(liste[1].url).catch(() => {});
+  (async () => {
+    while (n === HVK.nesil) {
+      if (i >= liste.length) {
+        HVK.zaman.push(setTimeout(() => { if (n === HVK.nesil) { hvKsDur(); try { if (cb.onBitti) cb.onBitti(); } catch (e) {} } }, Math.max(0, (t - ac.currentTime) * 1000)));
+        return;
+      }
+      if (t - ac.currentTime > 12) { await bekle(400); continue; }   // en fazla ~12 sn ilerisini zamanla
+      let x;
+      try { x = await hvKsYukle(liste[i].url); if (typeof liste[i].bas === 'number') x = { buf: x.buf, bas: liste[i].bas, son: Math.min(x.buf.duration, liste[i].son || x.buf.duration) }; }
+      catch (e) {
+        if (n !== HVK.nesil) return;
+        const ii = i, ms = Math.max(0, (t - ac.currentTime) * 1000);
+        HVK.zaman.push(setTimeout(() => { if (n === HVK.nesil) { hvKsDur(); try { if (cb.onHata) cb.onHata(ii); } catch (er) {} } }, ms));
+        return;
+      }
+      if (n !== HVK.nesil) return;
+      if (t < ac.currentTime + 0.03) t = ac.currentTime + 0.06;
+      const src = ac.createBufferSource(); src.buffer = x.buf; src.connect(ac.destination);
+      const d = Math.max(0.05, x.son - x.bas);
+      src.start(t, x.bas, d);
+      src.onended = () => { const k = HVK.kaynak.indexOf(src); if (k >= 0) HVK.kaynak.splice(k, 1); };
+      HVK.kaynak.push(src);
+      HVK.plan.push({ i, t, d });
+      if (HVK.plan.length > 40) HVK.plan.splice(0, HVK.plan.length - 40);
+      if (rep === 0) { const ii = i; HVK.zaman.push(setTimeout(() => { if (n === HVK.nesil) { try { if (cb.onSira) cb.onSira(ii); } catch (e) {} } }, Math.max(0, (t - ac.currentTime) * 1000))); }
+      t += d + HVK_ARA;
+      rep++;
+      if (rep >= tekrar) { rep = 0; i++; if (liste[i + 1]) hvKsYukle(liste[i + 1].url).catch(() => {}); }
+    }
+  })();
+}
+window.hvKsCal = hvKsCal;
+/* iOS: ses kartı yalnızca dokunuşun içinde açılabilir → oynatma düğmelerine dokunulduğunda hemen aç
+   (her dokunuşta değil: başka uygulamada çalan müziği boş yere kesmesin) */
+['touchend', 'click'].forEach(ev => document.addEventListener(ev, (e) => {
+  try {
+    if (!hvKsDestek() || !hvKsAcik()) return;
+    const b = e.target && e.target.closest && e.target.closest('[onclick]'); if (!b) return;
+    if (!/hvDn|hvKrOyna|hvKrDinle|hvKrAtla|hvAa|hvEz|hvSdSes|hvOg|Oynat|Dinle|Cal\(/.test(b.getAttribute('onclick') || '')) return;
+    const ac = hvKsBaglam();
+    if (!HVK.acildi) { const bf = ac.createBuffer(1, 1, 22050), sr = ac.createBufferSource(); sr.buffer = bf; sr.connect(ac.destination); sr.start(0); HVK.acildi = true; }
+  } catch (er) {}
+}, { capture: true, passive: true }));
+window.hvDurmadanAyarla = (acik) => { hvSet('hv_durmadan', acik ? '1' : '0'); };
+
 let hvOgSes = null, hvOgDurum = null, hvOgSaat = null;
 function hvOgAyniUrl(a, b) {
   const t = u => String(u || '').split('#')[0];
@@ -3812,6 +3929,17 @@ function hvOgOynat(liste, ayar) {
   const tekrar = Math.max(1, parseInt(ayar.tekrar, 10) || 1);
   hvOgDurum = { liste: liste, sira: 0, tekrar: tekrar, kalan: tekrar, ayar: ayar, hazir: false };
   try { if (ayar.onBasla) ayar.onBasla(); } catch (e) {}
+  if (hvKsUygun(liste)) {             // v68.8: âyet dosyaları → boşluksuz (durmadan) çal
+    const d = hvOgDurum; d.ks = true;
+    hvKsCal(liste, {
+      tekrar: tekrar,
+      onSira: (i) => { if (hvOgDurum !== d) return; d.sira = i; try { if (d.ayar.onSira) d.ayar.onSira(i, liste[i]); } catch (e) {} },
+      onBitti: () => { if (hvOgDurum !== d) return; hvOgDurum = null; if (hvOgSaat) { clearInterval(hvOgSaat); hvOgSaat = null; } try { if (d.ayar.onBitti) d.ayar.onBitti(); } catch (e) {} },
+      onHata: (i) => { if (hvOgDurum !== d) return; HVK.kapali = true; d.ks = false; if (hvOgSaat) clearInterval(hvOgSaat); hvOgBaslat(i); hvOgSaat = setInterval(hvOgKontrol, 60); }
+    });
+    hvOgSaat = setInterval(() => { if (hvOgDurum !== d || !d.ks || !d.ayar.onIlerle) return; const k = hvKsKonum(); if (k) { try { d.ayar.onIlerle(k.oran, k.i); } catch (e) {} } }, 100);
+    return;
+  }
   hvOgBaslat(0);
   hvOgSaat = setInterval(hvOgKontrol, 60);
 }
@@ -3891,6 +4019,7 @@ function hvOgParcaBitti(dosyaBitti) {
 function hvOgDurdur() {
   const d = hvOgDurum;
   hvOgDurum = null;
+  if (d && d.ks) hvKsDur();
   if (hvOgSaat) { clearInterval(hvOgSaat); hvOgSaat = null; }
   try { if (hvOgSes) hvOgSes.pause(); } catch (e) {}
   if (d) { try { if (d.ayar.onDur) d.ayar.onDur(); } catch (e) {} }
@@ -4604,7 +4733,28 @@ function hvDnAtla(yon) {
 }
 window.hvDnAtla = hvDnAtla;
 
+/* v68.8: Arapça modda âyet âyet (Yâsir) çalarken de çizgi ve sayaç ilerlesin */
+setInterval(() => {
+  try {
+    if (hvDnMod() !== 'aa' || !hvAaListe.length) return;
+    const c = document.getElementById('dn-cizgi'); if (!c) return;
+    const n = hvAaListe.length; let fr = 0;
+    if (hvAaKs) { const k = hvKsKonum(); if (k) fr = k.oran; }
+    else if (hvAaSes && hvAaSes.duration && !hvAaSes._segBas) fr = hvAaSes.currentTime / hvAaSes.duration;
+    c.value = Math.min(100, ((hvAaIdx + Math.min(1, fr)) / n) * 100);
+    const g = document.getElementById('dn-gecen'), t = document.getElementById('dn-toplam');
+    if (g) g.textContent = (hvAaIdx + 1) + '. âyet';
+    if (t) t.textContent = n + ' âyet';
+    const b = document.getElementById('dn-play'); if (b) { const ik = hvAaCaliyor ? '⏸︎' : '▶︎'; if (b.innerHTML !== ik) b.innerHTML = ik; }
+    const ad = document.getElementById('dn-simdi'); if (ad && hvAaSure) { const x = hvDnSureAdi(hvAaSure) + ' Sûresi'; if (ad.textContent !== x) ad.textContent = x; }
+  } catch (e) {}
+}, 300);
 function hvDnSar(deger) {
+  if (hvDnMod() === 'aa' && hvAaListe.length) {   // âyet âyet: çizgiyle âyete atla
+    const i = Math.max(0, Math.min(hvAaListe.length - 1, Math.floor(deger / 100 * hvAaListe.length)));
+    if (i !== hvAaIdx) hvAaAtlaAyet(i - hvAaIdx);
+    return;
+  }
   const s = hvDnNesne();
   if (s.duration) { try { s.currentTime = (deger / 100) * s.duration; } catch (e) {} }
 }
@@ -4935,11 +5085,41 @@ function hvAaOynat() {
   hvAaEkran();
   const mod = hvDnMod();
   if (mod === 'tr') { hvAaMealOku(); return; }
+  if (mod === 'aa' && hvAaKsDene()) return;   // v68.8: durmadan (boşluksuz) çalındı
   const s = hvAaSesNesnesi();
   const pr = hvSegCal(s, hvAyetSeg(hvAaSure, hvAaListe[hvAaIdx].v));
   try { const n = hvAaListe[hvAaIdx + 1]; if (n) { const sg = hvAyetSeg(hvAaSure, n.v); if (!sg.bas) { window._hvOnYukle = window._hvOnYukle || new Audio(); window._hvOnYukle.preload = 'auto'; window._hvOnYukle.src = sg.url; } } } catch (e) {}   // sıradaki âyet önceden yüklensin → boşluk olmasın
   if (pr && pr.catch) pr.catch(() => { if (hvAaCaliyor && s.paused) { if (mod === 'both') hvAaMealOku(); else hvAaSonraki(); } });
 }
+
+/* v68.8: Arapça âyet âyet modunda kalan âyetleri boşluksuz zamanla */
+let hvAaKs = false;
+function hvAaKsDene() {
+  let hiz = 1; try { hiz = Number(typeof hvLoad === 'function' ? hvLoad('kr_hiz', 1) : 1) || 1; } catch (e) {}
+  if (hiz !== 1) return false;
+  const bas = hvAaIdx, sure = hvAaSure;
+  const liste = hvAaListe.slice(bas).map(p => hvAyetSeg(sure, p.v));
+  // sûre başından başlıyorsa hocanın besmelesi önce (Fâtiha ve Tevbe hariç)
+  const bsm = (bas === 0 && sure !== 1 && sure !== 9 && hvDnQari().id === 'yasser') ? 1 : 0;
+  if (bsm) liste.unshift(Object.assign({}, HV_YASIR_BESMELE));
+  if (!hvKsUygun(liste)) return false;
+  try { if (hvAaSes) hvAaSes.pause(); } catch (e) {}
+  hvAaKs = true;
+  hvKsCal(liste, {
+    onSira: (i) => { if (!hvAaCaliyor || hvAaSure !== sure) return; hvAaIdx = bas + Math.max(0, i - bsm); hvAaEkran(); },
+    onBitti: () => { hvAaKs = false; if (!hvAaCaliyor || hvAaSure !== sure) return; hvAaIdx = hvAaListe.length; hvAaOynat(); },
+    onHata: (i) => { hvAaKs = false; HVK.kapali = true; if (!hvAaCaliyor || hvAaSure !== sure) return; hvAaIdx = bas + Math.max(0, i - bsm); hvAaOynat(); }
+  });
+  return true;
+}
+/* Uygulama arka plana geçince (ekran kilidi vb.) Web Audio susabilir → normal oynatıcıyla devam */
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState !== 'hidden' || !hvAaKs || !hvAaCaliyor) return;
+  const k = hvKsKonum(); hvKsDur(); hvAaKs = false;
+  if (k) hvAaIdx = Math.min(hvAaListe.length - 1, hvAaIdx);
+  const s = hvAaSesNesnesi(); const pr = hvSegCal(s, hvAyetSeg(hvAaSure, hvAaListe[hvAaIdx].v));
+  if (pr && pr.catch) pr.catch(() => {});
+});
 
 function hvAaMealOku() {
   const p = hvAaListe[hvAaIdx];
@@ -4960,6 +5140,7 @@ function hvAaSonraki() {
 function hvAaAtlaAyet(yon) {
   if (!hvAaListe.length) return;
   hvTtsDurdur();
+  if (hvAaKs) { hvKsDur(); hvAaKs = false; }
   try { if (hvAaSes) hvAaSes.pause(); } catch (e) {}
   hvAaIdx = Math.max(0, Math.min(hvAaListe.length - 1, hvAaIdx + yon));
   if (hvAaCaliyor) hvAaOynat(); else hvAaEkran();
@@ -4969,6 +5150,7 @@ window.hvAaAtlaAyet = hvAaAtlaAyet;
 function hvAaDurdur() {
   hvAaCaliyor = false;
   hvTtsDurdur();
+  if (hvAaKs) { hvKsDur(); hvAaKs = false; }
   try { if (hvAaSes) hvAaSes.pause(); } catch (e) {}
   hvAaEkran();
   hvDnTazele();
@@ -5049,6 +5231,10 @@ function renderDinle() {
       <label class="dn-switch">
         <input type="checkbox" ${surekli ? 'checked' : ''} onchange="hvDnSurekliDegistir(this)">
         <span>Bitince sıradaki sûre</span>
+      </label>
+      <label class="dn-switch">
+        <input type="checkbox" ${hvKsAcik() ? 'checked' : ''} onchange="hvDurmadanAyarla(this.checked);if(!this.checked)hvKsDur()">
+        <span>Durmadan oku (âyet arası boşluksuz)</span>
       </label>
     </div>
 
