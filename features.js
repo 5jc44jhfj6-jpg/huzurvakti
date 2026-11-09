@@ -3663,7 +3663,7 @@ const HV_DUA_SES = {
    Tek bir ses nesnesi hem Ezberle hem Oku sayfasında kullanılır; aynı sûre
    dosyasında sıradaki âyete geçerken ses durmadan devam eder.
    ═══════════════════════════════════════════════════════════════════════ */
-const HV_OGREN_VARSAYILAN = 'alfaqih';
+const HV_OGREN_VARSAYILAN = 'yasser';   // v68.7: kullanıcı kararı — varsayılan hoca Yâsir ed-Devserî
 const HV_FAKIH_ZAMAN = {
   1: [[0.52,4.55],[5.56,10.01],[9.9,13.03],[14.44,17.17],[17.12,21.57],[22.52,25.95],[26.98,36.41]],
   93: [[0.66,4.29],[4.7,5.29],[5.16,7.77],[7.7,10.15],[10.64,14.47],[14.32,17.51],[18.16,22.37],[22.22,26.59],[27.36,31.39],[31.82,35.03],[35.58,39.77],[40.28,44.83]],
@@ -4480,11 +4480,11 @@ window.hvKuranModu = hvKuranModu;
    ═══════════════════════════════════════════════════════════════════════ */
 
 const HV_DINLE_QARILER = [
+  { id: 'yasser', sunucu: 'server11', ad: 'Yâsir ed-Devserî' },   // v68.7: varsayılan ve ilk hoca
   { id: 'alfaqih', sunucu: 'server16', yol: 'M_Alfaqih/Rewayat-Hafs-A-n-Assem', ad: 'Muhammed el-Fakih' },   // v67.4: ilk hoca hep el-Fakih
   { id: 'husr',   sunucu: 'server13', ad: 'Mahmud Halil el-Husarî' },
   { id: 'afs',    sunucu: 'server8',  ad: 'Mishary Rashid Alafasy' },
   { id: 'minsh',  sunucu: 'server10', ad: 'Muhammed Sıddık el-Minşâvî' },
-  { id: 'yasser', sunucu: 'server11', ad: 'Yâsir ed-Devserî' },
   // v66.1 — kullanıcı isteğiyle eklendi (mp3quran.net, 114 sûre tam; âyet âyet kayıtları yok → o modlarda Husarî okur)
   { id: 'mousa',   sunucu: 'server14', yol: 'mousa/Rewayat-Hafs-A-n-Assem',     ad: 'Abdullah el-Mûsâ' },
   // v66.2 — 10 hâfız (hepsi mp3quran 114 sûre + everyayah âyet âyet, doğrulandı)
@@ -4509,7 +4509,7 @@ function hvDnSureAdi(no) {
   return no + '. Sûre';
 }
 function hvDnQari() {
-  const id = hvGet('hv_dinle_qari', 'alfaqih');
+  const id = hvGet('hv_dinle_qari', 'yasser');
   return HV_DINLE_QARILER.find(q => q.id === id) || HV_DINLE_QARILER[0];
 }
 function hvDnUrl(no) {
@@ -4566,6 +4566,8 @@ function hvDnMedyaBilgisi() {
 }
 
 function hvDnCal(no, baslangicSn) {
+  // v68.6: Yâsir ed-Devserî'nin tam sûre kaydı (mp3quran) kesik kesik; stüdyo âyet kayıtlarını kesintisiz arka arkaya çal
+  if (hvDnMod() === 'ar' && hvDnQari().id === 'yasser') { hvSet('hv_dinle_mod', 'aa'); hvAaCal(no, 0); return; }
   if (hvDnMod() !== 'ar') { hvAaCal(no, 0); return; }
   no = Math.max(1, Math.min(114, parseInt(no, 10) || 1));
   hvDnSure = no;
@@ -4935,6 +4937,7 @@ function hvAaOynat() {
   if (mod === 'tr') { hvAaMealOku(); return; }
   const s = hvAaSesNesnesi();
   const pr = hvSegCal(s, hvAyetSeg(hvAaSure, hvAaListe[hvAaIdx].v));
+  try { const n = hvAaListe[hvAaIdx + 1]; if (n) { const sg = hvAyetSeg(hvAaSure, n.v); if (!sg.bas) { window._hvOnYukle = window._hvOnYukle || new Audio(); window._hvOnYukle.preload = 'auto'; window._hvOnYukle.src = sg.url; } } } catch (e) {}   // sıradaki âyet önceden yüklensin → boşluk olmasın
   if (pr && pr.catch) pr.catch(() => { if (hvAaCaliyor && s.paused) { if (mod === 'both') hvAaMealOku(); else hvAaSonraki(); } });
 }
 

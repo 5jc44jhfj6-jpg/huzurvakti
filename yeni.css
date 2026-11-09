@@ -1454,3 +1454,86 @@ body.dark-theme .hv-sc-ipucu { color: #d8c4a3; }
 /* v68.4c: aynı seviyede kırpılmış erkek/kadın fotoğrafları */
 #page-home .ya-anl-foto i.e { background: url(img/an_e.jpg) center top / cover no-repeat !important; }
 #page-home .ya-anl-foto i.k { background: url(img/an_k.jpg) center top / cover no-repeat !important; }
+/* v68.6.2: bildirim (toast) krem temaya uygun, okunaklı */
+.app-toast-box { background: linear-gradient(#fffaf0, #f6e7c9) !important; border: 1.5px solid #d6a85c !important; box-shadow: 0 10px 28px rgba(60, 30, 8, .28) !important; backdrop-filter: none !important; -webkit-backdrop-filter: none !important; }
+.app-toast-box .toast-title { color: #5a3517 !important; font-family: var(--ya-serif) !important; font-weight: 700 !important; }
+.app-toast-box .toast-desc { color: #3b2a1c !important; opacity: 1 !important; font-weight: 500 !important; }
+body.dark-theme .app-toast-box { background: linear-gradient(#2e1f13, #24180e) !important; border-color: #8a6430 !important; }
+body.dark-theme .app-toast-box .toast-title { color: #f3cf86 !important; } body.dark-theme .app-toast-box .toast-desc { color: #f1e3cc !important; }
+/* v68.6.2: Kur'an başlığındaki kitap simgesi kaldırıldı (kullanıcı isteği) */
+.kr-hero .kr-logo { display: none !important; }
+
+/* v68.6.3 — Sûre sonu: âyet sayısı + âyet seçici */
+.ok-son-nav button { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.ok-son-nav button small { font-family: var(--ya-sans, inherit); font-size: .7rem; font-weight: 500; opacity: .75; }
+.ok-git-sat { display: flex; gap: 10px; margin: -10px 0 22px; }
+.ok-git-sat button { flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 9px 8px; border-radius: 12px; border: 1px dashed var(--border-gold); background: transparent; color: var(--text-main); font-size: .78rem; font-weight: 600; cursor: pointer; }
+.ok-git-sat button svg { width: 15px; height: 15px; flex: none; }
+.kr .ok-git-sat button { color: var(--kr-yazi); border-color: var(--kr-cizgi); }
+.kr-ayetgit { background: rgba(255,255,255,.18); border: 1px solid rgba(255,255,255,.4); color: inherit; font: inherit; border-radius: 999px; padding: 1px 8px; cursor: pointer; }
+.kr-ayetsec-ust { font-size: .78rem; color: var(--text-muted); margin: 8px 2px 10px; display: flex; align-items: center; gap: 5px; flex-wrap: wrap; }
+.kr-ayetsec-ust i { display: inline-block; width: 12px; height: 12px; border-radius: 4px; background: #a8692f; }
+.kr-ayetsec { display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; max-height: 55vh; overflow-y: auto; padding-bottom: 8px; }
+.kr-ayetsec button { padding: 10px 0; border-radius: 10px; border: 1px solid var(--border-light); background: var(--bg-card); color: var(--text-main); font-family: var(--ya-serif); font-weight: 600; font-size: .95rem; cursor: pointer; }
+.kr-ayetsec button.kal { background: #a8692f; color: #fff; border-color: #a8692f; }
+
+/* v68.7 — Sûre listesi sıralama */
+.sure-sira-sec { display: flex; gap: 4px; padding: 4px; margin: 4px 0 12px; border-radius: 999px; background: var(--bg-card); border: 1px solid var(--border-light); }
+.sure-sira-sec button { flex: 1; border: 0; background: transparent; padding: 9px 6px; border-radius: 999px; font-weight: 600; font-size: .85rem; color: var(--text-muted); cursor: pointer; }
+.sure-sira-sec button.on { background: linear-gradient(135deg, #f3d999, #e2b866); color: #2b1a10; box-shadow: 0 2px 8px rgba(160, 110, 40, .25); }
+.surah-card.nz .surah-sub-info b { color: #a8692f; }
+.kr-bilgi-iz:has(> div:nth-child(5)) { grid-template-columns: repeat(5, 1fr); }
+
+/* v68.7 — Yer İmlerim tam sayfa */
+.kr-imler-git { display: flex; align-items: center; gap: 10px; width: 100%; margin: 10px 0 4px; padding: 12px 14px; border-radius: 16px; border: 1.2px solid var(--border-gold); background: var(--bg-card); color: var(--text-main); cursor: pointer; text-align: left; }
+.kr-imler-git span { font-size: 1.1rem; } .kr-imler-git b { font-family: var(--ya-serif); font-size: 1rem; }
+.kr-imler-git small { margin-left: auto; color: var(--text-muted); font-size: .78rem; } .kr-imler-git svg { width: 16px; height: 16px; opacity: .6; }
+.yi-son { display: flex; align-items: center; gap: 12px; width: 100%; padding: 14px; margin: 6px 0 14px; border-radius: 18px; border: 0; background: linear-gradient(135deg, #3b2414, #1e1007); color: #f6dca6; text-align: left; cursor: pointer; }
+.yi-son-ik { font-size: 1.3rem; } .yi-son small { display: block; font-size: .7rem; opacity: .75; letter-spacing: .3px; } .yi-son b { font-family: var(--ya-serif); font-size: 1rem; } .yi-son i { margin-left: auto; font-style: normal; font-weight: 700; font-size: .85rem; color: #f3d999; white-space: nowrap; }
+.yi-say { font-size: .78rem; color: var(--text-muted); margin: 0 4px 8px; font-weight: 600; }
+.yi-liste { display: flex; flex-direction: column; gap: 8px; }
+.yi-kart { display: flex; align-items: stretch; border-radius: 16px; background: var(--bg-card); border: 1px solid var(--border-light); overflow: hidden; transition: opacity .2s, transform .2s; }
+.yi-kart.gidiyor { opacity: 0; transform: translateX(40px); }
+.yi-git { flex: 1; display: flex; gap: 12px; align-items: flex-start; padding: 12px; border: 0; background: transparent; color: var(--text-main); text-align: left; cursor: pointer; min-width: 0; }
+.yi-no { flex: none; width: 38px; height: 38px; border-radius: 12px; display: grid; place-items: center; background: linear-gradient(135deg, #f3d999, #e2b866); color: #2b1a10; font-family: var(--ya-serif); font-weight: 700; font-size: .95rem; }
+.yi-m { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.yi-m b { font-family: var(--ya-serif); font-size: .98rem; } .yi-m em { font-style: normal; font-weight: 500; color: #a8692f; font-size: .85rem; margin-left: 4px; }
+.yi-meal { font-size: .84rem; line-height: 1.45; color: var(--text-sub, var(--text-main)); opacity: .85; }
+.yi-m small { font-size: .7rem; color: var(--text-muted); }
+.yi-sil { flex: none; width: 44px; border: 0; border-left: 1px solid var(--border-light); background: transparent; color: var(--text-muted); font-size: 1rem; cursor: pointer; }
+.yi-bos { text-align: center; padding: 34px 18px; border-radius: 20px; background: var(--bg-card); border: 1px dashed var(--border-gold); }
+.yi-bos-ik { font-size: 2rem; color: #c9973f; } .yi-bos p { font-size: .88rem; color: var(--text-muted); line-height: 1.5; }
+.yi-bos button { margin-top: 6px; padding: 10px 18px; border-radius: 999px; border: 0; background: linear-gradient(135deg, #f3d999, #e2b866); color: #2b1a10; font-weight: 700; cursor: pointer; }
+.yi-pil { position: fixed; left: 50%; bottom: calc(96px + env(safe-area-inset-bottom)); transform: translate(-50%, 20px); opacity: 0; z-index: 9999; display: flex; align-items: center; gap: 8px; max-width: calc(100% - 32px); padding: 10px 14px; border-radius: 999px; border: 1px solid #e9c47a; background: #fbf3e2; color: #2b1a10; font-size: .84rem; font-weight: 600; box-shadow: 0 8px 24px rgba(60, 35, 10, .22); transition: opacity .25s, transform .25s; cursor: pointer; white-space: nowrap; }
+.yi-pil.gor { opacity: 1; transform: translate(-50%, 0); }
+.yi-pil i { font-style: normal; color: #a8692f; font-weight: 700; margin-left: 4px; }
+
+/* v68.7 — Okurken sayfa / cüz ayracı */
+.ok-sy { display: flex; align-items: center; gap: 10px; margin: 14px 0 10px; color: #a8692f; }
+.ok-sy i { flex: 1; height: 1px; background: linear-gradient(90deg, transparent, rgba(168,105,47,.45), transparent); }
+.ok-sy span { font-size: .72rem; font-weight: 700; letter-spacing: .4px; padding: 3px 10px; border-radius: 999px; background: rgba(226,189,115,.16); border: 1px solid rgba(201,151,63,.35); white-space: nowrap; }
+.ok-sy.cuz span { background: linear-gradient(135deg, #f3d999, #e2b866); color: #2b1a10; border-color: #e2b866; }
+.ok-sy span b { font-weight: 800; }
+.ok-mealakis .ok-sy { margin: 10px 0 8px; }
+.kr .ok-sy { color: var(--kr-aktif, #e9c47a); }
+.kr-mp-c i.okuma { background: linear-gradient(90deg, #8fb98a, #d9e8b0); }
+
+/* v68.7 — Meâlden Hatim kartı */
+.mh-kart { padding: 16px; border-radius: 22px; margin-bottom: 4px; background: linear-gradient(160deg, #fffaf0, #f6ead4); border: 1.2px solid var(--border-gold); box-shadow: 0 8px 22px rgba(120, 80, 30, .12); color: #2b1a10; }
+.mh-ust { display: flex; align-items: flex-end; justify-content: space-between; gap: 10px; }
+.mh-ust small { display: block; font-size: .62rem; letter-spacing: 1.2px; font-weight: 800; color: #a8692f; }
+.mh-ust b { font-family: var(--ya-serif); font-size: 1.3rem; }
+.mh-yuzde { text-align: right; font-family: var(--ya-serif); font-size: 1.7rem; font-weight: 700; color: #a8692f; line-height: 1; }
+.mh-yuzde small { display: block; font-family: inherit; font-size: .7rem; font-weight: 600; color: #8a6a48; margin-top: 3px; letter-spacing: 0; }
+.mh-cubuk { height: 8px; border-radius: 999px; background: rgba(168,105,47,.14); margin: 12px 0 10px; overflow: hidden; }
+.mh-cubuk i { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #c99a4b, #e9c77f); }
+.mh-cuzler { display: grid; grid-template-columns: repeat(10, 1fr); gap: 4px; }
+.mh-cuzler span { position: relative; height: 24px; border-radius: 6px; background: linear-gradient(to top, #e2b866 var(--d), rgba(168,105,47,.1) var(--d)); display: grid; place-items: center; }
+.mh-cuzler span.tam { background: linear-gradient(135deg, #c99a4b, #e9c77f); }
+.mh-cuzler em { font-style: normal; font-size: .6rem; font-weight: 700; color: #6b4a2a; } .mh-cuzler span.tam em { color: #fff; }
+.mh-devam { display: flex; align-items: center; gap: 10px; width: 100%; margin-top: 12px; padding: 11px 13px; border-radius: 14px; border: 0; background: #2b1a10; color: #f6dca6; text-align: left; cursor: pointer; }
+.mh-devam small { display: block; font-size: .66rem; opacity: .75; } .mh-devam b { font-size: .86rem; font-weight: 600; }
+.mh-devam i { margin-left: auto; font-style: normal; font-weight: 700; color: #f3d999; white-space: nowrap; }
+.mh-bos { margin-top: 12px; font-size: .84rem; line-height: 1.5; color: #6b4a2a; }
+.mh-not { margin-top: 8px; font-size: .74rem; color: #a8692f; }
+.mh-sifir { display: block; margin: 10px auto 0; border: 0; background: none; color: #8a6a48; font-size: .76rem; text-decoration: underline; cursor: pointer; }

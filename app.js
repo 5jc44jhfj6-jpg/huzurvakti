@@ -344,23 +344,23 @@ function applyStateSettings() {
   const settingsQariSelect = document.getElementById('settings-qari-select');
   if (settingsQariSelect) {
     let q = null; try { q = localStorage.getItem('hv_dinle_qari'); } catch (e) {}
-    settingsQariSelect.value = q || 'alfaqih';
-    if (settingsQariSelect.selectedIndex < 0) settingsQariSelect.value = 'alfaqih';
+    settingsQariSelect.value = q || 'yasser';
+    if (settingsQariSelect.selectedIndex < 0) settingsQariSelect.value = 'yasser';
   }
 
   const surahQariSelect = document.getElementById('qari-select');
   if (surahQariSelect) {
     let q = null; try { q = localStorage.getItem('hv_dinle_qari'); } catch (e) {}
-    surahQariSelect.value = q || 'alfaqih';
-    if (surahQariSelect.selectedIndex < 0) surahQariSelect.value = 'alfaqih';
+    surahQariSelect.value = q || 'yasser';
+    if (surahQariSelect.selectedIndex < 0) surahQariSelect.value = 'yasser';
   }
 
   // v66.4: Dua & Sure Öğren'in kendi hocası (varsayılan Muhammed el-Fakih)
   const ogrenQariSelect = document.getElementById('settings-ogren-qari-select');
   if (ogrenQariSelect) {
     let q = null; try { q = localStorage.getItem('hv_ogren_qari'); } catch (e) {}
-    ogrenQariSelect.value = q || 'alfaqih';
-    if (ogrenQariSelect.selectedIndex < 0) ogrenQariSelect.value = 'alfaqih';
+    ogrenQariSelect.value = q || 'yasser';
+    if (ogrenQariSelect.selectedIndex < 0) ogrenQariSelect.value = 'yasser';
   }
 
   // Vakit ince ayarı girişleri
@@ -2654,7 +2654,8 @@ async function loadSurahDetail(id, localSurahObj) {
 
   // Son okunan sure kaydı
   const prevLast = hvGetLastRead();
-  if (!prevLast || prevLast.surah !== id) hvSetLastRead(id, localSurahObj ? localSurahObj.name : ('Sure ' + id), 1);
+  // v68.6.2: kullanıcı "Buraya kadar" ile işaretlediyse sûre açmak kaldığı yeri SİLMEZ
+  if (!prevLast || (prevLast.surah !== id && !prevLast.elle && !(prevLast.ayah > 1))) hvSetLastRead(id, localSurahObj ? localSurahObj.name : ('Sure ' + id), 1);
 
   // 1) Çevrimdışı önbellek (IndexedDB) — varsa ağa hiç çıkmadan göster
   let verses = null;
@@ -2745,7 +2746,7 @@ function renderSurahVerses(id, verses, ayahWrap) {
       card.id = 'ayah-' + v.verse_number;
       card.innerHTML = `
         <div class="ayah-ar-text">${v.verse}</div>
-        ${v.okunusu ? `<div class="ayah-okunusu-text">🗣️ <b>Okunuşu:</b> ${v.okunusu}</div>` : ''}
+        ${v.okunusu ? `<div class="ayah-okunusu-text">🗣️ <b>Okunuşu:</b> ${window.hvSadeOkunus ? window.hvSadeOkunus(v.okunusu) : v.okunusu}</div>` : ''}
         <div class="ayah-tr-text"><span class="verse-num-badge">${v.verse_number}</span>📖 <b>Anlamı:</b> ${v.translation}</div>
         <div class="ayah-actions">
           <button class="ayah-act-btn ${isMarked ? 'on' : ''}" data-act="mark" onclick="hvToggleBookmark(${id}, ${v.verse_number}, this)">${isMarked ? '⭐ Kaydedildi' : '☆ Yer İmi'}</button>
@@ -2881,11 +2882,11 @@ window.hvToggleBookmark = hvToggleBookmark;
 function hvGetLastRead() {
   try { return JSON.parse(localStorage.getItem('hv_last_read') || 'null'); } catch (e) { return null; }
 }
-function hvSetLastRead(surah, name, ayah) {
-  localStorage.setItem('hv_last_read', JSON.stringify({ surah, name: name || hvSurahName(surah), ayah: ayah || 1, ts: Date.now() }));
+function hvSetLastRead(surah, name, ayah, elle) {
+  localStorage.setItem('hv_last_read', JSON.stringify({ surah, name: name || hvSurahName(surah), ayah: ayah || 1, ts: Date.now(), elle: !!elle }));
 }
 function hvMarkLastRead(surah, ayah, btn) {
-  hvSetLastRead(surah, hvSurahName(surah), ayah);
+  hvSetLastRead(surah, hvSurahName(surah), ayah, true);
   document.querySelectorAll('.ayah-act-btn[data-act="last"]').forEach(b => { b.classList.remove('on'); b.textContent = '📍 Buraya Kadar'; });
   if (btn) { btn.classList.add('on'); btn.textContent = '📍 Kaldığım Yer'; }
   showToastNotification('📍 Kaldığın yer kaydedildi', `${hvSurahName(surah)} ${ayah}. ayet`);
