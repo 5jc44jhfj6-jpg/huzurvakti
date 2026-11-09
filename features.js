@@ -3742,7 +3742,7 @@ async function hvOgrenSesCoz(refs, qari) {
   const yedek = r => ({ url: hvOgEveryayah(husr, besmeleMi(r) ? 1 : r.s, besmeleMi(r) ? 1 : r.a), yedek: true });
   if (HV_AA_KLASOR[q.id]) {
     const k = HV_AA_KLASOR[q.id];
-    return refs.map(r => (besmeleMi(r) && q.id === 'yasser') ? Object.assign({}, HV_YASIR_BESMELE) : ({ url: hvOgEveryayah(k, besmeleMi(r) ? 1 : r.s, besmeleMi(r) ? 1 : r.a) }));
+    return refs.map(r => ((besmeleMi(r) || (r.s === 1 && r.a === 1)) && q.id === 'yasser') ? Object.assign({}, HV_YASIR_BESMELE) : ({ url: hvOgEveryayah(k, besmeleMi(r) ? 1 : r.s, besmeleMi(r) ? 1 : r.a) }));
   }
   if (q.id === 'alfaqih') {
     return refs.map(r => {
@@ -3794,8 +3794,11 @@ function hvOgYedekNotu(sesler) {
    ═══════════════════════════════════════════════════════════════════════ */
 const HVK = { ac: null, nesil: 0, kaynak: [], zaman: [], plan: [], tampon: new Map(), kapali: false };
 const HVK_ARA = 0.05;   // âyetler arası bırakılan nefes (sn)
-/* Yâsir ed-Devserî'nin besmelesi: everyayah'taki (Fâtiha 1) kayıt yerine kendi tam sûre kaydından (İnşirah başı) — daha doğal */
-const HV_YASIR_BESMELE = { url: 'https://server11.mp3quran.net/yasser/094.mp3', bas: 0.05, son: 2.82, kisa: true };
+/* Yâsir ed-Devserî'nin besmelesi — kendi Yâsîn tam sûre kaydının başından (0.08–3.12 sn).
+   v68.8.3: ses parmak izi karşılaştırmasıyla doğrulandı: Yâsîn/Rahmân başı ile Kehf/Mülk'ün 2. parçası
+   aynı söz (besmele); Kehf/Mülk'ün 1. parçası istiâze; İnşirah başı "Elem neşrah" (besmele yok).
+   Yalnızca dosyanın ilk ~90 KB'ı indirilir. */
+const HV_YASIR_BESMELE = { url: 'https://server11.mp3quran.net/yasser/036.mp3', bas: 0.08, son: 3.12, kisa: true, aralik: 'bytes=0-90000' };
 function hvKsDestek() { return !HVK.kapali && !!(window.AudioContext || window.webkitAudioContext) && typeof fetch === 'function'; }
 function hvKsAcik() { return hvGet('hv_durmadan', '1') === '1'; }
 function hvKsUygun(liste) {
@@ -3807,11 +3810,12 @@ function hvKsBaglam() {
   try { if (HVK.ac.state !== 'running') HVK.ac.resume(); } catch (e) {}   // dokunuşun içinde çağrılmalı (iOS)
   return HVK.ac;
 }
-function hvKsYukle(url) {
-  if (HVK.tampon.has(url)) return HVK.tampon.get(url);
+function hvKsYukle(url, aralik) {
+  const anah = url + (aralik ? '#' + aralik : '');
+  if (HVK.tampon.has(anah)) return HVK.tampon.get(anah);
   const ac = hvKsBaglam();
   const p = (async () => {
-    const r = await fetch(url);
+    const r = await fetch(url, aralik ? { headers: { Range: aralik } } : undefined);
     if (!r.ok) throw new Error('ses ' + r.status);
     const ab = await r.arrayBuffer();
     const buf = await new Promise((ok, no) => { try { const x = ac.decodeAudioData(ab, ok, no); if (x && x.then) x.then(ok, no); } catch (e) { no(e); } });
@@ -3825,8 +3829,8 @@ function hvKsYukle(url) {
     const bas = Math.max(0, (b - 2) * 0.01), son = Math.min(buf.duration, (z + 12) * 0.01);
     return { buf, bas, son: son > bas + 0.2 ? son : buf.duration };
   })();
-  HVK.tampon.set(url, p);
-  p.catch(() => HVK.tampon.delete(url));
+  HVK.tampon.set(anah, p);
+  p.catch(() => HVK.tampon.delete(anah));
   if (HVK.tampon.size > 6) {   // çözülmüş ses çok yer kaplar (telefon belleği)
     const k = HVK.tampon.keys().next().value; HVK.tampon.delete(k); }
   return p;
@@ -3854,8 +3858,8 @@ function hvKsCal(liste, cb) {
   const n = HVK.nesil, ac = hvKsBaglam(), tekrar = Math.max(1, parseInt(cb.tekrar, 10) || 1);
   let i = 0, rep = 0, t = ac.currentTime + 0.12;
   const bekle = (ms) => new Promise(r => setTimeout(r, ms));
-  hvKsYukle(liste[0].url).catch(() => {});
-  if (liste[1]) hvKsYukle(liste[1].url).catch(() => {});
+  hvKsYukle(liste[0].url, liste[0].aralik).catch(() => {});
+  if (liste[1]) hvKsYukle(liste[1].url, liste[1].aralik).catch(() => {});
   (async () => {
     while (n === HVK.nesil) {
       if (i >= liste.length) {
@@ -3864,7 +3868,7 @@ function hvKsCal(liste, cb) {
       }
       if (t - ac.currentTime > 12) { await bekle(400); continue; }   // en fazla ~12 sn ilerisini zamanla
       let x;
-      try { x = await hvKsYukle(liste[i].url); if (typeof liste[i].bas === 'number') x = { buf: x.buf, bas: liste[i].bas, son: Math.min(x.buf.duration, liste[i].son || x.buf.duration) }; }
+      try { x = await hvKsYukle(liste[i].url, liste[i].aralik); if (typeof liste[i].bas === 'number') x = { buf: x.buf, bas: liste[i].bas, son: Math.min(x.buf.duration, liste[i].son || x.buf.duration) }; }
       catch (e) {
         if (n !== HVK.nesil) return;
         const ii = i, ms = Math.max(0, (t - ac.currentTime) * 1000);
@@ -3883,7 +3887,7 @@ function hvKsCal(liste, cb) {
       if (rep === 0) { const ii = i; HVK.zaman.push(setTimeout(() => { if (n === HVK.nesil) { try { if (cb.onSira) cb.onSira(ii); } catch (e) {} } }, Math.max(0, (t - ac.currentTime) * 1000))); }
       t += d + HVK_ARA;
       rep++;
-      if (rep >= tekrar) { rep = 0; i++; if (liste[i + 1]) hvKsYukle(liste[i + 1].url).catch(() => {}); }
+      if (rep >= tekrar) { rep = 0; i++; if (liste[i + 1]) hvKsYukle(liste[i + 1].url, liste[i + 1].aralik).catch(() => {}); }
     }
   })();
 }
@@ -4831,6 +4835,7 @@ const HV_AA_KLASOR = {
 function hvAyetSeg(s, a, q) {
   q = q || hvDnQari();
   s = Number(s); a = Number(a);
+  if (q.id === 'yasser' && s === 1 && a === 1) return Object.assign({}, HV_YASIR_BESMELE);   // Fâtiha'nın besmelesi de doğal kayıttan
   if (HV_AA_KLASOR[q.id]) return { url: hvOgEveryayah(HV_AA_KLASOR[q.id], s, a) };
   if (q.id === 'alfaqih') {
     const z = HV_FAKIH_ZAMAN[s], i = (s === 1) ? a - 1 : a;
