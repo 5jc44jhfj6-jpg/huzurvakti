@@ -1543,3 +1543,9 @@ body.dark-theme .app-toast-box .toast-title { color: #f3cf86 !important; } body.
 .og-dongu { height: 40px; padding: 0 14px; border-radius: 20px; border: 1.2px solid var(--border-gold); background: var(--bg-card); color: var(--text-main); font-weight: 600; font-size: .85rem; cursor: pointer; white-space: nowrap; }
 .og-dongu.on { background: linear-gradient(135deg, #f3d999, #e2b866); color: #2b1a10; border-color: #e2b866; }
 .sd-arac .og-dongu { height: 36px; padding: 0 10px; font-size: .78rem; }
+
+/* v68.9.2 — Geri al */
+.geri-al-pil { gap: 10px; cursor: default; }
+.geri-al-pil button { border: 0; border-radius: 999px; padding: 5px 12px; background: #2b1a10; color: #f3d999; font-weight: 700; font-size: .8rem; cursor: pointer; }
+.ez-ogrendim small, .sd-ogrendim small { font-weight: 500; opacity: .75; font-size: .75em; }
+.kk-rozet u { text-decoration: underline; cursor: pointer; }

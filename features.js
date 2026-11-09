@@ -4175,7 +4175,7 @@ function hvEzOgrendimDegistir() {
   if (b) {
     const on = l.indexOf(a) >= 0;
     b.classList.toggle('on', on);
-    b.innerHTML = on ? '✓ Öğrendim' : '○ Öğrendim';
+    b.innerHTML = on ? '✓ Öğrendim <small>· geri al</small>' : '○ Öğrendim'; if (on && window.hvGeriAlPil) hvGeriAlPil('✓ Öğrendim olarak işaretlendi', () => { const x = document.getElementById(b.id); if (x) x.click(); });
   }
 }
 window.hvEzOgrendimDegistir = hvEzOgrendimDegistir;
@@ -4532,7 +4532,7 @@ async function hvEzAc(tur, ad) {
     if (ob) {
       const on = hvEzOgrenildiMi(hvEzKayit.anahtar);
       ob.classList.toggle('on', on);
-      ob.innerHTML = on ? '✓ Öğrendim' : '○ Öğrendim';
+      ob.innerHTML = on ? '✓ Öğrendim <small>· geri al</small>' : '○ Öğrendim';
     }
     // Sesler hazırlanırken metin hemen görünsün (el-Mûsâ'da zaman tablosu ağdan iner)
     const K = hvEzKayit;
@@ -5795,6 +5795,7 @@ function hvSdOgrendimDegistir() {
   l = l.indexOf(s.anahtar) >= 0 ? l.filter(x => x !== s.anahtar) : l.concat([s.anahtar]);
   try { localStorage.setItem('hv_sd_ogrenildi', JSON.stringify(l)); } catch (e) {}
   hvSdOgrendimDugme();
+  if (l.indexOf(s.anahtar) >= 0 && window.hvGeriAlPil) hvGeriAlPil('✓ Öğrendim olarak işaretlendi', hvSdOgrendimDegistir);
 }
 window.hvSdOgrendimDegistir = hvSdOgrendimDegistir;
 function hvSdOgrendimDugme() {
@@ -5803,7 +5804,7 @@ function hvSdOgrendimDugme() {
   if (!b || !s) return;
   const on = hvSdOgrenildiMi(s.anahtar);
   b.classList.toggle('on', on);
-  b.innerHTML = on ? '✓ Öğrendim' : '○ Öğrendim';
+  b.innerHTML = on ? '✓ Öğrendim <small>· geri al</small>' : '○ Öğrendim';
 }
 
 /* ── Hece hece (yeni öğrenenler için) ──

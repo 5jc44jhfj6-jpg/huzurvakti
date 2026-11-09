@@ -407,16 +407,31 @@ function renderKelime() {
       <span class="kk-no">${_kk.i + 1} / ${liste.length}</span>
       <span class="kk-ar" dir="rtl" lang="ar">${k[0]}</span>
       ${_kk.ac ? `<span class="kk-ok">${esc(k[1])}</span><span class="kk-an">${esc(k[2])}</span>` : '<span class="kk-ipucu">Anlamını görmek için dokun</span>'}
-      ${bil.indexOf(idx) >= 0 ? '<span class="kk-rozet">✓ biliyorum</span>' : ''}
+      ${bil.indexOf(idx) >= 0 ? `<span class="kk-rozet" onclick="event.stopPropagation();hvKkUnut(${idx})">✓ biliyorum · <u>geri al</u></span>` : ''}
     </button>
     <div class="an-alt"><button class="an-btn" onclick="hvKkGit(0)">Tekrar et</button><button class="an-btn an-ileri" onclick="hvKkGit(1)">Biliyorum ✓</button></div>
     <div class="info-note">Kur'an'da en sık geçen kelimeleri öğrenince okuduğun âyetlerin önemli bir kısmını anlamaya başlarsın. Kart önce Arapça yüzüyle gelir; dokununca okunuşu ve anlamı açılır.</div>`;
 }
 window.hvKkCevir = () => { _kk.ac = !_kk.ac; titre(6); renderKelime(); };
+/* v68.9.2: yanlışlıkla "Biliyorum / Öğrendim" denirse geri alınabilsin (çocuklar için) */
+window.hvGeriAlPil = (metin, geriAl) => {
+  let p = $('geri-al-pil'); if (p) p.remove();
+  p = document.createElement('div'); p.id = 'geri-al-pil'; p.className = 'yi-pil geri-al-pil';
+  p.innerHTML = `<span>${esc(metin)}</span><button>↩ Geri al</button>`;
+  p.querySelector('button').onclick = () => { p.remove(); try { geriAl(); } catch (e) {} };
+  document.body.appendChild(p); requestAnimationFrame(() => p.classList.add('gor'));
+  clearTimeout(window._gaT); window._gaT = setTimeout(() => { p.classList.remove('gor'); setTimeout(() => p.remove(), 300); }, 5000);
+};
+window.hvKkUnut = (idx) => { const bil = yukle('kelime_bilinen', []).filter(x => x !== idx); kaydet('kelime_bilinen', bil); renderKelime(); };
 window.hvKkGit = (bildi) => {
   const bil = yukle('kelime_bilinen', []); const liste = _kk.mod === 'kalan' ? KELIMELER.map((k, i) => i).filter(i => bil.indexOf(i) < 0) : KELIMELER.map((k, i) => i);
   const idx = liste[_kk.i];
-  if (bildi && bil.indexOf(idx) < 0) { bil.push(idx); kaydet('kelime_bilinen', bil); if (_kk.mod === 'kalan') { _kk.ac = false; return renderKelime(); } }
+  if (bildi && bil.indexOf(idx) < 0) {
+    bil.push(idx); kaydet('kelime_bilinen', bil);
+    const onceki = _kk.i;
+    hvGeriAlPil('“' + KELIMELER[idx][1] + '” öğrenildi', () => { hvKkUnut(idx); _kk.i = Math.max(0, onceki); _kk.ac = false; renderKelime(); });
+    if (_kk.mod === 'kalan') { _kk.ac = false; return renderKelime(); }
+  }
   _kk.i = (_kk.i + 1) % Math.max(1, liste.length); _kk.ac = false; renderKelime();
 };
 window.hvKkMod = (m) => { _kk.mod = m; _kk.i = 0; _kk.ac = false; renderKelime(); };
@@ -953,7 +968,7 @@ function okBaslik(id) {
   h.innerHTML = `
     <div class="kr-rhero kr-rhero-s" style="background-image:url(${krSerit(id)});--krk:${krKonum(id)}">
       <button class="kr-yuv kr-sol" onclick="hvKrGeri()" aria-label="Geri">${IK.geri}</button>
-      <div class="kr-rbas"><h2>${esc(s.name || '')} Sûresi</h2><p>${id}. Sûre • <button class="kr-ayetgit" onclick="hvAyetSec(${id})">${s.verse_count || ''} Âyet ▾</button> • ${esc(s.revelation_place || '')}</p></div>
+      <div class="kr-rbas"><h2>${esc(s.name || '')} Sûresi</h2><p>${id}. Sûre • <button class="kr-ayetgit" onclick="hvAyetSecici(${id})">${s.verse_count || ''} Âyet ▾</button> • ${esc(s.revelation_place || '')}</p></div>
       <button class="kr-yuv kr-sag2" onclick="hvKrImler()" aria-label="Yer imleri">${IK.imi}</button>
       <button class="kr-yuv kr-sag" onclick="hvKrMenu()" aria-label="Seçenekler">${IK.daha}</button>
     </div>
@@ -1048,8 +1063,8 @@ function okCiz() {
       ${sonraki ? `<button class="ileri" onclick="retryLoadSurah(${id + 1});hvOkYukari()"><span>Sıradaki: ${esc(sonraki.name)} ›</span><small>${sonraki.verse_count || ''} âyet</small></button>` : '<span></span>'}
     </div>
     <div class="ok-git-sat">
-      <button onclick="hvAyetSec(${id})">${IK.sayfa}<span>Bu sûrede âyete git</span></button>
-      ${sonraki ? `<button onclick="hvAyetSec(${id + 1})">${IK.sayfa}<span>${esc(sonraki.name)}: âyet seç</span></button>` : ''}
+      <button onclick="hvAyetSecici(${id})">${IK.sayfa}<span>Bu sûrede âyete git</span></button>
+      ${sonraki ? `<button onclick="hvAyetSecici(${id + 1})">${IK.sayfa}<span>${esc(sonraki.name)}: âyet seç</span></button>` : ''}
     </div>` + (m !== 'bilgi' ? krAltHtml() : '');
   krSenk(true);
 }
@@ -1081,7 +1096,7 @@ window.hvOkMod = (m) => { kaydet('okuma_modu', m); okCiz(); };
 window.hvOkOkunus = () => { kaydet('okunus_goster', !okOkunus()); okCiz(); };
 window.hvOkKaynak = (k) => { kaydet('meal_kaynak', k); okCiz(); if (k === 'elmalili' && !YZ[OK.id]) elmalili(OK.id).then((a) => { if (!a) { kaydet('meal_kaynak', 'diyanet'); toast('Elmalılı meâli alınamadı', 'İnternete bağlanınca tekrar dene.'); } okCiz(); }); };
 /* v68.6.3: Âyet seçici — sûrenin âyet numaraları ızgarası; dokununca o âyete gider */
-window.hvAyetSec = (sid) => {
+window.hvAyetSecici = (sid) => {   // v68.9.2: adı değişti; eskisi features.js'teki günün âyeti seçicisini (hvAyetSec) eziyordu
   sid = Number(sid); const s = sureBul(sid) || {}; const N = Number(s.verse_count) || (sid === OK.id ? OK.v.length : 0);
   if (!N) return;
   const son = (typeof hvGetLastRead === 'function') ? hvGetLastRead() : null;
@@ -1547,16 +1562,19 @@ document.addEventListener('DOMContentLoaded', ayarKatla);
     requestAnimationFrame(() => {
       const v = window._currentAyet;
       const metin = v && v.arabic ? String(v.arabic).trim() : '';
-      tr.style.fontSize = '';
+      tr.style.fontSize = ''; tr.style.minHeight = ''; kart.style.removeProperty('flex-shrink');
       ar.classList.add('ya-ar');
       ar.textContent = ''; ar.style.display = 'none'; ar.style.fontSize = '';
-      const tasti = () => tr.scrollHeight > tr.clientHeight + 1;
+      // v68.9.2: kartın tamamı sığmalı (alt satır: sûre · âyet + Paylaş) — küçük / çentikli telefonlarda kesiliyordu
+      const tasti = () => tr.scrollHeight > tr.clientHeight + 1 || kart.scrollHeight > kart.clientHeight + 1;
       let fs = parseFloat(getComputedStyle(tr).fontSize) || 15, n = 0;
-      while (tasti() && fs > 14 && n < 6) { fs -= 0.5; tr.style.fontSize = fs + 'px'; n++; }
+      if (tasti()) tr.style.minHeight = '0';   // dar ekranda metin kutusunun sabit yüksekliği bırakılır
+      while (tasti() && fs > 13 && n < 8) { fs -= 0.5; tr.style.fontSize = fs + 'px'; n++; }
       if (tasti()) {
         if (deneme < 40 && typeof hvAyetSec === 'function' && typeof hvAyetCiz === 'function') {
           deneme++; const yeni = hvAyetSec(); if (yeni) { hvAyetCiz(yeni, false); return; }
         }
+        kart.style.setProperty('flex-shrink', '0', 'important');   // son çare: kart küçülmesin, sayfa biraz kaysın ama yazı kesilmesin
       }
       deneme = 0; kart.classList.remove('ar-var');
       if (metin && metin.length <= 170) {
