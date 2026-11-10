@@ -2033,7 +2033,38 @@ function initQiblaCompass() {
 function hvPusulaDurdur() {
   try { window.removeEventListener('deviceorientation', handleOrientationEvent, true); } catch (e) {}
   try { window.removeEventListener('deviceorientationabsolute', handleOrientationEvent, true); } catch (e) {}
+  try { if (window.__hvNativePusula && window.NamazDostuBridge && typeof NamazDostuBridge.stopCompass === 'function') NamazDostuBridge.stopCompass(); } catch (e) {}
+  window.__hvNativePusula = false;
 }
+
+/* v69.1 — ANDROID: telefonun kendi pusula sensörü (uygulama kabuğu, 1.3.3+).
+   Android WebView çoğu telefonda yalnızca GÖRECELİ yön veriyordu (gerçek kuzeyi bilmiyor),
+   bu yüzden kıble ibresi hiç oynamıyor ya da yanlış yönü gösteriyordu. Kabuk varsa yön
+   doğrudan Android'in manyetik pusulasından gelir; manyetik → gerçek kuzey düzeltmesi burada yapılır. */
+function hvNativePusulaBaslat() {
+  try {
+    if (window.NamazDostuBridge && typeof NamazDostuBridge.startCompass === 'function' && NamazDostuBridge.startCompass()) {
+      window.__hvNativePusula = true;
+      return true;
+    }
+  } catch (e) {}
+  return false;
+}
+let hvNativeKalibreUyarildi = false;
+window.hvNativeHeading = function (h, dogruluk) {
+  if (!window.__hvNativePusula || APP_STATE.currentPage !== 'qibla') return;
+  const n = Number(h);
+  if (isNaN(n)) return;
+  const u = APP_STATE.gpsKonum || APP_STATE.userLocation || {};
+  const gercek = (n + hvManyetikSapma(u.lat, u.lng) + 360) % 360;
+  // Sensör "güvenilmez" derse (0) bir kez kalibrasyon ipucu göster
+  if (Number(dogruluk) === 0 && !hvNativeKalibreUyarildi) {
+    hvNativeKalibreUyarildi = true;
+    const st = document.getElementById('compass-status-msg');
+    if (st) st.innerHTML = '🔄 <b>Pusula kalibre ediliyor.</b> Telefonu havada 8 çizer gibi birkaç kez çevirin; ibre düzelecektir.';
+  }
+  handleOrientationEvent({ webkitCompassHeading: gercek });
+};
 window.hvPusulaDurdur = hvPusulaDurdur;
 
 /* Düğmeye dokunuş = kullanıcı hareketi → iOS izni tam burada istenebilir.
@@ -2224,6 +2255,11 @@ function startCompassSensors(isAutoStart = false) {
     }
   } else {
     hvPusulaDurdur();
+    if (hvNativePusulaBaslat()) {
+      if (btn) btn.innerHTML = "✅ CANLI SENSÖR AKTİF";
+      if (status) status.innerHTML = "✅ <b>Pusula sensörü aktif!</b> Telefonunuzu düz tutarak çevirin. İbre şaşarsa telefonu 8 çizer gibi çevirin.";
+      return;
+    }
     if ('ondeviceorientationabsolute' in window) {
       window.addEventListener('deviceorientationabsolute', handleOrientationEvent, true);
     } else if (window.DeviceOrientationEvent) {
