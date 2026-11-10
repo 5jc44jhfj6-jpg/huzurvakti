@@ -2010,6 +2010,15 @@ document.addEventListener('DOMContentLoaded', ayarKatla);
         g.setDate(g.getDate() + 1);
       }
     } catch (e) {}
+    // v69.2: 15 dakikada bir dönen âyet havuzu (widget kendi seçer; kısa olanlar kilit ekranına)
+    try {
+      if (typeof hvAyetHavuzu === 'function') {
+        const gor = {};
+        o.havuz = hvAyetHavuzu().filter(v => { const k = v.surahNumber + ':' + v.ayah; if (gor[k]) return false; gor[k] = 1; return true; })
+          .map(v => ({ m: String(v.turkish || '').trim(), k: v.surah + ' Sûresi · ' + v.ayah + '. Âyet', kk: v.surah + ' ' + v.ayah }))
+          .filter(x => x.m);
+      }
+    } catch (e) {}
     // Son okunan + meâlden hatim
     try {
       const lr = JSON.parse(localStorage.getItem('hv_last_read') || 'null');
