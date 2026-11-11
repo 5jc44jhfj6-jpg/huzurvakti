@@ -18,6 +18,8 @@ const APP_STATE = {
   notifyEnabled: false,
   notifyOffset: 0,
   notifySound: 'ezan',
+  ezanSesi: 1,           // v70: 1 klasik, 2-4 telifsiz ezanlar
+  canliSayac: true,      // v70: iPhone kilit ekranı canlı geri sayım
   notifyBoth: false,
   notifyCuma: true,
   notifyKandil: true,
@@ -270,6 +272,8 @@ function saveSettings() {
     notifyEnabled: APP_STATE.notifyEnabled,
     notifyOffset: APP_STATE.notifyOffset,
     notifySound: APP_STATE.notifySound,
+    ezanSesi: APP_STATE.ezanSesi,
+    canliSayac: APP_STATE.canliSayac,
     notifyBoth: APP_STATE.notifyBoth,
     notifyCuma: APP_STATE.notifyCuma,
     notifyKandil: APP_STATE.notifyKandil,
@@ -323,6 +327,12 @@ function applyStateSettings() {
 
   const notifySound = document.getElementById('notify-sound');
   if (notifySound) notifySound.value = APP_STATE.notifySound;
+  const ezanSesi = document.getElementById('ezan-sesi');
+  if (ezanSesi) ezanSesi.value = String(APP_STATE.ezanSesi || 1);
+  const canliT = document.getElementById('canli-toggle');
+  if (canliT) canliT.checked = APP_STATE.canliSayac !== false;
+  const canliS = document.getElementById('canli-satir');
+  if (canliS) canliS.style.display = (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.canli) ? '' : 'none';
 
   const notifyBoth = document.getElementById('notify-both');
   if (notifyBoth) notifyBoth.checked = !!APP_STATE.notifyBoth;
@@ -908,7 +918,7 @@ function scheduleNativePrayerNotifications() {
               title: '🌅 Sabah Ezanı',
               body: `Sabah namazı vakti — haydi namaza! Güneş ${g.gunes}'de doğuyor.`,
               timestamp: Math.floor(at.getTime() / 1000),
-              sound: 'ezan'
+              sound: hvEzanBildirimSesi()
             });
             count++;
             daysCovered.add(dayKey);
@@ -938,7 +948,8 @@ function scheduleNativePrayerNotifications() {
       // "ezan" → uygulamadaki ezan sesi, "default" → telefon sesi, "none" → sessiz
       let sound = 'default';
       if (APP_STATE.notifySound === 'silent') sound = 'none';
-      else if (APP_STATE.notifySound === 'ezan' && getPrayerAdhan(id)) sound = 'ezan';
+      else if (APP_STATE.notifySound === 'beep') sound = window.hvIsAndroid ? 'default' : 'bip';
+      else if (APP_STATE.notifySound === 'ezan' && getPrayerAdhan(id)) sound = hvEzanBildirimSesi();
 
       const dayKey = `${day.getFullYear()}${hvPad2(day.getMonth() + 1)}${hvPad2(day.getDate())}`;
 
@@ -3504,6 +3515,26 @@ function triggerNotification(prayer, offset) {
 }
 
 // Gerçek ezan sesi (birkaç kaynak; biri çalmazsa diğerine geçer)
+// v70: seçilebilir ezan sesleri (2-4: Wikimedia Commons, CC0 / CC BY-SA)
+const HV_EZAN_DOSYA = { 1: 'ezan.mp3', 2: 'ses/ezan2.mp3', 3: 'ses/ezan3.mp3', 4: 'ses/ezan4.mp3' };
+function hvEzanBildirimSesi() {
+  const n = Number(APP_STATE.ezanSesi) || 1;
+  if (n === 1 || window.hvIsAndroid) return 'ezan';   // Android bildirim kanalı tek ezan sesiyle çalışır
+  return 'ezan' + n;
+}
+window.hvEzanBildirimSesi = hvEzanBildirimSesi;
+window.hvEzanSesiSec = function (v) {
+  APP_STATE.ezanSesi = Number(v) || 1;
+  saveSettings();
+  setTimeout(() => { try { scheduleNativePrayerNotifications(); } catch (e) {} }, 300);
+  try { if (activeAudioObj) { activeAudioObj.pause(); } } catch (e) {}
+  playAdhan();
+};
+window.hvCanliSec = function (ac) {
+  APP_STATE.canliSayac = !!ac;
+  saveSettings();
+  try { window.webkit.messageHandlers.canli.postMessage(!!ac); } catch (e) {}
+};
 const ADHAN_URLS = [
   'ezan.mp3',   // uygulamanın kendi ezanı (v64.8) — dış siteye bağımlı değil
   'https://www.islamcan.com/audio/adhan/azan1.mp3',
@@ -3522,7 +3553,10 @@ function playNotifyAudio(urls, i) {
     playNotifyAudio(urls, i + 1);
   });
 }
-function playAdhan() { playNotifyAudio(ADHAN_URLS, 0); }
+function playAdhan() {
+  const sec = HV_EZAN_DOSYA[Number(APP_STATE.ezanSesi) || 1] || 'ezan.mp3';
+  playNotifyAudio([sec].concat(ADHAN_URLS.filter(u => u !== sec)), 0);
+}
 window.playAdhan = playAdhan;
 
 // Ayarlardaki "Ezanı Test Et" butonu
