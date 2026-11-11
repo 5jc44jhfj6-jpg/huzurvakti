@@ -2262,7 +2262,7 @@ window.hvWidgetAc = function (h) {
   const SEV = ['0.25', '0.5', '1', '2', '3', '4', '5'], ETIKET = { '0.25': '¼', '0.5': '½' };
   const yk = (k, d) => { try { const v = localStorage.getItem(k); return v === null ? d : v; } catch (e) { return d; } };
   const yz = (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} };
-  let seviye = HIZ[yk('hv_otokay_hiz2', '1')] ? yk('hv_otokay_hiz2', '1') : '1', akiyor = false, acik = false, son = 0, birikim = 0, bekle = 0, rafId = 0;
+  let hizNow = 0, seviye = HIZ[yk('hv_otokay_hiz2', '1')] ? yk('hv_otokay_hiz2', '1') : '1', akiyor = false, acik = false, son = 0, birikim = 0, bekle = 0, rafId = 0;
 
   const kutu = () => { const w = document.getElementById('ayah-list-wrap'); return w ? w.closest('.hero-frame-box') : null; };
   const okumada = () => {
@@ -2292,11 +2292,14 @@ window.hvWidgetAc = function (h) {
     panel.hidden = !acik; dugme.hidden = acik;
     kok.classList.toggle('akiyor', akiyor);
   }
-  function dur() { akiyor = false; cancelAnimationFrame(rafId); rafId = 0; ciz(); }
+  // v70.7: pikselin altında (yarım, çeyrek piksel) akış → içerik GPU ile kaydırılır, takılma olmaz
+  const icerik = () => document.getElementById('ayah-list-wrap');
+  function kaydirmaSifirla() { const w = icerik(); if (w) { w.style.transform = ''; w.style.willChange = ''; } birikim = 0; }
+  function dur() { akiyor = false; cancelAnimationFrame(rafId); rafId = 0; kaydirmaSifirla(); ciz(); }
   function basla() {
     const k = kutu(); if (!k) return;
     if (k.scrollTop + k.clientHeight >= k.scrollHeight - 4) k.scrollTop = k.scrollTop; // sonda ise yine de dene
-    akiyor = true; son = 0; birikim = 0; bekle = 0; ciz();
+    akiyor = true; son = 0; birikim = 0; bekle = 0; hizNow = 0; ciz();
     cancelAnimationFrame(rafId); rafId = requestAnimationFrame(adim);
   }
   function adim(t) {
@@ -2305,15 +2308,19 @@ window.hvWidgetAc = function (h) {
     if (!k || !okumada()) { dur(); return; }
     if (!son) son = t;
     const dt = Math.min(0.1, (t - son) / 1000); son = t;
+    const w = icerik();
     if (Date.now() >= bekle) {
-      birikim += HIZ[seviye] * dt;
+      hizNow += (HIZ[seviye] - hizNow) * Math.min(1, dt * 2.5);   // aniden değil, yumuşakça hızlan/yavaşla
+      birikim += hizNow * dt;
       const px = Math.floor(birikim);
       if (px >= 1) {
-        birikim -= px;
         const once = k.scrollTop; k.scrollTop = once + px;
+        birikim -= (k.scrollTop - once);
         if (k.scrollTop <= once && k.scrollTop + k.clientHeight >= k.scrollHeight - 2) { dur(); if (typeof hvToast === 'function') hvToast('Sûre bitti', 'Otomatik kaydırma durdu.'); return; }
       }
-    }
+      // kalan küsurat (0–1 px) içerik kaydırılarak gösterilir → göz akışı kesintisiz görür
+      if (w) { w.style.willChange = 'transform'; w.style.transform = `translate3d(0, ${-Math.min(birikim, 1).toFixed(3)}px, 0)`; }
+    } else { hizNow = 0; if (w && w.style.transform) kaydirmaSifirla(); }
     rafId = requestAnimationFrame(adim);
   }
   dugme.onclick = () => { acik = true; ciz(); basla(); };
