@@ -1607,9 +1607,11 @@ function hvYakinCami() {
   const varMi = !isNaN(lat) && !isNaN(lng);
   const platform = (typeof hvNativePlatform === 'function') ? hvNativePlatform() : 'web';
   let url;
-  if (platform === 'ios') url = 'https://maps.apple.com/?q=cami' + (varMi ? `&sll=${lat},${lng}&z=14` : '');
+  // v70: kabuk içinde harita uygulamasına doğrudan git (web adresi uygulama içinde açılıyor, gidilemiyordu)
+  if (platform === 'ios') url = 'maps://?q=cami' + (varMi ? `&sll=${lat},${lng}&z=14` : '');
+  else if (platform === 'android') url = varMi ? `geo:${lat},${lng}?q=cami` : 'geo:0,0?q=cami';
   else url = varMi ? `https://www.google.com/maps/search/cami/@${lat},${lng},14z` : 'https://www.google.com/maps/search/cami';
-  try { window.open(url, '_blank'); } catch (e) { location.href = url; }
+  try { const a = document.createElement('a'); a.href = url; a.target = '_blank'; a.rel = 'noopener'; document.body.appendChild(a); a.click(); a.remove(); } catch (e) { location.href = url; }
 }
 window.hvYakinCami = hvYakinCami;
 
@@ -2012,6 +2014,9 @@ function initQiblaCompass() {
   if (!hvPusulaIzinGerekli()) {
     // Android / masaüstü → izin yok, doğrudan başlat
     startCompassSensors(true);
+  } else if (window.hvIosPusulaVar) {
+    // v70: iPhone kabuğunda telefonun pusulası — izin penceresi yok
+    startCompassSensors(true);
   } else if (hvPusulaBuOturumdaVerildi) {
     // iOS, bu açılışta izin zaten alındı
     startCompassSensors(true);
@@ -2034,6 +2039,7 @@ function hvPusulaDurdur() {
   try { window.removeEventListener('deviceorientation', handleOrientationEvent, true); } catch (e) {}
   try { window.removeEventListener('deviceorientationabsolute', handleOrientationEvent, true); } catch (e) {}
   try { if (window.__hvNativePusula && window.NamazDostuBridge && typeof NamazDostuBridge.stopCompass === 'function') NamazDostuBridge.stopCompass(); } catch (e) {}
+  try { if (window.__hvNativePusula && window.hvIosPusulaVar && window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.compass) window.webkit.messageHandlers.compass.postMessage('stop'); } catch (e) {}
   window.__hvNativePusula = false;
 }
 
@@ -2044,6 +2050,12 @@ function hvPusulaDurdur() {
 function hvNativePusulaBaslat() {
   try {
     if (window.NamazDostuBridge && typeof NamazDostuBridge.startCompass === 'function' && NamazDostuBridge.startCompass()) {
+      window.__hvNativePusula = true;
+      return true;
+    }
+    // v70 — iPhone kabuğu (1.9.2+): telefonun kendi pusulası, hareket izni istemez
+    if (window.hvIosPusulaVar && window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.compass) {
+      window.webkit.messageHandlers.compass.postMessage('start');
       window.__hvNativePusula = true;
       return true;
     }
@@ -2221,6 +2233,15 @@ function startCompassSensors(isAutoStart = false) {
   const btn = document.getElementById('enable-compass-btn');
   const status = document.getElementById('compass-status-msg');
 
+  // v70: kabukta telefonun kendi pusulası varsa önce o (iPhone'da hareket izni gerekmez)
+  if (window.hvIosPusulaVar) {
+    hvPusulaDurdur();
+    if (hvNativePusulaBaslat()) {
+      if (btn) { btn.innerHTML = "✅ CANLI SENSÖR AKTİF"; btn.classList.remove('vurgu'); }
+      if (status) status.innerHTML = "✅ <b>Pusula sensörü aktif!</b> Telefonunuzu düz tutarak çevirin. İbre şaşarsa telefonu 8 çizer gibi çevirin.";
+      return;
+    }
+  }
   if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
     if (isAutoStart && hvPusulaBuOturumdaVerildi) {
       hvPusulaDurdur();

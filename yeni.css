@@ -1556,3 +1556,21 @@ body.dark-theme .app-toast-box .toast-title { color: #f3cf86 !important; } body.
 .og-cubuk button { border: 1px solid rgba(168,105,47,.35); background: transparent; color: var(--gold); border-radius: 999px; padding: 7px 13px; font-weight: 700; font-size: .82rem; cursor: pointer; font-family: inherit; }
 .og-cubuk button:disabled { opacity: .38; cursor: default; }
 .og-cubuk .og-sifir.emin { background: #b3412e; border-color: #b3412e; color: #fff; }
+
+/* v70: paylaşım kartı kontrolleri */
+.pb-modal .pb-serit { flex-wrap: wrap; justify-content: center; overflow: visible; gap: 6px; max-height: 128px; overflow-y: auto; -webkit-overflow-scrolling: touch; touch-action: pan-y; }
+.pb-modal .pb-serit button { flex-basis: 44px; height: 56px; border-radius: 9px; }
+.pb-modal .pb-serit span { font-size: .5rem; padding: 8px 1px 3px; }
+.hv-sc-img { touch-action: pan-y; cursor: ns-resize; }
+.hv-sc-img.surukle { opacity: .85; transition: none; }
+.pb-ayar { display: flex; align-items: center; gap: 8px; width: 100%; justify-content: center; margin: 2px 0; }
+.pb-ayar button { border: 1.2px solid var(--border-gold, #d6a85c); background: var(--bg-card, #fff); color: var(--text-main, #3a2a14); font-weight: 800; border-radius: 10px; min-width: 44px; height: 36px; font-size: .95rem; }
+.pb-ayar .pb-sfr { min-width: 36px; }
+.pb-ayar span { font-size: .72rem; color: var(--text-muted, #7a6a55); text-align: center; line-height: 1.2; }
+.ph-ara { width: 100%; margin: 8px 0; }
+.ph-kart { display: block; width: 100%; text-align: left; background: var(--bg-card, #fff); border: 1px solid var(--border-gold, #e3cfa6); border-radius: 12px; padding: 10px 12px; margin: 6px 0; color: var(--text-main, #3a2a14); }
+.ph-kart b { display: block; font-size: .86rem; margin-bottom: 2px; }
+.ph-kart span { display: block; font-size: .84rem; line-height: 1.35; }
+.ph-kart small { display: block; color: var(--text-muted, #7a6a55); font-size: .72rem; margin-top: 4px; }
+
+.yh-arac-link { display:block; width:100%; text-align:left; margin: 4px 0 10px; }

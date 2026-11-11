@@ -1099,19 +1099,22 @@ function okCiz() {
           return `<div class="ok-meal"><span class="kr-ortak">${g.bas}–${g.son}. âyetlerin ortak meâli</span>${esc(okMeal(n))}</div>`; })()}
       </div>`).join('');
   }
-  const onceki = id > 1 ? sureBul(id - 1) : null, sonraki = id < 114 ? sureBul(id + 1) : null;
+  // v70: sûre listesi "İniş sırası"ndaysa önceki/sonraki sûre de iniş sırasına göre
+  const oncekiId = (typeof window.hvSureKomsu === 'function') ? window.hvSureKomsu(id, -1) : (id > 1 ? id - 1 : 0);
+  const sonrakiId = (typeof window.hvSureKomsu === 'function') ? window.hvSureKomsu(id, 1) : (id < 114 ? id + 1 : 0);
+  const onceki = oncekiId ? sureBul(oncekiId) : null, sonraki = sonrakiId ? sureBul(sonrakiId) : null;
   const sAd = (sureBul(id) || {}).name || '';
   w.innerHTML = `<div class="kr-mp ${OK.mpGor ? 'gor' : ''}" id="kr-mp"><button class="kr-mp-p" id="kr-mp-play" onclick="hvKrOyna()" aria-label="Oynat">${IK.play}</button><div class="kr-mp-m"><b>${esc(sAd)} Sûresi</b><small id="kr-mp-alt">${esc(hvDnQari().ad)}</small><span class="kr-mp-c"><i id="kr-mp-dolu"></i></span></div><button class="kr-mp-y" onclick="hvOkYukari()" aria-label="Yukarı">${IK.yukari}</button></div>` +
     (m !== 'bilgi' && id !== 1 && id !== 9 ? `<div class="ok-besmele">بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ</div>` : '') +
     `<div class="ok-sayfa kr-kagit ok-m-${m}"><i class="kr-kose k1"></i><i class="kr-kose k2"></i>${govde}</div>
     ${m !== 'bilgi' ? '<div class="ok-ipucu">Bir âyete dokun: yer imi, kaldığın yer, paylaş, buradan dinle</div>' : ''}
     <div class="ok-son-nav">
-      ${onceki ? `<button onclick="retryLoadSurah(${id - 1});hvOkYukari()"><span>‹ ${esc(onceki.name)}</span><small>${onceki.verse_count || ''} âyet</small></button>` : '<span></span>'}
-      ${sonraki ? `<button class="ileri" onclick="retryLoadSurah(${id + 1});hvOkYukari()"><span>Sıradaki: ${esc(sonraki.name)} ›</span><small>${sonraki.verse_count || ''} âyet</small></button>` : '<span></span>'}
+      ${onceki ? `<button onclick="retryLoadSurah(${oncekiId});hvOkYukari()"><span>‹ ${esc(onceki.name)}</span><small>${onceki.verse_count || ''} âyet</small></button>` : '<span></span>'}
+      ${sonraki ? `<button class="ileri" onclick="retryLoadSurah(${sonrakiId});hvOkYukari()"><span>Sıradaki: ${esc(sonraki.name)} ›</span><small>${sonraki.verse_count || ''} âyet</small></button>` : '<span></span>'}
     </div>
     <div class="ok-git-sat">
       <button onclick="hvAyetSecici(${id})">${IK.sayfa}<span>Bu sûrede âyete git</span></button>
-      ${sonraki ? `<button onclick="hvAyetSecici(${id + 1})">${IK.sayfa}<span>${esc(sonraki.name)}: âyet seç</span></button>` : ''}
+      ${sonraki ? `<button onclick="hvAyetSecici(${sonrakiId})">${IK.sayfa}<span>${esc(sonraki.name)}: âyet seç</span></button>` : ''}
     </div>` + (m !== 'bilgi' ? krAltHtml() : '');
   krSenk(true);
 }
@@ -1160,6 +1163,9 @@ window.hvAyetSecGit = (sid, n) => {
 window.hvOkYukari = () => { try { const v = $('surah-detail-view'); (v && v.scrollIntoView) ? v.scrollIntoView({ block: 'start' }) : window.scrollTo(0, 0); } catch (e) {} };
 window.hvKrAlt = () => { OK.altAcik = !OK.altAcik; const a = $('kr-alt'); if (a) a.outerHTML = krAltHtml(); };
 window.hvKrGeri = () => {
+  // v70: yer imlerinden açıldıysa geri → Yer İmlerim
+  if (window._hvImden && window._hvImden === OK.id) { window._hvImden = 0; OK.listeden = false; navigateTo('yerimleri'); return; }
+  window._hvImden = 0;
   if (OK.listeden) { const b = $('back-to-surahs'); if (b) { b.click(); krTemaUygula(); return; } }
   navigateTo('kurandua');
 };
@@ -1192,7 +1198,7 @@ window.hvKrOyna = (sadeceDurdur) => {
 window.hvKrAtla = (y) => {
   const m = hvDnMod();
   if (m !== 'ar' && hvAaSure === OK.id && hvAaListe.length) { hvAaAtlaAyet(y); return; }
-  const h = OK.id + y; if (h < 1 || h > 114) return;
+  const h = (typeof window.hvSureKomsu === 'function') ? window.hvSureKomsu(OK.id, y) : OK.id + y; if (h < 1 || h > 114) return;
   const cal = !!krCaliyorMu();
   retryLoadSurah(h); window.hvOkYukari();
   if (cal) setTimeout(() => { try { if (m === 'ar') hvDnCal(h); else hvAaCal(h, 0); } catch (e) {} }, 60);
@@ -1529,6 +1535,90 @@ if (typeof _eskiOSC === 'function') {
 }
 window.hvPbModal = (k) => { kaydet('paylas_bg', k); if (_pbSonVeri) window.hvOpenShareCard(_pbSonVeri); if ($('share-card-preview')) window.hvPbSec(k); };
 
+/* ═════ v70 · Paylaşım kartı: punto (A− / A+) + yazıyı sürükleyerek yukarı/aşağı taşıma + arka planların hepsi ═════ */
+(function () {
+  const _osc2 = window.hvOpenShareCard;
+  if (typeof _osc2 !== 'function') return;
+  let _son = null;
+  const yenidenAc = () => { if (_son) window.hvOpenShareCard(_son); };
+  window.hvPbPunto = (d) => { if (!_son) return; _son.punto = Math.max(0.6, Math.min(1.8, (Number(_son.punto) || 1) + d)); yenidenAc(); };
+  window.hvPbSifirla = () => { if (!_son) return; _son.punto = 1; _son.ofset = 0; yenidenAc(); };
+  window.hvOpenShareCard = async function (d) {
+    const r = await _osc2.apply(this, arguments);
+    if (!d || d.canvas) return r;
+    _son = d;
+    const box = document.querySelector('#hv-share-modal .hv-sc-box'); if (!box) return r;
+    const img = box.querySelector('.hv-sc-img'), act = box.querySelector('.hv-sc-actions');
+    // Kontrol çubuğu
+    const k = document.createElement('div'); k.className = 'pb-ayar';
+    k.innerHTML = `<button onclick="hvPbPunto(-0.12)" aria-label="Küçült">A−</button><span>Yazı boyutu · <b>yazıyı sürükleyerek taşı</b></span><button onclick="hvPbPunto(0.12)" aria-label="Büyüt">A+</button><button class="pb-sfr" onclick="hvPbSifirla()" aria-label="Sıfırla">↺</button>`;
+    if (act) act.before(k);
+    // Sürükleme: önizleme üstünde yukarı/aşağı
+    if (img) {
+      let y0 = null, taban = 0;
+      const olcek = () => (typeof HV_CARD_H !== 'undefined' ? HV_CARD_H : 1920) / Math.max(1, img.clientHeight);
+      const bas = (e) => { y0 = (e.touches ? e.touches[0].clientY : e.clientY); taban = Number(_son.ofset) || 0; img.classList.add('surukle'); };
+      const git = (e) => { if (y0 === null) return; const y = (e.touches ? e.touches[0].clientY : e.clientY); img.style.transform = `translateY(${Math.round((y - y0) * 0.35)}px)`; e.preventDefault(); };
+      const bit = (e) => { if (y0 === null) return; const y = (e.changedTouches ? e.changedTouches[0].clientY : e.clientY); const dy = (y - y0) * olcek(); y0 = null; img.classList.remove('surukle'); img.style.transform = ''; if (Math.abs(dy) > 12) { _son.ofset = taban + dy; yenidenAc(); } };
+      img.addEventListener('touchstart', bas, { passive: true }); img.addEventListener('touchmove', git, { passive: false }); img.addEventListener('touchend', bit);
+      img.addEventListener('mousedown', bas); window.addEventListener('mousemove', git); window.addEventListener('mouseup', bit);
+    }
+    return r;
+  };
+})();
+
+/* ═════ v70 · Paylaşım sayfası: Hadis listesi (1000+) ve Yer imlerim seçimi ═════ */
+window.hvPaylasimHadisListe = function (kap) {
+  if (!kap || typeof hvAllHadis !== 'function') return;
+  const HADITHS = hvAllHadis();
+  const ciz = (q) => {
+    q = (q || '').trim().toLocaleLowerCase('tr');
+    const L = HADITHS.map((h, i) => ({ h, i })).filter(x => !q || (x.h.text + ' ' + (x.h.source || '')).toLocaleLowerCase('tr').includes(q));
+    const goster = L.slice(0, 80);
+    $('ph-liste').innerHTML = goster.map(x => `<button class="ph-kart" onclick="hvPaylasimHadisSec(${x.i})"><span>${esc(x.h.text.length > 150 ? x.h.text.slice(0, 148).replace(/\s+\S*$/, '') + '…' : x.h.text)}</span><small>${esc(x.h.source || '')}</small></button>`).join('')
+      + (L.length > 80 ? `<div class="info-note">${L.length} hadisten ilk 80'i gösteriliyor — aramayı daraltın.</div>` : (L.length ? '' : '<div class="info-note">Eşleşen hadis yok.</div>'));
+  };
+  kap.innerHTML = `<div class="section-mini-title" style="margin-top:14px;">📿 Tüm Hadisler <span style="font-size:.75rem;color:var(--text-muted);font-weight:600;">${HADITHS.length}</span></div>
+    <input type="search" class="search-input ph-ara" placeholder="Hadis ara — ör. sabır, namaz, anne" oninput="hvPaylasimHadisAra(this.value)">
+    <div id="ph-liste"></div>`;
+  window.hvPaylasimHadisAra = ciz;
+  ciz('');
+};
+window.hvPaylasimHadisSec = function (i) {
+  const h = (typeof hvAllHadis === 'function' ? hvAllHadis() : HADITHS)[i]; if (!h) return;
+  window._paylasimData = { ar: h.ar || '', tr: h.text, src: h.source };
+  try { _paylasimData = window._paylasimData; } catch (e) {}
+  if (typeof pbOnizle === 'function') pbOnizle();
+  const p = $('share-card-preview'); if (p) p.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  titre(8);
+};
+window.hvPaylasimYerimiListe = function (kap) {
+  if (!kap) return;
+  const M = Object.values((typeof hvGetBookmarks === 'function') ? hvGetBookmarks() : {}).sort((a, b) => (b.ts || 0) - (a.ts || 0));
+  if (!M.length) { kap.innerHTML = `<div class="yi-bos"><div class="yi-bos-ik">☆</div><b>Henüz yer imin yok</b><p>Kur'an okurken bir âyete dokunup <b>☆ Yer imi</b> de; burada seçip kart yapabilirsin.</p></div>`; return; }
+  const meal = (s, a) => { try { return (window.DIYANET_MEAL && typeof hvMeal === 'function') ? hvMeal(s, a) : ''; } catch (e) { return ''; } };
+  kap.innerHTML = `<div class="section-mini-title" style="margin-top:14px;">⭐ Yer İmlerim <span style="font-size:.75rem;color:var(--text-muted);font-weight:600;">${M.length}</span></div>
+    <div class="info-note">Bir âyete dokun, kartın üstte hazırlansın.</div>` +
+    M.map(x => { const m = meal(x.surah, x.ayah); return `<button class="ph-kart" onclick="hvPaylasimYerimiSec(${x.surah},${x.ayah})"><b>${esc(x.name || hvSurahName(x.surah))} Sûresi · ${x.ayah}. âyet</b><span>${esc(m.length > 150 ? m.slice(0, 148).replace(/\s+\S*$/, '') + '…' : m)}</span></button>`; }).join('');
+  if (!window.DIYANET_MEAL && typeof hvMealHazir === 'function') hvMealHazir().then((ok) => { if (ok && APP_STATE.currentPage === 'paylasim') window.hvPaylasimYerimiListe(kap); }).catch(() => {});
+};
+window.hvPaylasimYerimiIlk = function () {
+  const M = Object.values((typeof hvGetBookmarks === 'function') ? hvGetBookmarks() : {}).sort((a, b) => (b.ts || 0) - (a.ts || 0));
+  if (M.length) window.hvPaylasimYerimiSec(M[0].surah, M[0].ayah);
+  else { const p = $('share-card-preview'); if (p) { p.classList.remove('pb-gorsel'); p.innerHTML = '<div class="info-note">Önce Kur\'an\'da bir âyeti yer imine ekle.</div>'; } }
+};
+window.hvPaylasimYerimiSec = async function (s, a) {
+  try { if (!window.DIYANET_MEAL && typeof hvMealHazir === 'function') await hvMealHazir(); } catch (e) {}
+  let tr = ''; try { tr = hvMeal(s, a); } catch (e) {}
+  if (!tr) { toast('Meâl yüklenemedi', 'İnternet bağlantını kontrol edip tekrar dene.'); return; }
+  window._paylasimData = { ar: '', tr, src: `${hvSurahName(s)} Sûresi, ${a}. Âyet` };
+  try { _paylasimData = window._paylasimData; } catch (e) {}
+  window._paylasimTip = 'ayet'; try { _paylasimTip = 'ayet'; } catch (e) {}
+  if (typeof pbOnizle === 'function') pbOnizle();
+  const p = $('share-card-preview'); if (p) p.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  titre(8);
+};
+
 
 /* ═════════ v67.5 · Ana sayfa: tek "Kur'an Oku" kartı + kaldığın yer ═════════ */
 function yaKuranYaz() {
@@ -1641,6 +1731,13 @@ document.addEventListener('DOMContentLoaded', ayarKatla);
   const NUZUL = [96, 68, 73, 74, 1, 111, 81, 87, 92, 89, 93, 94, 103, 100, 108, 102, 107, 109, 105, 113, 114, 112, 53, 80, 97, 91, 85, 95, 106, 101, 75, 104, 77, 50, 90, 86, 54, 38, 7, 72, 36, 25, 35, 19, 20, 56, 26, 27, 28, 17, 10, 11, 12, 15, 6, 37, 31, 34, 39, 40, 41, 42, 43, 44, 45, 46, 51, 88, 18, 16, 71, 14, 21, 23, 32, 52, 67, 69, 70, 78, 79, 82, 84, 30, 29, 83, 2, 8, 3, 33, 60, 4, 99, 57, 47, 13, 55, 76, 65, 98, 59, 24, 22, 63, 58, 49, 66, 64, 61, 62, 48, 5, 9, 110];
   const SIRA = {}; NUZUL.forEach((no, i) => { SIRA[no] = i + 1; });
   window.hvNuzulSira = (no) => SIRA[Number(no)] || 0;
+  // v70: okuyucuda önceki/sonraki sûre — seçili sıraya göre (yon: -1 / +1); yoksa 0
+  window.hvSureKomsu = (no, yon) => {
+    no = Number(no);
+    if (mod() !== 'nuzul') { const h = no + yon; return h >= 1 && h <= 114 ? h : 0; }
+    const i = NUZUL.indexOf(no); if (i < 0) return 0;
+    return NUZUL[i + yon] || 0;
+  };
   const mod = () => { try { return localStorage.getItem('hv_sure_sira') === 'nuzul' ? 'nuzul' : 'mushaf'; } catch (e) { return 'mushaf'; } };
   function cubuk() {
     const w = document.getElementById('surah-list-wrap'); if (!w) return;
@@ -1688,7 +1785,7 @@ document.addEventListener('DOMContentLoaded', ayarKatla);
     kok.innerHTML = (son && son.surah ? `<button class="yi-son" onclick="openSurahAt(${son.surah},${son.ayah || 1})"><span class="yi-son-ik">📍</span><span><small>Kaldığın yer</small><b>${esc(son.name || hvSurahName(son.surah))} Sûresi · ${son.ayah || 1}. âyet</b></span><i>Devam ›</i></button>` : '') +
       (M.length ? `<div class="yi-say">${M.length} yer imi</div><div class="yi-liste">${M.map(x => { const m = ilkSatir(x.surah, x.ayah); return `
         <div class="yi-kart" id="yi-${x.surah}-${x.ayah}">
-          <button class="yi-git" onclick="openSurahAt(${x.surah},${x.ayah})">
+          <button class="yi-git" onclick="hvImAc(${x.surah},${x.ayah})">
             <span class="yi-no">${x.ayah}</span>
             <span class="yi-m"><b>${esc(x.name || hvSurahName(x.surah))} Sûresi <em>${x.ayah}. âyet</em></b>${m ? `<span class="yi-meal">${esc(m)}</span>` : ''}<small>${tarih(x.ts)}</small></span>
           </button>
@@ -1703,6 +1800,7 @@ document.addEventListener('DOMContentLoaded', ayarKatla);
     if (el) { el.classList.add('gidiyor'); setTimeout(sil, 220); } else sil();
   };
   window.hvYerImleri = () => { try { _imDon = APP_STATE.currentPage || 'kurandua'; } catch (e) {} if (typeof hvOkKapat === 'function') hvOkKapat(); navigateTo('yerimleri'); };
+  window.hvImAc = (s, a) => { if (_imDon === 'quran') _imDon = 'kurandua'; openSurahAt(s, a); window._hvImden = Number(s); };
   window.hvImGeri = () => navigateTo(_imDon && _imDon !== 'yerimleri' ? _imDon : 'kurandua');
   window.hvKrImler = window.hvYerImleri;   // başlıktaki yer imi düğmesi artık tam sayfayı açar
   rota('yerimleri', ciz);

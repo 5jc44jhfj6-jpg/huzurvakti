@@ -1043,6 +1043,7 @@ function renderPaylasim() {
         <button class="seg-btn active" id="pt-ayet" onclick="paylasimPick('ayet')">📖 Ayet</button>
         <button class="seg-btn" id="pt-hadis" onclick="paylasimPick('hadis')">📿 Hadis</button>
         <button class="seg-btn" id="pt-cuma" onclick="paylasimPick('cuma')">🕌 Cuma</button>
+        <button class="seg-btn" id="pt-yerimi" onclick="paylasimPick('yerimi')">⭐ Yer İmlerim</button>
       </div>
       <div id="share-card-preview" class="share-card-preview"></div>
       <div class="share-actions">
@@ -1057,11 +1058,14 @@ let _paylasimTip = 'ayet';
 function paylasimPick(tip) {
   _paylasimTip = tip;
   const liste = document.getElementById('paylasim-cuma-liste');
-  if (liste) { if (tip === 'cuma') renderCuma('paylasim-cuma-liste'); else liste.innerHTML = ''; }
-  document.getElementById('pt-ayet').classList.toggle('active', tip === 'ayet');
-  document.getElementById('pt-hadis').classList.toggle('active', tip === 'hadis');
-  const cb = document.getElementById('pt-cuma');
-  if (cb) cb.classList.toggle('active', tip === 'cuma');
+  if (liste) {
+    if (tip === 'cuma') renderCuma('paylasim-cuma-liste');
+    else if (tip === 'hadis' && typeof hvPaylasimHadisListe === 'function') hvPaylasimHadisListe(liste);
+    else if (tip === 'yerimi' && typeof hvPaylasimYerimiListe === 'function') hvPaylasimYerimiListe(liste);
+    else liste.innerHTML = '';
+  }
+  ['ayet', 'hadis', 'cuma', 'yerimi'].forEach(t => { const b = document.getElementById('pt-' + t); if (b) b.classList.toggle('active', tip === t); });
+  if (tip === 'yerimi') { if (typeof hvPaylasimYerimiIlk === 'function') hvPaylasimYerimiIlk(); return; }
   paylasimYenile();
 }
 window.paylasimPick = paylasimPick;
@@ -2647,8 +2651,9 @@ async function hvBuildShareCard(data) {
       });
       arH = arFit.lines.length * arFit.size * arFit.lh + 112;
     }
+    const pz = Math.max(0.6, Math.min(1.8, Number(d.punto) || 1));   // v70: punto ayarı
     const bodyFit = hvCardFit(ctx, '\u201C' + (d.text || '') + '\u201D', boxW,
-      avail - lblH - arH - 130, { max: bodyMax, min: 34, weight: '500', lineHeight: 1.36, family: "'Lora', Georgia, serif" });
+      (avail - lblH - arH - 130) * pz, { max: Math.round(bodyMax * pz), min: Math.round(34 * Math.min(1, pz)), weight: '500', lineHeight: 1.36, family: "'Lora', Georgia, serif" });
     const bodyH = bodyFit.lines.length * bodyFit.size * bodyFit.lh;
     return { TOP, avail, arFit, arH, bodyFit, bodyH, top: lblH + arH + bodyH + srcH };
   };
@@ -2663,6 +2668,8 @@ async function hvBuildShareCard(data) {
 
   let y = yaziAlt ? Math.max(TOP, BOTTOM - L.top)
                   : TOP + Math.max(0, (avail - (lblH + arH + bodyH + srcH)) / 2);
+  // v70: kullanıcı yazıyı sürükleyerek yukarı/aşağı taşıdıysa
+  y = Math.max(120, Math.min(HV_CARD_H - 420 - L.top, y + (Number(d.ofset) || 0)));
 
   if (label) {
     y += LBL;
