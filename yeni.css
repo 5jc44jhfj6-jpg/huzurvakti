@@ -1574,3 +1574,7 @@ body.dark-theme .app-toast-box .toast-title { color: #f3cf86 !important; } body.
 .ph-kart small { display: block; color: var(--text-muted, #7a6a55); font-size: .72rem; margin-top: 4px; }
 
 .yh-arac-link { display:block; width:100%; text-align:left; margin: 4px 0 10px; }
+
+/* v70.2: ana ekranda Duvar Kâğıdı kısayolu (5. düğme) */
+.ya-kisa img.ya-dv { width: 26px; height: 31px; object-fit: cover; border-radius: 7px; border: 1.5px solid #d6a85c; filter: none; }
+.ya-kisa b { font-size: .66rem; }

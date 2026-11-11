@@ -487,12 +487,13 @@ rota('kelime', renderKelime);
 /* ═════════════════════════ DUVAR KÂĞITLARI ═════════════════════════ */
 const DUVARLAR = [['Mescid-i Haram', 'Mekke'], ['Mescid-i Nebevî', 'Medine'], ['Ayasofya', 'İstanbul'], ['Sultanahmet', 'İstanbul'], ['Şeyh Zayed', 'Abu Dabi'],
   ['Hasan II', 'Kazablanka'], ['Kul Şerif', 'Kazan'], ['Registan', 'Semerkant'], ['Şeyh Zayed · Havuz', 'Abu Dabi'], ['Putra', 'Putrajaya'],
-  // v68.9.1: kullanıcının ürettiği setten seçilen 12 arka plan (benzerleri elendi)
-  ['Baiturrahman', 'Açe'], ['Revaklı Avlu', 'Fas'], ['Işık Huzmeleri', 'Cami içi'], ['Ortaköy · Gece', 'İstanbul'], ['Kul Şerif · Akşam', 'Kazan'],
-  ['Hasan II · Akşam', 'Kazablanka'], ['Karlı Avlu', 'Kış'], ['Süleymaniye Avlusu', 'İstanbul'], ['Çini ve Kemer', 'Endülüs'], ['Putra · Şafak', 'Putrajaya'],
-  ['Bâdşâhî', 'Lahor'], ['Sultan Kâbus', 'Maskat']];
+  // v70.2: kullanıcının ilk setinden yalnız keskin 2 tanesi kaldı + yeni yüksek kaliteli 14 arka plan
+  ['Revaklı Avlu', 'Fas'], ['Işık Huzmeleri', 'Cami içi'],
+  ['Minang Ulu Camii', 'Padang'], ['Çini Eyvan', 'İsfahan'], ['Avize ve Mihrap', 'Maskat'], ['Nasırülmülk', 'Şiraz'], ['Vezir Han', 'Lahor'],
+  ['Cuma Mescidi', 'İsfahan'], ['Kırmızı Cami', 'Kolombo'], ['Modern Cami', 'Akşam'], ['Altın Kubbe', 'İsfahan'], ['Ahşap Sütunlar', 'Buhara'],
+  ['Taş Cami', 'Sade'], ['Baiturrahman', 'Açe'], ['Şeyh Zayed · İç', 'Abu Dabi'], ['Osmanlı Mihrabı', 'Türkiye']];
 /* Yazının yeri: [üst, alt] ekran oranı — gökyüzü / boş duvar olan bantta, cami açıkta kalsın. Listede olmayanlar eskisi gibi altta. */
-const DUVAR_UST = { 11: [0.26, 0.58], 12: [0.25, 0.54], 13: [0.24, 0.46], 15: [0.25, 0.50], 16: [0.25, 0.44], 17: [0.25, 0.48], 19: [0.25, 0.60], 20: [0.25, 0.50], 21: [0.25, 0.56], 22: [0.25, 0.50] };   // üst sınır ≥ %24: kilit ekranı saati
+const DUVAR_UST = { 11: [0.25, 0.54], 12: [0.24, 0.46], 13: [0.25, 0.52], 14: [0.25, 0.56], 15: [0.25, 0.42], 17: [0.25, 0.46], 18: [0.25, 0.50], 19: [0.25, 0.42], 20: [0.25, 0.54], 21: [0.25, 0.38], 23: [0.25, 0.54], 24: [0.25, 0.52], 25: [0.25, 0.44], 26: [0.25, 0.44] };   // üst sınır ≥ %24: kilit ekranı saati
 const DUVAR_SURE = [['', 'Sade (yazısız)'], ['s:Fâtiha', 'Fâtiha Sûresi'], ['d:Âyetel Kürsî', 'Âyetel Kürsî'], ['s:İhlâs', 'İhlâs Sûresi']];
 let _dvHavuz = null;
 function dvHavuz() {
@@ -909,7 +910,7 @@ function renderKrHub() {
         <button class="kr-oyna" onclick="event.stopPropagation();hvKrDinle(${no})" aria-label="Dinle">${IK.play}</button>
       </div>`; }).join('')}</div>
     <button class="kr-duvar" onclick="navigateTo('duvar')">
-      <span class="kr-duvar-ser">${['15', '11', '14', '21', '22'].map(n => `<i style="background-image:url(img/dv_k_${n}.jpg)"></i>`).join('')}</span>
+      <span class="kr-duvar-ser">${['16', '13', '19', '22', '18'].map(n => `<i style="background-image:url(img/dv_k_${n}.jpg)"></i>`).join('')}</span>
       <span class="kr-duvar-y"><small>YENİ</small><b>Duvar Kâğıtları</b><em>${DUVARLAR.length} cami · üzerine sûre ya da dua yaz</em></span>${IK.ok}
     </button>
     <div class="kr-baslik"><h3>Daha fazlası</h3></div>
