@@ -1260,6 +1260,7 @@ window.hvKrMenu = () => {
     <div class="kr-ayar"><span>Sayfa / cüz ayraçları <small class="kr-ayar-not">Mushaf'ta yeni sayfa nerede başlıyor</small></span><button class="kr-anah ${yukle('ok_ayrac', true) ? 'on' : ''}" onclick="hvOkAyar('ayrac')"><i></i></button></div>
     <div class="kr-ayar"><span>İlerleme ve kalan süre <small class="kr-ayar-not">Üst çubukta: %40 · ~12 dk</small></span><button class="kr-anah ${yukle('ok_ilerle', true) ? 'on' : ''}" onclick="hvOkAyar('ilerle')"><i></i></button></div>
     <div class="kr-ayar"><span>Durmadan oku <small class="kr-ayar-not">Âyet âyet dinlerken arada boşluk olmasın</small></span><button class="kr-anah ${hvGet('hv_durmadan', '1') === '1' ? 'on' : ''}" onclick="hvDurmadanAyarla(hvGet('hv_durmadan', '1') !== '1');hvKrMenu()"><i></i></button></div>
+    <div class="kr-ayar"><span>Otomatik kaydırma <small class="kr-ayar-not">Sayfa kendiliğinden aksın · 5 hız</small></span><button class="kr-anah ${yukle('ok_otokay', true) ? 'on' : ''}" onclick="hvOkAyar('otokay')"><i></i></button></div>
     <div class="kr-ayar"><span>Okurken ekran kararmasın</span><button class="kr-anah ${yukle('ok_uyanik', true) ? 'on' : ''}" onclick="hvOkAyar('uyanik')"><i></i></button></div>
     <div class="kr-ayar"><span>Okudukça hatim ilerlesin <small class="kr-ayar-not">Hatim Takibi'nde “Meâlden Hatim”</small></span><button class="kr-anah ${yukle('ok_mhatim', true) ? 'on' : ''}" onclick="hvOkAyar('mhatim')"><i></i></button></div>
     <div class="kr-ayar kr-ayar-d"><span>Görünüm <small class="kr-ayar-not">Ayarlar'daki “Yeşil tema” ile aynı</small></span><div class="kr-temalar">
@@ -2248,4 +2249,92 @@ window.hvWidgetAc = function (h) {
   };
   if (document.readyState === 'complete') bekle(); else window.addEventListener('load', bekle);
   setTimeout(hazir, 3000);
+})();
+
+
+/* ═════════════ v70.5 · KUR'AN OKURKEN OTOMATİK KAYDIRMA (5 hız) ═════════════
+   Okuma ekranında sağ altta küçük düğme → panel: ▶/⏸, 1–5 hız, kapat.
+   Parmakla dokununca durur, bırakınca 1,5 sn sonra devam eder. Sûre bitince kendiliğinden durur.
+   Okuma ayarlarından tamamen gizlenebilir ("Otomatik kaydırma"). */
+(function () {
+  const HIZ = [0, 14, 24, 36, 52, 75];   // saniyede piksel (1 = çok yavaş … 5 = hızlı)
+  const yk = (k, d) => { try { const v = localStorage.getItem(k); return v === null ? d : v; } catch (e) { return d; } };
+  const yz = (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} };
+  let seviye = Number(yk('hv_otokay_hiz', '2')) || 2, akiyor = false, acik = false, son = 0, birikim = 0, bekle = 0, rafId = 0;
+
+  const kutu = () => { const w = document.getElementById('ayah-list-wrap'); return w ? w.closest('.hero-frame-box') : null; };
+  const okumada = () => {
+    const d = document.getElementById('surah-detail-view');
+    return typeof APP_STATE !== 'undefined' && APP_STATE.currentPage === 'quran' && d && d.style.display !== 'none';
+  };
+  const izinli = () => { try { return !!(typeof hvLoad === 'function' ? hvLoad('ok_otokay', true) : true); } catch (e) { return true; } };
+
+  const kok = document.createElement('div');
+  kok.id = 'hv-otokay';
+  kok.innerHTML = `
+    <div class="ok-panel" hidden>
+      <button class="ok-oynat" aria-label="Başlat / durdur"></button>
+      <div class="ok-hizlar">${[1, 2, 3, 4, 5].map(n => `<button data-h="${n}">${n}</button>`).join('')}</div>
+      <button class="ok-kapat" aria-label="Kapat">✕</button>
+    </div>
+    <button class="ok-dugme" aria-label="Otomatik kaydırma">⇣<small>Kaydır</small></button>`;
+  const ekle = () => { if (!document.body.contains(kok)) document.body.appendChild(kok); };
+  if (document.body) ekle(); else document.addEventListener('DOMContentLoaded', ekle);
+
+  const panel = kok.querySelector('.ok-panel'), dugme = kok.querySelector('.ok-dugme'), oynat = kok.querySelector('.ok-oynat');
+  function ciz() {
+    oynat.innerHTML = akiyor
+      ? '<svg viewBox="0 0 24 24" width="18" height="18"><rect x="6" y="5" width="4" height="14" rx="1" fill="currentColor"/><rect x="14" y="5" width="4" height="14" rx="1" fill="currentColor"/></svg>'
+      : '<svg viewBox="0 0 24 24" width="18" height="18"><path d="M8 5v14l11-7z" fill="currentColor"/></svg>';
+    kok.querySelectorAll('.ok-hizlar button').forEach(b => b.classList.toggle('on', Number(b.dataset.h) === seviye));
+    panel.hidden = !acik; dugme.hidden = acik;
+    kok.classList.toggle('akiyor', akiyor);
+  }
+  function dur() { akiyor = false; cancelAnimationFrame(rafId); rafId = 0; ciz(); }
+  function basla() {
+    const k = kutu(); if (!k) return;
+    if (k.scrollTop + k.clientHeight >= k.scrollHeight - 4) k.scrollTop = k.scrollTop; // sonda ise yine de dene
+    akiyor = true; son = 0; birikim = 0; bekle = 0; ciz();
+    cancelAnimationFrame(rafId); rafId = requestAnimationFrame(adim);
+  }
+  function adim(t) {
+    if (!akiyor) return;
+    const k = kutu();
+    if (!k || !okumada()) { dur(); return; }
+    if (!son) son = t;
+    const dt = Math.min(0.1, (t - son) / 1000); son = t;
+    if (Date.now() >= bekle) {
+      birikim += HIZ[seviye] * dt;
+      const px = Math.floor(birikim);
+      if (px >= 1) {
+        birikim -= px;
+        const once = k.scrollTop; k.scrollTop = once + px;
+        if (k.scrollTop <= once && k.scrollTop + k.clientHeight >= k.scrollHeight - 2) { dur(); if (typeof hvToast === 'function') hvToast('Sûre bitti', 'Otomatik kaydırma durdu.'); return; }
+      }
+    }
+    rafId = requestAnimationFrame(adim);
+  }
+  dugme.onclick = () => { acik = true; ciz(); basla(); };
+  oynat.onclick = () => { akiyor ? dur() : basla(); };
+  kok.querySelector('.ok-kapat').onclick = () => { dur(); acik = false; ciz(); };
+  kok.querySelectorAll('.ok-hizlar button').forEach(b => b.onclick = () => {
+    seviye = Number(b.dataset.h); yz('hv_otokay_hiz', String(seviye)); ciz(); if (!akiyor) basla();
+  });
+
+  // Parmakla dokununca dur, bırakınca 1,5 sn sonra devam
+  const dokun = (e) => { if (akiyor && kutu() && kutu().contains(e.target)) bekle = Date.now() + 60000; };
+  const birak = () => { if (akiyor && bekle > Date.now()) bekle = Date.now() + 1500; };
+  document.addEventListener('touchstart', dokun, { passive: true });
+  document.addEventListener('touchend', birak, { passive: true });
+  document.addEventListener('wheel', (e) => { if (akiyor && kutu() && kutu().contains(e.target)) bekle = Date.now() + 1500; }, { passive: true });
+  document.addEventListener('visibilitychange', () => { if (document.hidden) dur(); });
+
+  // Okuma ekranındayken görün, değilse gizlen
+  setInterval(() => {
+    const goster = okumada() && izinli();
+    kok.style.display = goster ? 'block' : 'none';
+    if (!goster && (akiyor || acik)) { dur(); acik = false; ciz(); }
+  }, 600);
+  ciz();
+  window.hvOtoKaydirDur = dur;
 })();
