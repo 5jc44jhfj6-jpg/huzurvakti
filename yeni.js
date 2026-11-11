@@ -485,15 +485,16 @@ window.hvKkSifirla = () => { hvOgAnlik('kk'); kaydet('kelime_bilinen', []); _kk 
 rota('kelime', renderKelime);
 
 /* ═════════════════════════ DUVAR KÂĞITLARI ═════════════════════════ */
-const DUVARLAR = [['Mescid-i Haram', 'Mekke'], ['Mescid-i Nebevî', 'Medine'], ['Ayasofya', 'İstanbul'], ['Sultanahmet', 'İstanbul'], ['Şeyh Zayed', 'Abu Dabi'],
-  ['Hasan II', 'Kazablanka'], ['Kul Şerif', 'Kazan'], ['Registan', 'Semerkant'], ['Şeyh Zayed · Havuz', 'Abu Dabi'], ['Putra', 'Putrajaya'],
-  // v70.2: kullanıcının ilk setinden yalnız keskin 2 tanesi kaldı + yeni yüksek kaliteli 14 arka plan
-  ['Revaklı Avlu', 'Fas'], ['Işık Huzmeleri', 'Cami içi'],
+const DUVARLAR = [
+  // v70.3: kullanıcının ilk seti (12) + yeni yüksek kaliteli 14 — eski düşük çözünürlüklü 10 fotoğraf çıkarıldı
+  ['Baiturrahman', 'Açe'], ['Revaklı Avlu', 'Fas'], ['Işık Huzmeleri', 'Cami içi'], ['Ortaköy · Gece', 'İstanbul'], ['Kul Şerif · Akşam', 'Kazan'],
+  ['Hasan II · Akşam', 'Kazablanka'], ['Karlı Avlu', 'Kış'], ['Süleymaniye Avlusu', 'İstanbul'], ['Çini ve Kemer', 'Endülüs'], ['Putra · Şafak', 'Putrajaya'],
+  ['Bâdşâhî', 'Lahor'], ['Sultan Kâbus', 'Maskat'],
   ['Minang Ulu Camii', 'Padang'], ['Çini Eyvan', 'İsfahan'], ['Avize ve Mihrap', 'Maskat'], ['Nasırülmülk', 'Şiraz'], ['Vezir Han', 'Lahor'],
   ['Cuma Mescidi', 'İsfahan'], ['Kırmızı Cami', 'Kolombo'], ['Modern Cami', 'Akşam'], ['Altın Kubbe', 'İsfahan'], ['Ahşap Sütunlar', 'Buhara'],
-  ['Taş Cami', 'Sade'], ['Baiturrahman', 'Açe'], ['Şeyh Zayed · İç', 'Abu Dabi'], ['Osmanlı Mihrabı', 'Türkiye']];
+  ['Taş Cami', 'Sade'], ['Baiturrahman · Yağmur', 'Açe'], ['Şeyh Zayed · İç', 'Abu Dabi'], ['Osmanlı Mihrabı', 'Türkiye']];
 /* Yazının yeri: [üst, alt] ekran oranı — gökyüzü / boş duvar olan bantta, cami açıkta kalsın. Listede olmayanlar eskisi gibi altta. */
-const DUVAR_UST = { 11: [0.25, 0.54], 12: [0.24, 0.46], 13: [0.25, 0.52], 14: [0.25, 0.56], 15: [0.25, 0.42], 17: [0.25, 0.46], 18: [0.25, 0.50], 19: [0.25, 0.42], 20: [0.25, 0.54], 21: [0.25, 0.38], 23: [0.25, 0.54], 24: [0.25, 0.52], 25: [0.25, 0.44], 26: [0.25, 0.44] };   // üst sınır ≥ %24: kilit ekranı saati
+const DUVAR_UST = { 1: [0.26, 0.58], 2: [0.25, 0.54], 3: [0.24, 0.46], 5: [0.25, 0.50], 6: [0.25, 0.44], 7: [0.25, 0.48], 9: [0.25, 0.60], 10: [0.25, 0.50], 11: [0.25, 0.56], 12: [0.25, 0.50], 13: [0.25, 0.52], 14: [0.25, 0.56], 15: [0.25, 0.42], 17: [0.25, 0.46], 18: [0.25, 0.50], 19: [0.25, 0.42], 20: [0.25, 0.54], 21: [0.25, 0.38], 23: [0.25, 0.54], 24: [0.25, 0.52], 25: [0.25, 0.44], 26: [0.25, 0.44] };   // üst sınır ≥ %24: kilit ekranı saati
 const DUVAR_SURE = [['', 'Sade (yazısız)'], ['s:Fâtiha', 'Fâtiha Sûresi'], ['d:Âyetel Kürsî', 'Âyetel Kürsî'], ['s:İhlâs', 'İhlâs Sûresi']];
 let _dvHavuz = null;
 function dvHavuz() {
@@ -513,7 +514,23 @@ function dvMetin(k) {
   return h.find(x => x.k === k) || h.find(x => x.ad.indexOf(k.slice(2)) === 0) || null;
 }
 const dvSade = (s) => String(s || '').toLocaleLowerCase('tr').replace(/[âàá]/g, 'a').replace(/[îí]/g, 'i').replace(/[ûú]/g, 'u').replace(/[^a-zçğıöşü0-9 ]/g, '');
-let _dv = { i: 0, s: '', q: '' };
+let _dv = { i: 0, s: '', q: '', ofs: 0 };
+/* v70.3: önizlemede yazıyı parmakla yukarı/aşağı taşı (ofs = ekran yüksekliğinin oranı) */
+function dvSurukleBagla(cv) {
+  if (!cv || !_dv.s) return;
+  let y0 = null, o0 = 0, bekle = false;
+  const yY = (e) => (e.touches ? e.touches[0].clientY : e.clientY);
+  const bas = (e) => { y0 = yY(e); o0 = _dv.ofs || 0; cv.classList.add('surukle'); };
+  const git = (e) => {
+    if (y0 === null) return; e.preventDefault();
+    _dv.ofs = Math.max(-0.6, Math.min(0.6, o0 + (yY(e) - y0) / Math.max(1, cv.clientHeight)));
+    if (!bekle) { bekle = true; requestAnimationFrame(() => { duvarCiz(cv, 540, 960).then(() => { bekle = false; }); }); }
+  };
+  const bit = () => { if (y0 === null) return; y0 = null; cv.classList.remove('surukle'); renderDuvar(); };
+  cv.addEventListener('touchstart', bas, { passive: true }); cv.addEventListener('touchmove', git, { passive: false }); cv.addEventListener('touchend', bit);
+  cv.addEventListener('mousedown', bas); cv.addEventListener('mousemove', git); cv.addEventListener('mouseup', bit); cv.addEventListener('mouseleave', bit);
+}
+window.hvDvOfsSifirla = () => { _dv.ofs = 0; renderDuvar(); };
 function dvSonuc() {
   const q = dvSade(_dv.q).trim(); if (!q) return '';
   const r = dvHavuz().filter(x => dvSade(x.ad).includes(q)).slice(0, 14);
@@ -523,16 +540,19 @@ function renderDuvar() {
   const c = $('duvar-content'); if (!c) return;
   const ozel = _dv.s && !DUVAR_SURE.some(x => x[0] === _dv.s) ? dvMetin(_dv.s) : null;
   c.innerHTML = `
-    <div class="dv-izgara">${DUVARLAR.map((d, i) => `<button class="${i === _dv.i ? 'on' : ''}" onclick="hvDvSec(${i})" style="background-image:url(img/dv_k_${String(i + 1).padStart(2, '0')}.jpg)"><span>${esc(d[0])}<small>${esc(d[1])}</small></span></button>`).join('')}</div>
-    <div class="yh-grup">Üzerine sûre ya da dua yazılsın mı?</div>
+    <div class="yh-grup">1 · Üzerine sûre ya da dua yazılsın mı?</div>
     <div class="yh-cip">${DUVAR_SURE.map(s => `<button class="${s[0] === _dv.s ? 'on' : ''}" onclick="hvDvSure('${s[0]}')">${esc(s[1])}</button>`).join('')}${ozel ? `<button class="on">${esc(ozel.ad)}</button>` : ''}</div>
     <div class="dv-ara"><span>🔍</span><input id="dv-ara" type="search" placeholder="Başka sûre ya da dua ara (${dvHavuz().length} seçenek)" value="${esc(_dv.q)}" oninput="hvDvAra(this.value)" autocomplete="off"></div>
     <div class="dv-sonuc" id="dv-sonuc">${dvSonuc()}</div>
     ${_dv.s ? `<div class="dv-punto"><span>Yazı boyutu</span><button onclick="hvDvPunto(-1)" aria-label="Küçült">A−</button><b>%${Math.round(dvPunto() * 100)}</b><button onclick="hvDvPunto(1)" aria-label="Büyüt">A+</button></div>` : ''}
     <div class="dv-onizle"><canvas id="dv-canvas" width="540" height="960"></canvas></div>
+    ${_dv.s ? `<div class="dv-surukle-ip">☝️ Yazıyı parmağınla yukarı / aşağı sürükleyebilirsin${_dv.ofs ? ` · <button onclick="hvDvOfsSifirla()">Ortala</button>` : ''}</div>` : ''}
     <button class="an-basla" onclick="hvDvKaydet()">Telefonuma kaydet / paylaş</button>
+    <div class="yh-grup">2 · Fotoğrafı seç</div>
+    <div class="dv-izgara">${DUVARLAR.map((d, i) => `<button class="${i === _dv.i ? 'on' : ''}" onclick="hvDvSec(${i})" style="background-image:url(img/dv_k_${String(i + 1).padStart(2, '0')}.jpg)"><span>${esc(d[0])}<small>${esc(d[1])}</small></span></button>`).join('')}</div>
     <div class="info-note">Kaydettikten sonra telefonunun Ayarlar → Duvar Kâğıdı bölümünden ana ekrana ya da kilit ekranına koyabilirsin.</div>`;
   duvarCiz($('dv-canvas'), 540, 960);
+  dvSurukleBagla($('dv-canvas'));
 }
 function sarMetin(ctx, metin, x, y, gen, sat, ciz) {
   const kel = String(metin || '').split(/\s+/); let s = ''; const satirlar = [];
@@ -591,13 +611,14 @@ function duvarCiz(cv, W, H) {
         }
         if (yuk > alt - ust && s.tr) { const s3 = Object.assign({}, s, { tr: '' }); const r3 = sigdir(s3); s = s3; f = r3[0]; yuk = r3[1]; }
         let basY;
+        const kay = (y) => Math.max(H * 0.22, Math.min(H * 0.9 - yuk, y + (_dv.ofs || 0) * H));   // v70.3: sürükleme; saat ve alt düğmelerin altına girmesin
         if (ustMod) {   // yazı gökyüzünün ortasında; arkasında yalnız yumuşak bir koyuluk bandı, cami açıkta kalır
-          basY = ust + Math.max(0, ((alt - ust) - yuk) / 2) + 16 * f;
+          basY = kay(ust + Math.max(0, ((alt - ust) - yuk) / 2) + 16 * f);
           const b0 = Math.max(0, basY - 110 * f0), b1 = Math.min(H, basY + yuk + 90 * f0);
           const gb = ctx.createLinearGradient(0, b0, 0, b1); gb.addColorStop(0, 'rgba(10,6,3,0)'); gb.addColorStop(.25, 'rgba(10,6,3,.40)'); gb.addColorStop(.75, 'rgba(10,6,3,.40)'); gb.addColorStop(1, 'rgba(10,6,3,0)');
           ctx.fillStyle = gb; ctx.fillRect(0, b0, W, b1 - b0);
         } else {
-          basY = Math.max(ust + 16 * f, alt - yuk + 16 * f);
+          basY = kay(Math.max(ust + 16 * f, alt - yuk + 16 * f));
           // Manzarayı az kapatsın: koyuluk yalnızca yazının arkasında, alttan yukarı
           const gTop = Math.max(0, basY - 90 * f0);
           const gr = ctx.createLinearGradient(0, gTop, 0, H); gr.addColorStop(0, 'rgba(10,6,3,0)'); gr.addColorStop(.35, 'rgba(10,6,3,.42)'); gr.addColorStop(1, 'rgba(10,6,3,.72)');
@@ -819,10 +840,10 @@ function krTemaUygula() {
   ['page-kurandua', 'page-quran', 'page-mushaf', 'page-dinle', 'page-hatim'].forEach(id => { const s = $(id); if (s) { s.classList.add('kr'); s.classList.toggle('kr-yesil', t === 'yesil'); s.classList.toggle('kr-krem', t !== 'yesil'); } });
 }
 const krFoto = () => `img/vakit_${(document.body && document.body.dataset.foto) || 'ikindi'}.jpg`;
-const KR_SERIT = ['05', '01', '02', '06', '07', '03', '08', '10', '04', '09'];
+const KR_SERIT = ['13', '16', '17', '18', '19', '06', '22', '24', '14', '25'];
 const krSerit = (id) => `img/duvar_${KR_SERIT[Number(id) % 10]}.jpg`;
 /* v67.7: her caminin kendi gövdesi görünsün diye dikey konum (resme göre) */
-const KR_KONUM = { '01': 47, '02': 47, '03': 44, '04': 47, '05': 39, '06': 44, '07': 41, '08': 47, '09': 53, '10': 36 };
+const KR_KONUM = { '13': 62, '16': 50, '17': 55, '18': 60, '19': 60, '06': 45, '22': 50, '24': 52, '14': 50, '25': 55 };
 const krKonum = (id) => (KR_KONUM[KR_SERIT[Number(id) % 10]] || 45) + '%';
 const KR_CUZ = [[1, 1], [2, 142], [2, 253], [3, 93], [4, 24], [4, 148], [5, 82], [6, 111], [7, 88], [8, 41], [9, 93], [11, 6], [12, 53], [15, 1], [17, 1], [18, 75], [21, 1], [23, 1], [25, 21], [27, 56], [29, 46], [33, 31], [36, 28], [39, 32], [41, 47], [46, 1], [51, 31], [58, 1], [67, 1], [78, 1]];
 const KR_ONE = [1, 36, 67, 18, 55, 56, 48, 2];
@@ -1465,7 +1486,7 @@ window.hvHtSifir = (b) => {
 
 /* ─────────────── PAYLAŞIM: 10 CAMİ ARKA PLANI ─────────────── */
 const PB_ADLAR = DUVARLAR.map(d => d[0]);
-const pbSecili = () => yukle('paylas_bg', '07');   // v67.9: varsayılan Kul Şerif (keskin 1080 px)
+const pbSecili = () => yukle('paylas_bg', '16');   // v67.9: varsayılan Kul Şerif (keskin 1080 px)
 const pbKaynak = (sec) => sec ? `img/duvar_${sec}.jpg` : 'img/paylas_' + ((document.body && document.body.dataset.foto) || 'ikindi') + '.jpg';
 const _pbCache = {};
 window.hvCardLoadBg = function () {
@@ -1786,7 +1807,7 @@ document.addEventListener('DOMContentLoaded', ayarKatla);
     kok.innerHTML = (son && son.surah ? `<button class="yi-son" onclick="openSurahAt(${son.surah},${son.ayah || 1})"><span class="yi-son-ik">📍</span><span><small>Kaldığın yer</small><b>${esc(son.name || hvSurahName(son.surah))} Sûresi · ${son.ayah || 1}. âyet</b></span><i>Devam ›</i></button>` : '') +
       (M.length ? `<div class="yi-say">${M.length} yer imi</div><div class="yi-liste">${M.map(x => { const m = ilkSatir(x.surah, x.ayah); return `
         <div class="yi-kart" id="yi-${x.surah}-${x.ayah}">
-          <button class="yi-git" onclick="hvImAc(${x.surah},${x.ayah})">
+          <button class="yi-git" onclick="hvImAcKapa(${x.surah},${x.ayah})">
             <span class="yi-no">${x.ayah}</span>
             <span class="yi-m"><b>${esc(x.name || hvSurahName(x.surah))} Sûresi <em>${x.ayah}. âyet</em></b>${m ? `<span class="yi-meal">${esc(m)}</span>` : ''}<small>${tarih(x.ts)}</small></span>
           </button>
@@ -1801,6 +1822,35 @@ document.addEventListener('DOMContentLoaded', ayarKatla);
     if (el) { el.classList.add('gidiyor'); setTimeout(sil, 220); } else sil();
   };
   window.hvYerImleri = () => { try { _imDon = APP_STATE.currentPage || 'kurandua'; } catch (e) {} if (typeof hvOkKapat === 'function') hvOkKapat(); navigateTo('yerimleri'); };
+  /* v70.3: yer imine dokununca sûreye gitmeden, kartın içinde âyetin tamamı açılır */
+  const _imAr = {};
+  window.hvImAcKapa = async (s, a) => {
+    const kart = $('yi-' + s + '-' + a); if (!kart) return;
+    const acik = kart.querySelector('.yi-detay');
+    if (acik) { acik.remove(); kart.classList.remove('acik'); return; }
+    document.querySelectorAll('.yi-detay').forEach(d => { d.parentElement.classList.remove('acik'); d.remove(); });
+    let meal = ''; try { if (!window.DIYANET_MEAL && typeof hvMealHazir === 'function') await hvMealHazir(); meal = hvMeal(s, a) || ''; } catch (e) {}
+    const d = document.createElement('div'); d.className = 'yi-detay';
+    const k = s + ':' + a;
+    d.innerHTML = `<div class="yi-ar" id="yi-ar-${s}-${a}">${_imAr[k] ? esc(_imAr[k]) : '<span class="yi-yuk">Arapça metin yükleniyor…</span>'}</div>
+      <div class="yi-tam">${esc(meal || 'Meâl yüklenemedi — internet bağlantını kontrol et.')}</div>
+      <div class="yi-dug"><button onclick="hvImAc(${s},${a})">📖 Sûrede aç</button><button onclick="hvImPaylas(${s},${a})">📤 Paylaş</button></div>`;
+    kart.appendChild(d); kart.classList.add('acik');
+    d.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    if (!_imAr[k]) {
+      try {
+        const r = await fetch(`https://api.alquran.cloud/v1/ayah/${s}:${a}/quran-uthmani`).then(x => x.json());
+        let t = (r && r.data && r.data.text) || '';
+        if (a === 1 && s !== 1 && s !== 9) t = t.replace(/^\s*بِسْمِ[^\s]*\s+[^\s]+\s+[^\s]+\s+[^\s]+\s*/, '');
+        _imAr[k] = t;
+        const el = $('yi-ar-' + s + '-' + a); if (el) el.textContent = t;
+      } catch (e) { const el = $('yi-ar-' + s + '-' + a); if (el) el.innerHTML = ''; }
+    }
+  };
+  window.hvImPaylas = (s, a) => {
+    let tr = ''; try { tr = hvMeal(s, a) || ''; } catch (e) {}
+    if (typeof hvOpenShareCard === 'function') hvOpenShareCard({ badge: '📖 Ayet-i Kerime', text: tr, source: `${hvSurahName(s)} Sûresi, ${a}. âyet`, fallbackText: `${hvSurahName(s)} Sûresi, ${a}. âyet\n\n"${tr}"` });
+  };
   window.hvImAc = (s, a) => { if (_imDon === 'quran') _imDon = 'kurandua'; openSurahAt(s, a); window._hvImden = Number(s); };
   window.hvImGeri = () => navigateTo(_imDon && _imDon !== 'yerimleri' ? _imDon : 'kurandua');
   window.hvKrImler = window.hvYerImleri;   // başlıktaki yer imi düğmesi artık tam sayfayı açar
@@ -2183,3 +2233,19 @@ window.hvWidgetAc = function (h) {
     if (sayfa && typeof navigateTo === 'function') navigateTo(sayfa);
   } catch (e) {}
 };
+
+
+/* v70.3 · Android: ilk ekran çizilince açılış ekranını kaldır (ham web sayfası görünmesin) */
+(function () {
+  let gitti = false;
+  const hazir = () => {
+    if (gitti) return; gitti = true;
+    try { if (window.NamazDostuBridge && typeof NamazDostuBridge.appReady === 'function') NamazDostuBridge.appReady(); } catch (e) {}
+  };
+  const bekle = () => {
+    const f = (document.fonts && document.fonts.ready) ? document.fonts.ready : Promise.resolve();
+    f.then(() => requestAnimationFrame(() => requestAnimationFrame(() => setTimeout(hazir, 150)))).catch(hazir);
+  };
+  if (document.readyState === 'complete') bekle(); else window.addEventListener('load', bekle);
+  setTimeout(hazir, 3000);
+})();

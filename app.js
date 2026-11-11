@@ -1613,16 +1613,26 @@ window.hvVakitleriPaylas = hvVakitleriPaylas;
 
 /* Yakındaki camiler — harita uygulamasında "cami" araması */
 function hvYakinCami() {
-  const u = APP_STATE.userLocation || {};
-  const lat = Number(u.lat), lng = Number(u.lng);
-  const varMi = !isNaN(lat) && !isNaN(lng);
-  const platform = (typeof hvNativePlatform === 'function') ? hvNativePlatform() : 'web';
-  let url;
-  // v70: kabuk içinde harita uygulamasına doğrudan git (web adresi uygulama içinde açılıyor, gidilemiyordu)
-  if (platform === 'ios') url = 'maps://?q=cami' + (varMi ? `&sll=${lat},${lng}&z=14` : '');
-  else if (platform === 'android') url = varMi ? `geo:${lat},${lng}?q=cami` : 'geo:0,0?q=cami';
-  else url = varMi ? `https://www.google.com/maps/search/cami/@${lat},${lng},14z` : 'https://www.google.com/maps/search/cami';
-  try { const a = document.createElement('a'); a.href = url; a.target = '_blank'; a.rel = 'noopener'; document.body.appendChild(a); a.click(); a.remove(); } catch (e) { location.href = url; }
+  // v70.3: önce telefonun ŞU ANKİ konumu (seçili ilçenin merkezi değil), harita aramasını bu noktanın çevresine sınırla
+  const ac = (lat, lng) => {
+    const varMi = isFinite(lat) && isFinite(lng);
+    const platform = (typeof hvNativePlatform === 'function') ? hvNativePlatform() : 'web';
+    let url;
+    if (platform === 'ios') url = 'maps://?q=Cami' + (varMi ? `&sll=${lat},${lng}&sspn=0.04,0.04&z=15` : '');
+    else if (platform === 'android') url = varMi ? `geo:${lat},${lng}?q=cami&z=15` : 'geo:0,0?q=cami';
+    else url = varMi ? `https://www.google.com/maps/search/cami/@${lat},${lng},15z` : 'https://www.google.com/maps/search/cami';
+    try { const a = document.createElement('a'); a.href = url; a.target = '_blank'; a.rel = 'noopener'; document.body.appendChild(a); a.click(); a.remove(); } catch (e) { location.href = url; }
+  };
+  const yedek = () => { const u = APP_STATE.gpsKonum || APP_STATE.userLocation || {}; ac(Number(u.lat), Number(u.lng)); };
+  if (!navigator.geolocation) return yedek();
+  let bitti = false;
+  const t = setTimeout(() => { if (!bitti) { bitti = true; yedek(); } }, 6000);
+  navigator.geolocation.getCurrentPosition((pos) => {
+    if (bitti) return; bitti = true; clearTimeout(t);
+    APP_STATE.gpsKonum = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+    ac(pos.coords.latitude, pos.coords.longitude);
+  }, () => { if (!bitti) { bitti = true; clearTimeout(t); yedek(); } }, { enableHighAccuracy: true, timeout: 5500, maximumAge: 120000 });
+  try { if (typeof showToastNotification === 'function') showToastNotification('📍 Konum alınıyor', 'Çevrendeki camiler haritada açılıyor…'); } catch (e) {}
 }
 window.hvYakinCami = hvYakinCami;
 
@@ -2076,6 +2086,7 @@ function hvNativePusulaBaslat() {
 let hvNativeKalibreUyarildi = false;
 window.hvNativeHeading = function (h, dogruluk) {
   if (!window.__hvNativePusula || APP_STATE.currentPage !== 'qibla') return;
+  window.__hvNativeSon = Date.now();
   const n = Number(h);
   if (isNaN(n)) return;
   const u = APP_STATE.gpsKonum || APP_STATE.userLocation || {};
@@ -2290,6 +2301,14 @@ function startCompassSensors(isAutoStart = false) {
     if (hvNativePusulaBaslat()) {
       if (btn) btn.innerHTML = "✅ CANLI SENSÖR AKTİF";
       if (status) status.innerHTML = "✅ <b>Pusula sensörü aktif!</b> Telefonunuzu düz tutarak çevirin. İbre şaşarsa telefonu 8 çizer gibi çevirin.";
+      // v70.3: telefonun pusulası 2,5 sn içinde veri göndermezse tarayıcı sensörüne de bağlan (yedek)
+      window.__hvNativeSon = 0;
+      setTimeout(() => {
+        if (APP_STATE.currentPage === 'qibla' && !window.__hvNativeSon) {
+          if ('ondeviceorientationabsolute' in window) window.addEventListener('deviceorientationabsolute', handleOrientationEvent, true);
+          else if (window.DeviceOrientationEvent) window.addEventListener('deviceorientation', handleOrientationEvent, true);
+        }
+      }, 2500);
       return;
     }
     if ('ondeviceorientationabsolute' in window) {

@@ -1578,3 +1578,41 @@ body.dark-theme .app-toast-box .toast-title { color: #f3cf86 !important; } body.
 /* v70.2: ana ekranda Duvar Kâğıdı kısayolu (5. düğme) */
 .ya-kisa img.ya-dv { width: 26px; height: 31px; object-fit: cover; border-radius: 7px; border: 1.5px solid #d6a85c; filter: none; }
 .ya-kisa b { font-size: .66rem; }
+
+/* v70.3: duvar kâğıdı yazısını sürükleme */
+#dv-canvas { touch-action: pan-x; cursor: ns-resize; }
+#dv-canvas.surukle { outline: 2px dashed #d6a85c; outline-offset: -4px; }
+.dv-surukle-ip { text-align: center; font-size: .78rem; color: var(--text-sub, #7a6a55); margin: 6px 0 2px; }
+.dv-surukle-ip button { border: 1px solid #d6a85c; background: transparent; border-radius: 8px; padding: 2px 8px; font-size: .74rem; color: inherit; margin-left: 4px; }
+
+/* v70.3: yer imi kartı içinde âyetin tamamı */
+.yi-kart { flex-wrap: wrap; }
+.yi-detay { flex-basis: 100%; width: 100%; padding: 10px 12px 12px; border-top: 1px solid rgba(214,168,92,.35); }
+.yi-ar { font-family: 'Amiri', 'Amiri Quran', serif; font-size: 1.45rem; line-height: 2.1; direction: rtl; text-align: right; color: var(--text-main, #3a2a14); margin-bottom: 8px; }
+.yi-yuk { font-family: inherit; font-size: .75rem; color: var(--text-sub, #7a6a55); direction: ltr; }
+.yi-tam { font-family: Lora, Georgia, serif; font-size: 1rem; line-height: 1.6; color: var(--text-main, #3a2a14); }
+.yi-dug { display: flex; gap: 8px; margin-top: 12px; }
+.yi-dug button { flex: 1; border: 1.2px solid #d6a85c; background: var(--bg-card, #fffaf0); color: var(--text-main, #3a2a14); border-radius: 10px; padding: 9px 6px; font-weight: 700; font-size: .85rem; }
+.yi-kart.acik .yi-meal { display: none; }
+
+/* v70.3: bildirim durumu yazısı okunur olsun (açık yeşil krem zeminde görünmüyordu) */
+.notify-status.ok { color: #1f5e36 !important; background: #e6f4ea; border: 1px solid #b7dcc3; border-radius: 10px; margin: 6px 14px 4px; padding: 8px 12px; font-weight: 600; }
+body.dark-theme .notify-status.ok { color: #c9f0d6 !important; background: #1d3527; border-color: #2e5a40; }
+.notify-status.warn { color: #8a4b0f !important; background: #fdf0e0; border: 1px solid #f0cfa5; border-radius: 10px; margin: 6px 14px 4px; padding: 8px 12px; font-weight: 600; }
+body.dark-theme .notify-status.warn { color: #f6d6ae !important; background: #3a2614; border-color: #5c3d20; }
+/* v70.3: ana ekran kısayol yazıları dar/Android ekranlarda kesilmesin */
+.ya-kisa button { min-width: 0; padding-left: 2px; padding-right: 2px; }
+.ya-kisa b { white-space: normal !important; text-align: center; line-height: 1.05; font-size: clamp(.58rem, 2.7vw, .7rem) !important; max-width: 100%; overflow-wrap: anywhere; }
+
+#page-home .ya-kisa img { margin-top: 10px !important; }
+#page-home .ya-kisa button { height: 66px !important; gap: 2px; }
+/* v70.3: kısa ekranlarda (Android) alttaki 5 kısayol menünün arkasında kalmasın — her zaman görünür */
+#page-home .ya-kisa { position: sticky; bottom: 0; z-index: 6; box-shadow: 0 -4px 10px rgba(80, 50, 20, .08); }
+@media (max-height: 800px) {
+  #page-home .ya-hero { height: 34vh !important; }
+  #page-home .ya-ayet { min-height: 96px !important; }
+}
+@media (max-height: 680px) {
+  #page-home .ya-hero { height: 30vh !important; }
+  #page-home .ya-ayet { min-height: 84px !important; }
+}
