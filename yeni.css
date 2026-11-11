@@ -133,6 +133,9 @@ body.dark-theme .yn-nav .nav-tab.active .tab-label { color: #2b1d14; }
   background-image: url(img/vakit_ogle.jpg); filter: saturate(1.1);
   transition: background-image .8s ease;
 }
+/* v70.4: vakit değişince eski fotoğraf üstte kalıp yavaşça kaybolur */
+.ya-foto-eski { position: absolute; inset: 0; background-size: inherit; background-position: inherit; background-repeat: no-repeat;
+  opacity: 1; transition: opacity 2.2s ease; pointer-events: none; }
 body[data-foto="safak"] .ya-foto { background-image: url(img/vakit_safak.jpg); }
 body[data-foto="sabah"] .ya-foto { background-image: url(img/vakit_sabah.jpg); }
 body[data-foto="ogle"] .ya-foto { background-image: url(img/vakit_ogle.jpg); }
@@ -1444,6 +1447,8 @@ body.dark-theme .ez-duvar-btn { background: #2a1c11; color: #f3cf86; border-colo
 #page-home .ya-ayet { min-height: 112px !important; }
 .hv-sc-ipucu { font-size: .78rem; line-height: 1.4; color: #6a5440; text-align: center; margin: -2px 6px 2px; }
 body.dark-theme .hv-sc-ipucu { color: #d8c4a3; }
+.hv-sc-wp-sec { grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.hv-sc-wp-sec .hv-sc-btn { padding: 10px 4px; font-size: .82rem; }
 /* v68.4: Anlayarak kartı — tek, net fotoğraf (tekbir, yakın plan) */
 #page-home .ya-anl-foto { width: 104px !important; background: url(img/namaz_02_tekbir.jpg) 50% 4% / 150% auto no-repeat !important; -webkit-mask: linear-gradient(90deg, #000 85%, transparent) !important; mask: linear-gradient(90deg, #000 85%, transparent) !important; }
 /* v68.4b: erkek + kadın iki net küçük fotoğraf (tekbir, yüz ve eller görünür) */

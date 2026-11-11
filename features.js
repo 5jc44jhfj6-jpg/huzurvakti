@@ -2741,7 +2741,15 @@ async function hvOpenShareCard(data) {
     <div class="hv-sc-box">
       <img class="hv-sc-img" src="${dataUrl}" alt="Paylaşım görseli">
       <div class="hv-sc-actions">
-        ${d.duvar ? `<button class="hv-sc-btn hv-sc-primary" id="hv-sc-save">📲 Fotoğraflara Kaydet</button>
+        ${(d.duvar && window.hvAndroidGaleri) ? `<button class="hv-sc-btn hv-sc-primary" id="hv-sc-wp">🖼️ Duvar Kâğıdı Yap</button>
+        <div class="hv-sc-wp-sec" id="hv-sc-wp-sec" style="display:none">
+          <button class="hv-sc-btn" data-h="ana">Ana ekran</button>
+          <button class="hv-sc-btn" data-h="kilit">Kilit ekranı</button>
+          <button class="hv-sc-btn" data-h="ikisi">İkisi de</button>
+        </div>
+        <button class="hv-sc-btn" id="hv-sc-save">📲 Galeriye Kaydet</button>
+        <button class="hv-sc-btn" id="hv-sc-share">📤 Paylaş</button>`
+        : d.duvar ? `<button class="hv-sc-btn hv-sc-primary" id="hv-sc-save">📲 Fotoğraflara Kaydet</button>
         <div class="hv-sc-ipucu">Açılan menüden <b>“Görüntüyü Kaydet”</b>e dokun. Duvar kâğıdı yaparken kaymasın diye <b>“Perspektif yakınlaştırma”</b>yı kapat; görsel ekranınla birebir boyutta hazırlandı.</div>
         <button class="hv-sc-btn" id="hv-sc-share">📤 Paylaş</button>`
         : `<button class="hv-sc-btn hv-sc-primary" id="hv-sc-share">📤 Paylaş</button>
@@ -2753,6 +2761,17 @@ async function hvOpenShareCard(data) {
   document.body.appendChild(wrap);
   wrap.addEventListener('click', (e) => { if (e.target === wrap) wrap.remove(); });
   document.getElementById('hv-sc-close').onclick = () => wrap.remove();
+  // 1.5.3: Android → Duvar kâğıdı yap (ana ekran / kilit / ikisi)
+  const wpBtn = document.getElementById('hv-sc-wp');
+  if (wpBtn) {
+    wpBtn.onclick = () => { const s = document.getElementById('hv-sc-wp-sec'); if (s) s.style.display = s.style.display === 'none' ? 'grid' : 'none'; };
+    document.querySelectorAll('#hv-sc-wp-sec button').forEach(b => {
+      b.onclick = () => {
+        try { window.webkit.messageHandlers['set-wallpaper'].postMessage({ data: dataUrl, hedef: b.dataset.h }); } catch (e) {}
+        wrap.remove();
+      };
+    });
+  }
 
   const toBlob = () => new Promise((res) => cv.toBlob(res, 'image/jpeg', 0.95));
   // Dosya pencere açılırken hazırlanır → "Paylaş"a basınca beklemeden gider (iOS dokunuş izni de kaybolmaz)
@@ -2788,6 +2807,9 @@ async function hvOpenShareCard(data) {
     // v68.4: iPhone'da dosyalara değil, paylaşım menüsü açılır → "Görüntüyü Kaydet" / "Duvar Kâğıdı Olarak Kullan"
     try {
       const bridge = window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers['share-image'];
+      // 1.5.3: Android → doğrudan galeriye (Resimler › Namaz Dostu)
+      const galeri = window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers['save-image'];
+      if (window.hvAndroidGaleri && galeri) { galeri.postMessage({ data: dataUrl }); return; }
       if (window.hvIsAndroid && bridge) { bridge.postMessage({ data: cv.toDataURL('image/png') }); return; }
       const file = hazirDosya || await dosyaSozu;
       if (file && navigator.canShare && navigator.canShare({ files: [file] })) { await navigator.share({ files: [file] }); return; }

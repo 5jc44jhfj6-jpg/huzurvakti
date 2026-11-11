@@ -148,6 +148,29 @@ function hvGeceMi() {
 window.hvGeceMi = hvGeceMi;
 // Şu anki vakit dilimi → ana sayfa fotoğrafı
 const HV_VAKIT_FOTO = { Fajr: 'safak', Sunrise: 'sabah', Dhuhr: 'ogle', Asr: 'ikindi', Maghrib: 'aksam', Isha: 'gece' };
+// v70.4: vaktin içinde ışık da değişsin — kuşluk vakti pembe gökyüzü kalmasın, akşam ezanından sonra gece gelsin
+function hvVakitFotoSec(aktif, now) {
+  const dk = (id) => {
+    const t = APP_STATE.prayerTimes && APP_STATE.prayerTimes[id];
+    if (!t) return null;
+    const [h, m] = t.split(':').map(Number);
+    const d = new Date(now); d.setHours(h, m, 0, 0); return d;
+  };
+  const gecen = (id) => { const d = dk(id); return d ? (now - d) / 60000 : 0; };
+  if (aktif === 'Sunrise' && gecen('Sunrise') > 75) return 'ogle';
+  if (aktif === 'Maghrib' && gecen('Maghrib') > 50) return 'gece';
+  return HV_VAKIT_FOTO[aktif] || 'ogle';
+}
+function hvFotoGecis(eski) {
+  document.querySelectorAll('.ya-foto').forEach(el => {
+    const o = document.createElement('div');
+    o.className = 'ya-foto-eski';
+    o.style.backgroundImage = `url(img/vakit_${eski}.jpg)`;
+    el.appendChild(o);
+    requestAnimationFrame(() => requestAnimationFrame(() => { o.style.opacity = '0'; }));
+    setTimeout(() => o.remove(), 2600);
+  });
+}
 // Durum çubuğu rengi (iOS kabuğu theme-color'ı izler)
 const HV_UST_RENK = { safak: '#0a0f24', sabah: '#8f8db5', ogle: '#2f75c2', ikindi: '#6e8db5', aksam: '#2a4268', gece: '#050a1c' };   // v67.6 Kul Şerif üst renkleri
 function hvTemaRengi() {
@@ -333,6 +356,7 @@ function applyStateSettings() {
   if (canliT) canliT.checked = APP_STATE.canliSayac !== false;
   const canliS = document.getElementById('canli-satir');
   if (canliS) canliS.style.display = (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.canli) ? '' : 'none';
+  if (canliS && window.hvIsAndroid) { const l = canliS.querySelector('label'); if (l) l.innerHTML = 'Bildirim çubuğunda canlı geri sayım<br><small style="font-weight:500;color:var(--text-sub)">Sıradaki vakte kalan süre</small>'; }
 
   const notifyBoth = document.getElementById('notify-both');
   if (notifyBoth) notifyBoth.checked = !!APP_STATE.notifyBoth;
@@ -948,7 +972,7 @@ function scheduleNativePrayerNotifications() {
       // "ezan" → uygulamadaki ezan sesi, "default" → telefon sesi, "none" → sessiz
       let sound = 'default';
       if (APP_STATE.notifySound === 'silent') sound = 'none';
-      else if (APP_STATE.notifySound === 'beep') sound = window.hvIsAndroid ? 'default' : 'bip';
+      else if (APP_STATE.notifySound === 'beep') sound = (window.hvIsAndroid && !window.hvAndroidEzanSesleri) ? 'default' : 'bip';
       else if (APP_STATE.notifySound === 'ezan' && getPrayerAdhan(id)) sound = hvEzanBildirimSesi();
 
       const dayKey = `${day.getFullYear()}${hvPad2(day.getMonth() + 1)}${hvPad2(day.getDate())}`;
@@ -1872,10 +1896,14 @@ function updatePrayerCountdown() {
   const currentActiveId = activeIdx >= 0 ? order[activeIdx] : order[order.length - 1];
 
   // Günün saatine göre zemin tonu (sabah aydınlık kehribar → gece koyu)
-  if (document.body.dataset.tod !== currentActiveId) {
+  // v70.4: fotoğraf vakte + saate göre (güneşten 75 dk sonra öğle ışığı, akşamdan 50 dk sonra gece),
+  // değişirken eski fotoğraf yavaşça kaybolur (ani atlama yok)
+  const yeniFoto = hvVakitFotoSec(currentActiveId, now);
+  if (document.body.dataset.tod !== currentActiveId || document.body.dataset.foto !== yeniFoto) {
+    const eskiFoto = document.body.dataset.foto;
+    if (eskiFoto && eskiFoto !== yeniFoto) hvFotoGecis(eskiFoto);
     document.body.dataset.tod = currentActiveId;
-    // v67.0: vakte göre ana sayfa fotoğrafı + (oto modda) gece koyu tema
-    document.body.dataset.foto = HV_VAKIT_FOTO[currentActiveId] || 'ogle';
+    document.body.dataset.foto = yeniFoto;
     try { applyStateSettings(); } catch (e) {}
   }
   hvKonumYansit();
@@ -3538,7 +3566,7 @@ function triggerNotification(prayer, offset) {
 const HV_EZAN_DOSYA = { 1: 'ezan.mp3', 2: 'ses/ezan2.mp3', 3: 'ses/ezan3.mp3', 4: 'ses/ezan4.mp3' };
 function hvEzanBildirimSesi() {
   const n = Number(APP_STATE.ezanSesi) || 1;
-  if (n === 1 || window.hvIsAndroid) return 'ezan';   // Android bildirim kanalı tek ezan sesiyle çalışır
+  if (n === 1 || (window.hvIsAndroid && !window.hvAndroidEzanSesleri)) return 'ezan';   // Android 1.5.3'ten önce tek ezan kanalı vardı
   return 'ezan' + n;
 }
 window.hvEzanBildirimSesi = hvEzanBildirimSesi;
