@@ -2257,10 +2257,12 @@ window.hvWidgetAc = function (h) {
    Parmakla dokununca durur, bırakınca 1,5 sn sonra devam eder. Sûre bitince kendiliğinden durur.
    Okuma ayarlarından tamamen gizlenebilir ("Otomatik kaydırma"). */
 (function () {
-  const HIZ = [0, 14, 24, 36, 52, 75];   // saniyede piksel (1 = çok yavaş … 5 = hızlı)
+  // v70.6: daha yavaş seçenekler (¼ ve ½) + genel olarak yavaşlatıldı · saniyede piksel
+  const HIZ = { '0.25': 3, '0.5': 6, '1': 10, '2': 15, '3': 21, '4': 29, '5': 40 };
+  const SEV = ['0.25', '0.5', '1', '2', '3', '4', '5'], ETIKET = { '0.25': '¼', '0.5': '½' };
   const yk = (k, d) => { try { const v = localStorage.getItem(k); return v === null ? d : v; } catch (e) { return d; } };
   const yz = (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} };
-  let seviye = Number(yk('hv_otokay_hiz', '2')) || 2, akiyor = false, acik = false, son = 0, birikim = 0, bekle = 0, rafId = 0;
+  let seviye = HIZ[yk('hv_otokay_hiz2', '1')] ? yk('hv_otokay_hiz2', '1') : '1', akiyor = false, acik = false, son = 0, birikim = 0, bekle = 0, rafId = 0;
 
   const kutu = () => { const w = document.getElementById('ayah-list-wrap'); return w ? w.closest('.hero-frame-box') : null; };
   const okumada = () => {
@@ -2274,7 +2276,7 @@ window.hvWidgetAc = function (h) {
   kok.innerHTML = `
     <div class="ok-panel" hidden>
       <button class="ok-oynat" aria-label="Başlat / durdur"></button>
-      <div class="ok-hizlar">${[1, 2, 3, 4, 5].map(n => `<button data-h="${n}">${n}</button>`).join('')}</div>
+      <div class="ok-hizlar">${SEV.map(n => `<button data-h="${n}">${ETIKET[n] || n}</button>`).join('')}</div>
       <button class="ok-kapat" aria-label="Kapat">✕</button>
     </div>
     <button class="ok-dugme" aria-label="Otomatik kaydırma">⇣<small>Kaydır</small></button>`;
@@ -2286,7 +2288,7 @@ window.hvWidgetAc = function (h) {
     oynat.innerHTML = akiyor
       ? '<svg viewBox="0 0 24 24" width="18" height="18"><rect x="6" y="5" width="4" height="14" rx="1" fill="currentColor"/><rect x="14" y="5" width="4" height="14" rx="1" fill="currentColor"/></svg>'
       : '<svg viewBox="0 0 24 24" width="18" height="18"><path d="M8 5v14l11-7z" fill="currentColor"/></svg>';
-    kok.querySelectorAll('.ok-hizlar button').forEach(b => b.classList.toggle('on', Number(b.dataset.h) === seviye));
+    kok.querySelectorAll('.ok-hizlar button').forEach(b => b.classList.toggle('on', b.dataset.h === seviye));
     panel.hidden = !acik; dugme.hidden = acik;
     kok.classList.toggle('akiyor', akiyor);
   }
@@ -2318,7 +2320,7 @@ window.hvWidgetAc = function (h) {
   oynat.onclick = () => { akiyor ? dur() : basla(); };
   kok.querySelector('.ok-kapat').onclick = () => { dur(); acik = false; ciz(); };
   kok.querySelectorAll('.ok-hizlar button').forEach(b => b.onclick = () => {
-    seviye = Number(b.dataset.h); yz('hv_otokay_hiz', String(seviye)); ciz(); if (!akiyor) basla();
+    seviye = b.dataset.h; yz('hv_otokay_hiz2', seviye); ciz(); if (!akiyor) basla();
   });
 
   // Parmakla dokununca dur, bırakınca 1,5 sn sonra devam
