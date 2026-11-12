@@ -2119,6 +2119,12 @@ function hvNativePusulaBaslat() {
 let hvNativeKalibreUyarildi = false;
 window.hvNativeHeading = function (h, dogruluk) {
   if (!window.__hvNativePusula || APP_STATE.currentPage !== 'qibla') return;
+  // v70.9: telefonun pusulası veri gönderiyorsa tarayıcının yön sensörünü bırak — iki kaynak aynı anda
+  // ibreyi farklı yönlere çekiyordu (izin penceresi açılınca 2,5 sn'lik yedek devreye giriyordu)
+  if (!window.__hvNativeSon || Date.now() - window.__hvNativeSon > 3000) {
+    try { window.removeEventListener('deviceorientation', handleOrientationEvent, true); } catch (e) {}
+    try { window.removeEventListener('deviceorientationabsolute', handleOrientationEvent, true); } catch (e) {}
+  }
   window.__hvNativeSon = Date.now();
   const n = Number(h);
   if (isNaN(n)) return;
@@ -2427,6 +2433,8 @@ window.hvPusulaYon = hvPusulaYon;
 
 function handleOrientationEvent(e) {
   if (isDraggingCompass) return; // parmakla ayar yapılırken sensör devreye girmesin
+  // v70.9: telefonun kendi pusulası çalışıyorken tarayıcı olaylarını yok say (çift kaynak çakışması)
+  if (e && e.type && window.__hvNativePusula && window.__hvNativeSon && Date.now() - window.__hvNativeSon < 1500) return;
 
   let compassHeading = null;
   let mutlak = false;
