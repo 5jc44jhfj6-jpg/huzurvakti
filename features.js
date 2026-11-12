@@ -384,6 +384,17 @@ const ZIKIR_PRESETS = [
   { key: 'subhanallah', label: 'Sübhanallah', ar: 'سُبْحَانَ اللّٰه', target: 33 },
   { key: 'elhamdulillah', label: 'Elhamdülillah', ar: 'اَلْحَمْدُ لِلّٰه', target: 33 },
   { key: 'allahuekber', label: 'Allahu Ekber', ar: 'اَللّٰهُ اَكْبَر', target: 33 },
+  // v71.6: en çok çekilen zikirler
+  { key: 'tevhid', label: 'Lâ ilâhe illallah', ar: 'لَا إِلٰهَ إِلَّا اللّٰهُ', target: 100, anlam: 'Allah’tan başka ilâh yoktur' },
+  { key: 'estagfirullah', label: 'Estağfirullah', ar: 'أَسْتَغْفِرُ اللّٰهَ', target: 100, anlam: 'Allah’tan bağışlanma dilerim' },
+  { key: 'salavat', label: 'Salavât-ı Şerîfe', ar: 'اَللّٰهُمَّ صَلِّ عَلٰى سَيِّدِنَا مُحَمَّدٍ', target: 100, anlam: 'Allah’ım, Efendimiz Muhammed’e salât eyle' },
+  { key: 'subhanallahivebihamdihi', label: 'Sübhânallâhi ve bihamdihî', ar: 'سُبْحَانَ اللّٰهِ وَبِحَمْدِهِ', target: 100, anlam: 'Allah’ı hamdiyle tesbih ederim' },
+  { key: 'subhanallahilazim', label: 'Sübhânallâhi’l-azîm', ar: 'سُبْحَانَ اللّٰهِ الْعَظِيمِ', target: 100, anlam: 'Yüce Allah’ı tesbih ederim' },
+  { key: 'lahavle', label: 'Lâ havle ve lâ kuvvete illâ billâh', ar: 'لَا حَوْلَ وَلَا قُوَّةَ إِلَّا بِاللّٰهِ', target: 100, anlam: 'Güç ve kuvvet ancak Allah’ındır' },
+  { key: 'hasbunallah', label: 'Hasbünallâhu ve ni‘me’l-vekîl', ar: 'حَسْبُنَا اللّٰهُ وَنِعْمَ الْوَكِيلُ', target: 100, anlam: 'Allah bize yeter, O ne güzel vekildir' },
+  { key: 'yunus', label: 'Yûnus Duâsı', ar: 'لَا إِلٰهَ إِلَّا أَنْتَ سُبْحَانَكَ إِنِّي كُنْتُ مِنَ الظَّالِمِينَ', target: 100, anlam: 'Senden başka ilâh yok; Sen münezzehsin, ben zalimlerden oldum' },
+  { key: 'yahayyu', label: 'Yâ Hayyu yâ Kayyûm', ar: 'يَا حَيُّ يَا قَيُّومُ', target: 100, anlam: 'Ey diri ve her şeyi ayakta tutan Allah' },
+  { key: 'yalatif', label: 'Yâ Latîf', ar: 'يَا لَطِيفُ', target: 129, anlam: 'Ey lütfu bol olan Allah' },
   { key: 'serbest', label: 'Serbest Sayaç', ar: 'لَا إِلٰهَ إِلَّا اللّٰه', target: 0 }
 ];
 let _zikirActive = 0;
@@ -398,6 +409,7 @@ function renderZikirmatik() {
       <div class="zikir-display">
         <div class="zikir-ar" id="zikir-ar"></div>
         <div class="zikir-label" id="zikir-label"></div>
+        <div class="zikir-anlam" id="zikir-anlam"></div>
         <div class="zikir-count" id="zikir-count">0</div>
         <div class="zikir-target" id="zikir-target"></div>
       </div>
@@ -410,7 +422,7 @@ function renderZikirmatik() {
       </div>
       <div class="info-note" id="zikir-total-note"></div>`;
     const pw = document.getElementById('zikir-presets');
-    pw.innerHTML = ZIKIR_PRESETS.map((p, i) => `<button class="zikir-preset" data-i="${i}" onclick="zikirSelect(${i})">${p.label}</button>`).join('');
+    pw.innerHTML = ZIKIR_PRESETS.map((p, i) => `<button class="zikir-preset" data-i="${i}" onclick="zikirSelect(${i})"><span class="zp-ad">${p.label}</span>${p.target ? `<span class="zp-hedef">${p.target}</span>` : ''}</button>`).join('');
   }
   zikirSelect(_zikirActive, true);
   updateZikirVibBtn();
@@ -418,15 +430,15 @@ function renderZikirmatik() {
 }
 function zikirSelect(i, keep) {
   _zikirActive = i;
-  if (!keep) _zikirCount = 0;
-  else _zikirCount = hvLoad('zikir_c_' + ZIKIR_PRESETS[i].key, 0);
+  _zikirCount = hvLoad('zikir_c_' + ZIKIR_PRESETS[i].key, 0);   // v71.6: her zikrin kendi sayısı korunur
   document.querySelectorAll('.zikir-preset').forEach(b => b.classList.toggle('active', parseInt(b.dataset.i) === i));
   const p = ZIKIR_PRESETS[i];
   const arEl = document.getElementById('zikir-ar');
   const lbl = document.getElementById('zikir-label');
   const tgt = document.getElementById('zikir-target');
-  if (arEl) arEl.textContent = p.ar;
+  if (arEl) { arEl.textContent = p.ar; arEl.classList.toggle('uzun', p.ar.length > 26); }
   if (lbl) lbl.textContent = p.label;
+  const an = document.getElementById('zikir-anlam'); if (an) an.textContent = p.anlam || '';
   if (tgt) tgt.textContent = p.target ? `Hedef: ${p.target}` : 'Serbest';
   updateZikirCountUI();
 }

@@ -1663,3 +1663,18 @@ body.dark-theme .kible-sensor-yok .ksy-gunes { background: #3a2916; }
 .ts-ipucu { font-size: .75rem; color: var(--text-sub); }
 .ts-git { display: block; width: 100%; margin: 12px 0 4px; }
 .gr-ic .an-basla { margin-top: 8px; }
+
+/* v71.6 · Zikirmatik: hedef rozeti + anlam */
+#page-zikirmatik.zk-yeni .zikir-preset { display: flex !important; align-items: center; justify-content: space-between; gap: 10px; }
+.zikir-preset .zp-hedef { flex: none; font-family: var(--font-ui, sans-serif); font-size: .72rem; font-weight: 700; color: #a8692f; background: rgba(226, 189, 115, .18); border: 1px solid rgba(201, 151, 63, .35); border-radius: 999px; padding: 2px 8px; }
+.zikir-anlam { font-size: .78rem; color: var(--text-sub); text-align: center; margin: 2px 12px 0; line-height: 1.35; }
+.zikir-anlam:empty { display: none; }
+#page-zikirmatik.zk-yeni .zikir-anlam { color: rgba(246, 228, 192, .75); font-size: .68rem; max-width: 82%; margin-top: 0; }
+#page-zikirmatik.zk-yeni .zikir-ar.uzun { font-size: 1.05rem !important; line-height: 1.5; text-align: center; max-width: 88%; }
+#page-zikirmatik.zk-yeni .zikir-ar.uzun ~ .zikir-count { font-size: 3.2rem !important; }
+
+/* v71.6 · Son Okunan: Mushaf / İniş sırası ayrı kaldığın yer */
+.kr-son .kr-son-sira { display: inline-flex; gap: 2px; padding: 2px; margin-bottom: 8px; border-radius: 999px; background: rgba(20, 12, 5, .45); border: 1px solid rgba(243, 207, 134, .4); backdrop-filter: blur(4px); }
+.kr-son .kr-son-sira button { margin: 0; padding: 4px 11px; font-family: var(--font-ui, sans-serif); font-size: .72rem; font-weight: 600; background: none; color: #f3dfb8; border-radius: 999px; }
+.kr-son .kr-son-sira button.on { background: linear-gradient(160deg, #fff4dc, #f0d79e); color: #2b1a10; }
+.kr-son { flex-shrink: 0; height: auto !important; }

@@ -3017,17 +3017,21 @@ function hvToggleBookmark(surah, ayah, btn) {
 }
 window.hvToggleBookmark = hvToggleBookmark;
 
-function hvGetLastRead() {
-  try { return JSON.parse(localStorage.getItem('hv_last_read') || 'null'); } catch (e) { return null; }
+/* v71.6: Mushaf sırası ve İniş sırası için kaldığın yer AYRI tutulur (sûre listesinde hangi sıra seçiliyse o) */
+function hvSiraNuzul() { try { return localStorage.getItem('hv_sure_sira') === 'nuzul'; } catch (e) { return false; } }
+function hvLrAnahtar(mod) { return (mod ? mod === 'nuzul' : hvSiraNuzul()) ? 'hv_last_read_nuzul' : 'hv_last_read'; }
+function hvGetLastRead(mod) {
+  try { return JSON.parse(localStorage.getItem(hvLrAnahtar(mod)) || 'null'); } catch (e) { return null; }
 }
 function hvSetLastRead(surah, name, ayah, elle) {
-  localStorage.setItem('hv_last_read', JSON.stringify({ surah, name: name || hvSurahName(surah), ayah: ayah || 1, ts: Date.now(), elle: !!elle }));
+  localStorage.setItem(hvLrAnahtar(), JSON.stringify({ surah, name: name || hvSurahName(surah), ayah: ayah || 1, ts: Date.now(), elle: !!elle }));
 }
+window.hvGetLastRead = hvGetLastRead;
 function hvMarkLastRead(surah, ayah, btn) {
   hvSetLastRead(surah, hvSurahName(surah), ayah, true);
   document.querySelectorAll('.ayah-act-btn[data-act="last"]').forEach(b => { b.classList.remove('on'); b.textContent = '📍 Buraya Kadar'; });
   if (btn) { btn.classList.add('on'); btn.textContent = '📍 Kaldığım Yer'; }
-  showToastNotification('📍 Kaldığın yer kaydedildi', `${hvSurahName(surah)} ${ayah}. ayet`);
+  showToastNotification('📍 Kaldığın yer kaydedildi' + (hvSiraNuzul() ? ' · İniş sırası' : ''), `${hvSurahName(surah)} ${ayah}. ayet`);
 }
 window.hvMarkLastRead = hvMarkLastRead;
 

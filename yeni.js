@@ -963,8 +963,11 @@ function renderKrHub() {
   const kok = document.querySelector('#page-kurandua .yh-hub'); if (!kok) return;
   krTemaUygula();
   const son = (typeof hvGetLastRead === 'function') ? hvGetLastRead() : null;
-  const sonS = son ? sureBul(son.surah) : sureBul(1);
-  const sonNo = son ? son.surah : 1;
+  const nzMod = (() => { try { return localStorage.getItem('hv_sure_sira') === 'nuzul'; } catch (e) { return false; } })();
+  const ilk = nzMod ? 96 : 1;   // iniş sırasında ilk sûre Alak
+  const sonS = son ? sureBul(son.surah) : sureBul(ilk);
+  const sonNo = son ? son.surah : ilk;
+  const siraSec = `<div class="kr-son-sira"><button class="${nzMod ? '' : 'on'}" onclick="event.stopPropagation();hvSureSira('mushaf')">Mushaf sırası</button><button class="${nzMod ? 'on' : ''}" onclick="event.stopPropagation();hvSureSira('nuzul')">İniş sırası</button></div>`;
   kok.classList.add('kr-hub');
   kok.innerHTML = `
     <div class="kr-hero" style="background-image:url(${krFoto()})">
@@ -983,8 +986,8 @@ function renderKrHub() {
       <button onclick="navigateTo('hatim')">${IK.takvim}<b>Hatim</b><small>Takibi</small></button>
     </div>
     <div class="kr-son" style="background-image:url(${krSerit(sonNo)})">
-      <div><small>${son ? 'Son Okunan' : 'Okumaya başla'}</small><b>${esc(sonS ? sonS.name : '')} Sûresi</b><span>${sonNo}. Sûre • ${son && son.ayah > 1 ? son.ayah + '. âyette kaldın' : (sonS ? sonS.verse_count + ' Âyet' : '')}</span>
-      <button onclick="${son ? `openSurahAt(${son.surah},${son.ayah || 1})` : 'openSurahById(1)'}">${son ? 'Devam Et' : 'Başla'} ${IK.ok}</button></div>
+      <div>${siraSec}<small>${son ? 'Son Okunan' : 'Okumaya başla'}</small><b>${esc(sonS ? sonS.name : '')} Sûresi</b><span>${sonNo}. Sûre • ${son && son.ayah > 1 ? son.ayah + '. âyette kaldın' : (sonS ? sonS.verse_count + ' Âyet' : '')}</span>
+      <button onclick="${son ? `openSurahAt(${son.surah},${son.ayah || 1})` : `openSurahById(${ilk})`}">${son ? 'Devam Et' : 'Başla'} ${IK.ok}</button></div>
     </div>
     ${(() => { let k = 0; try { k = Object.keys(hvGetBookmarks()).length; } catch (e) {} return `<button class="kr-imler-git" onclick="hvYerImleri()"><span>⭐</span><b>Yer İmlerim</b><small>${k ? k + ' âyet kayıtlı' : 'Henüz yok'}</small>${IK.ok}</button>`; })()}
     <div id="kr-mini" class="kr-dinle-yer"></div>
@@ -1857,6 +1860,8 @@ document.addEventListener('DOMContentLoaded', ayarKatla);
     const q = (document.getElementById('surah-search-input') || {}).value || '';
     if (q.trim() && typeof filterSurahList === 'function') filterSurahList(q);
     else window.renderSurahListItems((typeof APP_STATE !== 'undefined' && APP_STATE.surahList) || []);
+    try { if (typeof renderKrHub === 'function' && document.querySelector('#page-kurandua .kr-hub')) renderKrHub(); } catch (e) {}
+    try { if (typeof yaKuranYaz === 'function') yaKuranYaz(); } catch (e) {}
   };
   try { if (typeof APP_STATE !== 'undefined' && APP_STATE.surahList && APP_STATE.surahList.length) window.renderSurahListItems(APP_STATE.surahList); } catch (e) {}
 })();
@@ -2281,7 +2286,7 @@ document.addEventListener('DOMContentLoaded', ayarKatla);
     } catch (e) {}
     // Son okunan + meâlden hatim
     try {
-      const lr = JSON.parse(localStorage.getItem('hv_last_read') || 'null');
+      const lr = (typeof hvGetLastRead === 'function') ? hvGetLastRead() : JSON.parse(localStorage.getItem('hv_last_read') || 'null');
       const mh = typeof window.hvMealHatim === 'function' ? window.hvMealHatim() : null;
       if (lr && lr.surah) {
         let ad = lr.name || (typeof hvSurahName === 'function' ? hvSurahName(lr.surah) : '');
