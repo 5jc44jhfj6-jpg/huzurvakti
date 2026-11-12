@@ -3388,6 +3388,7 @@ window.hvMushafSesQari = hvMushafSesQari;
 function hvMushafHatimIsaretle(sayfa) {
   try {
     hvSave('hatim_page', Math.max(0, Math.min(604, parseInt(sayfa, 10) || 0)));
+    if (typeof window.hvHatimBurayaKadar === 'function') window.hvHatimBurayaKadar(Math.max(1, Math.min(604, parseInt(sayfa, 10) || 1)));   // v71.8: Mushaf sırası hatmine
     if (typeof renderHatim === 'function') renderHatim();
     if (typeof hvToast === 'function') hvToast('✓ Hatim güncellendi', sayfa + '. sayfaya kadar okundu olarak işaretlendi.');
   } catch (e) {}
