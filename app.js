@@ -22,6 +22,7 @@ const APP_STATE = {
   canliSayac: true,      // v70: iPhone kilit ekranı canlı geri sayım
   notifyBoth: false,
   notifyCuma: true,
+  notifyKuranHafta: true,
   notifyKandil: true,
   notifyAyet: true,      // v65.6: sabah Günün Âyeti bildirimi
   notifyAyetSaat: 8,     // saat (0-23)
@@ -119,7 +120,7 @@ const PAGE_PARENT = {
   // v67.0 yeni sekme düzeni: Bugün · Kur'an · Öğren · Takibim · Ayarlar
   kurandua: 'kurandua', quran: 'kurandua', mushaf: 'kurandua', dinle: 'kurandua', hatim: 'kurandua', 'onemli-sureler': 'kurandua', 'ayet-arama': 'kurandua', 'kuran-nedir': 'kurandua',
   ogren: 'ogren', 'namaz-ogren': 'ogren', 'kuran-ogren': 'ogren', dualar: 'ogren',
-  anlayarak: 'ogren', 'gece-rutini': 'ogren', 'dua-defteri': 'ogren', kelime: 'ogren', cocuk: 'ogren', duvar: 'kurandua',
+  anlayarak: 'ogren', 'gece-rutini': 'ogren', tesbihat: 'ogren', 'dua-defteri': 'ogren', kelime: 'ogren', cocuk: 'ogren', duvar: 'kurandua',
   guide: 'ogren', 'namaz-programi': 'ogren', 'namaz-nedir': 'ogren', taharet: 'ogren', 'ozel-namaz': 'ogren',
   ezber: 'ogren', sifirdan: 'ogren', 'dua-ogrenme': 'ogren', elifba: 'ogren', tecvid: 'ogren',
   ezkar: 'ogren', 'gunluk-dua': 'ogren', esma: 'ogren', 'kirk-hadis': 'ogren', iman: 'ogren', peygamberler: 'ogren', siyer: 'ogren', sozluk: 'ogren', quiz: 'ogren',
@@ -299,6 +300,7 @@ function saveSettings() {
     canliSayac: APP_STATE.canliSayac,
     notifyBoth: APP_STATE.notifyBoth,
     notifyCuma: APP_STATE.notifyCuma,
+    notifyKuranHafta: APP_STATE.notifyKuranHafta,
     notifyKandil: APP_STATE.notifyKandil,
     notifyAyet: APP_STATE.notifyAyet,
     notifyAyetSaat: APP_STATE.notifyAyetSaat,
@@ -363,6 +365,8 @@ function applyStateSettings() {
 
   const notifyCuma = document.getElementById('notify-cuma');
   if (notifyCuma) notifyCuma.checked = APP_STATE.notifyCuma !== false;
+  const notifyKH = document.getElementById('notify-kuranhafta');
+  if (notifyKH) notifyKH.checked = APP_STATE.notifyKuranHafta !== false;
   const notifyKandil = document.getElementById('notify-kandil');
   if (notifyKandil) notifyKandil.checked = APP_STATE.notifyKandil !== false;
   const notifyAyet = document.getElementById('notify-ayet');
@@ -1038,6 +1042,24 @@ function scheduleNativePrayerNotifications() {
         count++;
       } catch (e) {}
     }
+  }
+
+  // ── v71.5: Haftalık Kur'an özeti — Pazar 20:00 (bu hafta hiç okumadı/dinlemediyse gelmez) ──
+  if (APP_STATE.notifyKuranHafta !== false && typeof window.hvKuranHafta === 'function') {
+    try {
+      const v = window.hvKuranHafta();
+      const at = new Date(); at.setHours(20, 0, 0, 0);
+      at.setDate(at.getDate() + ((7 - at.getDay()) % 7));   // bu haftanın Pazar'ı (bugün Pazar ise bugün)
+      if ((v.okunan > 0 || v.dinlenen > 0) && at.getTime() > now + 20000) {
+        let body;
+        if (v.okunan > 0 && v.dinlenen > 0) body = `Bu hafta ${v.okunan} sayfa Kur'an okudun, yaklaşık ${v.dinlenen} sayfa da dinledin. Allah kabul etsin 🤲`;
+        else if (v.okunan > 0) body = `Bu hafta ${v.okunan} sayfa Kur'an okudun. Allah kabul etsin 🤲`;
+        else body = `Bu hafta yaklaşık ${v.dinlenen} sayfa Kur'an dinledin. Allah kabul etsin 🤲`;
+        sched.postMessage({ id: `hv_kuranhafta_${v.hafta}`, title: "📖 Haftalık Kur'an Özeti", body,
+          timestamp: Math.floor(at.getTime() / 1000), sound: 'default' });
+        count++;
+      }
+    } catch (e) {}
   }
 
   // ── Kandil / bayram / arefe / Ramazan hatırlatması (sabah) ──
@@ -3383,6 +3405,16 @@ function setupSettingsListeners() {
     showToastNotification(
       e.target.checked ? '🕯️ Kandil hatırlatması açık' : '🕯️ Kandil hatırlatması kapalı',
       e.target.checked ? 'Kandil, bayram ve arefe günlerinde sabah bildirim gelecek.' : ''
+    );
+  });
+
+  document.getElementById('notify-kuranhafta')?.addEventListener('change', (e) => {
+    APP_STATE.notifyKuranHafta = e.target.checked;
+    saveSettings();
+    setTimeout(scheduleNativePrayerNotifications, 300);
+    showToastNotification(
+      e.target.checked ? "📖 Haftalık Kur'an özeti açık" : "📖 Haftalık Kur'an özeti kapalı",
+      e.target.checked ? "Pazar akşamı 20:00'de, o hafta okuduğun/dinlediğin sayfa sayısı gelecek." : ''
     );
   });
 

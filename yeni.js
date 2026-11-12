@@ -287,6 +287,7 @@ if (typeof _eskiNT === 'function') {
     const d = document.createElement('div'); d.className = 'tk-mz-satir';
     d.innerHTML = `<label><input type="checkbox" ${mz[k] ? 'checked' : ''} onchange="hvMazeret(this.checked)"> <span><b>Bugün mazeretliyim</b><small>Seri bozulmaz, aylık hesaba katılmaz</small></span></label>`;
     const ref = c.querySelector('.streak-box'); if (ref) ref.after(d); else c.appendChild(d);
+    const ts = document.createElement('button'); ts.className = 'an-basla ts-git'; ts.textContent = '📿 Namaz sonrası tesbihat ›'; ts.onclick = () => navigateTo('tesbihat'); d.after(ts);
   };
   rota('namaz-takibi', window.renderNamazTakibi);
 }
@@ -346,6 +347,63 @@ function renderGeceRutini() {
 }
 window.hvGeceTik = (id) => { const k = bugunKey(); const t = yukle('gece_rutin', {}); t[k] = t[k] || {}; t[k][id] = !t[k][id]; kaydet('gece_rutin', t); titre(10); renderGeceRutini(); };
 rota('gece-rutini', renderGeceRutini);
+
+/* ═════════════════════════ v71.5 · NAMAZ SONRASI TESBİHAT ═════════════════════════
+   Entesselâm → Âyete'l-Kürsî → 33×3 sayaç → Tevhid · ayrıca Yâsîn ve Âmenerrasûlü */
+const TS_FAZ = [['Sübhânallâh', 'سُبْحَانَ اللّٰهِ'], ['Elhamdülillâh', 'اَلْحَمْدُ لِلّٰهِ'], ['Allâhü ekber', 'اَللّٰهُ اَكْبَرُ']];
+let tsSay = 0;
+function tsListe() {
+  const kursi = (typeof DUA_LEARN !== 'undefined') ? (DUA_LEARN.find(x => /Kürs/.test(x.title)) || {}) : {};
+  const am = (typeof DUA_LEARN !== 'undefined') ? (DUA_LEARN.find(x => /Âmener/.test(x.title)) || {}) : {};
+  const amS = (typeof SIFIRDAN_NAMAZ_DUALARI !== 'undefined') ? (SIFIRDAN_NAMAZ_DUALARI.find(x => /Âmener/.test(x.ad)) || {}) : {};
+  const amAr = amS.satirlar ? amS.satirlar.map(s => s.ar).join(' ') : am.arabic;
+  const amOk = amS.satirlar ? amS.satirlar.map(s => s.ok).join(' ') : am.okunusu;
+  return [
+    { id: 'selam', ad: 'Allâhümme ente’s-selâm', alt: 'Selam verince ilk okunan', d: { ar: 'اَللّٰهُمَّ اَنْتَ السَّلَامُ وَمِنْكَ السَّلَامُ تَبَارَكْتَ يَا ذَا الْجَلَالِ وَالْاِكْرَامِ', ok: 'Allâhümme ente’s-selâmü ve minke’s-selâm, tebârekte yâ ze’l-celâli ve’l-ikrâm.', tr: 'Allah’ım! Sen selâmsın, selâmet ancak sendendir. Ey celâl ve ikram sahibi, Sen ne yücesin!' } },
+    { id: 'kursi', ad: 'Âyete’l-Kürsî', alt: 'Bakara 255', d: { ar: kursi.arabic, ok: kursi.okunusu, tr: kursi.turkish } },
+    { id: 'tesbih', ad: 'Tesbih (33 · 33 · 33)', alt: 'Sübhânallâh · Elhamdülillâh · Allâhü ekber', sayac: true },
+    { id: 'tevhid', ad: 'Tevhid ve dua', alt: 'Tesbihten sonra', d: { ar: 'لَا اِلٰهَ اِلَّا اللّٰهُ وَحْدَهُ لَا شَرٖيكَ لَهُ لَهُ الْمُلْكُ وَلَهُ الْحَمْدُ وَهُوَ عَلٰى كُلِّ شَيْءٍ قَدٖيرٌ', ok: 'Lâ ilâhe illallâhü vahdehû lâ şerîke leh, lehü’l-mülkü ve lehü’l-hamdü ve hüve alâ külli şey’in kadîr.', tr: 'Allah’tan başka ilâh yoktur; O tektir, ortağı yoktur. Mülk O’nundur, hamd O’na mahsustur. O her şeye gücü yetendir. — Ardından eller açılıp dua edilir.' } },
+    { id: 'yasin', ad: 'Yâsîn Sûresi', alt: 'Kur’an’ın kalbi — Kur’an’da aç', sure: 36 },
+    { id: 'amener', ad: 'Âmenerrasûlü', alt: 'Bakara 285-286', d: { ar: amAr, ok: amOk, tr: am.turkish }, ayet: [2, 285] }
+  ];
+}
+function tsSayacHtml() {
+  const f = Math.min(2, Math.floor(tsSay / 33)), bitti = tsSay >= 99, n = bitti ? 33 : tsSay % 33;
+  return `<div class="ts-sayac ${bitti ? 'bitti' : ''}" onclick="hvTsTap()" role="button">
+    <div class="ts-halka" style="--p:${bitti ? 1 : n / 33}"><div><b>${bitti ? '✓' : n}</b><small>${bitti ? 'Tamamlandı' : '/ 33'}</small></div></div>
+    <div class="ts-faz">${TS_FAZ.map((z, i) => `<span class="${i < f || bitti ? 'ok' : i === f ? 'bu' : ''}"><i dir="rtl" lang="ar">${z[1]}</i>${z[0]}</span>`).join('')}</div>
+    <small class="ts-ipucu">${bitti ? 'Allah kabul etsin · sıfırlamak için uzun bas' : 'Saymak için dokun'}</small></div>`;
+}
+function renderTesbihat() {
+  const c = $('tesbihat-content'); if (!c) return;
+  const k = bugunKey(); const t = yukle('tesbihat', {}); const bu = t[k] || {};
+  const L = tsListe(); const n = L.filter(x => bu[x.id]).length;
+  c.innerHTML = `<div class="gr-ust ts-ust" style="background-image:url(img/kart_dua.jpg)"><div><small>SELAMDAN SONRA</small><b>Namaz Sonrası Tesbihat</b><span>Bugün ${n} / ${L.length} okundu</span></div></div>
+  ${L.map(x => `<details class="gr-kart ${bu[x.id] ? 'ok' : ''}" ${x.sayac ? 'open' : ''}>
+    <summary><button class="gr-tik" onclick="event.preventDefault();hvTsTik('${x.id}')">${bu[x.id] ? '✓' : ''}</button><span><b>${esc(x.ad)}</b>${x.alt ? `<small>${esc(x.alt)}</small>` : ''}</span></summary>
+    <div class="gr-ic">${x.sayac ? `<div id="ts-sayac-kutu">${tsSayacHtml()}</div>` : ''}
+      ${x.sure ? `<button class="an-basla" onclick="openSurahById(${x.sure})">Yâsîn Sûresi’ni oku ›</button>` : ''}
+      ${x.d && x.d.ar ? duaKart(x.d) : ''}
+      ${x.ayet ? `<button class="an-basla" onclick="openSurahAt(${x.ayet[0]}, ${x.ayet[1]})">Kur’an’da aç ›</button>` : ''}</div></details>`).join('')}
+  <div class="info-note">Peygamberimiz (s.a.v.): “Kim her namazın ardından 33 kere Sübhânallâh, 33 kere Elhamdülillâh, 33 kere Allâhü ekber der ve yüzü Lâ ilâhe illallâhü vahdehû… ile tamamlarsa, günahları deniz köpüğü kadar olsa da bağışlanır.” (Müslim)</div>`;
+  const s = c.querySelector('.ts-sayac'); if (s) tsUzun(s);
+}
+function tsUzun(el) {
+  let z = null;
+  el.addEventListener('touchstart', () => { z = setTimeout(() => { z = 'x'; tsSay = 0; titre(40); tsCiz(); }, 700); }, { passive: true });
+  el.addEventListener('touchend', (e) => { if (z === 'x') { e.preventDefault(); } else clearTimeout(z); z = null; });
+  el.addEventListener('contextmenu', (e) => { e.preventDefault(); tsSay = 0; tsCiz(); });
+}
+function tsCiz() { const k = $('ts-sayac-kutu'); if (!k) return; k.innerHTML = tsSayacHtml(); const s = k.querySelector('.ts-sayac'); if (s) tsUzun(s); }
+window.hvTsTap = () => {
+  if (tsSay >= 99) return;
+  tsSay++;
+  if (tsSay === 99) { titre([60, 60, 120]); const t = yukle('tesbihat', {}); const k = bugunKey(); t[k] = t[k] || {}; t[k].tesbih = true; kaydet('tesbihat', t); try { const z = parseInt(yukle('zikir_total', 0), 10) || 0; kaydet('zikir_total', z + 99); } catch (e) {} renderTesbihat(); return; }
+  titre(tsSay % 33 === 0 ? [40, 40, 40] : 8);
+  tsCiz();
+};
+window.hvTsTik = (id) => { const k = bugunKey(); const t = yukle('tesbihat', {}); t[k] = t[k] || {}; t[k][id] = !t[k][id]; kaydet('tesbihat', t); titre(10); renderTesbihat(); };
+rota('tesbihat', renderTesbihat);
 
 /* ═════════════════════════ DUA DEFTERİM ═════════════════════════ */
 function renderDuaDefteri() {
@@ -556,7 +614,7 @@ function renderDuvar() {
     ${_dv.s ? `<div class="dv-surukle-ip">☝️ Yazıyı parmağınla yukarı / aşağı sürükleyebilirsin${_dv.ofs ? ` · <button onclick="hvDvOfsSifirla()">Ortala</button>` : ''}</div>` : ''}
     <button class="an-basla" onclick="hvDvKaydet()">Telefonuma kaydet / paylaş</button>
     <div class="yh-grup">2 · Fotoğrafı seç</div>
-    <div class="dv-izgara">${DUVARLAR.map((d, i) => `<button class="${i === _dv.i ? 'on' : ''}" onclick="hvDvSec(${i})" style="background-image:url(img/dv_k_${String(i + 1).padStart(2, '0')}.jpg?v=2)"><span>${esc(d[0])}<small>${esc(d[1])}</small></span></button>`).join('')}</div>
+    <div class="dv-izgara">${DUVARLAR.map((d, i) => `<button class="${i === _dv.i ? 'on' : ''}" onclick="hvDvSec(${i})" style="background-image:url(img/dv_k_${String(i + 1).padStart(2, '0')}.jpg?v=3)"><span>${esc(d[0])}<small>${esc(d[1])}</small></span></button>`).join('')}</div>
     <div class="info-note">Kaydettikten sonra telefonunun Ayarlar → Duvar Kâğıdı bölümünden ana ekrana ya da kilit ekranına koyabilirsin.</div>`;
   duvarCiz($('dv-canvas'), 540, 960);
   dvSurukleBagla($('dv-canvas'));
@@ -637,7 +695,7 @@ function duvarCiz(cv, W, H) {
       res(cv);
     };
     im.onerror = () => res(cv);
-    im.src = `img/duvar_${W >= 900 && _dv.i < 26 ? 'hd_' : ''}${String(_dv.i + 1).padStart(2, '0')}.jpg?v=2`;   // 27+ yeni setin HD'si yok   // v68.6: kaydederken yüksek çözünürlük
+    im.src = `img/duvar_${W >= 900 ? 'hd_' : ''}${String(_dv.i + 1).padStart(2, '0')}.jpg?v=3`;   // v71.5: 27+ setin de HD'si var   // v68.6: kaydederken yüksek çözünürlük
   });
 }
 window.hvDvSec = (i) => { _dv.i = i; renderDuvar(); };
@@ -1495,7 +1553,7 @@ window.hvHtSifir = (b) => {
 /* ─────────────── PAYLAŞIM: 10 CAMİ ARKA PLANI ─────────────── */
 const PB_ADLAR = DUVARLAR.map(d => d[0]);
 const pbSecili = () => yukle('paylas_bg', '16');   // v67.9: varsayılan Kul Şerif (keskin 1080 px)
-const pbKaynak = (sec) => sec ? `img/duvar_${sec}.jpg?v=2` : 'img/paylas_' + ((document.body && document.body.dataset.foto) || 'ikindi') + '.jpg';
+const pbKaynak = (sec) => sec ? `img/duvar_${sec}.jpg?v=3` : 'img/paylas_' + ((document.body && document.body.dataset.foto) || 'ikindi') + '.jpg';
 const _pbCache = {};
 window.hvCardLoadBg = function () {
   const src = pbKaynak(pbSecili());
@@ -1511,7 +1569,7 @@ function pbSerit(fn) {
   const sec = pbSecili();
   return `<div class="pb-serit">
     <button class="${sec === '' ? 'on' : ''}" onclick="${fn}('')" style="background-image:url(${pbKaynak('')})"><span>Vakte göre</span></button>
-    ${PB_ADLAR.map((a, i) => { const k = String(i + 1).padStart(2, '0'); return `<button class="${sec === k ? 'on' : ''}" onclick="${fn}('${k}')" style="background-image:url(img/dv_k_${k}.jpg?v=2)"><span>${esc(a)}</span></button>`; }).join('')}
+    ${PB_ADLAR.map((a, i) => { const k = String(i + 1).padStart(2, '0'); return `<button class="${sec === k ? 'on' : ''}" onclick="${fn}('${k}')" style="background-image:url(img/dv_k_${k}.jpg?v=3)"><span>${esc(a)}</span></button>`; }).join('')}
   </div>`;
 }
 let _pbSira = 0;
@@ -1895,6 +1953,50 @@ document.addEventListener('DOMContentLoaded', ayarKatla);
   const vc = (s) => { const x = sureBul(s); return x ? Number(x.verse_count) || 0 : 0; };
   function sayfaSon(p) { if (p >= 604) return 114 * 1000 + 6; const k = SB[p], s = Math.floor(k / 1000), a = k % 1000; return a > 1 ? s * 1000 + a - 1 : (s - 1) * 1000 + vc(s - 1); }
   window.hvAyetSayfa = ayetSayfa;
+
+  /* ── v71.5 · Haftalık Kur'an özeti: bu hafta okunan / dinlenen sayfa (Pazar 20:00 bildirimi) ── */
+  const KH = 'hv_kuran_hafta';
+  function haftaKey(d) { d = new Date(d || Date.now()); const g = (d.getDay() + 6) % 7; d.setHours(0, 0, 0, 0); d.setDate(d.getDate() - g); return d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate(); }
+  function khOku() { let o = null; try { o = JSON.parse(localStorage.getItem(KH) || 'null'); } catch (e) {} const h = haftaKey(); if (!o || o.h !== h || !Array.isArray(o.o)) o = { h, o: [], d: 0 }; return o; }
+  let khPlanT = null, khSon = null;
+  function khPlanla(hemen) {
+    const v = window.hvKuranHafta(), imza = v.okunan + ':' + v.dinlenen;
+    if (imza === khSon) return;
+    clearTimeout(khPlanT);
+    khPlanT = setTimeout(() => {
+      khPlanT = null; khSon = imza;
+      try { if (typeof hvHasNativeNotifications === 'function' && hvHasNativeNotifications() && typeof scheduleNativePrayerNotifications === 'function') scheduleNativePrayerNotifications(); } catch (e) {}
+    }, hemen ? 0 : 90000);
+  }
+  function khYaz(o) { try { localStorage.setItem(KH, JSON.stringify(o)); } catch (e) {} khPlanla(false); }
+  window.hvKuranHafta = () => { const o = khOku(); return { okunan: o.o.length, dinlenen: Math.round(o.d || 0), hafta: o.h }; };
+  window.hvKuranHaftaSayfa = (p) => { p = Number(p); if (!(p >= 1 && p <= 604)) return; const o = khOku(); if (o.o.indexOf(p) < 0) { o.o.push(p); khYaz(o); } };
+  function khDinle(sayfa) { if (!(sayfa > 0)) return; const o = khOku(); o.d = (o.d || 0) + sayfa; khYaz(o); }
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden' && khPlanT) khPlanla(true); });
+  setTimeout(() => { khSon = null; khPlanla(false); }, 5000);
+  // Dinleme: 5 sn'de bir çalan Kur'an sesine bak
+  const sureSayfa = (s) => { const n = vc(s); return n ? Math.max(1, ayetSayfa(s, n) - ayetSayfa(s, 1) + 1) : 1; };
+  const calar = (a) => !!(a && !a.paused && !a.ended && a.currentTime > 0);
+  let khTik = Date.now();
+  setInterval(() => {
+    const simdi = Date.now(), dt = Math.min(15, (simdi - khTik) / 1000); khTik = simdi;
+    try {
+      let p = 0;
+      if (typeof hvDnSes !== 'undefined' && calar(hvDnSes) && hvDnSes.duration && typeof hvDnSure !== 'undefined' && hvDnSure) p += dt / hvDnSes.duration * sureSayfa(hvDnSure);
+      if (typeof hvAaSes !== 'undefined' && calar(hvAaSes)) p += dt / 150;
+      if (typeof hvMvSes !== 'undefined' && calar(hvMvSes)) p += dt / 150;
+      if (p > 0) khDinle(p);
+    } catch (e) {}
+  }, 5000);
+  // Mushaf sayfa görünümü: bir sayfada 25 sn kalınca "okundu"
+  let msSayfa = 0, msT = 0;
+  if (typeof window.hvMushafSayfaGetir === 'function') {
+    const g0 = window.hvMushafSayfaGetir;
+    window.hvMushafSayfaGetir = function (p) { msSayfa = Number(p) || 0; msT = Date.now(); return g0.apply(this, arguments); };
+  }
+  setInterval(() => {
+    if (msSayfa && Date.now() - msT >= 25000 && document.visibilityState === 'visible' && ['mushaf', 'quran'].indexOf(APP_STATE.currentPage) >= 0) { window.hvKuranHaftaSayfa(msSayfa); msSayfa = 0; }
+  }, 5000);
   const ayar = (k) => !!yukle('ok_' + k, true);
   window.hvOkAyar = (k) => { kaydet('ok_' + k, !ayar(k)); window.hvKrMenu(); try { okCiz(); } catch (e) {} if (k === 'uyanik') uyanik(); };
 
@@ -1905,6 +2007,7 @@ document.addEventListener('DOMContentLoaded', ayarKatla);
   const say = (o) => { let n = 0; for (let i = 0; i < 604; i++) if (o.b.charCodeAt(i) === 49) n++; return n; };
   window.hvMealHatim = () => { const o = mh(); return { okunan: say(o), sure: o.s, ayet: o.a, ts: o.ts, adet: o.adet || 0 }; };
   function isaretle(s, bas, son) {
+    try { for (let a = bas; a <= son; a++) { const p = ayetSayfa(s, a); if (sayfaSon(p) === s * 1000 + a) window.hvKuranHaftaSayfa(p); } } catch (e) {}
     if (!ayar('mhatim')) return;
     const o = mh(); let b = o.b.split(''), deg = false;
     for (let a = bas; a <= son; a++) {
@@ -1930,7 +2033,7 @@ document.addEventListener('DOMContentLoaded', ayarKatla);
       if (!k) return;
       const p = ayetSayfa(OK.id, k), cz = cuzNo(p), czBas = CUZ_BAS.indexOf(p) >= 0 && SB_SET.has(OK.id * 1000 + k);
       const d = document.createElement('div'); d.className = 'ok-sy' + (czBas ? ' cuz' : '');
-      d.innerHTML = `<i></i><span>${czBas ? '<b>' + cz + '. Cüz</b> · ' : ''}Sayfa ${p}${czBas ? '' : ' · ' + cz + '. cüz'}</span><i></i>`;
+      const sAd = (sureBul(OK.id) || {}).name; d.innerHTML = `<i></i><span>${sAd ? esc(sAd) + ' Sûresi · ' : ''}${czBas ? '<b>' + cz + '. Cüz</b> · ' : ''}Sayfa ${p}${czBas ? '' : ' · ' + cz + '. cüz'}</span><i></i>`;
       const once = e.previousElementSibling; if (once && once.classList.contains('kr-ayrac')) once.style.display = 'none';
       e.before(d);
     });
@@ -1942,7 +2045,7 @@ document.addEventListener('DOMContentLoaded', ayarKatla);
   function izle(els) {
     if (io) { io.disconnect(); io = null; } Object.values(sayac).forEach(clearTimeout); sayac = {};
     izD = null;
-    if (!ayar('mhatim') || !els.length) return;
+    if (!els.length) return;   // v71.5: haftalık özet için hatim kapalıyken de izlenir (işaretleme yine ayara bağlı)
     const N = OK.v.length || vc(OK.id), ara = {};
     els.forEach((e, i) => { const n = Number(e.id.slice(5)); ara[n] = [n, i + 1 < els.length ? Number(els[i + 1].id.slice(5)) - 1 : N]; });
     izD = { sid: OK.id, els, ara, ilk: {}, tamam: {} };

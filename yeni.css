@@ -1646,3 +1646,20 @@ body.dark-theme .notify-status.warn { color: #f6d6ae !important; background: #3a
 body.dark-theme .kible-sensor-yok { background: #2c1f12; border-color: #8a6430; color: #f1dfbd; }
 body.dark-theme .kible-sensor-yok .ksy-bas { color: #f3c979; }
 body.dark-theme .kible-sensor-yok .ksy-gunes { background: #3a2916; }
+
+/* v71.5 · Namaz sonrası tesbihat */
+.ts-sayac { display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 8px 0 4px; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; cursor: pointer; }
+.ts-halka { width: 168px; height: 168px; border-radius: 50%; display: grid; place-items: center; background: conic-gradient(#c99a4b calc(var(--p) * 360deg), rgba(201, 154, 75, .16) 0); transition: background .15s; }
+.ts-halka > div { width: 146px; height: 146px; border-radius: 50%; background: var(--bg-card); display: flex; flex-direction: column; align-items: center; justify-content: center; box-shadow: inset 0 0 0 1px rgba(201, 154, 75, .35); }
+.ts-halka b { font-family: var(--ya-serif); font-size: 3rem; font-weight: 600; line-height: 1; color: var(--text-main); }
+.ts-halka small { font-size: .78rem; color: var(--text-sub); margin-top: 4px; }
+.ts-sayac:active .ts-halka > div { transform: scale(.97); }
+.ts-faz { display: flex; gap: 6px; width: 100%; }
+.ts-faz span { flex: 1; text-align: center; font-size: .74rem; font-weight: 600; color: var(--text-sub); padding: 7px 4px; border-radius: 12px; border: 1px solid var(--border-light); display: flex; flex-direction: column; gap: 2px; }
+.ts-faz span i { font-style: normal; font-size: 1.02rem; font-family: var(--ar-font, 'Amiri', serif); }
+.ts-faz span.bu { border-color: #c99a4b; color: var(--text-main); background: rgba(201, 154, 75, .12); }
+.ts-faz span.ok { color: #6e9b5a; border-color: rgba(110, 155, 90, .45); }
+.ts-sayac.bitti .ts-halka { background: conic-gradient(#6e9b5a 360deg, transparent 0); }
+.ts-ipucu { font-size: .75rem; color: var(--text-sub); }
+.ts-git { display: block; width: 100%; margin: 12px 0 4px; }
+.gr-ic .an-basla { margin-top: 8px; }
