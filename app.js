@@ -180,7 +180,8 @@ function hvVakitFotoUrl(k) {
   const d = new Date(); const gun = Math.floor((d.getTime() - d.getTimezoneOffset() * 60000) / 86400000);
   const ek = { safak: 0, sabah: 1, ogle: 2, ikindi: 3, aksam: 4, gece: 5 }[k];
   const n = (gun + ek) % HV_VAKIT_HAVUZ[k];
-  return n === 0 ? `img/vakit_${k}.jpg` : `img/vakit_${k}_${n + 1}.jpg`;
+  // ?v=71: aynı adlı eski (Kul Şerif) fotoğraf önbellekten gelmesin
+  return (n === 0 ? `img/vakit_${k}.jpg` : `img/vakit_${k}_${n + 1}.jpg`) + '?v=71';
 }
 window.hvVakitFotoUrl = hvVakitFotoUrl;
 function hvTemaRengi() {
