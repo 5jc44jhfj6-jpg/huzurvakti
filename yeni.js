@@ -556,7 +556,7 @@ function renderDuvar() {
     ${_dv.s ? `<div class="dv-surukle-ip">☝️ Yazıyı parmağınla yukarı / aşağı sürükleyebilirsin${_dv.ofs ? ` · <button onclick="hvDvOfsSifirla()">Ortala</button>` : ''}</div>` : ''}
     <button class="an-basla" onclick="hvDvKaydet()">Telefonuma kaydet / paylaş</button>
     <div class="yh-grup">2 · Fotoğrafı seç</div>
-    <div class="dv-izgara">${DUVARLAR.map((d, i) => `<button class="${i === _dv.i ? 'on' : ''}" onclick="hvDvSec(${i})" style="background-image:url(img/dv_k_${String(i + 1).padStart(2, '0')}.jpg)"><span>${esc(d[0])}<small>${esc(d[1])}</small></span></button>`).join('')}</div>
+    <div class="dv-izgara">${DUVARLAR.map((d, i) => `<button class="${i === _dv.i ? 'on' : ''}" onclick="hvDvSec(${i})" style="background-image:url(img/dv_k_${String(i + 1).padStart(2, '0')}.jpg?v=2)"><span>${esc(d[0])}<small>${esc(d[1])}</small></span></button>`).join('')}</div>
     <div class="info-note">Kaydettikten sonra telefonunun Ayarlar → Duvar Kâğıdı bölümünden ana ekrana ya da kilit ekranına koyabilirsin.</div>`;
   duvarCiz($('dv-canvas'), 540, 960);
   dvSurukleBagla($('dv-canvas'));
@@ -637,7 +637,7 @@ function duvarCiz(cv, W, H) {
       res(cv);
     };
     im.onerror = () => res(cv);
-    im.src = `img/duvar_${W >= 900 && _dv.i < 26 ? 'hd_' : ''}${String(_dv.i + 1).padStart(2, '0')}.jpg`;   // 27+ yeni setin HD'si yok   // v68.6: kaydederken yüksek çözünürlük
+    im.src = `img/duvar_${W >= 900 && _dv.i < 26 ? 'hd_' : ''}${String(_dv.i + 1).padStart(2, '0')}.jpg?v=2`;   // 27+ yeni setin HD'si yok   // v68.6: kaydederken yüksek çözünürlük
   });
 }
 window.hvDvSec = (i) => { _dv.i = i; renderDuvar(); };
@@ -1495,7 +1495,7 @@ window.hvHtSifir = (b) => {
 /* ─────────────── PAYLAŞIM: 10 CAMİ ARKA PLANI ─────────────── */
 const PB_ADLAR = DUVARLAR.map(d => d[0]);
 const pbSecili = () => yukle('paylas_bg', '16');   // v67.9: varsayılan Kul Şerif (keskin 1080 px)
-const pbKaynak = (sec) => sec ? `img/duvar_${sec}.jpg` : 'img/paylas_' + ((document.body && document.body.dataset.foto) || 'ikindi') + '.jpg';
+const pbKaynak = (sec) => sec ? `img/duvar_${sec}.jpg?v=2` : 'img/paylas_' + ((document.body && document.body.dataset.foto) || 'ikindi') + '.jpg';
 const _pbCache = {};
 window.hvCardLoadBg = function () {
   const src = pbKaynak(pbSecili());
@@ -1511,7 +1511,7 @@ function pbSerit(fn) {
   const sec = pbSecili();
   return `<div class="pb-serit">
     <button class="${sec === '' ? 'on' : ''}" onclick="${fn}('')" style="background-image:url(${pbKaynak('')})"><span>Vakte göre</span></button>
-    ${PB_ADLAR.map((a, i) => { const k = String(i + 1).padStart(2, '0'); return `<button class="${sec === k ? 'on' : ''}" onclick="${fn}('${k}')" style="background-image:url(img/dv_k_${k}.jpg)"><span>${esc(a)}</span></button>`; }).join('')}
+    ${PB_ADLAR.map((a, i) => { const k = String(i + 1).padStart(2, '0'); return `<button class="${sec === k ? 'on' : ''}" onclick="${fn}('${k}')" style="background-image:url(img/dv_k_${k}.jpg?v=2)"><span>${esc(a)}</span></button>`; }).join('')}
   </div>`;
 }
 let _pbSira = 0;
