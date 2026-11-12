@@ -492,7 +492,14 @@ const DUVARLAR = [
   ['Bâdşâhî', 'Lahor'], ['Sultan Kâbus', 'Maskat'],
   ['Minang Ulu Camii', 'Padang'], ['Çini Eyvan', 'İsfahan'], ['Avize ve Mihrap', 'Maskat'], ['Nasırülmülk', 'Şiraz'], ['Vezir Han', 'Lahor'],
   ['Cuma Mescidi', 'İsfahan'], ['Kırmızı Cami', 'Kolombo'], ['Modern Cami', 'Akşam'], ['Altın Kubbe', 'İsfahan'], ['Ahşap Sütunlar', 'Buhara'],
-  ['Taş Cami', 'Sade'], ['Baiturrahman · Yağmur', 'Açe'], ['Şeyh Zayed · İç', 'Abu Dabi'], ['Osmanlı Mihrabı', 'Türkiye']];
+  ['Taş Cami', 'Sade'], ['Baiturrahman · Yağmur', 'Açe'], ['Şeyh Zayed · İç', 'Abu Dabi'], ['Osmanlı Mihrabı', 'Türkiye'],
+  // v71.2: kullanıcının gönderdiği 28 yeni cami (yatay fotoğraf → dikey, alt kısım yazı için koyu)
+  ['Yıldızlı Çöl', 'Gece'], ['Cam Kubbe', 'Gün batımı'], ['Mermer Saray', 'Akşam'], ['Beyaz Kubbe', 'Akşam'], ['Endülüs Avlusu', 'Akşam'],
+  ['Beyaz Cami', 'Gündüz'], ['Yalıyar Camii', 'Şafak'], ['Dağ Eteğinde', 'Akşam'], ['Mor Akşam', 'Gün batımı'], ['Şelale Camii', 'Bulutlu'],
+  ['Modern Kubbe', 'Gündüz'], ['Mavi Saat', 'Hilal'], ['Çöl Akşamı', 'Gün batımı'], ['Sahil Camii', 'Gündüz'], ['Fırtınalı Sahil', 'Bulutlu'],
+  ['Endülüs · Gece', 'Mavi saat'], ['Kızıl Gökyüzü', 'Çöl'], ['Orman Camii', 'Yağmur'], ['Sonbahar Sabahı', 'Sis'], ['Ay Işığı', 'Dolunay'],
+  ['Lale Kubbe', 'Akşam'], ['Samanyolu', 'Gece'], ['Karlı Çini Cami', 'Kış'], ['Sahil · Bulutlu', 'Sabah'], ['Pembe Akşam', 'Gün batımı'],
+  ['Işık Huzmesi', 'Bulutlu'], ['Boğaz Akşamı', 'İstanbul'], ['Şehir Gecesi', 'Gece']];
 /* Yazının yeri: [üst, alt] ekran oranı — gökyüzü / boş duvar olan bantta, cami açıkta kalsın. Listede olmayanlar eskisi gibi altta. */
 const DUVAR_UST = { 1: [0.26, 0.58], 2: [0.25, 0.54], 3: [0.24, 0.46], 5: [0.25, 0.50], 6: [0.25, 0.44], 7: [0.25, 0.48], 9: [0.25, 0.60], 10: [0.25, 0.50], 11: [0.25, 0.56], 12: [0.25, 0.50], 13: [0.25, 0.52], 14: [0.25, 0.56], 15: [0.25, 0.42], 17: [0.25, 0.46], 18: [0.25, 0.50], 19: [0.25, 0.42], 20: [0.25, 0.54], 21: [0.25, 0.38], 23: [0.25, 0.54], 24: [0.25, 0.52], 25: [0.25, 0.44], 26: [0.25, 0.44] };   // üst sınır ≥ %24: kilit ekranı saati
 const DUVAR_SURE = [['', 'Sade (yazısız)'], ['s:Fâtiha', 'Fâtiha Sûresi'], ['d:Âyetel Kürsî', 'Âyetel Kürsî'], ['s:İhlâs', 'İhlâs Sûresi']];
@@ -630,7 +637,7 @@ function duvarCiz(cv, W, H) {
       res(cv);
     };
     im.onerror = () => res(cv);
-    im.src = `img/duvar_${W >= 900 ? 'hd_' : ''}${String(_dv.i + 1).padStart(2, '0')}.jpg`;   // v68.6: kaydederken yüksek çözünürlük
+    im.src = `img/duvar_${W >= 900 && _dv.i < 26 ? 'hd_' : ''}${String(_dv.i + 1).padStart(2, '0')}.jpg`;   // 27+ yeni setin HD'si yok   // v68.6: kaydederken yüksek çözünürlük
   });
 }
 window.hvDvSec = (i) => { _dv.i = i; renderDuvar(); };
