@@ -2369,7 +2369,7 @@ window.hvWidgetAc = function (h) {
 
 /* ═════════════ v70.5 · KUR'AN OKURKEN OTOMATİK KAYDIRMA (5 hız) ═════════════
    Okuma ekranında sağ altta küçük düğme → panel: ▶/⏸, 1–5 hız, kapat.
-   Parmakla dokununca durur, bırakınca 1,5 sn sonra devam eder. Sûre bitince kendiliğinden durur.
+   Parmakla dokununca durur, bırakınca 1,5 sn sonra devam eder. Sûre bitince 3 sn sonra sıradaki sûreye geçer (v71.7).
    Okuma ayarlarından tamamen gizlenebilir ("Otomatik kaydırma"). */
 (function () {
   // v70.6: daha yavaş seçenekler (¼ ve ½) + genel olarak yavaşlatıldı · saniyede piksel
@@ -2431,16 +2431,47 @@ window.hvWidgetAc = function (h) {
       if (px >= 1) {
         const once = k.scrollTop; k.scrollTop = once + px;
         birikim -= (k.scrollTop - once);
-        if (k.scrollTop <= once && k.scrollTop + k.clientHeight >= k.scrollHeight - 2) { dur(); if (typeof hvToast === 'function') hvToast('Sûre bitti', 'Otomatik kaydırma durdu.'); return; }
+        if (k.scrollTop <= once && k.scrollTop + k.clientHeight >= k.scrollHeight - 2) { sureBitti(); return; }
       }
       // kalan küsurat (0–1 px) içerik kaydırılarak gösterilir → göz akışı kesintisiz görür
       if (w) { w.style.willChange = 'transform'; w.style.transform = `translate3d(0, ${-Math.min(birikim, 1).toFixed(3)}px, 0)`; }
     } else { hizNow = 0; if (w && w.style.transform) kaydirmaSifirla(); }
     rafId = requestAnimationFrame(adim);
   }
+  /* v71.7: sûre bitince 3 sn geri sayım → sıradaki sûre (mushaf / iniş sırasına göre) açılır, kaydırma sürer */
+  const sonraki = document.createElement('div'); sonraki.className = 'ok-sonraki'; sonraki.hidden = true;
+  kok.prepend(sonraki);
+  let gecis = 0, gecisT = 0;
+  function gecisIptal(mesaj) {
+    clearInterval(gecisT); gecisT = 0; gecis = 0; sonraki.hidden = true;
+    if (mesaj && typeof hvToast === 'function') hvToast('Sûre bitti', 'Otomatik kaydırma durdu.');
+  }
+  function sureBitti() {
+    dur();
+    const no = (typeof window.hvSureKomsu === 'function') ? window.hvSureKomsu(OK.id, 1) : (OK.id < 114 ? OK.id + 1 : 0);
+    if (!no) { if (typeof hvToast === 'function') hvToast('Sûre bitti', 'Otomatik kaydırma durdu.'); return; }
+    const ad = ((sureBul(no) || {}).name) || (no + '. Sûre');
+    let kalan = 3; gecis = no;
+    const yaz = () => { sonraki.innerHTML = `<span><small>Sıradaki sûre</small><b>${esc(ad)}</b></span><i>${kalan}</i><button aria-label="İptal">İptal</button>`; sonraki.querySelector('button').onclick = () => gecisIptal(false); };
+    yaz(); sonraki.hidden = false;
+    gecisT = setInterval(() => {
+      if (!okumada()) { gecisIptal(false); return; }
+      kalan--;
+      if (kalan > 0) { yaz(); return; }
+      clearInterval(gecisT); gecisT = 0; sonraki.hidden = true;
+      try { openSurahById(no); } catch (e) { gecis = 0; return; }
+      const t0 = Date.now();
+      const bekleYukle = setInterval(() => {
+        const k = kutu(), w = icerik();
+        const hazir = OK.id === no && OK.v && OK.v.length && w && w.querySelector('[id^="ayah-"]');
+        if (hazir) { clearInterval(bekleYukle); gecis = 0; try { k.scrollTop = 0; } catch (e) {} acik = true; setTimeout(basla, 1200); }
+        else if (Date.now() - t0 > 20000) { clearInterval(bekleYukle); gecis = 0; }
+      }, 300);
+    }, 1000);
+  }
   dugme.onclick = () => { acik = true; ciz(); basla(); };
-  oynat.onclick = () => { akiyor ? dur() : basla(); };
-  kok.querySelector('.ok-kapat').onclick = () => { dur(); acik = false; ciz(); };
+  oynat.onclick = () => { if (gecisT) gecisIptal(false); akiyor ? dur() : basla(); };
+  kok.querySelector('.ok-kapat').onclick = () => { if (gecisT) gecisIptal(false); dur(); acik = false; ciz(); };
   kok.querySelectorAll('.ok-hizlar button').forEach(b => b.onclick = () => {
     seviye = b.dataset.h; yz('hv_otokay_hiz2', seviye); ciz(); if (!akiyor) basla();
   });
@@ -2457,6 +2488,7 @@ window.hvWidgetAc = function (h) {
   setInterval(() => {
     const goster = okumada() && izinli();
     kok.style.display = goster ? 'block' : 'none';
+    if (gecis) { kok.style.display = 'block'; return; }   // sıradaki sûreye geçerken panel kapanmasın
     if (!goster && (akiyor || acik)) { dur(); acik = false; ciz(); }
   }, 600);
   ciz();

@@ -1678,3 +1678,13 @@ body.dark-theme .kible-sensor-yok .ksy-gunes { background: #3a2916; }
 .kr-son .kr-son-sira button { margin: 0; padding: 4px 11px; font-family: var(--font-ui, sans-serif); font-size: .72rem; font-weight: 600; background: none; color: #f3dfb8; border-radius: 999px; }
 .kr-son .kr-son-sira button.on { background: linear-gradient(160deg, #fff4dc, #f0d79e); color: #2b1a10; }
 .kr-son { flex-shrink: 0; height: auto !important; }
+
+/* v71.7 · Otomatik kaydırma: sıradaki sûre geri sayımı */
+#hv-otokay .ok-sonraki { position: absolute; right: 0; bottom: calc(100% + 8px); display: flex; align-items: center; gap: 10px; padding: 8px 8px 8px 14px; border-radius: 18px; white-space: nowrap;
+  background: linear-gradient(#3a2716, #24170c); border: 1px solid rgba(201,151,77,.6); box-shadow: 0 6px 18px rgba(40,22,8,.35); color: #f3e2bd; }
+#hv-otokay .ok-sonraki[hidden] { display: none; }
+#hv-otokay .ok-sonraki span { display: flex; flex-direction: column; line-height: 1.2; }
+#hv-otokay .ok-sonraki small { font-size: .62rem; color: #e9cf9a; letter-spacing: .03em; }
+#hv-otokay .ok-sonraki b { font-family: var(--ya-serif); font-size: .98rem; font-weight: 600; }
+#hv-otokay .ok-sonraki i { font-style: normal; display: grid; place-items: center; width: 30px; height: 30px; border-radius: 50%; background: linear-gradient(#f5d58a, #d9a94e); color: #2a1a0b; font-weight: 800; }
+#hv-otokay .ok-sonraki button { border: 0; border-radius: 999px; padding: 6px 10px; background: rgba(255,255,255,.1); color: #f3e2bd; font-size: .78rem; font-weight: 600; cursor: pointer; }
