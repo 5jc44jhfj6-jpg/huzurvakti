@@ -2166,7 +2166,7 @@ document.addEventListener('DOMContentLoaded', ayarKatla);
         const gor = {};
         o.havuz = hvAyetHavuzu().filter(v => { const k = v.surahNumber + ':' + v.ayah; if (gor[k]) return false; gor[k] = 1; return true; })
           .map(v => ({ m: String(v.turkish || '').trim(), k: v.surah + ' Sûresi · ' + v.ayah + '. Âyet', kk: v.surah + ' ' + v.ayah }))
-          .filter(x => x.m);
+          .filter(x => x.m && x.m.length <= 150);   // v70.8: ana ekran widget'ında kesilmesin diye uzun âyetler havuza girmez
       }
     } catch (e) {}
     // Son okunan + meâlden hatim

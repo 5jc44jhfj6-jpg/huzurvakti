@@ -1999,7 +1999,12 @@ let startHeadingAngle = 0;
    her uygulama açılışında BİR KULLANICI DOKUNUŞU ister. Android ve
    masaüstünde hiç izin gerekmez → onay ekranı gösterilmemeli. */
 function hvPusulaIzinGerekli() {
-  return typeof DeviceOrientationEvent !== 'undefined' &&
+  // v70.8: Yeni Chrome / Android WebView sürümleri de requestPermission eklediği için Android telefonlar
+  // yanlışlıkla iPhone yoluna giriyor, izin soruyor ve telefonun pusulasına hiç bağlanmıyordu.
+  // İzin penceresi yalnızca iPhone/iPad içindir.
+  if (window.NamazDostuBridge || window.hvIsAndroid || /Android/i.test(navigator.userAgent || '')) return false;
+  const ios = /iPhone|iPad|iPod/i.test(navigator.userAgent || '') || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  return ios && typeof DeviceOrientationEvent !== 'undefined' &&
          typeof DeviceOrientationEvent.requestPermission === 'function';
 }
 let hvPusulaBuOturumdaVerildi = false;
@@ -2292,7 +2297,7 @@ function startCompassSensors(isAutoStart = false) {
       return;
     }
   }
-  if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
+  if (hvPusulaIzinGerekli()) {
     if (isAutoStart && hvPusulaBuOturumdaVerildi) {
       hvPusulaDurdur();
       window.addEventListener('deviceorientation', handleOrientationEvent, true);
@@ -3640,3 +3645,77 @@ window.acceptNotificationPermissionFlow = function() {
   setTimeout(() => { try { scheduleNativePrayerNotifications(); } catch (e) {} }, 1200);
 };
 
+
+/* ═════════════ v70.8 · KIBLE: PUSULA VERİSİ GELMEZSE AÇIKLAMA + GÜNEŞLE KIBLE ═════════════
+   Bazı Android telefonlarda manyetik pusula sensörü yok ya da veri göndermiyor → ibre hiç dönmez.
+   4 sn içinde geçerli (gerçek kuzeye göre) yön gelmezse kullanıcıya nedenini ve sensörsüz yolu gösterir. */
+(function () {
+  let giris = 0, webSon = 0, webGoreceli = 0, gosterildi = false;
+  const kaydet = (e) => {
+    if (APP_STATE.currentPage !== 'qibla') return;
+    if (e && e.alpha != null && !isNaN(e.alpha)) {
+      if (e.absolute === true || e.type === 'deviceorientationabsolute' || e.webkitCompassHeading != null) webSon = Date.now();
+      else webGoreceli = Date.now();
+    }
+  };
+  window.addEventListener('deviceorientationabsolute', kaydet, { passive: true });
+  window.addEventListener('deviceorientation', kaydet, { passive: true });
+
+  // Güneşin yatay açısı (kuzeyden saat yönünde) ve yüksekliği — NOAA yaklaşık formülü
+  function gunesKonumu(lat, lng, t) {
+    const r = Math.PI / 180, d = t / 86400000 + 2440587.5 - 2451545.0;
+    const g = (357.529 + 0.98560028 * d) * r, q = 280.459 + 0.98564736 * d;
+    const L = (q + 1.915 * Math.sin(g) + 0.020 * Math.sin(2 * g)) * r, e = (23.439 - 0.00000036 * d) * r;
+    const ra = Math.atan2(Math.cos(e) * Math.sin(L), Math.cos(L)), dec = Math.asin(Math.sin(e) * Math.sin(L));
+    const gmst = (18.697374558 + 24.06570982441908 * d) % 24;
+    const H = ((gmst * 15 + lng) * r) - ra, la = lat * r;
+    const alt = Math.asin(Math.sin(la) * Math.sin(dec) + Math.cos(la) * Math.cos(dec) * Math.cos(H));
+    const az = Math.atan2(-Math.sin(H), Math.tan(dec) * Math.cos(la) - Math.sin(la) * Math.cos(H));
+    return { az: (az / r + 360) % 360, alt: alt / r };
+  }
+  const yonAdi = (a) => ['kuzey', 'kuzeydoğu', 'doğu', 'güneydoğu', 'güney', 'güneybatı', 'batı', 'kuzeybatı'][Math.round(a / 45) % 8];
+
+  function panel() {
+    let p = document.getElementById('kible-sensor-yok');
+    if (!p) {
+      const ref = document.getElementById('compass-status-msg'); if (!ref) return null;
+      p = document.createElement('div'); p.id = 'kible-sensor-yok'; p.className = 'kible-sensor-yok';
+      ref.parentNode.insertBefore(p, ref);
+    }
+    return p;
+  }
+  function goster() {
+    const p = panel(); if (!p) return;
+    const u = APP_STATE.gpsKonum || APP_STATE.userLocation || {};
+    const kible = Math.round(APP_STATE.qiblaAngle || calculateQiblaBearing(u.lat, u.lng));
+    const g = gunesKonumu(u.lat, u.lng, Date.now());
+    let gunesYazi;
+    if (g.alt > 3) {
+      let fark = Math.round(((kible - g.az + 540) % 360) - 180);
+      const taraf = fark >= 0 ? 'sağına' : 'soluna';
+      gunesYazi = `☀️ <b>Güneşle bul:</b> Yüzünü güneşe dön. Kıble, güneşin <b>${Math.abs(fark)}° ${taraf}</b> düşüyor` +
+        (Math.abs(fark) <= 15 ? ' (neredeyse tam güneşin olduğu yön).' : Math.abs(fark) >= 80 && Math.abs(fark) <= 100 ? ` (güneşe göre tam ${fark >= 0 ? 'sağ' : 'sol'} kolunun yönü).` : Math.abs(fark) >= 165 ? ' (güneşe sırtını dönünce önün).' : '.');
+    } else {
+      gunesYazi = '🌙 Güneş şu an ufkun altında. Gündüz bu ekranda güneşe göre kıbleyi de gösteririz.';
+    }
+    const tani = window.__hvNativePusula ? 'ns' : (window.NamazDostuBridge ? 'nx' : 'w') + (webGoreceli ? '-r' : '');
+    const model = ((navigator.userAgent.match(/Android [\d.]+; ([^;)]+)/) || [])[1] || '').trim();
+    p.innerHTML = `<b class="ksy-bas">🧭 Bu telefonun pusulasından yön bilgisi alınamıyor.</b>
+      <span>Telefonda pusula (manyetik alan) sensörü olmayabilir ya da kapalı olabilir. Bu yüzden ibre dönmüyor.</span>
+      <span class="ksy-gunes">${gunesYazi}</span>
+      <span>🧭 Kıble açın: kuzeyden saat yönünde <b>${kible}°</b> (${yonAdi(kible)}). Elinde pusula varsa ona göre dönebilirsin; ya da aşağıdaki kadranı parmağınla çevirerek elle ayarla.</span>
+      <small>Kod: ${tani}${model ? ' · ' + model : ''}</small>`;
+    p.style.display = 'block';
+  }
+  setInterval(() => {
+    try {
+      if (APP_STATE.currentPage !== 'qibla') { giris = 0; gosterildi = false; const p = document.getElementById('kible-sensor-yok'); if (p) p.style.display = 'none'; return; }
+      if (!giris) { giris = Date.now(); return; }
+      const simdi = Date.now();
+      const veriVar = (window.__hvNativeSon && simdi - window.__hvNativeSon < 3000) || (webSon && simdi - webSon < 3000);
+      const p = document.getElementById('kible-sensor-yok');
+      if (veriVar) { if (p) p.style.display = 'none'; gosterildi = false; return; }
+      if (simdi - giris > 4000 && (!gosterildi || simdi % 60000 < 1000)) { gosterildi = true; goster(); }
+    } catch (e) {}
+  }, 1000);
+})();
