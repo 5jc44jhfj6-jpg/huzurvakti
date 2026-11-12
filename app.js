@@ -165,25 +165,14 @@ function hvFotoGecis(eski) {
   document.querySelectorAll('.ya-foto').forEach(el => {
     const o = document.createElement('div');
     o.className = 'ya-foto-eski';
-    o.style.backgroundImage = `url(${hvVakitFotoUrl(eski)})`;
+    o.style.backgroundImage = `url(img/vakit_${eski}.jpg?v=k1)`;
     el.appendChild(o);
     requestAnimationFrame(() => requestAnimationFrame(() => { o.style.opacity = '0'; }));
     setTimeout(() => o.remove(), 2600);
   });
 }
 // Durum çubuğu rengi (iOS kabuğu theme-color'ı izler)
-const HV_UST_RENK = { safak: '#0d306d', sabah: '#8591a4', ogle: '#659cdd', ikindi: '#a18d97', aksam: '#8b5c55', gece: '#0e1014' };   // v71: yeni vakit fotoğraflarının üst renkleri
-// v71: her vaktin birkaç fotoğrafı var; her gün sırayla biri gelir (vakit_aksam.jpg, vakit_aksam_2.jpg …)
-const HV_VAKIT_HAVUZ = { safak: 3, sabah: 3, ogle: 4, ikindi: 5, aksam: 7, gece: 3 };
-function hvVakitFotoUrl(k) {
-  k = HV_VAKIT_HAVUZ[k] ? k : 'ogle';
-  const d = new Date(); const gun = Math.floor((d.getTime() - d.getTimezoneOffset() * 60000) / 86400000);
-  const ek = { safak: 0, sabah: 1, ogle: 2, ikindi: 3, aksam: 4, gece: 5 }[k];
-  const n = (gun + ek) % HV_VAKIT_HAVUZ[k];
-  // ?v=71: aynı adlı eski (Kul Şerif) fotoğraf önbellekten gelmesin
-  return (n === 0 ? `img/vakit_${k}.jpg` : `img/vakit_${k}_${n + 1}.jpg`) + '?v=71';
-}
-window.hvVakitFotoUrl = hvVakitFotoUrl;
+const HV_UST_RENK = { safak: '#0a0f24', sabah: '#8f8db5', ogle: '#2f75c2', ikindi: '#6e8db5', aksam: '#2a4268', gece: '#050a1c' };   // v67.6 Kul Şerif üst renkleri
 function hvTemaRengi() {
   try {
     let renk;
@@ -1915,7 +1904,6 @@ function updatePrayerCountdown() {
     if (eskiFoto && eskiFoto !== yeniFoto) hvFotoGecis(eskiFoto);
     document.body.dataset.tod = currentActiveId;
     document.body.dataset.foto = yeniFoto;
-    document.body.style.setProperty('--vk-foto', `url(${hvVakitFotoUrl(yeniFoto)})`);
     try { applyStateSettings(); } catch (e) {}
   }
   hvKonumYansit();

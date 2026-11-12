@@ -130,12 +130,18 @@ body.dark-theme .yn-nav .nav-tab.active .tab-label { color: #2b1d14; }
 }
 .ya-foto {
   position: absolute; inset: 0; background-size: cover; background-position: center 59%;
-  background-image: var(--vk-foto, url(img/vakit_ogle.jpg)); filter: saturate(1.1);
+  background-image: url(img/vakit_ogle.jpg?v=k1); filter: saturate(1.1);
   transition: background-image .8s ease;
 }
 /* v70.4: vakit değişince eski fotoğraf üstte kalıp yavaşça kaybolur */
 .ya-foto-eski { position: absolute; inset: 0; background-size: inherit; background-position: inherit; background-repeat: no-repeat;
   opacity: 1; transition: opacity 2.2s ease; pointer-events: none; }
+body[data-foto="safak"] .ya-foto { background-image: url(img/vakit_safak.jpg?v=k1); }
+body[data-foto="sabah"] .ya-foto { background-image: url(img/vakit_sabah.jpg?v=k1); }
+body[data-foto="ogle"] .ya-foto { background-image: url(img/vakit_ogle.jpg?v=k1); }
+body[data-foto="ikindi"] .ya-foto { background-image: url(img/vakit_ikindi.jpg?v=k1); }
+body[data-foto="aksam"] .ya-foto { background-image: url(img/vakit_aksam.jpg?v=k1); }
+body[data-foto="gece"] .ya-foto { background-image: url(img/vakit_gece.jpg?v=k1); }
 .ya-hero::after {
   content: ''; position: absolute; inset: 0; pointer-events: none;
   background: linear-gradient(rgba(15, 8, 3, .42), rgba(15, 8, 3, .12) 45%, rgba(15, 8, 3, 0) 62%);
@@ -1640,24 +1646,3 @@ body.dark-theme .notify-status.warn { color: #f6d6ae !important; background: #3a
 body.dark-theme .kible-sensor-yok { background: #2c1f12; border-color: #8a6430; color: #f1dfbd; }
 body.dark-theme .kible-sensor-yok .ksy-bas { color: #f3c979; }
 body.dark-theme .kible-sensor-yok .ksy-gunes { background: #3a2916; }
-
-/* v71 · hareketli vakit sahnesi */
-#ya-foto-fx { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; }
-@keyframes hvYavasYaklas { from { transform: scale(1); } to { transform: scale(1.07); } }
-@media (prefers-reduced-motion: no-preference) {
-  #page-home .ya-foto { animation: hvYavasYaklas 38s ease-in-out infinite alternate; transform-origin: 50% 40%; }
-}
-/* v71 · vakte göre açılış */
-.hv-acilis { position: fixed; inset: 0; z-index: 99990; background: #120c07; opacity: 0; transition: opacity .45s ease; overflow: hidden; }
-.hv-acilis.acik { opacity: 1; }
-.hv-acilis.kapan { opacity: 0; transition: opacity .65s ease; }
-.hv-acilis-foto { position: absolute; inset: 0; background-size: cover; background-position: center; transform: scale(1.12); transition: transform 2.6s ease-out; }
-.hv-acilis.acik .hv-acilis-foto { transform: scale(1.02); }
-.hv-acilis::after { content: ""; position: absolute; inset: 0; background: linear-gradient(rgba(10,6,3,.25), rgba(10,6,3,0) 35%, rgba(10,6,3,.15) 60%, rgba(10,6,3,.8)); pointer-events: none; }
-.hv-acilis canvas { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 1; }
-.hv-acilis-yazi { position: absolute; left: 0; right: 0; bottom: calc(14vh + env(safe-area-inset-bottom, 0px)); z-index: 2; text-align: center; color: #fff;
-  transform: translateY(14px); opacity: 0; transition: transform .9s ease .25s, opacity .9s ease .25s; }
-.hv-acilis.acik .hv-acilis-yazi { transform: none; opacity: 1; }
-.hv-acilis-yazi small { display: block; font-size: .8rem; letter-spacing: .22em; text-transform: uppercase; color: #f1cf87; font-weight: 700; }
-.hv-acilis-yazi b { display: block; font-family: 'Lora', Georgia, serif; font-size: 2.1rem; font-weight: 600; margin-top: 6px; text-shadow: 0 2px 18px rgba(0,0,0,.45); }
-.hv-acilis-yazi span { display: block; margin-top: 10px; font-size: .85rem; color: rgba(255,255,255,.75); letter-spacing: .08em; }

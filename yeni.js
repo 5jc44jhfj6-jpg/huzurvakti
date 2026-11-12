@@ -495,8 +495,6 @@ const DUVARLAR = [
   ['Taş Cami', 'Sade'], ['Baiturrahman · Yağmur', 'Açe'], ['Şeyh Zayed · İç', 'Abu Dabi'], ['Osmanlı Mihrabı', 'Türkiye']];
 /* Yazının yeri: [üst, alt] ekran oranı — gökyüzü / boş duvar olan bantta, cami açıkta kalsın. Listede olmayanlar eskisi gibi altta. */
 const DUVAR_UST = { 1: [0.26, 0.58], 2: [0.25, 0.54], 3: [0.24, 0.46], 5: [0.25, 0.50], 6: [0.25, 0.44], 7: [0.25, 0.48], 9: [0.25, 0.60], 10: [0.25, 0.50], 11: [0.25, 0.56], 12: [0.25, 0.50], 13: [0.25, 0.52], 14: [0.25, 0.56], 15: [0.25, 0.42], 17: [0.25, 0.46], 18: [0.25, 0.50], 19: [0.25, 0.42], 20: [0.25, 0.54], 21: [0.25, 0.38], 23: [0.25, 0.54], 24: [0.25, 0.52], 25: [0.25, 0.44], 26: [0.25, 0.44] };   // üst sınır ≥ %24: kilit ekranı saati
-// v71: zayıf/benzer duvar kâğıtları listeden çıkarıldı (Modern Cami, Taş Cami, Baiturrahman·Yağmur — ilk Baiturrahman kaldı)
-const DUVAR_GIZLI = new Set([20, 23, 24]);
 const DUVAR_SURE = [['', 'Sade (yazısız)'], ['s:Fâtiha', 'Fâtiha Sûresi'], ['d:Âyetel Kürsî', 'Âyetel Kürsî'], ['s:İhlâs', 'İhlâs Sûresi']];
 let _dvHavuz = null;
 function dvHavuz() {
@@ -551,7 +549,7 @@ function renderDuvar() {
     ${_dv.s ? `<div class="dv-surukle-ip">☝️ Yazıyı parmağınla yukarı / aşağı sürükleyebilirsin${_dv.ofs ? ` · <button onclick="hvDvOfsSifirla()">Ortala</button>` : ''}</div>` : ''}
     <button class="an-basla" onclick="hvDvKaydet()">Telefonuma kaydet / paylaş</button>
     <div class="yh-grup">2 · Fotoğrafı seç</div>
-    <div class="dv-izgara">${DUVARLAR.map((d, i) => DUVAR_GIZLI.has(i + 1) ? '' : `<button class="${i === _dv.i ? 'on' : ''}" onclick="hvDvSec(${i})" style="background-image:url(img/dv_k_${String(i + 1).padStart(2, '0')}.jpg)"><span>${esc(d[0])}<small>${esc(d[1])}</small></span></button>`).join('')}</div>
+    <div class="dv-izgara">${DUVARLAR.map((d, i) => `<button class="${i === _dv.i ? 'on' : ''}" onclick="hvDvSec(${i})" style="background-image:url(img/dv_k_${String(i + 1).padStart(2, '0')}.jpg)"><span>${esc(d[0])}<small>${esc(d[1])}</small></span></button>`).join('')}</div>
     <div class="info-note">Kaydettikten sonra telefonunun Ayarlar → Duvar Kâğıdı bölümünden ana ekrana ya da kilit ekranına koyabilirsin.</div>`;
   duvarCiz($('dv-canvas'), 540, 960);
   dvSurukleBagla($('dv-canvas'));
@@ -841,11 +839,11 @@ function krTemaUygula() {
   const t = krTema();
   ['page-kurandua', 'page-quran', 'page-mushaf', 'page-dinle', 'page-hatim'].forEach(id => { const s = $(id); if (s) { s.classList.add('kr'); s.classList.toggle('kr-yesil', t === 'yesil'); s.classList.toggle('kr-krem', t !== 'yesil'); } });
 }
-const krFoto = () => (typeof hvVakitFotoUrl === 'function' ? hvVakitFotoUrl((document.body && document.body.dataset.foto) || 'ikindi') : 'img/vakit_ikindi.jpg');
-const KR_SERIT = ['13', '16', '17', '18', '19', '06', '22', '08', '14', '25'];
+const krFoto = () => `img/vakit_${(document.body && document.body.dataset.foto) || 'ikindi'}.jpg?v=k1`;
+const KR_SERIT = ['13', '16', '17', '18', '19', '06', '22', '24', '14', '25'];
 const krSerit = (id) => `img/duvar_${KR_SERIT[Number(id) % 10]}.jpg`;
 /* v67.7: her caminin kendi gövdesi görünsün diye dikey konum (resme göre) */
-const KR_KONUM = { '13': 62, '16': 50, '17': 55, '18': 60, '19': 60, '06': 45, '22': 50, '08': 52, '14': 50, '25': 55 };
+const KR_KONUM = { '13': 62, '16': 50, '17': 55, '18': 60, '19': 60, '06': 45, '22': 50, '24': 52, '14': 50, '25': 55 };
 const krKonum = (id) => (KR_KONUM[KR_SERIT[Number(id) % 10]] || 45) + '%';
 const KR_CUZ = [[1, 1], [2, 142], [2, 253], [3, 93], [4, 24], [4, 148], [5, 82], [6, 111], [7, 88], [8, 41], [9, 93], [11, 6], [12, 53], [15, 1], [17, 1], [18, 75], [21, 1], [23, 1], [25, 21], [27, 56], [29, 46], [33, 31], [36, 28], [39, 32], [41, 47], [46, 1], [51, 31], [58, 1], [67, 1], [78, 1]];
 const KR_ONE = [1, 36, 67, 18, 55, 56, 48, 2];
@@ -934,7 +932,7 @@ function renderKrHub() {
       </div>`; }).join('')}</div>
     <button class="kr-duvar" onclick="navigateTo('duvar')">
       <span class="kr-duvar-ser">${['16', '13', '19', '22', '18'].map(n => `<i style="background-image:url(img/dv_k_${n}.jpg)"></i>`).join('')}</span>
-      <span class="kr-duvar-y"><small>YENİ</small><b>Duvar Kâğıtları</b><em>${DUVARLAR.length - DUVAR_GIZLI.size} cami · üzerine sûre ya da dua yaz</em></span>${IK.ok}
+      <span class="kr-duvar-y"><small>YENİ</small><b>Duvar Kâğıtları</b><em>${DUVARLAR.length} cami · üzerine sûre ya da dua yaz</em></span>${IK.ok}
     </button>
     <div class="kr-baslik"><h3>Daha fazlası</h3></div>
     <div class="kr-diger">
@@ -1506,7 +1504,7 @@ function pbSerit(fn) {
   const sec = pbSecili();
   return `<div class="pb-serit">
     <button class="${sec === '' ? 'on' : ''}" onclick="${fn}('')" style="background-image:url(${pbKaynak('')})"><span>Vakte göre</span></button>
-    ${PB_ADLAR.map((a, i) => { const k = String(i + 1).padStart(2, '0'); if (DUVAR_GIZLI.has(i + 1)) return ''; return `<button class="${sec === k ? 'on' : ''}" onclick="${fn}('${k}')" style="background-image:url(img/dv_k_${k}.jpg)"><span>${esc(a)}</span></button>`; }).join('')}
+    ${PB_ADLAR.map((a, i) => { const k = String(i + 1).padStart(2, '0'); return `<button class="${sec === k ? 'on' : ''}" onclick="${fn}('${k}')" style="background-image:url(img/dv_k_${k}.jpg)"><span>${esc(a)}</span></button>`; }).join('')}
   </div>`;
 }
 let _pbSira = 0;
@@ -2348,145 +2346,4 @@ window.hvWidgetAc = function (h) {
   }, 600);
   ciz();
   window.hvOtoKaydirDur = dur;
-})();
-
-/* ═════════════ v71 · HAREKETLİ VAKİT SAHNESİ + VAKTE GÖRE AÇILIŞ ═════════════
-   Ana sayfa fotoğrafının üstünde vakte göre hafif hareket:
-   gece/imsak → yıldızlar göz kırpar, arada kayan yıldız · sabah/öğle → ışık süzülür, parıltılar
-   ikindi → altın toz zerreleri · akşam → sıcak zerreler ve uzaktan geçen kuşlar.
-   Uygulama her açılışta vaktin fotoğrafı ve hareketiyle kısa bir karşılama gösterir (dokununca geçer). */
-(function () {
-  const azHareket = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const rnd = (a, b) => a + Math.random() * (b - a);
-
-  function sahne(cv, mod, tamEkran) {
-    const ctx = cv.getContext('2d'); let W = 0, H = 0, dpr = 1, parca = [], kayan = null, kuslar = [], sonKayan = 0, sonKus = 0, isik = -0.4;
-    function boyut() {
-      const r = cv.getBoundingClientRect(); dpr = Math.min(2, window.devicePixelRatio || 1);
-      W = Math.max(1, r.width); H = Math.max(1, r.height); cv.width = W * dpr; cv.height = H * dpr; ctx.setTransform(dpr, 0, 0, dpr, 0, 0); kur();
-    }
-    function kur() {
-      parca = [];
-      const gok = tamEkran ? 0.55 : 0.5;
-      if (mod === 'gece' || mod === 'safak') {
-        const n = Math.round((mod === 'gece' ? 70 : 45) * (W * H) / (390 * 350));
-        for (let i = 0; i < Math.min(n, 160); i++) parca.push({ x: rnd(0, W), y: rnd(0, H * gok), r: rnd(0.5, 1.6), f: rnd(0, 6.28), h: rnd(0.6, 2.2), a: rnd(0.35, 1) * (mod === 'safak' ? 0.7 : 1) });
-      } else {
-        const n = { sabah: 18, ogle: 12, ikindi: 30, aksam: 24 }[mod] || 15;
-        for (let i = 0; i < n; i++) parca.push({ x: rnd(0, W), y: rnd(H * 0.15, H), r: rnd(0.8, mod === 'ikindi' || mod === 'aksam' ? 2.2 : 1.6), vx: rnd(-0.08, 0.08), vy: rnd(-0.25, -0.06), f: rnd(0, 6.28), a: rnd(0.25, 0.7) });
-      }
-    }
-    function ciz(t) {
-      ctx.clearRect(0, 0, W, H);
-      if (mod === 'gece' || mod === 'safak') {
-        for (const p of parca) {
-          const a = p.a * (0.55 + 0.45 * Math.sin(t / 1000 * p.h + p.f));
-          ctx.globalAlpha = a; ctx.fillStyle = '#fff8e6'; ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, 6.283); ctx.fill();
-          if (p.r > 1.3) { ctx.globalAlpha = a * 0.25; ctx.beginPath(); ctx.arc(p.x, p.y, p.r * 3, 0, 6.283); ctx.fill(); }
-        }
-        // kayan yıldız
-        if (!kayan && t - sonKayan > (mod === 'gece' ? rnd(4500, 9000) : rnd(9000, 16000))) {
-          sonKayan = t; const x = rnd(W * 0.2, W * 0.95), y = rnd(H * 0.03, H * 0.25);
-          kayan = { x, y, vx: -rnd(5, 8), vy: rnd(2, 3.2), o: 1, iz: [] };
-        }
-        if (kayan) {
-          kayan.iz.unshift([kayan.x, kayan.y]); if (kayan.iz.length > 18) kayan.iz.pop();
-          kayan.x += kayan.vx; kayan.y += kayan.vy; kayan.o -= 0.02;
-          for (let i = 0; i < kayan.iz.length - 1; i++) {
-            ctx.globalAlpha = Math.max(0, kayan.o) * (1 - i / kayan.iz.length); ctx.strokeStyle = '#fff3d2'; ctx.lineWidth = 2 - i / 12;
-            ctx.beginPath(); ctx.moveTo(kayan.iz[i][0], kayan.iz[i][1]); ctx.lineTo(kayan.iz[i + 1][0], kayan.iz[i + 1][1]); ctx.stroke();
-          }
-          if (kayan.o <= 0 || kayan.x < -20 || kayan.y > H) kayan = null;
-        }
-      } else {
-        // süzülen ışık şeridi (sabah / öğle / ikindi)
-        if (mod !== 'aksam') {
-          isik += 0.0016; if (isik > 1.4) isik = -0.4;
-          const gx = isik * W, g = ctx.createLinearGradient(gx - W * 0.25, 0, gx + W * 0.25, H);
-          g.addColorStop(0, 'rgba(255,240,200,0)'); g.addColorStop(0.5, mod === 'ogle' ? 'rgba(255,255,255,0.10)' : 'rgba(255,226,160,0.12)'); g.addColorStop(1, 'rgba(255,240,200,0)');
-          ctx.globalAlpha = 1; ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
-        }
-        const renk = mod === 'aksam' ? '#ffc58a' : mod === 'ikindi' ? '#ffd98f' : '#fff6dc';
-        for (const p of parca) {
-          p.x += p.vx + Math.sin(t / 1500 + p.f) * 0.08; p.y += p.vy;
-          if (p.y < -5) { p.y = H + 5; p.x = rnd(0, W); }
-          if (p.x < -5) p.x = W + 5; if (p.x > W + 5) p.x = -5;
-          ctx.globalAlpha = p.a * (0.6 + 0.4 * Math.sin(t / 700 + p.f)); ctx.fillStyle = renk;
-          ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, 6.283); ctx.fill();
-        }
-        // akşam: uzaktan geçen kuşlar
-        if (mod === 'aksam') {
-          if (!kuslar.length && t - sonKus > rnd(9000, 15000)) {
-            sonKus = t; const y0 = rnd(H * 0.1, H * 0.3), yon = Math.random() < 0.5 ? 1 : -1;
-            for (let i = 0; i < 5; i++) kuslar.push({ x: yon > 0 ? -20 - i * 14 : W + 20 + i * 14, y: y0 + rnd(-10, 10) + (i % 2) * 8, v: yon * rnd(0.55, 0.75), f: rnd(0, 6.28), s: rnd(3, 5) });
-          }
-          ctx.globalAlpha = 0.75; ctx.strokeStyle = '#2a1608'; ctx.lineWidth = 1.3;
-          for (const k of kuslar) {
-            k.x += k.v; const kanat = Math.sin(t / 140 + k.f) * k.s * 0.6;
-            ctx.beginPath(); ctx.moveTo(k.x - k.s, k.y - kanat); ctx.quadraticCurveTo(k.x - k.s / 2, k.y - 1, k.x, k.y); ctx.quadraticCurveTo(k.x + k.s / 2, k.y - 1, k.x + k.s, k.y - kanat); ctx.stroke();
-          }
-          kuslar = kuslar.filter(k => k.x > -60 && k.x < W + 60);
-        }
-      }
-      ctx.globalAlpha = 1;
-    }
-    let raf = 0, son = 0, calisiyor = false;
-    function dongu(t) {
-      if (!calisiyor) return;
-      if (t - son >= 33) { son = t; try { ciz(t); } catch (e) {} }   // ~30 kare/sn — pil dostu
-      raf = requestAnimationFrame(dongu);
-    }
-    boyut();
-    return {
-      mod: () => mod,
-      degis(m) { if (m !== mod) { mod = m; kayan = null; kuslar = []; kur(); } },
-      boyut,
-      basla() { if (calisiyor || azHareket) return; calisiyor = true; raf = requestAnimationFrame(dongu); },
-      dur() { calisiyor = false; cancelAnimationFrame(raf); },
-      tekCiz() { try { ciz(performance.now()); } catch (e) {} }
-    };
-  }
-
-  /* ── Ana sayfa fotoğrafının üstünde ── */
-  let ana = null;
-  function anaKur() {
-    const foto = document.getElementById('ya-foto'); if (!foto || !foto.parentNode) return;
-    let cv = document.getElementById('ya-foto-fx');
-    if (!cv) { cv = document.createElement('canvas'); cv.id = 'ya-foto-fx'; foto.parentNode.insertBefore(cv, foto.nextSibling); }
-    ana = sahne(cv, document.body.dataset.foto || 'ogle', false);
-  }
-  function anaKontrol() {
-    if (!ana) { anaKur(); if (!ana) return; }
-    const m = document.body.dataset.foto || 'ogle'; ana.degis(m);
-    const gorunur = !document.hidden && (typeof APP_STATE === 'undefined' || APP_STATE.currentPage === 'home');
-    if (gorunur) ana.basla(); else ana.dur();
-  }
-  setInterval(anaKontrol, 1000);
-  document.addEventListener('visibilitychange', anaKontrol);
-  window.addEventListener('resize', () => { if (ana) ana.boyut(); });
-
-  /* ── Vakte göre açılış ── */
-  const SELAM = {
-    safak: ['Hayırlı sabahlar', 'İmsak vakti'], sabah: ['Hayırlı sabahlar', 'Güneş doğdu'], ogle: ['Hayırlı günler', 'Öğle vakti'],
-    ikindi: ['Hayırlı günler', 'İkindi vakti'], aksam: ['Hayırlı akşamlar', 'Akşam vakti'], gece: ['Hayırlı geceler', 'Yatsı vakti']
-  };
-  function acilis() {
-    try { if (sessionStorage.getItem('hv_acilis_v71')) return; sessionStorage.setItem('hv_acilis_v71', '1'); } catch (e) {}
-    try { if (localStorage.getItem('hv_acilis_kapali') === '1') return; } catch (e) {}
-    const m = document.body.dataset.foto; if (!m || !window.hvVakitFotoUrl) return;
-    const s = SELAM[m] || SELAM.ogle;
-    const k = document.createElement('div'); k.id = 'hv-acilis'; k.className = 'hv-acilis';
-    k.innerHTML = `<div class="hv-acilis-foto" style="background-image:url(${hvVakitFotoUrl(m)})"></div><canvas></canvas>
-      <div class="hv-acilis-yazi"><small>${s[1]}</small><b>${s[0]}</b><span>Namaz Dostu</span></div>`;
-    document.body.appendChild(k);
-    const sh = sahne(k.querySelector('canvas'), m, true); sh.basla(); if (azHareket) sh.tekCiz();
-    requestAnimationFrame(() => requestAnimationFrame(() => k.classList.add('acik')));
-    let bitti = false;
-    const kapat = () => { if (bitti) return; bitti = true; k.classList.remove('acik'); k.classList.add('kapan'); setTimeout(() => { sh.dur(); k.remove(); }, 700); };
-    k.addEventListener('click', kapat);
-    setTimeout(kapat, 2300);
-  }
-  // vakit belli olunca (en geç 2,5 sn) açılışı göster
-  let bek = 0;
-  const t = setInterval(() => { bek += 100; if (document.body && document.body.dataset.foto) { clearInterval(t); acilis(); } else if (bek > 2500) clearInterval(t); }, 100);
 })();
