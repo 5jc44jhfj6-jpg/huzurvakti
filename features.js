@@ -395,6 +395,24 @@ const ZIKIR_PRESETS = [
   { key: 'yunus', label: 'Yûnus Duâsı', ar: 'لَا إِلٰهَ إِلَّا أَنْتَ سُبْحَانَكَ إِنِّي كُنْتُ مِنَ الظَّالِمِينَ', target: 100, anlam: 'Senden başka ilâh yok; Sen münezzehsin, ben zalimlerden oldum' },
   { key: 'yahayyu', label: 'Yâ Hayyu yâ Kayyûm', ar: 'يَا حَيُّ يَا قَيُّومُ', target: 100, anlam: 'Ey diri ve her şeyi ayakta tutan Allah' },
   { key: 'yalatif', label: 'Yâ Latîf', ar: 'يَا لَطِيفُ', target: 129, anlam: 'Ey lütfu bol olan Allah' },
+  // v72.1: daha çok çekilen zikirler (Esmâ zikirlerinde hedef, geleneğe göre ismin ebced değeri)
+  { key: 'tevhidtam', label: 'Tevhid (Lâ ilâhe illallâhu vahdehû…)', ar: 'لَا إِلٰهَ إِلَّا اللّٰهُ وَحْدَهُ لَا شَرِيكَ لَهُ لَهُ الْمُلْكُ وَلَهُ الْحَمْدُ وَهُوَ عَلٰى كُلِّ شَيْءٍ قَدِيرٌ', target: 100, anlam: 'Allah’tan başka ilâh yoktur, O tektir, ortağı yoktur; mülk ve hamd O’nundur, O her şeye kadirdir' },
+  { key: 'bakiyat', label: 'Sübhânallâhi ve’l-hamdü lillâhi…', ar: 'سُبْحَانَ اللّٰهِ وَالْحَمْدُ لِلّٰهِ وَلَا إِلٰهَ إِلَّا اللّٰهُ وَاللّٰهُ أَكْبَرُ', target: 100, anlam: 'Allah’ı tesbih ederim, hamd Allah’adır, Allah’tan başka ilâh yoktur, Allah en büyüktür' },
+  { key: 'istigfartam', label: 'Estağfirullâhe’l-azîm…', ar: 'أَسْتَغْفِرُ اللّٰهَ الْعَظِيمَ الَّذِي لَا إِلٰهَ إِلَّا هُوَ الْحَيَّ الْقَيُّومَ وَأَتُوبُ إِلَيْهِ', target: 100, anlam: 'Kendisinden başka ilâh olmayan, diri ve kayyûm olan yüce Allah’tan bağışlanma diler, O’na tövbe ederim' },
+  { key: 'rabbigfirli', label: 'Rabbiğfirlî', ar: 'رَبِّ اغْفِرْ لِي', target: 100, anlam: 'Rabbim, beni bağışla' },
+  { key: 'sehadet', label: 'Kelime-i Şehâdet', ar: 'أَشْهَدُ أَنْ لَا إِلٰهَ إِلَّا اللّٰهُ وَأَشْهَدُ أَنَّ مُحَمَّدًا عَبْدُهُ وَرَسُولُهُ', target: 100, anlam: 'Allah’tan başka ilâh olmadığına, Muhammed’in O’nun kulu ve elçisi olduğuna şahitlik ederim' },
+  { key: 'kelimetevhid', label: 'Kelime-i Tevhîd', ar: 'لَا إِلٰهَ إِلَّا اللّٰهُ مُحَمَّدٌ رَسُولُ اللّٰهِ', target: 100, anlam: 'Allah’tan başka ilâh yoktur, Muhammed Allah’ın elçisidir' },
+  { key: 'hasbiyallah', label: 'Hasbiyallâhu lâ ilâhe illâ hû…', ar: 'حَسْبِيَ اللّٰهُ لَا إِلٰهَ إِلَّا هُوَ عَلَيْهِ تَوَكَّلْتُ وَهُوَ رَبُّ الْعَرْشِ الْعَظِيمِ', target: 7, anlam: 'Allah bana yeter, O’ndan başka ilâh yoktur; O’na güvendim, O büyük arşın Rabbidir (Tevbe 129)' },
+  { key: 'afuv', label: 'Allâhümme inneke afüvvün…', ar: 'اَللّٰهُمَّ إِنَّكَ عَفُوٌّ تُحِبُّ الْعَفْوَ فَاعْفُ عَنِّي', target: 100, anlam: 'Allah’ım, Sen affedicisin, affetmeyi seversin; beni affet' },
+  { key: 'besmele', label: 'Besmele', ar: 'بِسْمِ اللّٰهِ الرَّحْمٰنِ الرَّحِيمِ', target: 100, anlam: 'Rahmân ve Rahîm olan Allah’ın adıyla' },
+  { key: 'lafzatullah', label: 'Allah (Lafza-i Celâl)', ar: 'اَللّٰهُ', target: 100, anlam: 'Allah’ın zâtını bildiren özel ismi' },
+  { key: 'yarahman', label: 'Yâ Rahmân, Yâ Rahîm', ar: 'يَا رَحْمٰنُ يَا رَحِيمُ', target: 100, anlam: 'Ey dünyada ve âhirette merhamet eden Allah' },
+  { key: 'yavedud', label: 'Yâ Vedûd', ar: 'يَا وَدُودُ', target: 20, anlam: 'Ey kullarını seven ve sevilmeye lâyık olan Allah' },
+  { key: 'yafettah', label: 'Yâ Fettâh', ar: 'يَا فَتَّاحُ', target: 489, anlam: 'Ey hayır kapılarını açan Allah' },
+  { key: 'yarezzak', label: 'Yâ Rezzâk', ar: 'يَا رَزَّاقُ', target: 308, anlam: 'Ey bütün canlıların rızkını veren Allah' },
+  { key: 'yahafiz', label: 'Yâ Hafîz', ar: 'يَا حَفِيظُ', target: 998, anlam: 'Ey her şeyi koruyup gözeten Allah' },
+  { key: 'yasafi', label: 'Yâ Şâfî', ar: 'يَا شَافِي', target: 391, anlam: 'Ey şifa veren Allah' },
+  { key: 'yasabur', label: 'Yâ Sabûr', ar: 'يَا صَبُورُ', target: 298, anlam: 'Ey çok sabırlı olan Allah' },
   { key: 'serbest', label: 'Serbest Sayaç', ar: 'لَا إِلٰهَ إِلَّا اللّٰه', target: 0 }
 ];
 let _zikirActive = 0;

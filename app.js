@@ -1626,7 +1626,6 @@ function hvEkVakitleriCiz(t) {
       const gunler = hvBugunDiniGun(bugun);
       const bayram = gunler.find(g => g.type === 'bayram' && g.date === ymd);
       if (bayram) ozel += `<div class="ozel-satir bayram"><span>🕌 Bayram namazı</span><b>≈ ${israk}</b></div>`;
-      if (bugun.getDay() === 5) ozel += `<div class="ozel-satir kandil hutbe" role="button" onclick="hvHutbeAc()"><span>📜 Hayırlı Cumalar</span><b>Bu haftanın hutbesi ›</b></div>`;   // v72: Cuma günü Diyanet hutbesi
       const kandil = gunler.find(g => g.type === 'kandil');
       if (kandil) ozel += `<div class="ozel-satir kandil"><span>🕯️ Bu akşam ${kandil.name}</span><b>Mübarek olsun</b></div>`;
       if (typeof hvRamazanDurum === 'function') {
