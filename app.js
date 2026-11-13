@@ -124,9 +124,9 @@ const PAGE_PARENT = {
   guide: 'ogren', 'namaz-programi': 'ogren', 'namaz-nedir': 'ogren', taharet: 'ogren', 'ozel-namaz': 'ogren',
   ezber: 'ogren', sifirdan: 'ogren', 'dua-ogrenme': 'ogren', elifba: 'ogren', tecvid: 'ogren',
   ezkar: 'ogren', 'gunluk-dua': 'ogren', esma: 'ogren', 'kirk-hadis': 'ogren', iman: 'ogren', peygamberler: 'ogren', siyer: 'ogren', sozluk: 'ogren', quiz: 'ogren',
-  ibadet: 'ibadet', 'namaz-takibi': 'ibadet', kaza: 'ibadet', oruc: 'ibadet', zikirmatik: 'ibadet', qibla: 'ibadet', 'hac-umre': 'ogren', geceler: 'ogren', imsakiye: 'ibadet', takvim: 'ibadet', cevirici: 'ibadet',
-  zekat: 'settings', fitre: 'settings',
-  settings: 'settings', araclar: 'settings', kaynaklar: 'settings', paylasim: 'settings', bebek: 'settings', cuma: 'settings'
+  ibadet: 'ibadet', 'namaz-takibi': 'ibadet', kaza: 'ibadet', oruc: 'ibadet', zikirmatik: 'home', qibla: 'home',   /* v72: Zikirmatik ve Kıble yalnız ana sayfada */ 'hac-umre': 'ogren', geceler: 'ogren', imsakiye: 'ibadet', takvim: 'ibadet', cevirici: 'ibadet',
+  zekat: 'ogren', fitre: 'ogren',   /* v72: Öğren → Daha fazla */
+  settings: 'settings', araclar: 'settings', kaynaklar: 'settings', paylasim: 'settings', bebek: 'ogren', cuma: 'settings'
 };
 
 /* Geri: sayfaya ana sayfadaki Hızlı Erişim'den gelindiyse ana sayfaya, aksi hâlde ait olduğu sekmeye döner (v65.1) */
@@ -1129,6 +1129,26 @@ function scheduleNativePrayerNotifications() {
     }
   }
 
+  // ── v72: Bildirimler bitmeden hatırlat ──
+  // Bildirimler yalnız birkaç gün ileriye kurulabiliyor (iPhone sınırı 64). Kullanıcı uygulamayı o kadar gün açmazsa ezan susar
+  // ve neden sustuğunu anlamaz. Kurulu son günden bir gün önce akşam 21:00'de "uygulamayı bir kez aç" hatırlatması kurulur.
+  // Uygulama her açıldığında bildirimler yeniden kurulduğu için bu hatırlatma da ileri kayar; düzenli açan kişi hiç görmez.
+  try {
+    if (daysCovered.size) {
+      const son = [...daysCovered].sort().pop();   // YYYYMMDD
+      const sonGun = new Date(Number(son.slice(0, 4)), Number(son.slice(4, 6)) - 1, Number(son.slice(6, 8)));
+      const at = new Date(sonGun); at.setDate(at.getDate() - 1); at.setHours(21, 0, 0, 0);
+      if (at.getTime() <= now + 3600000) { at.setTime(sonGun.getTime()); at.setHours(12, 0, 0, 0); }   // kapsam çok kısaysa son günün öğlesi
+      if (at.getTime() > now + 3600000) {
+        const gunAd = sonGun.toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', weekday: 'long' });
+        sched.postMessage({ id: 'hv_hatirlat_ac', title: '🔔 Ezan bildirimlerin bitmek üzere',
+          body: `Vakit bildirimlerin ${gunAd} gününe kadar kurulu. Devam etmesi için Namaz Dostu'nu bir kez açman yeterli.`,
+          timestamp: Math.floor(at.getTime() / 1000), sound: 'default' });
+        count++;
+      }
+    }
+  } catch (e) {}
+
   try { localStorage.setItem('hv_notif_count', String(count)); } catch (e) {}
   updateNotifyStatusUI(count, daysCovered.size);
   return count;
@@ -1606,6 +1626,7 @@ function hvEkVakitleriCiz(t) {
       const gunler = hvBugunDiniGun(bugun);
       const bayram = gunler.find(g => g.type === 'bayram' && g.date === ymd);
       if (bayram) ozel += `<div class="ozel-satir bayram"><span>🕌 Bayram namazı</span><b>≈ ${israk}</b></div>`;
+      if (bugun.getDay() === 5) ozel += `<div class="ozel-satir kandil hutbe" role="button" onclick="hvHutbeAc()"><span>📜 Hayırlı Cumalar</span><b>Bu haftanın hutbesi ›</b></div>`;   // v72: Cuma günü Diyanet hutbesi
       const kandil = gunler.find(g => g.type === 'kandil');
       if (kandil) ozel += `<div class="ozel-satir kandil"><span>🕯️ Bu akşam ${kandil.name}</span><b>Mübarek olsun</b></div>`;
       if (typeof hvRamazanDurum === 'function') {
@@ -1986,6 +2007,13 @@ function loadDailyVerse() {
 }
 
 
+// v72: kıble açısının yön adı — eskiden her yerde "Güneydoğu" yazıyordu (Van'da 191° = Güney-Güneybatı, New York'ta 58° = Kuzeydoğu)
+function hvYonAdi(d) {
+  const A = ['Kuzey', 'Kuzeydoğu', 'Doğu', 'Güneydoğu', 'Güney', 'Güneybatı', 'Batı', 'Kuzeybatı'];
+  return A[Math.round((((Number(d) || 0) % 360) + 360) % 360 / 45) % 8];
+}
+window.hvYonAdi = hvYonAdi;
+
 // Qibla Compass
 function calculateQiblaBearing(lat, lng) {
   const kaabaLat = 21.4225 * Math.PI / 180;
@@ -2064,7 +2092,7 @@ function initQiblaCompass() {
   const distVal = document.getElementById('kaaba-dist-val');
   const locVal = document.getElementById('qibla-user-loc');
 
-  if (degVal) degVal.textContent = `${Math.round(APP_STATE.qiblaAngle)}° Güneydoğu`;
+  if (degVal) degVal.textContent = `${Math.round(APP_STATE.qiblaAngle)}° ${hvYonAdi(APP_STATE.qiblaAngle)}`;
   if (distVal) distVal.textContent = `${dist.toLocaleString('tr-TR')} km`;
   if (locVal) locVal.textContent = `${APP_STATE.currentCity}, ${APP_STATE.currentDistrict} ➔ Mekke-i Mükerreme`;
 
@@ -2152,15 +2180,37 @@ window.hvNativeHeading = function (h, dogruluk) {
   if (isNaN(n)) return;
   const u = APP_STATE.gpsKonum || APP_STATE.userLocation || {};
   const gercek = (n + hvManyetikSapma(u.lat, u.lng) + 360) % 360;
-  // Sensör "güvenilmez" derse (0) bir kez kalibrasyon ipucu göster
-  if (Number(dogruluk) === 0 && !hvNativeKalibreUyarildi) {
-    hvNativeKalibreUyarildi = true;
-    const st = document.getElementById('compass-status-msg');
-    if (st) st.innerHTML = '🔄 <b>Pusula kalibre ediliyor.</b> Telefonu havada 8 çizer gibi birkaç kez çevirin; ibre düzelecektir.';
-  }
+  // v72: pusulanın hassasiyeti sürekli izlenir (0 güvenilmez · 1 zayıf · 2 orta · 3 iyi).
+  // Eskiden yalnız "0" gelince bir kez uyarılıyordu; iPhone ±30-40° saparken "1" gönderiyordu ve kimse uyarılmıyordu.
+  hvPusulaHassasiyet(Number(dogruluk));
   handleOrientationEvent({ webkitCompassHeading: gercek });
 };
 window.hvPusulaDurdur = hvPusulaDurdur;
+
+let hvHassasSon = -1, hvHassasZayifBas = 0;
+function hvPusulaHassasiyet(acc) {   // durum yazısı yön tarifine ayrıldığı için uyarı pusulanın altındaki ayrı kutuda durur
+  if (isNaN(acc)) return;
+  if (acc <= 1) {
+    if (!hvHassasZayifBas) hvHassasZayifBas = Date.now();
+    if (Date.now() - hvHassasZayifBas < 2500 || hvHassasSon === 1) return;   // kısa dalgalanmada uyarma
+    hvHassasSon = 1; hvKibleHassasRozet('zayif');
+  } else {
+    hvHassasZayifBas = 0;
+    const yeni = acc >= 3 ? 3 : 2;
+    if (hvHassasSon === yeni) return;
+    hvHassasSon = yeni; hvKibleHassasRozet(yeni === 3 ? 'iyi' : 'orta');
+  }
+}
+function hvKibleHassasRozet(d) {
+  const kutu = document.getElementById('compass-interactive-box'); if (!kutu) return;
+  let r = document.getElementById('kible-hassas'); if (!r) { r = document.createElement('div'); r.id = 'kible-hassas'; kutu.after(r); }
+  if (d) r.dataset.d = d; else d = r.dataset.d || 'orta';
+  const ofs = hvKibleOfset();
+  r.className = 'kible-hassas ' + d;
+  r.innerHTML = '<div class="kh-ust"><i></i>Pusula hassasiyeti: <b>' + (d === 'iyi' ? 'İyi' : d === 'orta' ? 'Orta' : 'Zayıf') + '</b></div>' +
+    (d === 'zayif' ? '<p>Yön birkaç derece hatalı olabilir. Telefonu havada <b>8 çizer gibi</b> 3-4 kez çevirin; metal eşyadan, mıknatıslı kılıftan ve hoparlörden uzak tutun.</p>' : '') +
+    (ofs ? '<p class="kib-ofs-not">İnce ayar ' + (ofs > 0 ? '+' : '') + ofs.toFixed(0) + '° açık — <a href="#" onclick="hvKibleOfsetSifirla();return false;">sıfırla</a></p>' : '');
+}
 
 /* Düğmeye dokunuş = kullanıcı hareketi → iOS izni tam burada istenebilir.
    Eskiden burada sadece bir onay penceresi açılıyordu; o pencere fazladan
@@ -2226,7 +2276,7 @@ function acceptQiblaPermissionFlow() {
         const distVal = document.getElementById('kaaba-dist-val');
         APP_STATE.qiblaAngle = calculateQiblaBearing(pos.coords.latitude, pos.coords.longitude);
         const dist = calculateGreatCircleDistance(pos.coords.latitude, pos.coords.longitude, 21.4225, 39.8262);
-        if (degVal) degVal.textContent = `${Math.round(APP_STATE.qiblaAngle)}° Güneydoğu`;
+        if (degVal) degVal.textContent = `${Math.round(APP_STATE.qiblaAngle)}° ${hvYonAdi(APP_STATE.qiblaAngle)}`;
         if (distVal) distVal.textContent = `${dist.toLocaleString('tr-TR')} km`;
         updateQiblaUI(0);
       },
@@ -2304,7 +2354,7 @@ function startCompassSensors(isAutoStart = false) {
         const distVal = document.getElementById('kaaba-dist-val');
         APP_STATE.qiblaAngle = calculateQiblaBearing(pos.coords.latitude, pos.coords.longitude);
         const dist = calculateGreatCircleDistance(pos.coords.latitude, pos.coords.longitude, 21.4225, 39.8262);
-        if (degVal) degVal.textContent = `${Math.round(APP_STATE.qiblaAngle)}° Güneydoğu`;
+        if (degVal) degVal.textContent = `${Math.round(APP_STATE.qiblaAngle)}° ${hvYonAdi(APP_STATE.qiblaAngle)}`;
         if (distVal) distVal.textContent = `${dist.toLocaleString('tr-TR')} km`;
         updateQiblaUI(0);
       },
@@ -2546,6 +2596,7 @@ function hvKibleOfsetAyarla(v) {
   try { localStorage.setItem('hv_kible_ofset', String(n)); } catch (e) {}
   const et = document.getElementById('kible-ofset-val');
   if (et) et.textContent = (n > 0 ? '+' : '') + n.toFixed(0) + '°';
+  try { if (document.getElementById('kible-hassas')) hvKibleHassasRozet(); } catch (e) {}
   updateQiblaUI(smoothHeading === null ? 0 : smoothHeading);
 }
 function hvKibleOfsetSifirla() {
@@ -3027,6 +3078,13 @@ function hvSetLastRead(surah, name, ayah, elle) {
   localStorage.setItem(hvLrAnahtar(), JSON.stringify({ surah, name: name || hvSurahName(surah), ayah: ayah || 1, ts: Date.now(), elle: !!elle }));
 }
 window.hvGetLastRead = hvGetLastRead;
+
+/* v72: Diyanet'in cuma hutbeleri — e-Devlet'teki resmî liste (giriş gerekmez; PDF, Word ve ses) */
+const HV_HUTBE_URL = 'https://www.turkiye.gov.tr/diyanet-isleri-cuma-ve-bayram-hutbeleri';
+function hvHutbeAc() {
+  try { const w = window.open(HV_HUTBE_URL, '_blank'); if (!w) location.href = HV_HUTBE_URL; } catch (e) { location.href = HV_HUTBE_URL; }
+}
+window.hvHutbeAc = hvHutbeAc;
 function hvMarkLastRead(surah, ayah, btn) {
   hvSetLastRead(surah, hvSurahName(surah), ayah, true);
   document.querySelectorAll('.ayah-act-btn[data-act="last"]').forEach(b => { b.classList.remove('on'); b.textContent = '📍 Buraya Kadar'; });

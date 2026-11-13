@@ -398,7 +398,7 @@ function tsCiz() { const k = $('ts-sayac-kutu'); if (!k) return; k.innerHTML = t
 window.hvTsTap = () => {
   if (tsSay >= 99) return;
   tsSay++;
-  if (tsSay === 99) { titre([60, 60, 120]); const t = yukle('tesbihat', {}); const k = bugunKey(); t[k] = t[k] || {}; t[k].tesbih = true; kaydet('tesbihat', t); try { const z = parseInt(yukle('zikir_total', 0), 10) || 0; kaydet('zikir_total', z + 99); } catch (e) {} renderTesbihat(); return; }
+  if (tsSay === 99) { titre([60, 60, 120]); const t = yukle('tesbihat', {}); const k = bugunKey(); t[k] = t[k] || {}; t[k].tesbih = true; kaydet('tesbihat', t); try { const z = parseInt(yukle('zikir_total', 0), 10) || 0; kaydet('zikir_total', z + 99); } catch (e) {} renderTesbihat(); try { window.hvPuanAni('tesbihat'); } catch (e) {} return; }
   titre(tsSay % 33 === 0 ? [40, 40, 40] : 8);
   tsCiz();
 };
@@ -990,6 +990,7 @@ function renderKrHub() {
       <div>${siraSec}<small>${son ? 'Son Okunan' : 'Okumaya başla'}</small><b>${esc(sonS ? sonS.name : '')} Sûresi</b><span>${sonNo}. Sûre • ${son && son.ayah > 1 ? son.ayah + '. âyette kaldın' : (sonS ? sonS.verse_count + ' Âyet' : '')}</span>
       <button onclick="${son ? `openSurahAt(${son.surah},${son.ayah || 1})` : `openSurahById(${ilk})`}">${son ? 'Devam Et' : 'Başla'} ${IK.ok}</button></div>
     </div>
+    ${typeof window.hvGunlukKart === 'function' ? window.hvGunlukKart() : ''}
     ${(() => { let k = 0; try { k = Object.keys(hvGetBookmarks()).length; } catch (e) {} return `<button class="kr-imler-git" onclick="hvYerImleri()"><span>⭐</span><b>Yer İmlerim</b><small>${k ? k + ' âyet kayıtlı' : 'Henüz yok'}</small>${IK.ok}</button>`; })()}
     <div id="kr-mini" class="kr-dinle-yer"></div>
     <div class="kr-baslik"><h3>Öne Çıkan Sûreler</h3><button onclick="hvKrOnemli()">Tümü · fazîletleriyle ${IK.ok}</button></div>
@@ -1079,12 +1080,13 @@ function krOynaticiHtml() {
   const hiz = yukle('kr_hiz', 1), tek = yukle('kr_tekrar', false);
   const sid = window._krSure || 0;
   const not = (m === 'both' || m0 === 'aa') && typeof hvAyetKendiSesi === 'function' && !hvAyetKendiSesi(sid, q) ? `<div class="kr-not">ℹ️ ${esc(q.ad)}'in bu sûrede âyet âyet bölünmüş kaydı yok (Fâtiha ve kısa sûrelerde var). Türkçe araya girdiği için bu sûrenin Arapçasını Husarî okur. Kendi sesinden tam sûre için “Arapça Dinle”.</div>` : '';
-  return `<div class="kr-oynatici" id="kr-oynatici">
+  const acik = !!yukle('kr_oyn_acik', false);   // v72: ses çalar varsayılan olarak tek satır; ▾ ile açılır
+  return `<div class="kr-oynatici ${acik ? '' : 'kucuk'}" id="kr-oynatici">
     <div class="kr-om"><span class="kr-kul">${IK.kulak}</span><div class="kr-seg">
       <button class="${m === 'ar' ? 'on' : ''}" onclick="hvKrDinMod('ar')">${IK.kulak}<span>Arapça Dinle</span></button>
       <button class="${m === 'tr' ? 'on' : ''}" onclick="hvKrDinMod('tr')">${IK.ceviri}<span>Türkçe Dinle</span></button>
       <button class="${m === 'both' ? 'on' : ''}" onclick="hvKrDinMod('both')">${IK.dalga}<span>Arapça + Türkçe</span></button></div></div>
-    <div class="kr-hoca"><span class="kr-av">${esc(basHarf(q.ad))}</span><button class="kr-hoca-ad" onclick="hvKrHoca()">${esc(q.ad)} ${IK.asagi}</button><button class="kr-hiz" onclick="hvKrHiz()">${Number(hiz) === 1 ? '1.0' : String(Number(hiz))}x</button></div>
+    <div class="kr-hoca"><button class="kr-kp" id="kr-kp-play" onclick="hvKrOyna()" aria-label="Dinle">${IK.play}</button><span class="kr-av">${esc(basHarf(q.ad))}</span><button class="kr-hoca-ad" onclick="hvKrHoca()">${esc(q.ad)} ${IK.asagi}</button><button class="kr-hiz" onclick="hvKrHiz()">${Number(hiz) === 1 ? '1.0' : String(Number(hiz))}x</button><button class="kr-ac" onclick="hvKrOynAcKapa()" aria-label="${acik ? 'Küçült' : 'Tüm ses seçenekleri'}">${acik ? '▴' : '▾'}</button></div>
     ${not}
     <div class="kr-cubuk" id="kr-cubuk" onclick="hvKrSar(event)"><i id="kr-dolu"></i><b id="kr-nokta"></b></div>
     <div class="kr-zaman"><span id="kr-gecen">00:00</span><span id="kr-toplam">--:--</span></div>
@@ -1269,6 +1271,7 @@ window.hvKrDinMod = (m) => {
   const o = $('kr-oynatici'); if (o) o.outerHTML = krOynaticiHtml();
   krSenk(true);
 };
+window.hvKrOynAcKapa = () => { kaydet('kr_oyn_acik', !yukle('kr_oyn_acik', false)); const o = $('kr-oynatici'); if (o) o.outerHTML = krOynaticiHtml(); try { krSenk(true); } catch (e) {} };
 window.hvKrOyna = (sadeceDurdur) => {
   const m = hvDnMod();
   try {
@@ -1366,6 +1369,7 @@ function krSenk(zorla) {
       tp = n + ' âyet';
     }
     const mpp = $('kr-mp-play'); if (mpp && mpp.dataset.ik !== ik) { mpp.dataset.ik = ik; mpp.innerHTML = IK[ik]; }
+    const kpp = $('kr-kp-play'); if (kpp && kpp.dataset.ik !== ik) { kpp.dataset.ik = ik; kpp.innerHTML = IK[ik]; }
     const oi = (!cal && window._okIlerle && window._okIlerle.id === OK.id) ? window._okIlerle : null;   // v68.7: dinlemiyorken okuma ilerlemesi
     const mpd = $('kr-mp-dolu'); if (mpd) { mpd.style.width = ((oi ? oi.oran : oran) * 100).toFixed(2) + '%'; mpd.classList.toggle('okuma', !!oi); }
     const mpa = $('kr-mp-alt'); if (mpa) { const t = oi ? oi.yazi : hvDnQari().ad + (cal ? ' · ' + g : ''); if (mpa.textContent !== t) mpa.textContent = t; }
@@ -2009,24 +2013,46 @@ document.addEventListener('DOMContentLoaded', ayarKatla);
   window.hvOkAyar = (k) => { kaydet('ok_' + k, !ayar(k)); window.hvKrMenu(); try { okCiz(); } catch (e) {} if (k === 'uyanik') uyanik(); };
 
   /* ── Meâlden hatim kaydı ── */
-  const MH = 'hv_meal_hatim';
-  function mh() { try { const o = JSON.parse(localStorage.getItem(MH) || 'null'); if (o && typeof o.b === 'string' && o.b.length === 604) return o; } catch (e) {} return { b: '0'.repeat(604), s: 0, a: 0, ts: 0, adet: 0 }; }
-  const mhYaz = (o) => { try { localStorage.setItem(MH, JSON.stringify(o)); } catch (e) {} };
-  const say = (o) => { let n = 0; for (let i = 0; i < 604; i++) if (o.b.charCodeAt(i) === 49) n++; return n; };
-  window.hvMealHatim = () => { const o = mh(); return { okunan: say(o), sure: o.s, ayet: o.a, ts: o.ts, adet: o.adet || 0 }; };
+  /* v71.9: Mushaf hatmi de ÂYET ÂYET tutulur (hv_mushaf_hatim2, 6236 işaret) → kısa sûre okuyan da ilerlemeyi görür,
+     yarım sayfa yarım sayılır. Eski sayfa kaydı (hv_meal_hatim, 604 işaret) ilk açılışta buraya taşınır. */
+  const MH = 'hv_mushaf_hatim2', MH_ESKI = 'hv_meal_hatim';
+  function mh() {
+    ayetIndeks(); const N = _bas[115];
+    try { const o = JSON.parse(localStorage.getItem(MH) || 'null'); if (o && typeof o.b === 'string' && o.b.length === N) return o; } catch (e) {}
+    const y = { b: '0'.repeat(N), s: 0, a: 0, ts: 0, adet: 0 };
+    try {
+      const e = JSON.parse(localStorage.getItem(MH_ESKI) || 'null');
+      if (e && typeof e.b === 'string' && e.b.length === 604) {
+        const b = y.b.split('');
+        for (let x = 1; x <= 114; x++) for (let a = 1; a <= vc(x); a++) if (e.b[ayetSayfa(x, a) - 1] === '1') b[_bas[x] + a - 1] = '1';
+        y.b = b.join(''); y.s = e.s || 0; y.a = e.a || 0; y.ts = e.ts || 0; y.adet = e.adet || 0;
+        mhYaz(y);
+      }
+    } catch (e) {}
+    return y;
+  }
+  function mhYaz(o) { try { localStorage.setItem(MH, JSON.stringify(o)); } catch (e) {} }
+  // sayfa karşılığı: toplam (küsuratlı) + her sayfanın doluluk oranı
+  function sayfaOzet(o) {
+    ayetIndeks(); const pg = new Float32Array(605); let top = 0;
+    for (let x = 1; x <= 114; x++) { const n = vc(x); for (let a = 1; a <= n; a++) if (o.b.charCodeAt(_bas[x] + a - 1) === 49) { const w = _pAg[_bas[x] + a - 1]; pg[ayetSayfa(x, a)] += w; top += w; } }
+    return { top, pg };
+  }
+  const say = (o) => { const t = sayfaOzet(o).top; return t > 603.99 ? 604 : t; };
+  const yuzde = (sayfa) => { const y = sayfa / 604 * 100; return y >= 99.95 ? '100' : y >= 10 ? String(Math.round(y)) : y > 0 && y < 0.1 ? '0,1' : y.toFixed(1).replace('.', ',').replace(/,0$/, ''); };
+  const sayfaYaz = (sayfa) => (sayfa >= 10 || sayfa === Math.round(sayfa) ? String(Math.round(sayfa)) : sayfa.toFixed(1).replace('.', ','));
+  window.hvMealHatim = () => { const o = mh(); return { okunan: Math.round(say(o)), sure: o.s, ayet: o.a, ts: o.ts, adet: o.adet || 0 }; };
   function isaretle(s, bas, son) {
     try { for (let a = bas; a <= son; a++) { const p = ayetSayfa(s, a); if (sayfaSon(p) === s * 1000 + a) window.hvKuranHaftaSayfa(p); } } catch (e) {}
+    try { gunlukEkle(s, bas, son); } catch (e) {}   // v72: günlük okuma hedefi (hatim ayarından bağımsız; tekrar okumalar da sayılır)
     if (!ayar('mhatim')) return;
     if (nzMod()) { nzIsaretle(s, bas, son); return; }   // v71.8: iniş sırasında okuyorsa iniş sırası hatmi ilerler
-    const o = mh(); let b = o.b.split(''), deg = false;
-    for (let a = bas; a <= son; a++) {
-      const p = ayetSayfa(s, a);
-      if (sayfaSon(p) === s * 1000 + a && b[p - 1] !== '1') { b[p - 1] = '1'; deg = true; }
-    }
+    const o = mh(); const b = o.b.split(''); let deg = false;
+    for (let a = bas; a <= son; a++) { const k = _bas[s] + a - 1; if (b[k] !== '1') { b[k] = '1'; deg = true; } }
     if (deg || (o.s === s && son > o.a) || !o.s) { o.s = s; o.a = son; }   // kısa göz atmalar 'en son' yeri değiştirmesin
     o.ts = Date.now(); o.b = b.join('');
     mhYaz(o);
-    if (deg && say(o) === 604) toast('🎉 Meâlden hatmini tamamladın', 'Allah kabul etsin. Hatim Takibi\'nden yeni hatme başlayabilirsin.');
+    if (deg && o.b.indexOf('0') < 0) { toast('🎉 Hatmini tamamladın', 'Allah kabul etsin. Hatim Takibi\'nden yeni hatme başlayabilirsin.'); try { window.hvPuanAni('hatim'); } catch (e) {} }
   }
 
   /* ── Okuma ekranı: izleme, ayraç, ilerleme ── */
@@ -2113,15 +2139,25 @@ document.addEventListener('DOMContentLoaded', ayarKatla);
   if (typeof nav0 === 'function') window.navigateTo = function () { const r = nav0.apply(this, arguments); setTimeout(() => { uyanik(); ilerle(); }, 50); return r; };
 
   /* v71.8: okurken üstte sûrenin ana teması (SURE_ACIKLAMA, Bilgi sekmesindeki özet) */
+  /* v72: okuma ekranı toparlandı — hatim etiketi yerine başlıkta küçük yeşil nokta; sûre özeti tek satır, dokununca açılır */
+  function hatimEtiket() {
+    const w = $('ayah-list-wrap'); if (w) { const eski = w.querySelector('.ok-hatim-et'); if (eski) eski.remove(); }
+    const bas = document.querySelector('#surah-header-card .kr-rbas'); if (!bas) return;
+    let n = bas.querySelector('.ok-hatim-nokta');
+    if (okMod() === 'bilgi' || !ayar('mhatim')) { if (n) n.remove(); return; }
+    if (!n) { n = document.createElement('button'); n.className = 'ok-hatim-nokta'; n.setAttribute('aria-label', 'Hatim bilgisi'); bas.appendChild(n); }
+    n.innerHTML = `<i></i>${nzMod() ? 'İniş hatmi' : 'Mushaf hatmi'}`;
+    n.onclick = (e) => { e.stopPropagation(); toast('Okudukların hatme yazılıyor', (nzMod() ? 'İniş sırası' : 'Mushaf sırası') + ' hatmin ilerliyor. Hatim Takibi’nden görebilirsin.'); };
+  }
   function ozetKoy() {
+    hatimEtiket();
     const w = $('ayah-list-wrap'); if (!w || okMod() === 'bilgi' || !ayar('ozet')) return;
     const A = (typeof SURE_ACIKLAMA !== 'undefined') ? SURE_ACIKLAMA : null; const t = A && A[OK.id]; if (!t) return;
     const eski = w.querySelector('.ok-ozet'); if (eski) eski.remove();
-    const d = document.createElement('div'); d.className = 'ok-ozet';
-    d.innerHTML = `<span>📖</span><p><b>Bu sûre ne anlatıyor?</b>${esc(t)}</p><button aria-label="Gizle" onclick="hvOzetGizle()">✕</button>`;
+    const d = document.createElement('details'); d.className = 'ok-ozet';
+    d.innerHTML = `<summary><span>📖</span><b>Bu sûre ne anlatıyor?</b><i>›</i></summary><p>${esc(t)}</p><button onclick="hvOzetGizle()">Bu kutuyu gösterme</button>`;
     w.prepend(d);
   }
-
   window.hvOzetGizle = () => { kaydet('ok_ozet', false); const e = document.querySelector('.ok-ozet'); if (e) e.remove(); toast('Sûre özeti gizlendi', 'Okuma ayarlarından (⋯) tekrar açabilirsin.'); };
 
   /* okCiz her çizimden sonra */
@@ -2163,7 +2199,7 @@ document.addEventListener('DOMContentLoaded', ayarKatla);
     ayetIndeks(); const o = nh(); const b = o.b.split(''); let deg = false;
     for (let a = bas; a <= son; a++) { const k = _bas[s] + a - 1; if (b[k] !== '1') { b[k] = '1'; deg = true; } }
     o.b = b.join(''); o.s = s; o.a = son; o.ts = Date.now(); nhYaz(o);
-    if (deg && nzOzet(o).sayfa >= 603.5) toast('🎉 İniş sırasına göre hatmini tamamladın', 'Allah kabul etsin.');
+    if (deg && o.b.indexOf('0') < 0) { toast('🎉 İniş sırasına göre hatmini tamamladın', 'Allah kabul etsin.'); try { window.hvPuanAni('hatim'); } catch (e) {} }
   }
   function nzOzet(o) {
     ayetIndeks(); let sayfa = 0, bitenSure = 0; const sure = [];
@@ -2175,35 +2211,98 @@ document.addEventListener('DOMContentLoaded', ayarKatla);
     for (const x of L) { const n = vc(x); for (let a = 1; a <= n; a++) if (o.b.charCodeAt(_bas[x] + a - 1) !== 49) return [x, a]; }
     return null;
   }
-  function msSiradaki(o) { for (let p = 1; p <= 604; p++) if (o.b[p - 1] !== '1') { const k = SB[p - 1]; return [Math.floor(k / 1000), k % 1000, p]; } return null; }
-  window.hvHatimIsaretSayfa = (p) => {   // mushaf sayfa görünümünden (25 sn kalınca / "buraya kadar okudum")
-    if (!ayar('mhatim')) return; const o = mh(); if (o.b[p - 1] === '1') return;
-    const b = o.b.split(''); b[p - 1] = '1'; o.b = b.join(''); const k = SB[p - 1]; o.s = Math.floor(k / 1000); o.a = k % 1000; o.ts = Date.now(); mhYaz(o);
+  function msSiradaki(o) { ayetIndeks(); const k = o.b.indexOf('0'); if (k < 0) return null; let x = 1; while (x < 114 && _bas[x + 1] <= k) x++; const ay = k - _bas[x] + 1; return [x, ay, ayetSayfa(x, ay)]; }
+  function sayfaAyetleri(p, fn) { for (let x = 1; x <= 114; x++) { const n = vc(x); if (ayetSayfa(x, 1) > p) break; if (ayetSayfa(x, n) < p) continue; for (let a = 1; a <= n; a++) { const q = ayetSayfa(x, a); if (q === p) fn(x, a); else if (q > p) break; } } }
+  window.hvHatimIsaretSayfa = (p) => {   // Sayfa Sayfa Mushaf'ta bir sayfada 25 sn kalınca
+    try { sayfaAyetleri(p, (x, a) => gunlukEkle(x, a, a)); } catch (e) {}
+    if (!ayar('mhatim')) return; const o = mh(); const b = o.b.split(''); let deg = false, sx = 0, sa = 0;
+    sayfaAyetleri(p, (x, a) => { const k = _bas[x] + a - 1; if (b[k] !== '1') { b[k] = '1'; deg = true; } sx = x; sa = a; });
+    if (!deg) return; o.b = b.join(''); o.s = sx; o.a = sa; o.ts = Date.now(); mhYaz(o);
   };
-  window.hvHatimBurayaKadar = (p) => { const o = mh(); const b = o.b.split(''); for (let i = 0; i < p; i++) b[i] = '1'; o.b = b.join(''); const k = SB[p - 1]; o.s = Math.floor(k / 1000); o.a = k % 1000; o.ts = Date.now(); mhYaz(o); };
+  window.hvHatimBurayaKadar = (p) => {   // "Hatimde buraya kadar okudum"
+    const o = mh(); const b = o.b.split(''); let sx = 0, sa = 0;
+    for (let x = 1; x <= 114; x++) { const n = vc(x); for (let a = 1; a <= n; a++) { if (ayetSayfa(x, a) > p) { x = 999; break; } b[_bas[x] + a - 1] = '1'; sx = x; sa = a; } }
+    o.b = b.join(''); o.s = sx; o.a = sa; o.ts = Date.now(); mhYaz(o);
+  };
+  /* ── v72 · GÜNLÜK OKUMA HEDEFİ ──
+     Kullanıcı günde kaç sayfa okumak istediğini seçer (1-20). O gün okunan her âyet, bulunduğu sayfadaki payı kadar sayılır
+     (aynı gün aynı âyet bir kez). Kur'an sekmesinde halka + seri; hedefe ulaşınca kutlama. */
+  const GK = 'hv_gunluk_okuma', GG = 'hv_gunluk_gecmis', GH = 'hv_gunluk_hedef';
+  const bugunStr = (d) => { d = d || new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
+  const gHedef = () => { const n = parseInt(localStorage.getItem(GH) || '0', 10); return n > 0 ? n : 0; };
+  function gOku() { let o = null; try { o = JSON.parse(localStorage.getItem(GK) || 'null'); } catch (e) {} if (!o || o.g !== bugunStr()) o = { g: bugunStr(), a: [], p: 0, kutlandi: false }; return o; }
+  function gGecmis() { try { return JSON.parse(localStorage.getItem(GG) || '{}') || {}; } catch (e) { return {}; } }
+  function gunlukEkle(s, bas, son) {
+    ayetIndeks(); const o = gOku(); const set = new Set(o.a); let ek = 0;
+    for (let a = bas; a <= son; a++) { const k = _bas[s] + a - 1; if (k < 0 || k >= _bas[115] || set.has(k)) continue; set.add(k); ek += _pAg[k]; }
+    if (!ek) return;
+    o.a = [...set]; o.p = Math.round((o.p + ek) * 100) / 100;
+    const H = gHedef(), yeniTamam = H && !o.kutlandi && o.p >= H - 0.005;
+    if (yeniTamam) o.kutlandi = true;
+    try { localStorage.setItem(GK, JSON.stringify(o)); } catch (e) {}
+    const g = gGecmis(); g[o.g] = o.p; const kes = bugunStr(new Date(Date.now() - 70 * 864e5)); Object.keys(g).forEach(d => { if (d < kes) delete g[d]; });
+    try { localStorage.setItem(GG, JSON.stringify(g)); } catch (e) {}
+    if (yeniTamam) { titre([60, 60, 120]); toast('🎯 Bugünkü hedefini tamamladın', `${H} sayfa okudun. Allah kabul etsin.`); }
+  }
+  function gSeri() {   // hedefin tutturulduğu ardışık gün sayısı (bugün henüz tamamlanmadıysa dünden geriye)
+    const H = gHedef(); if (!H) return 0; const g = gGecmis(); let n = 0; const d = new Date();
+    if (!((g[bugunStr(d)] || 0) >= H - 0.005)) d.setDate(d.getDate() - 1);
+    while ((g[bugunStr(d)] || 0) >= H - 0.005) { n++; d.setDate(d.getDate() - 1); }
+    return n;
+  }
+  const sf = (x) => (x >= 10 || Math.abs(x - Math.round(x)) < 0.05 ? String(Math.round(x)) : x.toFixed(1).replace('.', ','));
+  window.hvGunlukKart = () => {
+    const H = gHedef();
+    if (!H) return `<button class="gh-kart bos" onclick="hvGunlukHedefSec()"><span class="gh-ik">🎯</span><span class="gh-m"><b>Günlük okuma hedefi koy</b><small>Her gün kaç sayfa okumak istersin? Okudukça kendiliğinden sayılır.</small></span><i>›</i></button>`;
+    const o = gOku(), p = o.p, oran = Math.min(1, p / H), seri = gSeri(), tamam = p >= H - 0.005;
+    let kalanS = 604; try { kalanS = 604 - say(mh()); } catch (e) {}
+    const gun = Math.max(1, Math.ceil(kalanS / H));
+    const R2 = 22, C2 = 2 * Math.PI * R2;
+    return `<button class="gh-kart ${tamam ? 'tamam' : ''}" onclick="hvGunlukHedefSec()">
+      <span class="gh-halka"><svg viewBox="0 0 52 52"><circle cx="26" cy="26" r="${R2}" class="gh-iz"/><circle cx="26" cy="26" r="${R2}" class="gh-dolu" stroke-dasharray="${C2}" stroke-dashoffset="${C2 * (1 - oran)}"/></svg><em>${tamam ? '✓' : Math.round(oran * 100) + '%'}</em></span>
+      <span class="gh-m"><small>BUGÜNKÜ HEDEF</small><b>${sf(Math.min(p, 999))} / ${H} sayfa</b><small>${seri ? `🔥 ${seri} gündür hedefte · ` : ''}${tamam ? 'Bugün tamam, Allah kabul etsin' : `Bu hızla hatim ~${gun} günde biter`}</small></span><i>›</i></button>`;
+  };
+  window.hvGunlukHedefSec = () => {
+    const H = gHedef(), S = [1, 2, 3, 5, 10, 20];
+    const html = (typeof shBas === 'function' ? shBas('Günlük okuma hedefi') : '') +
+      `<div class="gh-sec-not">Her gün kaç sayfa okumak istersin? Okuduğun âyetler kendiliğinden sayılır.</div>
+      <div class="gh-sec">${S.map(n => `<button class="${n === H ? 'on' : ''}" onclick="hvGunlukHedef(${n})"><b>${n}</b><small>${n === 20 ? 'sayfa · 1 cüz' : 'sayfa'}</small><em>~${Math.ceil(604 / n)} günde hatim</em></button>`).join('')}</div>
+      ${H ? `<button class="gh-kaldir" onclick="hvGunlukHedef(0)">Hedefi kaldır</button>` : ''}`;
+    if (typeof sheetAc === 'function') sheetAc(html);
+  };
+  window.hvGunlukHedef = (n) => {
+    try { if (n) localStorage.setItem(GH, String(n)); else localStorage.removeItem(GH); } catch (e) {}
+    const o = gOku(); o.kutlandi = n ? o.p >= n - 0.005 : false; try { localStorage.setItem(GK, JSON.stringify(o)); } catch (e) {}
+    try { if (typeof hvOkKapat === 'function') hvOkKapat(); } catch (e) {}
+    titre(10); if (n) toast('🎯 Hedef: günde ' + n + ' sayfa', 'Okudukça kendiliğinden sayılır.');
+    try { if (typeof renderKrHub === 'function') renderKrHub(); } catch (e) {}
+  };
+  window.hvGunlukDurum = () => ({ hedef: gHedef(), bugun: gOku().p, seri: gSeri() });
+
   const R = 46, C = 2 * Math.PI * R;
   const halka = (oran, ust, alt) => `<div class="ht2-halka"><svg viewBox="0 0 108 108"><circle cx="54" cy="54" r="${R}" class="ht2-iz"/><circle cx="54" cy="54" r="${R}" class="ht2-dolu" stroke-dasharray="${C}" stroke-dashoffset="${C * (1 - oran)}"/></svg><div><b>${ust}</b><small>${alt}</small></div></div>`;
+  const yaziliyor = (m) => (nzMod() ? 'nuzul' : 'mushaf') === m ? '<span class="ht2-aktif">● Şu an okudukların buraya yazılıyor</span>' : '';
   function kartMushaf(ustte) {
-    const o = mh(), n = say(o), sir = msSiradaki(o);
-    const czDolu = CUZ_BAS.map((b, i) => { const son = cuzSon(i); let k = 0; for (let p = b; p <= son; p++) if (o.b[p - 1] === '1') k++; return k / (son - b + 1); });
-    const biten = czDolu.filter(d => d >= 1).length;
+    const o = mh(), oz = sayfaOzet(o), n = oz.top > 603.99 ? 604 : oz.top, sir = msSiradaki(o);
+    const czDolu = CUZ_BAS.map((b, i) => { const son = cuzSon(i); let k = 0; for (let p = b; p <= son; p++) k += Math.min(1, oz.pg[p]); return k / (son - b + 1); });
+    const biten = czDolu.filter(d => d >= 0.999).length;
     return `<div class="ht2-kart">
-      <div class="ht2-bas"><div><small>OKUDUKÇA İLERLER</small><b>Mushaf sırasına göre hatim</b></div>${ustte ? '' : `<button class="ht2-ust" onclick="hvHatimUst('mushaf')">⇅ Üste al</button>`}</div>
-      <div class="ht2-govde">${halka(n / 604, '%' + Math.round(n / 604 * 100), n + ' / 604 sayfa')}
-        <div class="ht2-bilgi"><div><small>BİTEN CÜZ</small><b>${biten} / 30</b></div><div><small>KALAN</small><b>${604 - n} sayfa</b></div>${o.adet ? `<div><small>TAMAMLANAN</small><b>${o.adet} hatim</b></div>` : ''}</div></div>
-      <div class="mh-cuzler">${czDolu.map((d, i) => `<span class="${d >= 1 ? 'tam' : ''}" style="--d:${Math.round(d * 100)}%" onclick="hvHatimDevam('mushaf',${CUZ_BAS[i]})"><em>${i + 1}</em></span>`).join('')}</div>
-      ${n >= 604 ? `<div class="ht2-tamam">🎉 Hatmini tamamladın, Allah kabul etsin.</div>` : sir ? `<button class="mh-devam" onclick="hvHatimDevam('mushaf')"><span><small>${n ? 'Kaldığın yerden devam' : 'Hatme başla'}</small><b>${esc(hvSurahName(sir[0]))} ${sir[1]}. âyet · Sayfa ${sir[2]} · ${cuzNo(sir[2])}. cüz</b></span><i>Oku ›</i></button>` : ''}
-      ${n ? `<button class="mh-sifir" onclick="hvHatimSifir('mushaf',this)">${n >= 604 ? 'Yeni hatme başla' : 'Bu hatmi sıfırla'}</button>` : ''}
+      <div class="ht2-bas"><div><small>OKUDUKÇA İLERLER</small><b>Mushaf sırasına göre hatim</b>${yaziliyor('mushaf')}</div>${ustte ? '' : `<button class="ht2-ust" onclick="hvHatimUst('mushaf')">⇅ Üste al</button>`}</div>
+      <div class="ht2-govde">${halka(n / 604, '%' + yuzde(n), sayfaYaz(n) + ' / 604 sayfa')}
+        <div class="ht2-bilgi"><div><small>BİTEN CÜZ</small><b>${biten} / 30</b></div><div><small>KALAN</small><b>${sayfaYaz(604 - n)} sayfa</b></div>${o.adet ? `<div><small>TAMAMLANAN</small><b>${o.adet} hatim</b></div>` : ''}</div></div>
+      <div class="mh-cuzler">${czDolu.map((d, i) => `<span class="${d >= 0.999 ? 'tam' : ''}" style="--d:${d > 0 ? Math.max(8, Math.round(d * 100)) : 0}%" onclick="hvHatimDevam('mushaf',${CUZ_BAS[i]})"><em>${i + 1}</em></span>`).join('')}</div>
+      ${!sir ? `<div class="ht2-tamam">🎉 Hatmini tamamladın, Allah kabul etsin.</div>` : `<button class="mh-devam" onclick="hvHatimDevam('mushaf')"><span><small>${n ? 'Kaldığın yerden devam' : 'Hatme başla'}</small><b>${esc(hvSurahName(sir[0]))} ${sir[1]}. âyet · Sayfa ${sir[2]} · ${cuzNo(sir[2])}. cüz</b></span><i>Oku ›</i></button>`}
+      ${n ? `<button class="mh-sifir" onclick="hvHatimSifir('mushaf',this)">${!sir ? 'Yeni hatme başla' : 'Bu hatmi sıfırla'}</button>` : ''}
     </div>`;
   }
   function kartNuzul(ustte) {
     const o = nh(), oz = nzOzet(o), sir = nzSiradaki(o), L = window.hvNuzulListe || [];
     const pct = Math.min(100, Math.round(oz.sayfa / 604 * 100)), bitti = !sir;
     return `<div class="ht2-kart nz">
-      <div class="ht2-bas"><div><small>OKUDUKÇA İLERLER</small><b>İniş sırasına göre hatim</b></div>${ustte ? '' : `<button class="ht2-ust" onclick="hvHatimUst('nuzul')">⇅ Üste al</button>`}</div>
-      <div class="ht2-govde">${halka(oz.sayfa / 604, '%' + pct, Math.round(oz.sayfa) + ' / 604 sayfa')}
-        <div class="ht2-bilgi"><div><small>BİTEN SÛRE</small><b>${oz.bitenSure} / 114</b></div><div><small>KALAN</small><b>${Math.max(0, 604 - Math.round(oz.sayfa))} sayfa</b></div>${o.adet ? `<div><small>TAMAMLANAN</small><b>${o.adet} hatim</b></div>` : ''}</div></div>
-      <div class="ht2-sureler" title="114 sûre, iniş sırasıyla">${L.map((x, i) => `<span class="${oz.sure[x] >= 1 ? 'tam' : ''}" style="--d:${Math.round(oz.sure[x] * 100)}%" title="${i + 1}. ${esc(hvSurahName(x))}" onclick="hvHatimDevam('nuzul',${x})"></span>`).join('')}</div>
+      <div class="ht2-bas"><div><small>OKUDUKÇA İLERLER</small><b>İniş sırasına göre hatim</b>${yaziliyor('nuzul')}</div>${ustte ? '' : `<button class="ht2-ust" onclick="hvHatimUst('nuzul')">⇅ Üste al</button>`}</div>
+      <div class="ht2-govde">${halka(oz.sayfa / 604, '%' + yuzde(bitti ? 604 : oz.sayfa), sayfaYaz(bitti ? 604 : oz.sayfa) + ' / 604 sayfa')}
+        <div class="ht2-bilgi"><div><small>BİTEN SÛRE</small><b>${oz.bitenSure} / 114</b></div><div><small>KALAN</small><b>${bitti ? 0 : sayfaYaz(Math.max(0, 604 - oz.sayfa))} sayfa</b></div>${o.adet ? `<div><small>TAMAMLANAN</small><b>${o.adet} hatim</b></div>` : ''}</div></div>
+      <div class="ht2-sureler" title="114 sûre, iniş sırasıyla">${L.map((x, i) => `<span class="${oz.sure[x] >= 1 ? 'tam' : ''}" style="--d:${oz.sure[x] > 0 ? Math.max(15, Math.round(oz.sure[x] * 100)) : 0}%" title="${i + 1}. ${esc(hvSurahName(x))}" onclick="hvHatimDevam('nuzul',${x})"></span>`).join('')}</div>
       ${bitti ? `<div class="ht2-tamam">🎉 Hatmini tamamladın, Allah kabul etsin.</div>` : `<button class="mh-devam" onclick="hvHatimDevam('nuzul')"><span><small>${oz.sayfa ? 'Kaldığın yerden devam' : 'Hatme başla · ilk inen sûre'}</small><b>${esc(hvSurahName(sir[0]))} ${sir[1]}. âyet · iniş sırası ${window.hvNuzulSira ? window.hvNuzulSira(sir[0]) : ''}</b></span><i>Oku ›</i></button>`}
       ${oz.sayfa ? `<button class="mh-sifir" onclick="hvHatimSifir('nuzul',this)">${bitti ? 'Yeni hatme başla' : 'Bu hatmi sıfırla'}</button>` : ''}
     </div>`;
@@ -2213,7 +2312,7 @@ document.addEventListener('DOMContentLoaded', ayarKatla);
     const ust = yukle('hatim_ust', 'mushaf');
     const k = ust === 'nuzul' ? [kartNuzul(true), kartMushaf(false)] : [kartMushaf(true), kartNuzul(false)];
     c.innerHTML = k.join('') + `${!ayar('mhatim') ? '<div class="mh-not">Okuma ayarlarında “Okudukça hatim ilerlesin” kapalı; açınca hatimler kendiliğinden ilerler.</div>' : ''}
-      <div class="info-note">Okuduğun sûrelerde sayfalar kendiliğinden işaretlenir. Sûre listesinde <b>Mushaf sırası</b> seçiliyken okuduğun Mushaf hatmine, <b>İniş sırası</b> seçiliyken okuduğun İniş hatmine yazılır. Sayfa Sayfa Mushaf'ta bir sayfada 25 sn kalınca da Mushaf hatmine sayılır.</div>`;
+      <div class="info-note">Okuduğun her âyet kendiliğinden işaretlenir; kısa bir sûre okusan bile ilerleme artar. Sûre listesinde <b>Mushaf sırası</b> seçiliyken okuduğun Mushaf hatmine, <b>İniş sırası</b> seçiliyken okuduğun İniş hatmine yazılır. Sayfa Sayfa Mushaf'ta bir sayfada 25 sn kalınca da Mushaf hatmine sayılır.</div>`;
   };
   window.renderHatim = renderHatimYeni; rota('hatim', renderHatimYeni);
   window.hvHatimUst = (m) => { kaydet('hatim_ust', m); titre(10); renderHatimYeni(); };
@@ -2229,7 +2328,7 @@ document.addEventListener('DOMContentLoaded', ayarKatla);
   };
   window.hvHatimSifir = (m, b) => {
     if (b && !b.dataset.emin) { b.dataset.emin = '1'; b.textContent = 'Emin misin? Tekrar dokun'; setTimeout(() => { if (b.isConnected) { delete b.dataset.emin; renderHatimYeni(); } }, 3500); return; }
-    if (m === 'mushaf') { const o = mh(), tam = say(o) >= 604; mhYaz({ b: '0'.repeat(604), s: 0, a: 0, ts: 0, adet: (o.adet || 0) + (tam ? 1 : 0) }); }
+    if (m === 'mushaf') { const o = mh(), tam = o.b.indexOf('0') < 0; mhYaz({ b: '0'.repeat(o.b.length), s: 0, a: 0, ts: 0, adet: (o.adet || 0) + (tam ? 1 : 0) }); try { localStorage.removeItem(MH_ESKI); } catch (e) {} }
     else { const o = nh(), tam = !nzSiradaki(o); nhYaz({ b: '0'.repeat(o.b.length), s: 0, a: 0, ts: 0, adet: (o.adet || 0) + (tam ? 1 : 0) }); }
     renderHatimYeni();
   };
@@ -2457,7 +2556,7 @@ window.hvWidgetAc = function (h) {
 
 /* ═════════════ v70.5 · KUR'AN OKURKEN OTOMATİK KAYDIRMA (5 hız) ═════════════
    Okuma ekranında sağ altta küçük düğme → panel: ▶/⏸, 1–5 hız, kapat.
-   Parmakla dokununca durur, bırakınca 1,5 sn sonra devam eder. Sûre bitince 3 sn sonra sıradaki sûreye geçer (v71.7).
+   Parmakla dokununca durur, bırakınca 1,5 sn sonra devam eder. Sûre bitince 5 sn sonra (v72: 3 sn yetişilmiyordu) sıradaki sûreye geçer (v71.7).
    Okuma ayarlarından tamamen gizlenebilir ("Otomatik kaydırma"). */
 (function () {
   // v70.6: daha yavaş seçenekler (¼ ve ½) + genel olarak yavaşlatıldı · saniyede piksel
@@ -2540,7 +2639,7 @@ window.hvWidgetAc = function (h) {
     const no = (typeof window.hvSureKomsu === 'function') ? window.hvSureKomsu(cur, 1) : (cur < 114 ? cur + 1 : 0);
     if (!no) { if (typeof hvToast === 'function') hvToast('Sûre bitti', 'Otomatik kaydırma durdu.'); return; }
     const ad = (typeof hvSurahName === 'function' ? hvSurahName(no) : '') || (no + '. Sûre');
-    let kalan = 3; gecis = no;
+    let kalan = 5; gecis = no;
     const yaz = () => { sonraki.innerHTML = `<span><small>Sıradaki sûre</small><b>${String(ad).replace(/[<>&]/g, '')} Sûresi</b></span><i>${kalan}</i><button aria-label="İptal">İptal</button>`; sonraki.querySelector('button').onclick = () => gecisIptal(false); };
     yaz(); sonraki.hidden = false;
     gecisT = setInterval(() => {
@@ -2582,4 +2681,193 @@ window.hvWidgetAc = function (h) {
   }, 600);
   ciz();
   window.hvOtoKaydirDur = dur;
+})();
+
+/* ═════════════ v71.9 · KUR'AN KENDİLİĞİNDEN ÇEVRİMDIŞI ═════════════
+   Eskiden "Tüm Kur'an'ı indir" düğmesine basmayan kullanıcıda açılmamış sûre internetsiz açılmıyordu.
+   Artık uygulama açıldıktan ~25 sn sonra eksik sûreler arka planda, sessizce ve yavaşça (sûre başına ~1 sn ara) indirilir.
+   Veri tasarrufu açıksa ya da internet yoksa bekler; üst üste 3 hata olursa bırakır, sonraki açılışta kaldığı yerden sürer. */
+(function () {
+  let calisiyor = false;
+  async function otoIndir() {
+    if (calisiyor) return;
+    try {
+      if (typeof fetchSurahVerses !== 'function' || typeof hvIdbKeys !== 'function' || typeof hvIdbSet !== 'function') return;
+      if (navigator.onLine === false) return;
+      if (navigator.connection && navigator.connection.saveData) return;
+      if (typeof _hvDownloading !== 'undefined' && _hvDownloading) return;
+      let var_ = []; try { var_ = (await hvIdbKeys()).map(String); } catch (e) { return; }
+      const eksik = []; for (let i = 1; i <= 114; i++) if (var_.indexOf('surah_' + i) < 0) eksik.push(i);
+      if (!eksik.length) return;
+      calisiyor = true;
+      eksik.sort((a, b) => (a >= 78 ? a - 200 : a) - (b >= 78 ? b - 200 : b));   // önce 30. cüz (en çok okunan kısa sûreler), sonra baştan
+      let hata = 0;
+      for (const no of eksik) {
+        if (navigator.onLine === false || document.visibilityState === 'hidden') break;
+        if (typeof _hvDownloading !== 'undefined' && _hvDownloading) break;   // kullanıcı elle indirmeyi başlattı
+        let v = null; try { v = await fetchSurahVerses(no); } catch (e) { v = null; }
+        if (v && v.length) { try { await hvIdbSet('surah_' + no, v); hata = 0; } catch (e) { break; } }
+        else if (++hata >= 3) break;
+        await new Promise(r => setTimeout(r, 1000));
+      }
+    } catch (e) {} finally { calisiyor = false; }
+  }
+  window.hvKuranOtoIndir = otoIndir;
+  setTimeout(otoIndir, 25000);
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') setTimeout(otoIndir, 8000); });
+  window.addEventListener('online', () => setTimeout(otoIndir, 5000));
+})();
+
+/* ═════════════ v72 · GENEL ARAMA ═════════════
+   Ana sayfadaki büyüteç → tam ekran arama: sayfalar (anahtar kelimelerle) + 114 sûre.
+   Türkçe harf duyarsız (ı/i, ş/s, ç/c, ğ/g, ö/o, ü/u, şapkalı harfler). */
+(function () {
+  const S = [   // [sayfa, simge, ad, açıklama, ek anahtar kelimeler]
+    ['qibla', '🧭', 'Kıble Pusulası', 'Kâbe yönünü bul', 'kible yon pusula kabe'],
+    ['zikirmatik', '📿', 'Zikirmatik', 'Dijital tesbih · 14 zikir', 'tesbih zikir subhanallah estagfirullah salavat sayac'],
+    ['tesbihat', '📿', 'Namaz Sonrası Tesbihat', 'Âyete’l-Kürsî · 33-33-33 · Âmenerrasûlü', 'tesbih ayetel kursi amenerrasulu selam'],
+    ['namaz-takibi', '✅', 'Namaz Takibi', 'Günlük 5 vakit ve seri', 'kildim takip cizelge seri'],
+    ['kaza', '🔄', 'Kaza Namazı Takibi', 'Kaza borcunu takip et', 'kaza borc'],
+    ['oruc', '🌙', 'Oruç Takibi', 'Ramazan ve nafile oruçlar', 'oruc ramazan nafile'],
+    ['hatim', '📗', 'Hatim Takibi', 'Mushaf ve iniş sırasına göre', 'hatim cuz hatme'],
+    ['imsakiye', '🍽️', 'İmsakiye ve Vakitler', 'Aylık sahur-iftar çizelgesi', 'imsak iftar sahur vakit aylik ramazan'],
+    ['takvim', '📅', 'Hicri Takvim', 'Kandiller, bayramlar, tarih çevirici', 'hicri kandil bayram tarih cevir'],
+    ['hutbe', '📜', 'Cuma Hutbesi', 'Diyanet’in bu haftaki hutbesi (internet gerekir)', 'hutbe cuma diyanet vaaz'],
+    ['geceler', '🕯️', 'Kandil Rehberi', 'Mübarek gecelerde ne yapılır', 'kandil kadir berat mirac regaib mevlid'],
+    ['kurandua', '📖', 'Kur’an', 'Oku · dinle · anla', 'kuran mushaf sure'],
+    ['quran', '📖', 'Sûreler', '114 sûre · oku, dinle, meâl', 'sure liste meal oku'],
+    ['mushaf', '📜', 'Sayfa Sayfa Mushaf', 'Mushaf görünümüyle oku', 'mushaf sayfa arapca'],
+    ['dinle', '🎧', 'Kur’an Dinle', 'Hâfızlardan kesintisiz dinle', 'dinle hafiz ses tilavet'],
+    ['ayet-arama', '🔎', 'Âyet ve Meâl Arama', 'Meâlde kelime ara', 'ayet ara meal kelime konu'],
+    ['yerimleri', '⭐', 'Yer İmlerim', 'Kaydettiğin âyetler', 'yer imi kaydet favori'],
+    ['onemli-sureler', '⭐', 'Önemli Sûreler', 'Faziletli sûreler', 'yasin mulk fetih vakia nebe fazilet'],
+    ['kuran-nedir', '💡', 'Kur’an Nedir?', 'Niçin ve nasıl okunur', 'kuran nedir'],
+    ['duvar', '🖼️', 'Duvar Kâğıtları', 'Cami fotoğrafları · sûreli', 'duvar kagidi arka plan kilit ekrani foto'],
+    ['anlayarak', '🕌', 'Anlayarak Namaz', 'Adım adım, fotoğraflı', 'namaz nasil kilinir anlam erkek kadin'],
+    ['guide', '🤲', 'Namaz Rehberi', '5 vakit namazın kılınışı', 'namaz kilinisi rekat sabah ogle ikindi aksam yatsi vitir'],
+    ['namaz-programi', '🌱', '30 Günde Namaza Başlangıç', 'Sıfırdan adım adım', 'baslangic yeni baslayan program'],
+    ['namaz-nedir', '❓', 'Namaz Nedir?', 'Farz, sünnet, nafile', 'namaz nedir farz sunnet'],
+    ['taharet', '💧', 'Abdest ve Taharet', 'Abdest, gusül, teyemmüm', 'abdest gusul teyemmum boy abdesti'],
+    ['ozel-namaz', '🕌', 'Özel Namazlar', 'Cuma, bayram, teravih, cenaze', 'cuma bayram teravih cenaze teheccud kusluk hacet istihare'],
+    ['ezber', '📝', 'Dua ve Sûre Öğren', 'Ezberle, tekrar et', 'ezber dua ogren namaz duasi sure fatiha ihlas'],
+    ['sifirdan', '🌱', 'Sıfırdan Namaz Duaları', 'Satır satır öğren', 'sifirdan dua subhaneke ettehiyyatu salli barik kunut'],
+    ['elifba', '🔤', 'Elifbâ', 'Kur’an harfleri', 'elif ba harf arapca okuma'],
+    ['tecvid', '🎓', 'Tecvid Dersleri', '14 ders', 'tecvid med idgam ihfa'],
+    ['kelime', '🗂️', 'Kelime Kartları', 'Kur’an’da en sık geçen kelimeler', 'kelime arapca kart'],
+    ['ezkar', '🌅', 'Sabah · Akşam Ezkârı', 'Günlük zikir ve dualar', 'sabah aksam zikir ezkar'],
+    ['gece-rutini', '🌙', 'Gece Rutini', 'Mülk · Âyete’l-Kürsî · yatma duası', 'gece yatmadan uyku mulk'],
+    ['gunluk-dua', '📔', 'Günlük Dualar', 'Yemek, yolculuk, uyku…', 'yemek duasi yolculuk uyku sofra'],
+    ['dua-defteri', '✍️', 'Dua Defterim', 'Kendi duaların', 'dua defter not'],
+    ['esma', '🕋', 'Esmâül Hüsnâ', 'Allah’ın 99 ismi', 'esma 99 isim allah'],
+    ['kirk-hadis', '📜', 'Hadis-i Şerifler', '1000+ hadis', 'hadis buhari muslim'],
+    ['iman', '📜', 'İman Esasları', 'Âmentü, imanın 6 şartı', 'iman amentu sart'],
+    ['siyer', '🌟', 'Siyer', 'Peygamberimizin hayatı', 'peygamber hayat siyer muhammed'],
+    ['peygamberler', '👳', 'Peygamberler', 'Kur’an’daki 25 peygamber', 'peygamber kissa'],
+    ['hac-umre', '🕋', 'Hac ve Umre', 'Adım adım rehber', 'hac umre ihram tavaf'],
+    ['sozluk', '📚', 'Dini Sözlük', 'İslamî kavramlar', 'sozluk kavram anlam nedir'],
+    ['quiz', '🧠', 'İslami Bilgi Quizi', 'Bilgini test et', 'quiz test soru yarisma'],
+    ['cocuk', '🧒', 'Çocuk Modu', 'Çocuklar için', 'cocuk'],
+    ['zekat', '💰', 'Zekât ve Fitre', 'Hesaplayıcı', 'zekat fitre fidye hesap'],
+    ['bebek', '👶', 'Bebek İsimleri', 'Anlamlı isimler', 'bebek isim ad'],
+    ['paylasim', '📤', 'Paylaşım Kartları', 'Âyet, hadis, Cuma mesajı', 'paylas kart cuma mesaji'],
+    ['araclar', '🧰', 'Araçlar', 'Hesaplayıcılar', 'arac'],
+    ['settings', '⚙️', 'Ayarlar', 'Konum, bildirim, ezan sesi, tema', 'ayar bildirim ezan sesi konum sehir tema yedek alarm'],
+    ['kaynaklar', '📚', 'Kaynaklar ve Gizlilik', 'İçerik kaynakları', 'kaynak gizlilik']
+  ];
+  const esc = (t) => String(t == null ? '' : t).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const sade = (t) => String(t || '').toLocaleLowerCase('tr').replace(/[âá]/g, 'a').replace(/[îí]/g, 'i').replace(/[ûú]/g, 'u').replace(/ı/g, 'i').replace(/ş/g, 's').replace(/ç/g, 'c').replace(/ğ/g, 'g').replace(/ö/g, 'o').replace(/ü/g, 'u').replace(/[’'‘`]/g, '').replace(/\s+/g, ' ').trim();
+  let IX = null;
+  function indeks() {
+    if (IX) return IX;
+    IX = S.map(x => ({ tip: 's', id: x[0], ik: x[1], ad: x[2], alt: x[3], k: sade(x[2] + ' ' + x[3] + ' ' + x[4]), a: sade(x[2]) }));
+    const L = (typeof ALL_114_SURAHS !== 'undefined') ? ALL_114_SURAHS : [];
+    L.forEach(s => IX.push({ tip: 'k', id: Number(s.id), ik: String(s.id), ad: s.name + ' Sûresi', alt: s.id + '. sûre · ' + s.verse_count + ' âyet', k: sade(s.name + ' suresi ' + s.id), a: sade(s.name) }));
+    return IX;
+  }
+  function bul(q) {
+    q = sade(q); if (!q) return [];
+    const kel = q.split(' ');
+    return indeks().map(x => { if (!kel.every(w => x.k.indexOf(w) >= 0)) return null; const p = x.a.indexOf(q); return { x, puan: (p === 0 ? 0 : p > 0 ? 1 : 2) + (x.tip === 'k' ? 0.5 : 0) }; })
+      .filter(Boolean).sort((a, b) => a.puan - b.puan).slice(0, 30).map(r => r.x);
+  }
+  const ONERI = ['tesbihat', 'namaz-takibi', 'hatim', 'kaza', 'anlayarak', 'duvar', 'ayet-arama', 'settings'];
+  let kok = null;
+  function satir(x) { return `<button class="ara-sat" onclick="hvAraGit('${x.tip}','${x.id}')"><span class="ara-ik${x.tip === 'k' ? ' no' : ''}">${x.ik}</span><span class="ara-m"><b>${esc(x.ad)}</b><small>${esc(x.alt)}</small></span><i>›</i></button>`; }
+  function ciz(q) {
+    const l = kok.querySelector('.ara-liste');
+    if (!sade(q)) { l.innerHTML = `<div class="ara-bas">Sık kullanılanlar</div>` + ONERI.map(id => indeks().find(x => x.tip === 's' && x.id === id)).filter(Boolean).map(satir).join(''); return; }
+    const R = bul(q);
+    l.innerHTML = R.length ? R.map(satir).join('') + `<button class="ara-sat ara-ayet" onclick="hvAraAyet()"><span class="ara-ik">🔎</span><span class="ara-m"><b>“${esc(q)}” — âyetlerde ara</b><small>Kur’an meâlinde geçtiği yerler</small></span><i>›</i></button>`
+      : `<div class="ara-yok">Sayfa bulunamadı.</div><button class="ara-sat ara-ayet" onclick="hvAraAyet()"><span class="ara-ik">🔎</span><span class="ara-m"><b>“${esc(q)}” — âyetlerde ara</b><small>Kur’an meâlinde geçtiği yerler</small></span><i>›</i></button>`;
+  }
+  window.hvAraAc = () => {
+    if (!kok) {
+      kok = document.createElement('div'); kok.id = 'hv-ara'; kok.hidden = true;
+      kok.innerHTML = `<div class="ara-ust"><span class="ara-buyutec"><svg viewBox="0 0 24 24" width="19" height="19"><circle cx="10.5" cy="10.5" r="6.2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M15.2 15.2 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></span><input type="search" placeholder="Ne arıyorsun? (kıble, tesbihat, Yâsîn…)" autocomplete="off" enterkeyhint="search"><button class="ara-kapat" onclick="hvAraKapat()">Vazgeç</button></div><div class="ara-liste"></div>`;
+      document.body.appendChild(kok);
+      kok.querySelector('input').addEventListener('input', (e) => ciz(e.target.value));
+    }
+    kok.hidden = false; const i = kok.querySelector('input'); i.value = ''; ciz(''); setTimeout(() => { try { i.focus(); } catch (e) {} }, 60);
+  };
+  window.hvAraKapat = () => { if (kok) { kok.hidden = true; try { kok.querySelector('input').blur(); } catch (e) {} } };
+  window.hvAraGit = (tip, id) => { window.hvAraKapat(); if (tip === 'k') openSurahById(Number(id)); else if (id === 'hutbe') { if (typeof hvHutbeAc === 'function') hvHutbeAc(); } else navigateTo(id); };
+  window.hvAraAyet = () => {
+    const q = kok.querySelector('input').value; window.hvAraKapat(); navigateTo('ayet-arama');
+    setTimeout(() => { try { const i = document.getElementById('ayet-search-input'); if (i) i.value = q; if (typeof doAyetArama === 'function') doAyetArama(q); } catch (e) {} }, 150);
+  };
+})();
+
+/* ═════════════ v72 · İLK AÇILIŞ TANITIMI ═════════════
+   Yalnızca yeni kullanıcıya, bir kez (hv_tanitim). Aramada "tanıtım" yazarak tekrar açılabilir değil; Ayarlar'dan hvTanitimAc() ile açılır. */
+(function () {
+  const A = [
+    ['img/acilis.jpg', 'Hoş geldin', 'Namaz Dostu', 'Reklam yok, ücret yok, verilerin telefonunda kalır. Bir dakikada neler var gösterelim.'],
+    ['img/vakit_ikindi.jpg?v=k1', 'Vakitler ve ezan', 'Diyanet vakitleri, ezanlı bildirim', 'Şehrini seç, vakit girince ezan okunsun. Kıble pusulası ve Zikirmatik ana sayfanın altında.'],
+    ['img/kart_kuran.jpg', 'Kur’an-ı Kerim', 'Oku, dinle, hatmet', 'Meâliyle oku, hâfızlardan dinle. Okudukça hatmin kendiliğinden ilerler; Kur’an internetsiz de açılır.'],
+    ['img/kart_anlayarak.jpg', 'Öğren', 'Anlayarak namaz, dualar, sûreler', 'Namazı fotoğraflarla adım adım öğren; duaları ve kısa sûreleri satır satır ezberle.'],
+    ['img/kart_dua.jpg', 'Takip et ve bul', 'Namaz, kaza, oruç takibi', 'Aradığını bulamazsan ana sayfadaki büyüteçe dokun: “tesbihat”, “kaza”, “Yâsîn” yazman yeter.']
+  ];
+  let kok = null, n = 0;
+  function ciz() {
+    const x = A[n], son = n === A.length - 1;
+    kok.innerHTML = `<div class="tn-foto" style="background-image:url(${x[0]})"></div><div class="tn-ic"><small>${x[1]}</small><b>${x[2]}</b><p>${x[3]}</p>
+      <div class="tn-nokta">${A.map((_, i) => `<i class="${i === n ? 'on' : ''}"></i>`).join('')}</div>
+      <div class="tn-btn">${son ? '' : `<button class="tn-atla" onclick="hvTanitimKapat()">Atla</button>`}<button class="tn-ileri" onclick="hvTanitimIleri()">${son ? 'Başla' : 'İleri ›'}</button></div></div>`;
+  }
+  window.hvTanitimAc = () => { if (!kok) { kok = document.createElement('div'); kok.id = 'hv-tanitim'; document.body.appendChild(kok); } n = 0; kok.hidden = false; ciz(); };
+  window.hvTanitimIleri = () => { if (n >= A.length - 1) return window.hvTanitimKapat(); n++; ciz(); };
+  window.hvTanitimKapat = () => { try { localStorage.setItem('hv_tanitim', '1'); } catch (e) {} if (kok) kok.hidden = true; };
+  try {
+    const yeni = !localStorage.getItem('hv_tanitim') && !localStorage.getItem('namaz_vakti_v25') && !localStorage.getItem('namaz_vakti_v25_prompted');
+    if (yeni) { if (document.body) window.hvTanitimAc(); else document.addEventListener('DOMContentLoaded', window.hvTanitimAc); }
+    else if (!localStorage.getItem('hv_tanitim')) localStorage.setItem('hv_tanitim', '1');   // eski kullanıcıya gösterme
+  } catch (e) {}
+})();
+
+/* ═════════════ v72 · PUAN İSTEME — güzel bir anın ardından ═════════════
+   Eski kural (açılış sayısına göre) duruyor. Buna ek: hatim bitince, tesbihat tamamlanınca (3. kez) ve 7 günlük namaz serisinde,
+   birkaç saniye sonra aynı puan kartı çıkar. Puan verdiyse / "bir daha sorma" dediyse hiç çıkmaz; en fazla 30 günde bir. */
+(function () {
+  window.hvPuanAni = (neden) => {
+    try {
+      if (typeof hvNativePlatform !== 'function' || !hvNativePlatform()) return;   // yalnız mağaza uygulamasında
+      if (localStorage.getItem('hv_rated') === '1') return;
+      const son = parseInt(localStorage.getItem('hv_puan_son') || '0', 10) || 0;
+      if (Date.now() - son < 30 * 864e5) return;
+      if (neden === 'tesbihat') { const n = (parseInt(localStorage.getItem('hv_puan_ts') || '0', 10) || 0) + 1; localStorage.setItem('hv_puan_ts', String(n)); if (n < 3) return; }
+      if (neden === 'seri') { if (localStorage.getItem('hv_puan_seri') === '1') return; localStorage.setItem('hv_puan_seri', '1'); }
+      localStorage.setItem('hv_puan_son', String(Date.now()));
+      setTimeout(() => { try { if (typeof hvShowRatingCard === 'function') hvShowRatingCard(); } catch (e) {} }, 3500);
+    } catch (e) {}
+  };
+  // 7 günlük seri: Namaz Takibi her çizildiğinde bak
+  const nt = window.renderNamazTakibi;
+  if (typeof nt === 'function') {
+    window.renderNamazTakibi = function () {
+      const r = nt.apply(this, arguments);
+      try { const d = (typeof hvLoad === 'function') ? hvLoad('namaz_takip', {}) : {}; if (typeof window.calcNamazStreak === 'function' && window.calcNamazStreak(d) >= 7) window.hvPuanAni('seri'); } catch (e) {}
+      return r;
+    };
+    try { window.FEATURE_ROUTES = window.FEATURE_ROUTES || {}; window.FEATURE_ROUTES['namaz-takibi'] = window.renderNamazTakibi; } catch (e) {}
+  }
 })();
