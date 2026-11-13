@@ -19,10 +19,10 @@
        – Ses akışları (Range istekleri) tarayıcıya bırakılır; kendi
          ezan/zil sesimiz çevrimdışıyken önbellekten parça parça verilir.
    ══════════════════════════════════════════════════════════════ */
-const CACHE_NAME = 'namaz-dostu-v72.2';
+const CACHE_NAME = 'namaz-dostu-v72.3';
 
 // Sürüm etiketli çekirdek dosyalar (sayfanın gerçekte istediği URL'ler)
-const V = '72.2';
+const V = '72.3';
 const CORE_ASSETS = [
   './',
   './index.html',
@@ -70,7 +70,9 @@ const CORE_ASSETS = [
   './img/vk_ogle.png',
   './img/vk_ikindi.png',
   './img/vk_aksam.png',
-  './img/vk_yatsi.png'
+  './img/vk_yatsi.png',
+  './img/kt_oku.jpg',
+  './img/kt_dinle.jpg'
 ];
 
 const SAYFA_SURE = 3500;   // sayfa açılışında ağı en fazla bu kadar bekle (ms)

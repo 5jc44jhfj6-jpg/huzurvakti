@@ -1915,6 +1915,22 @@ function updatePrayerCountdown() {
   const diffMs = nextTimeDate - now;
   const timerText = document.getElementById('countdown-timer');
 
+  // v72.3: çerçeve için bir önceki vakit
+  let prevDate = null;
+  for (const id of order) {
+    const ts = APP_STATE.prayerTimes[id];
+    if (!ts) continue;
+    const [ph, pm] = ts.split(':').map(Number);
+    const d = new Date(); d.setHours(ph, pm, 0, 0);
+    if (d <= now) prevDate = d;
+  }
+  if (!prevDate && APP_STATE.prayerTimes['Isha']) {
+    const [ph, pm] = APP_STATE.prayerTimes['Isha'].split(':').map(Number);
+    prevDate = new Date(); prevDate.setDate(prevDate.getDate() - 1); prevDate.setHours(ph, pm, 0, 0);
+  }
+  const toplamMs = prevDate ? (nextTimeDate - prevDate) : 0;
+  try { if (window.hvSayacCerceve && toplamMs > 0) window.hvSayacCerceve(Math.max(0, diffMs), toplamMs); } catch (e) {}
+
   if (diffMs <= 0) {
     if (timerText) timerText.textContent = "00:00:00";
     return;
