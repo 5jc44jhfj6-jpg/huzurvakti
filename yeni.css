@@ -130,18 +130,18 @@ body.dark-theme .yn-nav .nav-tab.active .tab-label { color: #2b1d14; }
 }
 .ya-foto {
   position: absolute; inset: 0; background-size: cover; background-position: center 59%;
-  background-image: url(img/vakit_ogle.jpg?v=k1); filter: saturate(1.1);
+  background-image: url(img/vakit_ogle.jpg?v=k2); filter: saturate(1.1);
   transition: background-image .8s ease;
 }
 /* v70.4: vakit değişince eski fotoğraf üstte kalıp yavaşça kaybolur */
 .ya-foto-eski { position: absolute; inset: 0; background-size: inherit; background-position: inherit; background-repeat: no-repeat;
   opacity: 1; transition: opacity 2.2s ease; pointer-events: none; }
-body[data-foto="safak"] .ya-foto { background-image: url(img/vakit_safak.jpg?v=k1); }
-body[data-foto="sabah"] .ya-foto { background-image: url(img/vakit_sabah.jpg?v=k1); }
-body[data-foto="ogle"] .ya-foto { background-image: url(img/vakit_ogle.jpg?v=k1); }
-body[data-foto="ikindi"] .ya-foto { background-image: url(img/vakit_ikindi.jpg?v=k1); }
-body[data-foto="aksam"] .ya-foto { background-image: url(img/vakit_aksam.jpg?v=k1); }
-body[data-foto="gece"] .ya-foto { background-image: url(img/vakit_gece.jpg?v=k1); }
+body[data-foto="safak"] .ya-foto { background-image: url(img/vakit_safak.jpg?v=k2); }
+body[data-foto="sabah"] .ya-foto { background-image: url(img/vakit_sabah.jpg?v=k2); }
+body[data-foto="ogle"] .ya-foto { background-image: url(img/vakit_ogle.jpg?v=k2); }
+body[data-foto="ikindi"] .ya-foto { background-image: url(img/vakit_ikindi.jpg?v=k2); }
+body[data-foto="aksam"] .ya-foto { background-image: url(img/vakit_aksam.jpg?v=k2); }
+body[data-foto="gece"] .ya-foto { background-image: url(img/vakit_gece.jpg?v=k2); }
 .ya-hero::after {
   content: ''; position: absolute; inset: 0; pointer-events: none;
   background: linear-gradient(rgba(15, 8, 3, .42), rgba(15, 8, 3, .12) 45%, rgba(15, 8, 3, 0) 62%);

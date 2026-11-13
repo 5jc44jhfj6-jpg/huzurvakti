@@ -905,7 +905,7 @@ function krTemaUygula() {
   const t = krTema();
   ['page-kurandua', 'page-quran', 'page-mushaf', 'page-dinle', 'page-hatim'].forEach(id => { const s = $(id); if (s) { s.classList.add('kr'); s.classList.toggle('kr-yesil', t === 'yesil'); s.classList.toggle('kr-krem', t !== 'yesil'); } });
 }
-const krFoto = () => `img/vakit_${(document.body && document.body.dataset.foto) || 'ikindi'}.jpg?v=k1`;
+const krFoto = () => `img/vakit_${(document.body && document.body.dataset.foto) || 'ikindi'}.jpg?v=k2`;
 const KR_SERIT = ['13', '16', '17', '18', '19', '06', '22', '24', '14', '25'];
 const krSerit = (id) => `img/duvar_${KR_SERIT[Number(id) % 10]}.jpg`;
 /* v67.7: her caminin kendi gövdesi görünsün diye dikey konum (resme göre) */
@@ -2837,7 +2837,7 @@ window.hvWidgetAc = function (h) {
 (function () {
   const A = [
     ['img/acilis.jpg', 'Hoş geldin', 'Namaz Dostu', 'Reklam yok, ücret yok, verilerin telefonunda kalır. Bir dakikada neler var gösterelim.'],
-    ['img/vakit_ikindi.jpg?v=k1', 'Vakitler ve ezan', 'Diyanet vakitleri, ezanlı bildirim', 'Şehrini seç, vakit girince ezan okunsun. Kıble pusulası ve Zikirmatik ana sayfanın altında.'],
+    ['img/vakit_ikindi.jpg?v=k2', 'Vakitler ve ezan', 'Diyanet vakitleri, ezanlı bildirim', 'Şehrini seç, vakit girince ezan okunsun. Kıble pusulası ve Zikirmatik ana sayfanın altında.'],
     ['img/kart_kuran.jpg', 'Kur’an-ı Kerim', 'Oku, dinle, hatmet', 'Meâliyle oku, hâfızlardan dinle. Okudukça hatmin kendiliğinden ilerler; Kur’an internetsiz de açılır.'],
     ['img/kart_anlayarak.jpg', 'Öğren', 'Anlayarak namaz, dualar, sûreler', 'Namazı fotoğraflarla adım adım öğren; duaları ve kısa sûreleri satır satır ezberle.'],
     ['img/kart_dua.jpg', 'Takip et ve bul', 'Namaz, kaza, oruç takibi', 'Aradığını bulamazsan ana sayfadaki büyüteçe dokun: “tesbihat”, “kaza”, “Yâsîn” yazman yeter.']

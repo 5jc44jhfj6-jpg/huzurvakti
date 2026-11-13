@@ -166,14 +166,14 @@ function hvFotoGecis(eski) {
   document.querySelectorAll('.ya-foto').forEach(el => {
     const o = document.createElement('div');
     o.className = 'ya-foto-eski';
-    o.style.backgroundImage = `url(img/vakit_${eski}.jpg?v=k1)`;
+    o.style.backgroundImage = `url(img/vakit_${eski}.jpg?v=k2)`;
     el.appendChild(o);
     requestAnimationFrame(() => requestAnimationFrame(() => { o.style.opacity = '0'; }));
     setTimeout(() => o.remove(), 2600);
   });
 }
 // Durum çubuğu rengi (iOS kabuğu theme-color'ı izler)
-const HV_UST_RENK = { safak: '#0a0f24', sabah: '#8f8db5', ogle: '#2f75c2', ikindi: '#6e8db5', aksam: '#2a4268', gece: '#050a1c' };   // v67.6 Kul Şerif üst renkleri
+const HV_UST_RENK = { safak: '#8a6879', sabah: '#8d6c5d', ogle: '#374d66', ikindi: '#625d67', aksam: '#6d2917', gece: '#051429' };   // v72.2 yeni vakit fotoğrafları
 function hvTemaRengi() {
   try {
     let renk;
@@ -1553,7 +1553,7 @@ function renderPrayerCards(timings) {
     // v68.0: altın kemerli Kul Şerif vakit kartı (resim) + ad levhada + saat altta
     card.classList.add('vk');
     card.innerHTML = `
-      <span class="vk-kart" style="background-image:url(img/vk_${HV_VAKIT_RESIM[id] || 'ogle'}.png)"><span class="prayer-name">${info.name}</span></span>
+      <span class="vk-kart" style="background-image:url(img/vk_${HV_VAKIT_RESIM[id] || 'ogle'}.png?v=k2)"><span class="prayer-name">${info.name}</span></span>
       <span class="prayer-time">${timeVal}</span>
     `;
     container.appendChild(card);
