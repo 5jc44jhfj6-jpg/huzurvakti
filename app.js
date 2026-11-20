@@ -2803,7 +2803,8 @@ async function loadSurahDetail(id, localSurahObj) {
       const option = qariSelect.options[qariSelect.selectedIndex];
       const server = option.getAttribute('data-server');
       const qari = option.getAttribute('data-path') || option.value;
-      audioPlayer.src = `https://${server}.mp3quran.net/${qari}/${paddedId}.mp3`;
+      const taban = option.getAttribute('data-taban');   // v72.5: yeni hocalar tam adresle
+      audioPlayer.src = taban ? `${taban}${paddedId}.mp3` : `https://${server}.mp3quran.net/${qari}/${paddedId}.mp3`;
       audioPlayer.load();
     };
 

@@ -1311,7 +1311,7 @@ window.hvKrHiz = () => {
 window.hvKrTekrar = (b) => { const t = !yukle('kr_tekrar', false); kaydet('kr_tekrar', t); if (b) b.classList.toggle('on', t); toast(t ? 'Tekrar açık' : 'Tekrar kapalı', t ? 'Sûre bitince baştan okunur.' : 'Sûre bitince sıradakine geçer.'); };
 window.hvKrHoca = () => {
   const a = hvDnQari().id;
-  sheetAc(shBas('Hâfız seç') + `<div class="kr-hocalar">${HV_DINLE_QARILER.map((q, i) => `<button class="${q.id === a ? 'on' : ''}" onclick="hvKrHocaSec('${q.id}')"><span class="kr-av">${esc(basHarf(q.ad))}</span><span><b>${esc(q.ad)}</b><small>${i === 0 ? 'Önerilen · ' : ''}${hvDnAyetKaydiVar(q.id) ? 'Tam sûre + âyet âyet' : 'Tam sûre'}</small></span>${q.id === a ? '<i>✓</i>' : ''}</button>`).join('')}</div>`);
+  sheetAc(shBas('Hâfız seç') + `<div class="kr-hocalar">${HV_DINLE_QARILER.map((q, i) => `<button class="${q.id === a ? 'on' : ''}" onclick="hvKrHocaSec('${q.id}')"><span class="kr-av">${esc(basHarf(q.ad))}</span><span><b>${esc(q.ad)}</b><small>${i === 0 ? 'Önerilen · ' : ''}${(hvDnAyetKaydiVar(q.id) || q.oku || q.id === 'mousa') ? 'Tam sûre + âyet âyet' : 'Tam sûre'}</small></span>${q.id === a ? '<i>✓</i>' : ''}</button>`).join('')}</div>`);
 };
 window.hvKrHocaSec = (id) => {
   if (typeof hvDnQariDegistir === 'function') hvDnQariDegistir(id);
@@ -1361,7 +1361,15 @@ function krSenk(zorla) {
     try { if (hvDnSes) { if (hvDnSes.playbackRate !== hiz) hvDnSes.playbackRate = hiz; hvDnSes.loop = tek; } if (hvAaSes && hvAaSes.playbackRate !== hiz) hvAaSes.playbackRate = hiz; } catch (e) {}
     let oran = 0, g = '00:00', tp = '--:--', aktif = 0;
     if (ar) {
-      if (hvDnSure === OK.id && hvDnSes) { oran = hvDnSes.duration ? hvDnSes.currentTime / hvDnSes.duration : 0; g = krSaat(hvDnSes.currentTime); tp = hvDnSes.duration ? krSaat(hvDnSes.duration) : '--:--'; }
+      if (hvDnSure === OK.id && hvDnSes) {
+        oran = hvDnSes.duration ? hvDnSes.currentTime / hvDnSes.duration : 0; g = krSaat(hvDnSes.currentTime); tp = hvDnSes.duration ? krSaat(hvDnSes.duration) : '--:--';
+        // v72.5: tam sûre çalarken o an okunan âyet de işaretlensin (hocanın âyet zamanları varsa)
+        try {
+          const q = hvDnQari(), z = (typeof hvSureZamanHazir === 'function') ? hvSureZamanHazir(q, OK.id) : null;
+          if (z && cal) { const ms = hvDnSes.currentTime * 1000; let x = 0; for (const y of z) { if (y[0] >= 1 && y[1] <= ms + 150) x = y[0]; } aktif = x; }
+          else if (q.oku && !z && typeof hvSureZaman === 'function') hvSureZaman(q, OK.id).catch(() => {});
+        } catch (e) {}
+      }
     } else {
       const n = OK.v.length || 1;
       if (hvAaSure === OK.id && hvAaListe.length) { aktif = hvAaIdx + 1; oran = (hvAaIdx + (cal ? 0.5 : 0)) / n; g = aktif + '. âyet'; }

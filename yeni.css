@@ -1846,3 +1846,9 @@ details.ok-ozet li::marker { color: #c99a4b; }
 #page-home .ya-kt { border: 2px solid #d4a64a; border-radius: 12px; overflow: hidden;
   box-shadow: 0 2px 6px rgba(120, 80, 20, .3), inset 0 0 0 1px rgba(255, 240, 200, .6); }
 #page-home .ya-dinle i { display: none; }
+
+/* v72.5: Kur'an Dinle uyku zamanlayıcısı */
+.dn-uyku { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 8px 0 2px; font-size: .92rem; }
+.dn-uyku .mv-qari { flex: 0 0 auto; width: auto; min-width: 150px; }
+.dn-uyku-not { font-size: .8rem; color: #8a5a16; min-height: 0; margin-bottom: 4px; }
+.dn-uyku-not:empty { display: none; }

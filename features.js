@@ -3769,7 +3769,7 @@ function hvOgrenQariSecim(fn) {
 
 const hvP3 = n => String(n).padStart(3, '0');
 function hvOgEveryayah(klasor, s, a) { return 'https://everyayah.com/data/' + klasor + '/' + hvP3(s) + hvP3(a) + '.mp3'; }
-function hvOgSureUrl(q, s) { return 'https://' + q.sunucu + '.mp3quran.net/' + (q.yol || q.id) + '/' + hvP3(s) + '.mp3'; }
+function hvOgSureUrl(q, s) { if (q.taban) return q.taban + hvP3(s) + '.mp3'; return 'https://' + q.sunucu + '.mp3quran.net/' + (q.yol || q.id) + '/' + hvP3(s) + '.mp3'; }
 
 /* el-Mûsâ resmî âyet zamanları (ms) — bir kez indirilir, cihazda saklanır */
 const hvMusaZamanBellek = {};
@@ -3791,6 +3791,42 @@ async function hvMusaZaman(s) {
     return z;
   } finally { if (t) clearTimeout(t); }
 }
+
+/* v72.5: herhangi bir hocanın mp3quran âyet zamanları (q.oku) — [[âyet, başlangıç ms, bitiş ms], ...]
+   Bir kez indirilir, cihazda saklanır. */
+const hvSureZamanBellek = {};
+function hvSureZamanHazir(q, s) {
+  if (!q || !q.oku) return null;
+  const k = q.id + '_' + s;
+  if (hvSureZamanBellek[k]) return hvSureZamanBellek[k];
+  try { const c = JSON.parse(localStorage.getItem('hv_z_' + k) || 'null'); if (Array.isArray(c) && c.length) { hvSureZamanBellek[k] = c; return c; } } catch (e) {}
+  return null;
+}
+const hvSureZamanIstek = {};
+function hvSureZaman(q, s) {
+  const hazir = hvSureZamanHazir(q, s);
+  if (hazir || !q || !q.oku) return Promise.resolve(hazir);
+  const k = q.id + '_' + s;
+  if (hvSureZamanIstek[k]) return hvSureZamanIstek[k];
+  const p = hvSureZamanIndir(q, s, k);
+  hvSureZamanIstek[k] = p;
+  p.catch(() => { setTimeout(() => { delete hvSureZamanIstek[k]; }, 60000); });   // hata olursa 1 dk sonra yeniden dene
+  return p;
+}
+async function hvSureZamanIndir(q, s, k) {
+  const ctrl = (typeof AbortController !== 'undefined') ? new AbortController() : null;
+  const t = ctrl ? setTimeout(() => ctrl.abort(), 9000) : null;
+  try {
+    const r = await fetch('https://mp3quran.net/api/v3/ayat_timing?surah=' + s + '&read=' + q.oku, ctrl ? { signal: ctrl.signal } : undefined);
+    const j = await r.json();
+    if (!Array.isArray(j) || !j.length) throw new Error('boş');
+    const z = j.map(x => [Number(x.ayah), Number(x.start_time), Number(x.end_time)]);
+    hvSureZamanBellek[k] = z;
+    try { localStorage.setItem('hv_z_' + k, JSON.stringify(z)); } catch (e) {}
+    return z;
+  } finally { if (t) clearTimeout(t); }
+}
+window.hvSureZaman = hvSureZaman;
 
 /* refs: [{ s: sûre, a: âyet }]  (a = 0 → o sûrenin başındaki besmele)
    Dönen: [{ url, bas?, son?, yedek? }]  — bas/son yoksa dosyanın tamamı çalınır.
@@ -3824,6 +3860,24 @@ async function hvOgrenSesCoz(refs, qari) {
       if (besmeleMi(r)) {
         if (r.s === 1) return ilk ? { url: hvOgSureUrl(q, 1), bas: Math.max(0, ilk[1] / 1000 - 0.05), son: ilk[2] / 1000 } : yedek(r);
         return ilk ? { url: hvOgSureUrl(q, r.s), bas: 0, son: Math.max(0.5, ilk[1] / 1000) } : yedek(r);
+      }
+      const x = z.find(y => y[0] === r.a);
+      return x ? { url: hvOgSureUrl(q, r.s), bas: Math.max(0, x[1] / 1000 - 0.05), son: x[2] / 1000 } : yedek(r);
+    });
+  }
+  if (q.oku) {   // v72.5: yeni hocalar — mp3quran âyet zamanları
+    const sureler = refs.map(r => r.s).filter((x, i, a) => a.indexOf(x) === i);
+    const tablo = {};
+    await Promise.all(sureler.map(async s => { try { tablo[s] = await hvSureZaman(q, s); } catch (e) { tablo[s] = null; } }));
+    return refs.map(r => {
+      const z = tablo[r.s];
+      if (!z) return yedek(r);
+      const ilk = z.find(y => y[0] === 1);
+      if (besmeleMi(r)) {
+        const b0 = z.find(y => y[0] === 0);
+        if (b0) return { url: hvOgSureUrl(q, r.s), bas: Math.max(0, b0[1] / 1000), son: b0[2] / 1000 };
+        if (r.s === 1) return ilk ? { url: hvOgSureUrl(q, 1), bas: Math.max(0, ilk[1] / 1000 - 0.05), son: ilk[2] / 1000 } : yedek(r);
+        return ilk && ilk[1] > 800 ? { url: hvOgSureUrl(q, r.s), bas: 0, son: ilk[1] / 1000 } : yedek(r);
       }
       const x = z.find(y => y[0] === r.a);
       return x ? { url: hvOgSureUrl(q, r.s), bas: Math.max(0, x[1] / 1000 - 0.05), son: x[2] / 1000 } : yedek(r);
@@ -4705,20 +4759,27 @@ window.hvKuranModu = hvKuranModu;
    Kaynak: mp3quran.net (uygulamada zaten kullanılan sunucu)
    ═══════════════════════════════════════════════════════════════════════ */
 
+/* v72.5: taban = mp3quran'ın yeni tam adresi; oku = mp3quran âyet zamanları kimliği (ayat_timing ?read=)
+   Sıra kullanıcı kararı: ilk 3 Yâsir ed-Devserî, Muhammed el-Fakih, Saad el-Ğâmidî; sonra yeni hocalar. */
+const HV_MP3Q = 'https://cdn.mp3quran.net/audio/';
 const HV_DINLE_QARILER = [
-  { id: 'yasser', sunucu: 'server11', ad: 'Yâsir ed-Devserî' },   // v68.7: varsayılan ve ilk hoca
-  { id: 'alfaqih', sunucu: 'server16', yol: 'M_Alfaqih/Rewayat-Hafs-A-n-Assem', ad: 'Muhammed el-Fakih' },   // v67.4: ilk hoca hep el-Fakih
+  { id: 'yasser', sunucu: 'server11', taban: HV_MP3Q + 'yasser-dosari/r1/', oku: 92, ad: 'Yâsir ed-Devserî' },   // v68.7: varsayılan ve ilk hoca
+  { id: 'alfaqih', sunucu: 'server16', yol: 'M_Alfaqih/Rewayat-Hafs-A-n-Assem', ad: 'Muhammed el-Fakih' },
+  { id: 's_gmd',   sunucu: 'server7',  taban: HV_MP3Q + 'saad-ghamdi/r1/', oku: 30, ad: 'Saad el-Ğâmidî' },
+  // v72.5 — yeni hocalar (114 sûre tam + mp3quran âyet zamanları; âyet âyet modlarda da kendi sesleri)
+  { id: 'qatami',  taban: HV_MP3Q + 'nasser-qatami/r1/', oku: 86,  ad: 'Nâsır el-Katamî' },
+  { id: 'abkar',   taban: HV_MP3Q + 'idrees-abkar/r1/',  oku: 12,  ad: 'İdris Ebker' },
+  { id: 'ajmi',    taban: HV_MP3Q + 'ahmad-ajmi/r1/',    oku: 5,   ad: 'Ahmed el-Acemî' },
+  { id: 'raad',    taban: HV_MP3Q + 'raad-kurdi/r1/',    oku: 221, ad: 'Raad Muhammed el-Kürdî' },
   { id: 'husr',   sunucu: 'server13', ad: 'Mahmud Halil el-Husarî' },
   { id: 'afs',    sunucu: 'server8',  ad: 'Mishary Rashid Alafasy' },
   { id: 'minsh',  sunucu: 'server10', ad: 'Muhammed Sıddık el-Minşâvî' },
-  // v66.1 — kullanıcı isteğiyle eklendi (mp3quran.net, 114 sûre tam; âyet âyet kayıtları yok → o modlarda Husarî okur)
   { id: 'mousa',   sunucu: 'server14', yol: 'mousa/Rewayat-Hafs-A-n-Assem',     ad: 'Abdullah el-Mûsâ' },
-  // v66.2 — 10 hâfız (hepsi mp3quran 114 sûre + everyayah âyet âyet, doğrulandı)
   { id: 'basit',   sunucu: 'server7',  ad: 'Abdülbâsıt Abdüssamed' },
   { id: 'sds',     sunucu: 'server11', ad: 'Abdurrahman es-Sudeys' },
-  { id: 's_gmd',   sunucu: 'server7',  ad: 'Saad el-Ğâmidî' },
   { id: 'maher',   sunucu: 'server12', ad: 'Mâhir el-Muaykılî' }
 ];
+window.HV_DINLE_QARILER = HV_DINLE_QARILER;
 /* Seçili hâfızın âyet âyet (everyayah) kaydı var mı? Yoksa âyet modları Husarî ile okur. */
 function hvDnAyetKaydiVar(id) { return !!(typeof HV_AA_KLASOR !== 'undefined' && HV_AA_KLASOR[id]); }
 
@@ -4740,6 +4801,7 @@ function hvDnQari() {
 }
 function hvDnUrl(no) {
   const q = hvDnQari();
+  if (q.taban) return q.taban + String(no).padStart(3, '0') + '.mp3';
   return 'https://' + q.sunucu + '.mp3quran.net/' + (q.yol || q.id) + '/' + String(no).padStart(3, '0') + '.mp3';
 }
 function hvDnSure2(sn) { const m = Math.floor(sn / 60), s = Math.floor(sn % 60); return m + ':' + (s < 10 ? '0' : '') + s; }
@@ -4759,7 +4821,9 @@ function hvDnNesne() {
     if (hvDnSure) { try { localStorage.setItem('hv_dinle_pos', String(Math.floor(hvDnSes.currentTime))); } catch (e) {} }
   });
 
+  hvDnSes.addEventListener('timeupdate', () => { try { hvUykuKontrol(); } catch (e) {} });
   hvDnSes.addEventListener('ended', () => {
+    try { if (hvUykuSureBitti()) { hvDnCaliyor = false; hvDnTazele(); return; } } catch (e) {}
     const surekli = hvGet('hv_dinle_surekli', '1') === '1';
     if (surekli && hvDnSure < 114) { hvDnCal(hvDnSure + 1); }
     else { hvDnCaliyor = false; hvDnTazele(); }
@@ -4792,20 +4856,36 @@ function hvDnMedyaBilgisi() {
 }
 
 function hvDnCal(no, baslangicSn) {
-  // v68.6: Yâsir ed-Devserî'nin tam sûre kaydı (mp3quran) kesik kesik; stüdyo âyet kayıtlarını kesintisiz arka arkaya çal
-  if (hvDnMod() === 'ar' && hvDnQari().id === 'yasser') { hvSet('hv_dinle_mod', 'aa'); hvAaCal(no, 0); return; }
+  // v72.5: Arapça her hoca için TEK PARÇA tam sûre kaydı çalar — âyet âyet bölünmez, kesilmez, atlamaz.
+  // (Yâsir ed-Devserî'nin tam kaydı Dua Öğren'deki stüdyo kaydıyla aynı: Yâsîn 916 sn ≈ 83 âyet dosyası 912 sn)
+  if (hvDnMod() === 'aa') hvSet('hv_dinle_mod', 'ar');   // eski sürümün zorla açtığı âyet âyet modu kapansın
   if (hvDnMod() !== 'ar') { hvAaCal(no, 0); return; }
+  try { if (hvAaCaliyor) hvAaDurdur(); } catch (e) {}
   no = Math.max(1, Math.min(114, parseInt(no, 10) || 1));
   hvDnSure = no;
   hvSet('hv_dinle_sure', no);
+  const q = hvDnQari();
   const s = hvDnNesne();
   s.src = hvDnUrl(no);
   s.load();
+  const git = (t) => {   // meta veri gelince konuma git
+    const yap = () => { try { s.currentTime = t; } catch (e) {} };
+    if (s.readyState >= 1) yap(); else s.addEventListener('loadedmetadata', function f() { s.removeEventListener('loadedmetadata', f); yap(); });
+  };
   if (baslangicSn) {
-    const atla = () => { try { s.currentTime = baslangicSn; } catch (e) {} s.removeEventListener('loadedmetadata', atla); };
-    s.addEventListener('loadedmetadata', atla);
+    git(baslangicSn);
   } else {
     try { localStorage.setItem('hv_dinle_pos', '0'); } catch (e) {}
+    // Yâsir'in sûre başındaki stüdyo besmelesi okunmaz (kullanıcı kararı v68.8.4) → doğrudan 1. âyetten başla
+    if (q.id === 'yasser' && no !== 1 && no !== 9) {
+      s.muted = true;
+      const ac = () => { s.muted = false; };
+      const zaman = setTimeout(ac, 2500);
+      hvSureZaman(q, no).then(z => {
+        const a1 = z && z.find(y => y[0] === 1);
+        if (a1 && hvDnSure === no && s.currentTime < a1[1] / 1000) git(Math.max(0, a1[1] / 1000 - 0.08));
+      }).catch(() => {}).finally(() => { clearTimeout(zaman); setTimeout(ac, 120); });
+    }
   }
   s.play().catch(() => {});
   hvDnMedyaBilgisi();
@@ -4942,13 +5022,18 @@ function hvAyetSeg(s, a, q) {
       if (x) return { url: hvOgSureUrl(q, s), bas: Math.max(0, x[1] / 1000 - 0.05), son: x[2] / 1000 };
     } else { try { hvMusaZaman(s).catch(() => {}); } catch (e) {} }
   }
+  if (q.oku) {   // v72.5: yeni hocalar — tam sûre dosyasının içinden o âyet
+    const z = hvSureZamanHazir(q, s);
+    if (z) { const x = z.find(y => y[0] === a); if (x) return { url: hvOgSureUrl(q, s), bas: Math.max(0, x[1] / 1000 - 0.05), son: x[2] / 1000 }; }
+    else { try { hvSureZaman(q, s).catch(() => {}); } catch (e) {} }
+  }
   return { url: hvOgEveryayah(HV_AA_KLASOR.husr, s, a), yedek: true };
 }
 window.hvAyetSeg = hvAyetSeg;
 /* Bu sûrede hoca âyet âyet kendi sesiyle okuyabiliyor mu? */
 function hvAyetKendiSesi(s, q) {
   q = q || hvDnQari();
-  if (HV_AA_KLASOR[q.id] || q.id === 'mousa') return true;
+  if (HV_AA_KLASOR[q.id] || q.id === 'mousa' || q.oku) return true;
   if (q.id === 'alfaqih') return !!(s && HV_FAKIH_ZAMAN[Number(s)]);
   return false;
 }
@@ -5166,6 +5251,7 @@ async function hvAaCal(sure, baslaIdx) {
   hvAaSure = Math.max(1, Math.min(114, parseInt(sure, 10) || 1));
   hvAaListe = hvAaListeKur(hvAaSure);
   hvAaIdx = Math.max(0, Math.min(hvAaListe.length - 1, parseInt(baslaIdx, 10) || 0));
+  try { const q = hvDnQari(); if (q.oku && !HV_AA_KLASOR[q.id]) await hvSureZaman(q, hvAaSure); } catch (e) {}   // v72.5: yeni hocanın âyet zamanları önce gelsin
   hvAaCaliyor = true;
   hvSet('hv_dinle_sure', hvAaSure);
   hvAaOynat();
@@ -5174,7 +5260,10 @@ window.hvAaCal = hvAaCal;
 
 function hvAaOynat() {
   if (!hvAaCaliyor) return;
+  try { hvUykuKontrol(); } catch (e) {}
+  if (!hvAaCaliyor) return;
   if (hvAaIdx >= hvAaListe.length) {   // sûre bitti
+    try { if (hvUykuSureBitti()) { hvAaIdx = Math.max(0, hvAaListe.length - 1); hvAaEkran(); return; } } catch (e) {}
     if (hvGet('hv_dinle_surekli', '1') === '1' && hvAaSure < 114) { hvAaCal(hvAaSure + 1, 0); return; }
     hvAaIdx = Math.max(0, hvAaListe.length - 1);   // son âyet ekranda kalsın
     hvAaDurdur(); return;
@@ -5278,6 +5367,42 @@ function hvAaEkran() {
 
 function hvDnDurdurTam() { try { if (hvDnSes) hvDnSes.pause(); } catch (e) {} }
 
+/* ── v72.5: Uyku zamanlayıcısı ── 15/30/60 dk sonra ya da çalan sûre bitince ses durur.
+   Uygulama yeniden açılınca kapalı başlar. */
+const HV_UYKU = { mod: '0', bitis: 0, t: null };
+function hvUykuDurum() { return HV_UYKU.mod; }
+function hvUykuYazi() {
+  if (HV_UYKU.mod === 'sure') return 'Çalan sûre bitince ses duracak.';
+  if (HV_UYKU.bitis) { const dk = Math.max(1, Math.ceil((HV_UYKU.bitis - Date.now()) / 60000)); return '~' + dk + ' dakika sonra ses duracak.'; }
+  return '';
+}
+function hvUykuDur() {
+  HV_UYKU.mod = '0'; HV_UYKU.bitis = 0; if (HV_UYKU.t) { clearTimeout(HV_UYKU.t); HV_UYKU.t = null; }
+  try { if (hvAaCaliyor) hvAaDurdur(); } catch (e) {}
+  try { hvDnDurdurTam(); } catch (e) {}
+  try { if (typeof hvMvDurdur === 'function') hvMvDurdur(); } catch (e) {}
+  const s = document.getElementById('dn-uyku-sec'); if (s) s.value = '0';
+  const n = document.getElementById('dn-uyku-not'); if (n) n.textContent = '';
+  try { hvDnTazele(); } catch (e) {}
+}
+function hvUykuAyarla(v) {
+  if (HV_UYKU.t) { clearTimeout(HV_UYKU.t); HV_UYKU.t = null; }
+  HV_UYKU.mod = String(v || '0'); HV_UYKU.bitis = 0;
+  if (/^\d+$/.test(HV_UYKU.mod) && HV_UYKU.mod !== '0') {
+    const dk = parseInt(HV_UYKU.mod, 10);
+    HV_UYKU.bitis = Date.now() + dk * 60000;
+    HV_UYKU.t = setTimeout(hvUykuDur, dk * 60000);
+  }
+  const n = document.getElementById('dn-uyku-not'); if (n) n.textContent = hvUykuYazi();
+}
+/* Telefon arka plandayken zamanlayıcı geç kalabilir → ses çalarken de kontrol et */
+function hvUykuKontrol() { if (HV_UYKU.bitis && Date.now() >= HV_UYKU.bitis) hvUykuDur(); }
+/* Sûre bitti: "Bu sûre bitince" seçiliyse sıradakine geçme, dur */
+function hvUykuSureBitti() { if (HV_UYKU.mod !== 'sure') return false; hvUykuDur(); return true; }
+window.hvUykuAyarla = hvUykuAyarla;
+window.hvUykuDurum = hvUykuDurum;
+setInterval(() => { try { hvUykuKontrol(); const n = document.getElementById('dn-uyku-not'); if (n && HV_UYKU.bitis) n.textContent = hvUykuYazi(); } catch (e) {} }, 15000);
+
 function renderDinle() {
   const kok = document.getElementById('dinle-root');
   if (!kok) return;
@@ -5324,7 +5449,12 @@ function renderDinle() {
       <select class="mv-qari" onchange="hvDnQariDegistir(this.value)">
         ${HV_DINLE_QARILER.map(q => `<option value="${q.id}" ${q.id === qari ? 'selected' : ''}>${q.ad}</option>`).join('')}
       </select>
-      ${(mod === 'both' && !hvDnAyetKaydiVar(qari) && qari !== 'mousa') ? `<div class="mv-tts-not">ℹ️ ${hvEsc(hvDnQari().ad)}'in âyet âyet bölünmüş kaydı yalnızca Fâtiha ve kısa sûrelerde (Duhâ–Nâs) var. Diğer sûrelerde Türkçe araya girdiği için Arapçayı Husarî okur; kendi sesinden tam sûre için "Arapça" modu.</div>` : ''}
+      <label class="dn-uyku"><span>⏾ Uyku zamanlayıcısı</span>
+        <select id="dn-uyku-sec" class="mv-qari" onchange="hvUykuAyarla(this.value)">
+          ${[['0', 'Kapalı'], ['15', '15 dakika'], ['30', '30 dakika'], ['60', '60 dakika'], ['sure', 'Bu sûre bitince']].map(x => `<option value="${x[0]}" ${hvUykuDurum() === x[0] ? 'selected' : ''}>${x[1]}</option>`).join('')}
+        </select></label>
+      <div id="dn-uyku-not" class="dn-uyku-not">${hvUykuYazi()}</div>
+      ${(mod === 'both' && !hvDnAyetKaydiVar(qari) && qari !== 'mousa' && !hvDnQari().oku) ? `<div class="mv-tts-not">ℹ️ ${hvEsc(hvDnQari().ad)}'in âyet âyet bölünmüş kaydı yalnızca Fâtiha ve kısa sûrelerde (Duhâ–Nâs) var. Diğer sûrelerde Türkçe araya girdiği için Arapçayı Husarî okur; kendi sesinden tam sûre için "Arapça" modu.</div>` : ''}
       <label class="dn-switch">
         <input type="checkbox" ${surekli ? 'checked' : ''} onchange="hvDnSurekliDegistir(this)">
         <span>Bitince sıradaki sûre</span>
