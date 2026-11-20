@@ -914,6 +914,16 @@ function scheduleNativePrayerNotifications() {
   const sched = hvNativeHandler('schedule-local-notification');
   if (!sched) { updateNotifyStatusUI(0); return 0; }
 
+  // v72.6 — "Ezan bildirimleri hiç kesilmesin": yeni uygulamalar (iOS 1.9.4 / Android 1.6) 'bildirim-plani' köprüsü sunar.
+  // O zaman 30 günlük tam plan tek seferde telefona verilir; telefon iPhone'un 64 sınırına göre en yakınları kendisi kurar
+  // ve arka planda / her ezanda yenisini ekler. Eski uygulamalarda her şey eskisi gibi (12 gün, tek tek).
+  const hvPlanH = hvNativeHandler('bildirim-plani');
+  const hvPlan = hvPlanH ? [] : null;
+  const hvGunSay = hvPlan ? 30 : HV_NOTIFY_DAYS;
+  const hvEnCok = hvPlan ? 400 : HV_NOTIFY_MAX;
+  const hvAyetGun = hvPlan ? 30 : HV_NOTIFY_AYET_GUN;
+  const kur = hvPlan ? { postMessage: (m) => { hvPlan.push(m); } } : sched;
+
   const early = parseInt(APP_STATE.notifyOffset, 10) || 0;   // kaç dk kala
   const both = !!APP_STATE.notifyBoth;                        // hem önceden hem vaktinde
   const daysCovered = new Set();
@@ -922,7 +932,7 @@ function scheduleNativePrayerNotifications() {
   const now = Date.now();
   let count = 0;
 
-  for (let d = 0; d < HV_NOTIFY_DAYS && count < HV_NOTIFY_MAX; d++) {
+  for (let d = 0; d < hvGunSay && count < hvEnCok; d++) {
     const day = new Date();
     day.setHours(0, 0, 0, 0);
     day.setDate(day.getDate() + d);
@@ -933,7 +943,7 @@ function scheduleNativePrayerNotifications() {
     const ramazan = /ramazan|ramadan/i.test(entry.h || '');
 
     // ── v66.4: Sabah ezanı alarmı (seçilen saatte, ezan sesiyle) ──
-    if (alarmAcik && count < HV_NOTIFY_MAX) {
+    if (alarmAcik && count < hvEnCok) {
       const g = hvSabahAlarmGunu(day);
       if (g) {
         const at = new Date(day);
@@ -941,7 +951,7 @@ function scheduleNativePrayerNotifications() {
         if (at.getTime() > now + 20000) {
           const dayKey = `${day.getFullYear()}${hvPad2(day.getMonth() + 1)}${hvPad2(day.getDate())}`;
           try {
-            sched.postMessage({
+            kur.postMessage({
               id: `hv_${dayKey}_sabah`,
               title: '🌅 Sabah Ezanı',
               body: `Sabah namazı vakti — haydi namaza! Güneş ${g.gunes}'de doğuyor.`,
@@ -957,7 +967,7 @@ function scheduleNativePrayerNotifications() {
     if (!vakitAcik) continue;
 
     for (const id of HV_NOTIFY_PRAYERS) {
-      if (count >= HV_NOTIFY_MAX) break;
+      if (count >= hvEnCok) break;
       if (id === 'Fajr' && alarmAcik) continue;   // sabahın bildirimi = alarm (iki kez ezan okunmasın)
       const rawTime = entry.t[id];
       if (!rawTime) continue;
@@ -1003,10 +1013,10 @@ function scheduleNativePrayerNotifications() {
       }
 
       for (const job of jobs) {
-        if (count >= HV_NOTIFY_MAX) break;
+        if (count >= hvEnCok) break;
         if (job.at.getTime() <= now + 20000) continue; // geçmiş ya da çok yakın
         try {
-          sched.postMessage({
+          kur.postMessage({
             id: `hv_${dayKey}_${id}${job.sfx}`,
             title: 'Namaz Dostu',
             body: job.body,
@@ -1022,7 +1032,7 @@ function scheduleNativePrayerNotifications() {
 
   // ── Cuma hatırlatması (sabah 09:00) ──
   if (vakitAcik && APP_STATE.notifyCuma !== false) {
-    for (let d = 0; d < HV_NOTIFY_DAYS && count < HV_NOTIFY_MAX + 12; d++) {
+    for (let d = 0; d < hvGunSay && count < hvEnCok + 12; d++) {
       const day = new Date();
       day.setHours(0, 0, 0, 0);
       day.setDate(day.getDate() + d);
@@ -1032,7 +1042,7 @@ function scheduleNativePrayerNotifications() {
       if (at.getTime() <= now + 20000) continue;
       const dayKey = `${day.getFullYear()}${hvPad2(day.getMonth() + 1)}${hvPad2(day.getDate())}`;
       try {
-        sched.postMessage({
+        kur.postMessage({
           id: `hv_cuma_${dayKey}`,
           title: 'Hayırlı Cumalar 🕌',
           body: 'Bugün Cuma. Kehf suresini okumayı ve Peygamber Efendimize salavat getirmeyi unutma.',
@@ -1055,7 +1065,7 @@ function scheduleNativePrayerNotifications() {
         if (v.okunan > 0 && v.dinlenen > 0) body = `Bu hafta ${v.okunan} sayfa Kur'an okudun, yaklaşık ${v.dinlenen} sayfa da dinledin. Allah kabul etsin 🤲`;
         else if (v.okunan > 0) body = `Bu hafta ${v.okunan} sayfa Kur'an okudun. Allah kabul etsin 🤲`;
         else body = `Bu hafta yaklaşık ${v.dinlenen} sayfa Kur'an dinledin. Allah kabul etsin 🤲`;
-        sched.postMessage({ id: `hv_kuranhafta_${v.hafta}`, title: "📖 Haftalık Kur'an Özeti", body,
+        kur.postMessage({ id: `hv_kuranhafta_${v.hafta}`, title: "📖 Haftalık Kur'an Özeti", body,
           timestamp: Math.floor(at.getTime() / 1000), sound: 'default' });
         count++;
       }
@@ -1064,7 +1074,7 @@ function scheduleNativePrayerNotifications() {
 
   // ── Kandil / bayram / arefe / Ramazan hatırlatması (sabah) ──
   if (vakitAcik && APP_STATE.notifyKandil !== false && typeof hvBugunDiniGun === 'function') {
-    for (let d = 0; d < HV_NOTIFY_DAYS && count < HV_NOTIFY_MAX + 6; d++) {
+    for (let d = 0; d < hvGunSay && count < hvEnCok + 6; d++) {
       const day = new Date();
       day.setHours(0, 0, 0, 0);
       day.setDate(day.getDate() + d);
@@ -1072,7 +1082,7 @@ function scheduleNativePrayerNotifications() {
       try { gunler = hvBugunDiniGun(day); } catch (e) { gunler = []; }
       const ymd = `${day.getFullYear()}-${hvPad2(day.getMonth() + 1)}-${hvPad2(day.getDate())}`;
       gunler.forEach((g, gi) => {
-        if (count >= HV_NOTIFY_MAX + 6) return;
+        if (count >= hvEnCok + 6) return;
         let saat = 9, title = '', body = '';
         if (g.type === 'kandil') {
           saat = 10; title = `🕯️ ${g.name}`;
@@ -1097,7 +1107,7 @@ function scheduleNativePrayerNotifications() {
         if (at.getTime() <= now + 20000) return;
         const dayKey = `${day.getFullYear()}${hvPad2(day.getMonth() + 1)}${hvPad2(day.getDate())}`;
         try {
-          sched.postMessage({ id: `hv_dini_${dayKey}_${gi}`, title: title, body: body,
+          kur.postMessage({ id: `hv_dini_${dayKey}_${gi}`, title: title, body: body,
             timestamp: Math.floor(at.getTime() / 1000), sound: 'default' });
           count++;
         } catch (e) {}
@@ -1108,7 +1118,7 @@ function scheduleNativePrayerNotifications() {
   // ── Günün Âyeti (v65.6): her sabah seçilen saatte, o günün âyeti (Diyanet meali) ──
   if (vakitAcik && APP_STATE.notifyAyet !== false && typeof hvGununAyeti === 'function') {
     const saat = Math.max(0, Math.min(23, parseInt(APP_STATE.notifyAyetSaat, 10) || 8));
-    for (let d = 0; d < HV_NOTIFY_AYET_GUN; d++) {
+    for (let d = 0; d < hvAyetGun; d++) {
       const day = new Date();
       day.setHours(0, 0, 0, 0);
       day.setDate(day.getDate() + d);
@@ -1122,7 +1132,7 @@ function scheduleNativePrayerNotifications() {
       const kaynak = (typeof hvKartKaynak === 'function') ? hvKartKaynak(v) : (v.surah + ' Sûresi, ' + v.ayah + '. Âyet');
       const dayKey = `${day.getFullYear()}${hvPad2(day.getMonth() + 1)}${hvPad2(day.getDate())}`;
       try {
-        sched.postMessage({ id: `hv_ayet_${dayKey}`, title: '📖 Günün Âyeti', body: `${metin} — ${kaynak}`,
+        kur.postMessage({ id: `hv_ayet_${dayKey}`, title: '📖 Günün Âyeti', body: `${metin} — ${kaynak}`,
           timestamp: Math.floor(at.getTime() / 1000), sound: 'default' });
         count++;
       } catch (e) {}
@@ -1141,13 +1151,19 @@ function scheduleNativePrayerNotifications() {
       if (at.getTime() <= now + 3600000) { at.setTime(sonGun.getTime()); at.setHours(12, 0, 0, 0); }   // kapsam çok kısaysa son günün öğlesi
       if (at.getTime() > now + 3600000) {
         const gunAd = sonGun.toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', weekday: 'long' });
-        sched.postMessage({ id: 'hv_hatirlat_ac', title: '🔔 Ezan bildirimlerin bitmek üzere',
+        kur.postMessage({ id: 'hv_hatirlat_ac', title: '🔔 Ezan bildirimlerin bitmek üzere',
           body: `Vakit bildirimlerin ${gunAd} gününe kadar kurulu. Devam etmesi için Namaz Dostu'nu bir kez açman yeterli.`,
           timestamp: Math.floor(at.getTime() / 1000), sound: 'default' });
         count++;
       }
     }
   } catch (e) {}
+
+  // v72.6: plan modunda hepsi tek mesajla gider (telefon kendisi sırayla kurar)
+  if (hvPlan) {
+    try { hvPlanH.postMessage(JSON.stringify(hvPlan)); }
+    catch (e) { hvPlan.forEach(m => { try { sched.postMessage(m); } catch (e2) {} }); }
+  }
 
   try { localStorage.setItem('hv_notif_count', String(count)); } catch (e) {}
   updateNotifyStatusUI(count, daysCovered.size);
@@ -2166,8 +2182,18 @@ function hvNativePusulaBaslat() {
   return false;
 }
 let hvNativeKalibreUyarildi = false;
-window.hvNativeHeading = function (h, dogruluk) {
+let hvPusulaKonumSon = 0;
+window.hvNativeHeading = function (h, dogruluk, gercekKuzey) {
   if (!window.__hvNativePusula || APP_STATE.currentPage !== 'qibla') return;
+  // v72.6: Android 1.6+ telefonun kendi sapma (GeomagneticField) hesabı için konumu dakikada bir iletir
+  try {
+    const uk = APP_STATE.gpsKonum || APP_STATE.userLocation;
+    if (uk && isFinite(uk.lat) && isFinite(uk.lng) && Date.now() - hvPusulaKonumSon > 60000 &&
+        window.NamazDostuBridge && typeof NamazDostuBridge.setKonum === 'function') {
+      hvPusulaKonumSon = Date.now();
+      NamazDostuBridge.setKonum(Number(uk.lat), Number(uk.lng));
+    }
+  } catch (e) {}
   // v70.9: telefonun pusulası veri gönderiyorsa tarayıcının yön sensörünü bırak — iki kaynak aynı anda
   // ibreyi farklı yönlere çekiyordu (izin penceresi açılınca 2,5 sn'lik yedek devreye giriyordu)
   if (!window.__hvNativeSon || Date.now() - window.__hvNativeSon > 3000) {
@@ -2178,7 +2204,8 @@ window.hvNativeHeading = function (h, dogruluk) {
   const n = Number(h);
   if (isNaN(n)) return;
   const u = APP_STATE.gpsKonum || APP_STATE.userLocation || {};
-  const gercek = (n + hvManyetikSapma(u.lat, u.lng) + 360) % 360;
+  // v72.6: 3. değer 1 ise telefon zaten GERÇEK kuzeyi verdi (iOS trueHeading / Android GeomagneticField) → sapma eklenmez
+  const gercek = Number(gercekKuzey) === 1 ? ((n % 360) + 360) % 360 : (n + hvManyetikSapma(u.lat, u.lng) + 360) % 360;
   // v72: pusulanın hassasiyeti sürekli izlenir (0 güvenilmez · 1 zayıf · 2 orta · 3 iyi).
   // Eskiden yalnız "0" gelince bir kez uyarılıyordu; iPhone ±30-40° saparken "1" gönderiyordu ve kimse uyarılmıyordu.
   hvPusulaHassasiyet(Number(dogruluk));
