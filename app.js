@@ -964,6 +964,31 @@ function scheduleNativePrayerNotifications() {
         }
       }
     }
+    // ── v72.7: Ramazan sahur alarmı — imsaktan 45 dk önce, ezan sesiyle (Ramazan panelinden kapatılabilir) ──
+    try {
+      let sahurAcik = true;
+      try { sahurAcik = localStorage.getItem('hv_sahur_alarm') !== '0'; } catch (e) {}
+      const rd = (sahurAcik && typeof hvRamazanDurum === 'function') ? hvRamazanDurum(new Date(day)) : null;
+      if (rd && rd.durum === 'icinde' && entry.t.Fajr && count < hvEnCok) {
+        const imsakHm = addMinutes(entry.t.Fajr, parseInt(timeOffs.Fajr, 10) || 0);
+        const p = imsakHm.split(':');
+        const at = new Date(day);
+        at.setHours(parseInt(p[0], 10), parseInt(p[1], 10) - 45, 0, 0);
+        if (at.getTime() > now + 20000) {
+          const dayKey = `${day.getFullYear()}${hvPad2(day.getMonth() + 1)}${hvPad2(day.getDate())}`;
+          kur.postMessage({
+            id: `hv_${dayKey}_sahur`,
+            title: '🌙 Sahur Vakti',
+            body: `İmsaka 45 dakika kaldı (${imsakHm}). Sahura kalk, niyet etmeyi unutma.`,
+            timestamp: Math.floor(at.getTime() / 1000),
+            sound: hvEzanBildirimSesi()
+          });
+          count++;
+          daysCovered.add(dayKey);
+        }
+      }
+    } catch (e) {}
+
     if (!vakitAcik) continue;
 
     for (const id of HV_NOTIFY_PRAYERS) {
@@ -2575,9 +2600,9 @@ function handleOrientationEvent(e) {
     let diff = compassHeading - oncekiNorm;
     if (diff > 180) diff -= 360;
     if (diff < -180) diff += 360;
-    // v65.3: 0,7° altındaki sensör titremesini yok say; büyük dönüşlerde hızlı, küçüklerde yumuşak izle
-    if (Math.abs(diff) < 0.7) diff = 0;
-    const k = Math.abs(diff) > 25 ? 0.5 : 0.18;
+    // v72.7: titremesin — 1,5° altındaki kıpırtıyı yok say; küçük farkı çok yavaş, büyük dönüşü hızlı izle
+    const ad = Math.abs(diff);
+    const k = ad > 25 ? 0.45 : (ad > 8 ? 0.2 : (ad > 1.5 ? 0.07 : 0.025));
     smoothHeading = oncekiNorm + diff * k;
   }
   // 0-360 dışına taşmasın (eskiden birikip 1000°+ gösteriyordu)

@@ -2972,7 +2972,9 @@ function hvBesmeleAyir(text) {
     harita.push(i);
   }
   if (sade.indexOf(hedef) === 0 && harita.length > hedef.length) {
-    const kes = harita[hedef.length - 1] + 1;
+    let kes = harita[hedef.length - 1] + 1;
+    // v72.7: son harfin harekesi (ِ) kalan metne taşmasın
+    while (kes < text.length && /[ؐ-ًؚ-ٰٟۖ-ۭـ]/.test(text[kes])) kes++;
     return { besmele: text.slice(0, kes).trim(), kalan: text.slice(kes).trim() };
   }
   return { besmele: '', kalan: text };
