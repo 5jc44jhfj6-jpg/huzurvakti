@@ -4211,11 +4211,17 @@ function hvEzVurgula(i) {
 /* Okunan âyetin kelimeleri sesle birlikte dolar (Arapça + okunuş) */
 function hvEzKelimeIlerle(oran, i) {
   const r = Math.max(0, Math.min(1, oran || 0));
+  // v72.8: takip geriden geliyordu → (1) her kelimenin payı harf sayısına göre (kısa kelime kısa sürer),
+  // (2) kelime okunmaya BAŞLADIĞI an boyanır (eskiden kelime bitince boyanıyordu, yarım–bir kelime geriden geliyordu)
+  const harf = (x) => Math.max(1, String(x.textContent || '').replace(/[ؐ-ًؚ-ٰٟۖ-ۭـ\s'’`\-·.,;:!?()"“”]/g, '').length);
   const doldur = (el, sec) => {
     if (!el) return;
-    const w = el.querySelectorAll(sec);
-    const n = Math.round(r * w.length);
-    w.forEach((x, m) => x.classList.toggle('gecti', m < n));
+    const w = [...el.querySelectorAll(sec)];
+    if (!w.length) return;
+    if (!el._hvHarf || el._hvHarf.length !== w.length) el._hvHarf = w.map(harf);
+    const L = el._hvHarf, top = L.reduce((a, b) => a + b, 0), konum = r * top;
+    let bas = 0;
+    w.forEach((x, m) => { x.classList.toggle('gecti', r > 0 && bas <= konum); bas += L[m]; });
   };
   doldur(document.querySelector('.ez-tam-kart .ez-a.ez-i-' + i) || document.querySelector('.ez-tam-kart .ez-tk-besmele.ez-i-' + i), '.ez-w');
   doldur(document.querySelector('.ez-tam-kart .ez-o.ez-i-' + i), '.ez-ow');

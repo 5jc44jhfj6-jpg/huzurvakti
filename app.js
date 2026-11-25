@@ -158,8 +158,8 @@ function hvVakitFotoSec(aktif, now) {
     const d = new Date(now); d.setHours(h, m, 0, 0); return d;
   };
   const gecen = (id) => { const d = dk(id); return d ? (now - d) / 60000 : 0; };
-  if (aktif === 'Sunrise' && gecen('Sunrise') > 75) return 'ogle';
-  if (aktif === 'Maghrib' && gecen('Maghrib') > 50) return 'gece';
+  // v72.8: güneşten 75 dk sonra öğle fotoğrafına geçme kaldırıldı → güneş fotoğrafı öğle vaktine kadar kalır (kullanıcı isteği)
+  // v72.8: akşamdan 50 dk sonra gece fotoğrafına geçme de kaldırıldı → her vakit kendi fotoğrafıyla (kullanıcı isteği)
   return HV_VAKIT_FOTO[aktif] || 'ogle';
 }
 function hvFotoGecis(eski) {

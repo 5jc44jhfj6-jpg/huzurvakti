@@ -84,6 +84,15 @@ const HV_ILMIHAL = [
     y: 'Diyanet İlmihali, Gusül', a: 'gusul nasil alinir' },
 
   // ── NAMAZ ──
+  { k: 'Namaz', s: 'Kur\'an\'da namazın beş vakit olduğu yazıyor mu?',
+    c: '"Beş" sayısı Kur\'an\'da geçmez; ancak namaz vakitlerine işaret eden âyetler vardır: "Gündüzün iki ucunda ve gecenin gündüze yakın saatlerinde namaz kıl" (Hûd 114), "Güneşin batıya kaymasından gecenin karanlığına kadar namazı kıl, sabah namazını da kıl" (İsrâ 78). Rûm 17-18\'de akşam, sabah, ikindi ve öğle vakitleri anılır; Bakara 238\'de "Namazlara ve orta namaza devam edin" buyrulur. Namazın beş vakit oluşu, rekâtları ve kılınışı Peygamberimizin uygulamasıyla (sünnetle) belirlenmiştir. Bütün mezhepler ve Diyanet bu konuda görüş birliği içindedir.',
+    y: 'Hûd 11/114 · İsrâ 17/78 · Rûm 30/17-18 · Bakara 2/238 · Diyanet İlmihali', a: 'bes vakit kuranda yaziyor mu namaz vakitleri ayet' },
+  { k: 'Namaz', s: 'Namazın nasıl kılınacağı Kur\'an\'da anlatılıyor mu?',
+    c: 'Ana unsurları Kur\'an\'da geçer: abdest (Mâide 6), su yoksa teyemmüm (Nisâ 43), kıbleye yönelmek (Bakara 144), kıyam (Bakara 238), rükû ve secde (Hac 77), Kur\'an okumak (Müzzemmil 20), yolculukta kısaltmak (Nisâ 101). Rekât sayıları, Fâtiha ve zamm-ı sûre okumak, Tahiyyat, selam ve hareketlerin sırası ise Peygamberimizin uygulamasından öğrenilmiştir. Peygamberimiz "Beni nasıl namaz kılarken görüyorsanız siz de öyle kılın" buyurmuştur.',
+    y: 'Mâide 5/6 · Bakara 2/144, 238 · Hac 22/77 · Buhârî, Ezân 18', a: 'namaz nasil kilinir kuranda rekat sunnet' },
+  { k: 'Namaz', s: 'Cemaatle kılmak ile tek başına kılmak arasında fark var mı?',
+    c: 'İkisi de geçerli namazdır; ancak cemaatle kılmanın fazileti çok büyüktür. Kur\'an\'da "Rükû edenlerle birlikte rükû edin" buyrulur (Bakara 43). Peygamberimiz "Cemaatle kılınan namaz, tek başına kılınandan yirmi yedi derece daha faziletlidir" buyurmuştur. Hanefî mezhebine göre beş vakit namazı cemaatle kılmak erkekler için sünnet-i müekkededir. Cuma namazı ise ancak cemaatle kılınır ve erkeklere farzdır.',
+    y: 'Bakara 2/43 · Nisâ 4/102 · Buhârî, Ezân 30 · Müslim, Mesâcid 249 · Diyanet İlmihali', a: 'cemaat tek basina fark fazilet 27 derece cuma' },
   { k: 'Namaz', s: 'Namazın farzları nelerdir?',
     c: 'On ikidir. Namazdan önceki şartlar: hadesten taharet (abdest/gusül), necasetten taharet (temizlik), setr-i avret (örtünme), istikbâl-i kıble (kıbleye dönmek), vakit ve niyet. Namazın içindeki rükünler: iftitah tekbiri, kıyam, kırâat, rükû, secde ve son oturuş (ka\'de-i ahîre).',
     y: 'Diyanet İlmihali, Namaz', a: 'namaz farz sart rukun' },
@@ -170,7 +179,16 @@ const HV_ILMIHAL = [
     y: 'Diyanet İlmihali', a: 'cunup adet kuran okumak' },
   { k: 'Kur\'an', s: 'Hatim duası nasıl yapılır?',
     c: 'Kur\'an\'ın tamamı okunduktan sonra yapılan duadır; belirli bir kalıbı yoktur. Genellikle Duhâ sûresinden itibaren son sûreler okunup Fâtiha ve Bakara\'nın ilk âyetleriyle bitirilir, ardından kişi kendi diliyle dua eder.',
-    y: 'Diyanet İşleri Başkanlığı', a: 'hatim duasi' }
+    y: 'Diyanet İşleri Başkanlığı', a: 'hatim duasi' },
+  { k: 'Kur\'an', s: 'Mushaf sırası ile iniş (nüzul) sırası neden farklı?',
+    c: 'Mushaf sırası Fâtiha ile başlayıp Nâs ile biten, Peygamberimiz zamanında belirlenen ve bütün Mushafların basıldığı sıradır; namazda ve hatimde bu sıra esas alınır. İniş sırası ise âyetlerin indiriliş sırasıdır; ilk inen Alak sûresinin ilk âyetleridir. İniş sırası âlimlerin rivayetlerden çıkardığı yaklaşık bir sıralamadır; bu yüzden kaynaktan kaynağa küçük farklar görülür. En yaygın liste 1924 Kahire Mushafı\'nda kullanılandır. Bazı meal ve tefsirler konuların tarihî bağlamını göstermek için bu sırayı izler.',
+    y: 'Diyanet İşleri Başkanlığı · TDV İslâm Ansiklopedisi, "Nüzûl"', a: 'nuzul inis sirasi mushaf sirasi farkli' },
+  { k: 'Kur\'an', s: 'Uygulamadaki meal hangisi, güvenilir mi?',
+    c: 'Uygulamada Diyanet İşleri Başkanlığı\'nın Kur\'an-ı Kerim Meâli (Halil Altuntaş – Muzaffer Şahin) kullanılır. İlahiyatçılardan oluşan bir heyetin gözden geçirdiği, Türkiye\'de en yaygın kullanılan mealdir. Unutmamak gerekir ki her meal bir çeviri ve yorumdur; Arapça metin bütün kaynaklarda aynıdır. Anlamakta zorlanılan âyetlerde tefsirlere bakmak faydalıdır.',
+    y: 'Diyanet İşleri Başkanlığı, Kur\'an-ı Kerim Meâli', a: 'meal diyanet guvenilir hangi meal' },
+  { k: 'Kur\'an', s: 'Bazı kıssalar neden birden fazla sûrede anlatılıyor?',
+    c: 'Hz. Mûsâ, Hz. İbrâhim ve Hz. Nûh gibi peygamberlerin kıssaları farklı sûrelerde, farklı yönleriyle anlatılır. Her sûrede kıssanın o sûrenin konusuna uygun bölümü öne çıkarılır; böylece aynı olaydan farklı dersler verilir. Bu bir tekrar değil, Kur\'an\'ın anlatım üslubudur.',
+    y: 'Diyanet İşleri Başkanlığı · TDV İslâm Ansiklopedisi, "Kıssa"', a: 'kissa tekrar musa bakara taha neden ayni' }
 ];
 window.HV_ILMIHAL = HV_ILMIHAL;
 
