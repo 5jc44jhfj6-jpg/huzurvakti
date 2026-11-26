@@ -911,6 +911,11 @@ const krSerit = (id) => `img/duvar_${KR_SERIT[Number(id) % 10]}.jpg`;
 /* v67.7: her caminin kendi gövdesi görünsün diye dikey konum (resme göre) */
 const KR_KONUM = { '13': 62, '16': 50, '17': 55, '18': 60, '19': 60, '06': 45, '22': 50, '24': 52, '14': 50, '25': 55 };
 const krKonum = (id) => (KR_KONUM[KR_SERIT[Number(id) % 10]] || 45) + '%';
+/* v72.9: ince şeritlerde (Öne Çıkan Sûreler) dikey fotoğrafın caminin göründüğü bandı; başlıkta vakit fotoğrafının cami kısmı */
+const KR_SERIT_KONUM = { '13': 82, '16': 38, '17': 70, '18': 72, '19': 64, '06': 82, '22': 14, '24': 74, '14': 80, '25': 42 };
+const krSeritKonum = (id) => (KR_SERIT_KONUM[KR_SERIT[Number(id) % 10]] || 60) + '%';
+const KR_HERO_KONUM = { safak: '36% 42%', sabah: '55% 30%', ogle: '58% 38%', ikindi: '50% 38%', aksam: '55% 44%', gece: '42% 52%' };
+const krHeroKonum = () => KR_HERO_KONUM[(document.body && document.body.dataset.foto) || 'ikindi'] || '50% 40%';
 const KR_CUZ = [[1, 1], [2, 142], [2, 253], [3, 93], [4, 24], [4, 148], [5, 82], [6, 111], [7, 88], [8, 41], [9, 93], [11, 6], [12, 53], [15, 1], [17, 1], [18, 75], [21, 1], [23, 1], [25, 21], [27, 56], [29, 46], [33, 31], [36, 28], [39, 32], [41, 47], [46, 1], [51, 31], [58, 1], [67, 1], [78, 1]];
 const KR_ONE = [1, 36, 67, 18, 55, 56, 48, 2];
 const I = (d, f) => `<svg viewBox="0 0 24 24" fill="${f ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
@@ -971,7 +976,7 @@ function renderKrHub() {
   const siraSec = `<div class="kr-son-sira"><button class="${nzMod ? '' : 'on'}" onclick="event.stopPropagation();hvSureSira('mushaf')">Mushaf sırası</button><button class="${nzMod ? 'on' : ''}" onclick="event.stopPropagation();hvSureSira('nuzul')">İniş sırası</button></div>`;
   kok.classList.add('kr-hub');
   kok.innerHTML = `
-    <div class="kr-hero" style="background-image:url(${krFoto()})">
+    <div class="kr-hero" style="background-image:url(${krFoto()});--krh:${krHeroKonum()}">
       <div class="kr-hero-ic">
         <div class="kr-logo">${IK.kitap}</div>
         <h2>Kur'an-ı Kerim</h2>
@@ -998,7 +1003,7 @@ function renderKrHub() {
     <div id="kr-mini" class="kr-dinle-yer"></div>
     <div class="kr-baslik"><h3>Öne Çıkan Sûreler</h3><button onclick="hvKrOnemli()">Tümü · fazîletleriyle ${IK.ok}</button></div>
     <div class="kr-liste">${KR_ONE.map(no => { const s = sureBul(no) || {}; return `
-      <div class="kr-sat" onclick="openSurahById(${no})" style="--img:url(${krSerit(no)})">
+      <div class="kr-sat" onclick="openSurahById(${no})" style="--img:url(${krSerit(no)});--krs:${krSeritKonum(no)}">
         <span class="kr-no">${no}</span>
         <span class="kr-m"><b>${esc(s.name || '')} Sûresi</b><small>${s.verse_count || ''} Âyet • ${esc(s.revelation_place || '')}</small></span>
         <button class="kr-oyna" onclick="event.stopPropagation();hvKrDinle(${no})" aria-label="Dinle">${IK.play}</button>
@@ -1122,7 +1127,8 @@ function okBaslik(id) {
       <button onclick="hvKrSayfa()">${IK.sayfa}<span>Sayfa</span></button>
       <button class="${m === 'bilgi' ? 'on' : ''}" onclick="hvOkMod('bilgi')">${IK.bilgi}<span>Bilgi</span></button>
     </div>
-    ${krOynaticiHtml()}`;
+    ${krOynaticiHtml()}
+    <button class="kr-gorunum" onclick="hvOkumaRenk()" aria-label="Renk, yazı tipi ve boyut">${window.hvOkumaGorunumIc ? window.hvOkumaGorunumIc() : '<span class="kr-gr-aa">Aa</span><span class="kr-gr-m"><b>Renk, yazı tipi ve boyut</b></span>'}<i>›</i></button>`;
   krSenk(true);
   krGozle();
 }
@@ -2676,6 +2682,21 @@ window.hvWidgetAc = function (h) {
   if (document.body) ekle(); else document.addEventListener('DOMContentLoaded', ekle);
 
   const panel = kok.querySelector('.ok-panel'), dugme = kok.querySelector('.ok-dugme'), oynat = kok.querySelector('.ok-oynat');
+  /* v72.9: kayarken üstteki sûre çubuğu yapışkan (sticky) değil SABİT (fixed) olur → kaydırma ile hiç oynamaz, titremez */
+  function cubukSabitle(ac) {
+    const mp = document.getElementById('kr-mp'); if (!mp) return;
+    if (ac) {
+      const k = kutu(), w = icerik(); if (!k || !w) return;
+      const kr = k.getBoundingClientRect(), wr = w.getBoundingClientRect();
+      const cs = getComputedStyle(k), ust = kr.top + k.clientTop + (parseFloat(cs.paddingTop) || 0);   // yapışkan çubuğun durduğu yer
+      mp.style.position = 'fixed'; mp.style.top = Math.max(0, ust) + 'px';
+      mp.style.left = (wr.left - 2) + 'px'; mp.style.width = (wr.width + 4) + 'px'; mp.style.margin = '0';
+      mp.classList.add('ok-sabit');
+    } else if (mp.classList.contains('ok-sabit')) {
+      ['position', 'top', 'left', 'width', 'margin'].forEach(x => mp.style.removeProperty(x)); mp.classList.remove('ok-sabit');
+    }
+  }
+  window.addEventListener('resize', () => { if (akiyor) cubukSabitle(true); });
   function ciz() {
     oynat.innerHTML = akiyor
       ? '<svg viewBox="0 0 24 24" width="18" height="18"><rect x="6" y="5" width="4" height="14" rx="1" fill="currentColor"/><rect x="14" y="5" width="4" height="14" rx="1" fill="currentColor"/></svg>'
@@ -2684,6 +2705,7 @@ window.hvWidgetAc = function (h) {
     panel.hidden = !acik; dugme.hidden = acik;
     kok.classList.toggle('akiyor', akiyor);
     try { document.body.classList.toggle('ok-akiyor', akiyor); } catch (e) {}
+    cubukSabitle(akiyor);
     // v72.8: okuma modu etiketi (dokununca mod menüsü)
     const mc = kok.querySelector('.ok-mod-cip');
     if (mc) { const m = modu(); mc.hidden = !acik || !window.hvOkumaModAdi; if (window.hvOkumaModAdi) mc.innerHTML = '📖 ' + window.hvOkumaModAdi(m) + ' <i>▾</i>'; }
@@ -2720,6 +2742,7 @@ window.hvWidgetAc = function (h) {
     if (!son) son = t;
     const dt = Math.min(0.1, (t - son) / 1000); son = t;
     const w = icerik();
+    { const mp = document.getElementById('kr-mp'); if (mp && !mp.classList.contains('ok-sabit')) cubukSabitle(true); }   // okuyucu yeniden çizilirse
     if (Date.now() >= bekle) {
       hizNow += (HIZ[seviye] - hizNow) * Math.min(1, dt * 2.5);   // aniden değil, yumuşakça hızlan/yavaşla
       birikim += hizNow * dt;
@@ -2730,8 +2753,12 @@ window.hvWidgetAc = function (h) {
         if (k.scrollTop <= once && k.scrollTop + k.clientHeight >= k.scrollHeight - 2) { sureBitti(); return; }
       }
       // kalan küsurat (0–1 px) içerik kaydırılarak gösterilir → göz akışı kesintisiz görür
-      const ty = `translate3d(0, ${-Math.min(birikim, 1).toFixed(3)}px, 0)`;
-      kayan(w).forEach(x => { x.style.willChange = 'transform'; x.style.transform = ty; });
+      // v72.9: bilgisayar ekranında (piksel yoğunluğu düşük) yarım piksel kaydırma harfleri bulanıklaştırıp titretiyordu →
+      // orada yalnız tam piksel kaydırılır; telefonda (yoğun ekran) yarım piksel akış kalır.
+      if ((window.devicePixelRatio || 1) >= 1.5) {
+        const ty = `translate3d(0, ${-Math.min(birikim, 1).toFixed(3)}px, 0)`;
+        kayan(w).forEach(x => { x.style.willChange = 'transform'; x.style.transform = ty; });
+      }
     } else { hizNow = 0; if (w && kayan(w).some(x => x.style.transform)) kaydirmaSifirla(); }
     rafId = requestAnimationFrame(adim);
   }
@@ -2792,6 +2819,8 @@ window.hvWidgetAc = function (h) {
   // v72.8: durdurmak için yapılan dokunuş âyet menüsünü de açmasın (aynı dokunuşun tıklaması yutulur)
   let yut = 0;
   const eldenDur = (e) => {
+    // v72.9: sûre bitti, "sıradaki sûre" geri sayımı sürerken ekrana dokunmak/tekerlek geçişi iptal etsin (yoksa sonraki sûre açılıp sayfa en başa kayıyordu)
+    if (gecisT && kutu() && kutu().contains(e.target)) { gecisIptal(false); yut = Date.now(); return; }
     if (!(akiyor && kutu() && kutu().contains(e.target))) return;
     // Dokundukça ilerle: dokunuş durdurmaz, sonraki cümleye geçer (tekerle kaydırma ise durdurur)
     if (e.type === 'touchstart' && window.hvOkuMotor && window.hvOkuMotor.modDokun && window.hvOkuMotor.modDokun()) { window.hvOkuMotor.ileri(); yut = Date.now(); return; }

@@ -17,7 +17,8 @@
   const e = (x) => (typeof hvEsc === 'function' ? hvEsc(x) : String(x));
   const aralik = (x) => x[1] + (x[2] > x[1] ? '–' + x[2] : '');
   const dizi = (ys) => ys.slice().sort((a, b) => nz() ? (sira(a[0]) - sira(b[0]) || a[1] - b[1]) : (a[0] - b[0] || a[1] - b[1]));
-  const cip = (x) => '<button onclick="event.stopPropagation();hvKissaGit(' + x[0] + ',' + x[1] + ')">' + e(sAd(x[0])) + ' <i>' + aralik(x) + '</i></button>';
+  // os/oa: okurken bulunulan yer (sûre, âyet) → gidilen yerden "okuduğuna dön" ile geri gelinir
+  const cip = (x, os, oa) => '<button onclick="event.stopPropagation();hvKissaGit(' + x[0] + ',' + x[1] + (os ? ',' + os + ',' + oa : '') + ')">' + e(sAd(x[0])) + ' <i>' + aralik(x) + '</i></button>';
 
   /* ── iniş dönemi ── */
   const DONEM = [
@@ -51,16 +52,39 @@
       const digerleri = dizi(g.y.filter(x => !(x[0] === r[0] && x[1] === r[1])));
       if (!digerleri.length) return;
       const n = document.createElement('div'); n.className = 'ks-not';
-      n.innerHTML = '<div class="ks-bas"><span>📜</span><b>' + e(g.ad) + ' kıssası</b><small>' + aralik(r) + '. âyetler</small></div>' +
+      n.innerHTML = '<div class="ks-bas"><span>📜</span><b>' + e(g.ad) + ' kıssası</b><small>' + (r[2] > r[1] ? aralik(r) + '. âyetler' : r[1] + '. âyet') + '</small></div>' +
         '<div class="ks-ac">Bu kıssa Kur\'an\'da başka yerlerde de anlatılır' + (nz() ? ' (iniş sırasıyla)' : '') + ':</div>' +
-        '<div class="ks-cip">' + digerleri.map(cip).join('') + '</div>' +
+        '<div class="ks-cip">' + digerleri.map(x => cip(x, id, r[1])).join('') + '</div>' +
         '<button class="ks-tum" onclick="event.stopPropagation();hvPeyAc(\'' + g.id + '\')">Peygamberler ve Kıssaları ›</button>';
       n.addEventListener('click', (ev) => ev.stopPropagation());
       // aynı âyete birden çok not düşerse alt alta sıralansın
       const k = el.id; (konan[k] || el).after(n); konan[k] = n;
     }));
   }
-  window.hvKissaGit = (s, a) => { try { if (typeof hvAyetSecGit === 'function') hvAyetSecGit(s, a); else openSurahAt(s, a); } catch (x) { try { openSurahAt(s, a); } catch (y) {} } };
+  const git = (s, a) => { try { if (typeof hvAyetSecGit === 'function') hvAyetSecGit(s, a); else openSurahAt(s, a); } catch (x) { try { openSurahAt(s, a); } catch (y) {} } };
+  /* v72.9: kıssanın başka geçtiği yere gidince solda "‹ Okuduğuna dön" düğmesi çıkar; dokununca kaldığın âyete döner.
+     Oradan başka bir yere daha gidilse de düğme ilk okuduğun yeri hatırlar. */
+  let donus = null;
+  function donusCiz() {
+    let b = document.getElementById('ks-geri');
+    if (!donus) { if (b) b.remove(); return; }
+    if (!b) { b = document.createElement('button'); b.id = 'ks-geri'; b.onclick = () => window.hvKissaDon(); document.body.appendChild(b); requestAnimationFrame(() => b.classList.add('gor')); }
+    b.innerHTML = '<span>‹</span><b>Okuduğuna dön</b><small>' + e(sAd(donus.s)) + ' ' + donus.a + '. âyet</small>';
+  }
+  window.hvKissaDon = () => { const d = donus; donus = null; donusCiz(); if (d) git(d.s, d.a); };
+  window.hvKissaGit = (s, a, os, oa) => {
+    if (os && !donus) donus = { s: Number(os), a: Number(oa) || 1, ayni: Number(s) === Number(os), ayrildi: false };
+    git(s, a); donusCiz();
+  };
+  // okuma ekranından çıkılınca ya da kişi kendisi eski sûreye dönünce düğme kalksın
+  setInterval(() => {
+    if (!donus) return;
+    let sayfa = ''; try { sayfa = APP_STATE.currentPage; } catch (x) {}
+    const O = window.hvOK || {};
+    if (sayfa !== 'quran') { donus = null; donusCiz(); return; }
+    if (Number(O.id) !== donus.s) donus.ayrildi = true;
+    else if (donus.ayrildi && !donus.ayni) { donus = null; donusCiz(); }
+  }, 1500);
   window.hvKissaUygula = (id, m) => { try { id = Number(id); if (m !== 'bilgi') donemKoy(id); kissaKoy(id, m); } catch (x) {} };
 
   /* ── Öğren › Peygamberler ve Kıssaları ── */

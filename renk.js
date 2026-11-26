@@ -14,6 +14,9 @@
     ['#fbf3e3', 'Krem', '#fffaf0', '#ecd9b4', '#a0662a'],
     ['#f7f0e1', 'Kitap kâğıdı', '#fdf9f0', '#e6d6b3', '#9a6a33'],
     ['#f1e4c9', 'Sepya', '#f9efdb', '#dcc395', '#94582a'],
+    ['#f5ecd8', 'Fildişi', '#fbf5e8', '#e6d4ad', '#9a6230'],
+    ['#f3e8d1', 'Eski kâğıt', '#faf1df', '#e0caa0', '#975d2c'],
+    ['#f4e9d6', 'Kum', '#faf3e6', '#e3d2b2', '#8f5f34'],
     ['#fbfbfa', 'İnci', '#ffffff', '#e4e6ea', '#8a6a3a'],
     ['#efeeea', 'Taş', '#f8f7f4', '#d6d2c9', '#7a6a52'],
     ['#e6f2df', 'Açık yeşil', '#f3faee', '#c6e0b8', '#3f7a4a'],
@@ -55,7 +58,9 @@
   const ton = (h) => { const z = zBul(h); if (!z) return h; const [B, , L, D] = z;
     return `radial-gradient(ellipse 95% 520px at 50% 0, ${L} 0%, ${rgba2(L, 0)} 100%), linear-gradient(90deg, ${D} 0%, ${B} 13%, ${L} 50%, ${B} 87%, ${D} 100%)`; };
   const rgba2 = (h, a) => { h = h.replace('#', ''); const c = [0, 2, 4].map(i => parseInt(h.substr(i, 2), 16)); return `rgba(${c[0]},${c[1]},${c[2]},${a})`; };
+  // Varsayılan: Krem + normal yazı (Sepya+Kalın varsayılan denendi, kullanıcı geri aldı)
   const VARS = { z: '#fbf3e3', y: '#2b1d14' };
+  const FVARS = {};
   const oku = () => { try { const o = JSON.parse(localStorage.getItem(ANAH) || 'null'); return o && o.z && o.y ? o : null; } catch (e) { return null; } };
   const yaz = (o) => { try { if (o) localStorage.setItem(ANAH, JSON.stringify(o)); else localStorage.removeItem(ANAH); } catch (e) {} };
 
@@ -81,7 +86,7 @@
     return dk >= aksam || dk < sabah;
   }
   const geceEtkin = () => { const g = gOku(); return !!(g.acik && geceMi()); };
-  const etkin = () => { if (geceEtkin()) { const g = gOku(); return { z: g.z, y: g.y }; } return oku(); };
+  const etkin = () => { if (geceEtkin()) { const g = gOku(); return { z: g.z, y: g.y }; } return oku() || VARS; };
   let _sonGece = null;
   setInterval(() => { const x = geceEtkin(); if (x !== _sonGece) { _sonGece = x; uygula(); } }, 60000);
   document.addEventListener('visibilitychange', () => { if (!document.hidden) uygula(); });
@@ -89,7 +94,7 @@
   window.hvOkumaGeceSec = (z, y) => { const g = gOku(); g.z = z; g.y = y; g.acik = true; gYaz(g); uygula(); ciz(); };
 
   function uygula() {
-    const o = etkin(), s = document.getElementById('page-quran'); _sonGece = geceEtkin();
+    const o = etkin(), s = document.getElementById('page-quran'); _sonGece = geceEtkin(); try { if (typeof gorunumYenile === 'function') setTimeout(gorunumYenile, 0); } catch (x) {}
     let st = document.getElementById('okr-stil');
     if (!o) { if (st) st.remove(); if (s) { s.style.removeProperty('--kr-kagit'); s.style.removeProperty('--kr-kagit-yazi'); s.classList.remove('okr-ozel'); } return; }
     if (s) { s.style.setProperty('--kr-kagit', o.z, 'important'); s.style.setProperty('--kr-kagit-yazi', o.y, 'important'); s.classList.add('okr-ozel'); }
@@ -139,8 +144,8 @@
     ['scheherazade', 'Scheherazade', "'Scheherazade New', serif", 'Scheherazade+New:wght@400;700'],
     ['naskh', 'Noto Nesih', "'Noto Naskh Arabic', serif", 'Noto+Naskh+Arabic:wght@400;600']
   ];
-  const fOku = () => { try { return JSON.parse(localStorage.getItem(FANAH) || '{}') || {}; } catch (x) { return {}; } };
-  const fYaz = (o) => { try { if (o.m || o.a || o.k || o.i) localStorage.setItem(FANAH, JSON.stringify(o)); else localStorage.removeItem(FANAH); } catch (x) {} };
+  const fOku = () => { try { const o = JSON.parse(localStorage.getItem(FANAH) || 'null'); return o || Object.assign({}, FVARS); } catch (x) { return Object.assign({}, FVARS); } };
+  const fYaz = (o) => { try { localStorage.setItem(FANAH, JSON.stringify(o)); } catch (x) {} };
   const fBul = (L, id) => L.find(x => x[0] === (id || '')) || L[0];
   const yuklendi = {};
   function fYukle(aile) {
@@ -238,7 +243,7 @@
       ${k < 4.5 ? `<div class="okr-uyari">⚠️ Bu iki renk birbirine yakın, okunması zor olabilir.</div>` : ''}
       <button class="okr-zar" onclick="hvOkumaKaristir()"><span>🎲</span>Karıştır<small>Zemin, yazı rengi, yazı tipi, kalın/italik rastgele gelsin</small></button>
       <div class="okr-et">Hazır temalar</div>
-      <div class="okr-hazir">${HAZIR.map(([ad, z, y]) => { const zz = z || VARS.z, yy = y || VARS.y; const on = secim ? (secim.z === z && secim.y === y) : !z; return `<button class="${on ? 'on' : ''}" onclick="hvOkumaRenkHazir('${z || ''}','${y || ''}')"><span style="background:${ton(zz)};color:${yy};border-color:${vurgu(zz)}">Aa</span><small>${e(ad)}</small></button>`; }).join('')}</div>
+      <div class="okr-hazir">${HAZIR.map(([ad, z, y]) => { const zz = z || VARS.z, yy = y || VARS.y; const cur = secim || VARS; const on = cur.z === zz && cur.y === yy; return `<button class="${on ? 'on' : ''}" onclick="hvOkumaRenkHazir('${z || ''}','${y || ''}')"><span style="background:${ton(zz)};color:${yy};border-color:${vurgu(zz)}">Aa</span><small>${e(ad)}</small></button>`; }).join('')}</div>
       <div class="okr-et">Zemin rengi</div>
       <div class="okr-renkler">${ZEMIN.map(([h, ad]) => `<button class="${o.z === h ? 'on' : ''}" style="background:${ton(h)}" title="${e(ad)}" aria-label="${e(ad)}" onclick="hvOkumaRenkSec('z','${h}')"></button>`).join('')}</div>
       <div class="okr-et">Yazı rengi</div>
@@ -280,5 +285,17 @@
     if (!p) { p = document.createElement('div'); p.id = 'okr'; p.innerHTML = '<div class="okr-ic"></div>'; p.addEventListener('click', (ev) => { if (ev.target === p) window.hvOkumaRenkKapat(); }); document.body.appendChild(p); }
     ciz(); requestAnimationFrame(() => p.classList.add('ac'));
   };
-  window.hvOkumaRenkKapat = () => { const p = document.getElementById('okr'); if (p) { p.classList.remove('ac'); setTimeout(() => p.remove(), 250); } };
+  window.hvOkumaRenkKapat = () => { const p = document.getElementById('okr'); if (p) { p.classList.remove('ac'); setTimeout(() => p.remove(), 250); } gorunumYenile(); };
+  /* v72.9: sûrenin üstünde, kâri çubuğunun altında görünür giriş: "Aa · Renk, yazı tipi ve boyut · Şu an: Sepya · Lora · Kalın" */
+  window.hvOkumaGorunumIc = () => {
+    const o = etkin() || VARS, fo = fOku();
+    const h = HAZIR.find(x => (x[1] || VARS.z) === o.z && (x[2] || VARS.y) === o.y), z = zBul(o.z);
+    const ad = h ? h[0] : (z ? z[1] : 'Özel');
+    const parca = [ad + (geceEtkin() ? ' (gece)' : ''), fBul(MFONT, fo.m)[1]];
+    if (fo.k) parca.push('Kalın'); if (fo.i) parca.push('İtalik');
+    parca.push(boyut() + ' punto');
+    return `<span class="kr-gr-aa" style="background:${ton(o.z)};color:${o.y};border-color:${vurgu(o.z)}">Aa</span><span class="kr-gr-m"><b>Renk, yazı tipi ve boyut</b><small>Şu an: ${e(parca.join(' · '))}</small></span>`;
+  };
+  function gorunumYenile() { document.querySelectorAll('.kr-gorunum').forEach(b => { const i = b.querySelector('i'); b.innerHTML = window.hvOkumaGorunumIc() + (i ? i.outerHTML : '<i>›</i>'); }); }
+  window.hvOkumaGorunumYenile = gorunumYenile;
 })();
