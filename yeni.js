@@ -1330,6 +1330,7 @@ window.hvKrImler = () => {
 window.hvKrMenu = () => {
   const t = krTema(), fs = (typeof APP_STATE !== 'undefined' && APP_STATE.fontSize) || 20;
   sheetAc(shBas('Okuma ayarları') + `
+    <button class="kr-ayar-renk" onclick="hvOkumaRenk()"><i>🎨</i><span>Renk, yazı tipi ve boyut<small>Zemin, yazı rengi ve yazı tipini kendin seç, önizle</small></span>${IK.ok}</button>
     <div class="kr-ayar"><span>Yazı boyutu</span><div class="kr-fs"><button onclick="adjustQuranFontSize(-2);hvKrMenu()">A−</button><b>${fs}</b><button onclick="adjustQuranFontSize(2);hvKrMenu()">A+</button></div></div>
     <div class="kr-ayar"><span>Okunuşu göster</span><button class="kr-anah ${okOkunus() ? 'on' : ''}" onclick="hvOkOkunus();hvKrMenu()"><i></i></button></div>
     <div class="kr-ayar"><span>Sayfa / cüz ayraçları <small class="kr-ayar-not">Mushaf'ta yeni sayfa nerede başlıyor</small></span><button class="kr-anah ${yukle('ok_ayrac', true) ? 'on' : ''}" onclick="hvOkAyar('ayrac')"><i></i></button></div>
@@ -1573,10 +1574,12 @@ window.hvHtSifir = (b) => {
 
 /* ─────────────── PAYLAŞIM: 10 CAMİ ARKA PLANI ─────────────── */
 const PB_ADLAR = DUVARLAR.map(d => d[0]);
-const pbSecili = () => yukle('paylas_bg', '16');   // v67.9: varsayılan Kul Şerif (keskin 1080 px)
+// v72.9: okuma teması seçildiyse ve kişi paylaşım arka planı seçmediyse varsayılan "Okuma temam"
+const pbSecili = () => yukle('paylas_bg', (window.hvOkumaTemaVar && window.hvOkumaTemaVar()) ? 'tema' : '16');   // v67.9: varsayılan Kul Şerif (keskin 1080 px)
 const pbKaynak = (sec) => sec ? `img/duvar_${sec}.jpg?v=3` : 'img/paylas_' + ((document.body && document.body.dataset.foto) || 'ikindi') + '.jpg';
 const _pbCache = {};
 window.hvCardLoadBg = function () {
+  if (pbSecili() === 'tema' && window.hvOkumaTemaKart) return Promise.resolve(window.hvOkumaTemaKart());   // v72.9
   const src = pbKaynak(pbSecili());
   return new Promise((res) => {
     if (_pbCache[src]) return res(_pbCache[src]);
@@ -1589,6 +1592,7 @@ window.hvCardLoadBg = function () {
 function pbSerit(fn) {
   const sec = pbSecili();
   return `<div class="pb-serit">
+    ${window.hvOkumaTemaTon ? `<button class="${sec === 'tema' ? 'on' : ''}" onclick="${fn}('tema')" style="background-image:${window.hvOkumaTemaTon()}"><span>Okuma temam</span></button>` : ''}
     <button class="${sec === '' ? 'on' : ''}" onclick="${fn}('')" style="background-image:url(${pbKaynak('')})"><span>Vakte göre</span></button>
     ${PB_ADLAR.map((a, i) => { const k = String(i + 1).padStart(2, '0'); return `<button class="${sec === k ? 'on' : ''}" onclick="${fn}('${k}')" style="background-image:url(img/dv_k_${k}.jpg?v=3)"><span>${esc(a)}</span></button>`; }).join('')}
   </div>`;
@@ -1904,7 +1908,7 @@ document.addEventListener('DOMContentLoaded', ayarKatla);
           </button>
           <button class="yi-sil" onclick="hvImSil(${x.surah},${x.ayah})" aria-label="Sil">✕</button>
         </div>`; }).join('')}</div>`
-        : `<div class="yi-bos"><div class="yi-bos-ik">☆</div><b>Henüz yer imin yok</b><p>Okurken bir âyete dokun, <b>☆ Yer imi</b> de. Kaydettiğin âyetler burada alt alta durur.</p><button onclick="navigateTo('kurandua')">Kur'an'a git ›</button></div>`);
+        : `<div class="yi-bos"><div class="yi-bos-ik">☆</div><b>Henüz yer imin yok</b><p>Okurken bir âyete <b>basılı tut</b> ya da dokunup <b>☆ Yer imi</b> de. Kaydettiğin âyetler burada alt alta durur.</p><button onclick="navigateTo('kurandua')">Kur'an'a git ›</button></div>`);
     if (!window.DIYANET_MEAL && M.length && typeof hvMealHazir === 'function') hvMealHazir().then((ok) => { if (ok && APP_STATE.currentPage === 'yerimleri') ciz(); }).catch(() => {});
   }
   window.hvImSil = (s, a) => {
@@ -2129,7 +2133,9 @@ document.addEventListener('DOMContentLoaded', ayarKatla);
     const m = okMod(), hiz = m === 'meal' ? 150 : m === 'arapca' ? 60 : 90;   // dakikada kelime (kabaca)
     let kel = 0; for (let k = n - 1; k < OK.v.length; k++) { const v = OK.v[k]; const t = m === 'arapca' ? v.verse : (v.translation || ''); kel += String(t || '').split(/\s+/).length; }
     const dk = Math.max(1, Math.round(kel / hiz));
-    const yazi = sonda ? 'Sûre bitti ✓ · Sayfa ' + ayetSayfa(OK.id, N) : `Sayfa ${ayetSayfa(OK.id, n)} · %${Math.round(oran * 100)} · ~${dk} dk kaldı`;
+    // v72.9: "~5 dk kaldı" dinleme süresi gibi duruyordu → sûrenin bitmesine kaç SAYFA kaldı (okudukça azalır)
+    const sp = ayetSayfa(OK.id, n), sonS = ayetSayfa(OK.id, N), kalanS = Math.max(0, sonS - sp);
+    const yazi = sonda ? 'Sûre bitti ✓ · Sayfa ' + sonS : `Sayfa ${sp} · ${kalanS ? kalanS + ' sayfa kaldı' : 'son sayfa'}`;
     window._okIlerle = { id: OK.id, oran, yazi };
     try { krSenk(true); } catch (e) {}
   }
@@ -2677,6 +2683,7 @@ window.hvWidgetAc = function (h) {
     kok.querySelectorAll('.ok-hizlar button').forEach(b => b.classList.toggle('on', b.dataset.h === seviye));
     panel.hidden = !acik; dugme.hidden = acik;
     kok.classList.toggle('akiyor', akiyor);
+    try { document.body.classList.toggle('ok-akiyor', akiyor); } catch (e) {}
     // v72.8: okuma modu etiketi (dokununca mod menüsü)
     const mc = kok.querySelector('.ok-mod-cip');
     if (mc) { const m = modu(); mc.hidden = !acik || !window.hvOkumaModAdi; if (window.hvOkumaModAdi) mc.innerHTML = '📖 ' + window.hvOkumaModAdi(m) + ' <i>▾</i>'; }
@@ -2686,11 +2693,14 @@ window.hvWidgetAc = function (h) {
   const motor = () => (modu() !== 'duz' && window.hvOkuMotor) ? window.hvOkuMotor : null;
   // v70.7: pikselin altında (yarım, çeyrek piksel) akış → içerik GPU ile kaydırılır, takılma olmaz
   const icerik = () => document.getElementById('ayah-list-wrap');
+  // v72.9: yarım piksel kaydırma, üstteki yapışkan sûre çubuğuna (kr-mp) UYGULANMAZ → çubuk titremez.
+  // Eskiden bütün kutu (çubuk dahil) kaydırılıyordu; çubuk hem kayıyor hem geri yapışıyordu.
+  const kayan = (w) => w ? [...w.children].filter(x => !x.classList.contains('kr-mp')) : [];
   function kaydirmaSifirla() {
     const w = icerik();
     // v72.8: küsurat yarım pikselden büyükse 1 px kaydırıp öyle bırak → durunca metin geri zıplamaz
     try { const k = kutu(); if (k && birikim >= 0.5) k.scrollTop = k.scrollTop + 1; } catch (e) {}
-    if (w) { w.style.transform = ''; w.style.willChange = ''; } birikim = 0;
+    kayan(w).forEach(x => { x.style.transform = ''; x.style.willChange = ''; }); birikim = 0;
   }
   function dur() { akiyor = false; cancelAnimationFrame(rafId); rafId = 0; kaydirmaSifirla(); try { if (window.hvOkuMotor) window.hvOkuMotor.dur(); } catch (e) {} ciz(); }
   function basla() {
@@ -2698,6 +2708,8 @@ window.hvWidgetAc = function (h) {
     if (k.scrollTop + k.clientHeight >= k.scrollHeight - 4) k.scrollTop = k.scrollTop; // sonda ise yine de dene
     akiyor = true; son = 0; birikim = 0; bekle = 0; hizNow = 0; ciz();
     const M = motor();
+    // v72.9: Düz kaydırmaya dönülünce önceki modun (kelime, satır…) soluk/vurgulu izleri temizlenir
+    if (!M) { try { if (window.hvOkuMotor && window.hvOkuMotor.sifirla) window.hvOkuMotor.sifirla(); } catch (e) {} }
     if (M) { cancelAnimationFrame(rafId); rafId = 0; if (M.basla(modu(), seviye)) return; }   // mealsiz görünümde düz kaydırmaya düşer
     cancelAnimationFrame(rafId); rafId = requestAnimationFrame(adim);
   }
@@ -2718,8 +2730,9 @@ window.hvWidgetAc = function (h) {
         if (k.scrollTop <= once && k.scrollTop + k.clientHeight >= k.scrollHeight - 2) { sureBitti(); return; }
       }
       // kalan küsurat (0–1 px) içerik kaydırılarak gösterilir → göz akışı kesintisiz görür
-      if (w) { w.style.willChange = 'transform'; w.style.transform = `translate3d(0, ${-Math.min(birikim, 1).toFixed(3)}px, 0)`; }
-    } else { hizNow = 0; if (w && w.style.transform) kaydirmaSifirla(); }
+      const ty = `translate3d(0, ${-Math.min(birikim, 1).toFixed(3)}px, 0)`;
+      kayan(w).forEach(x => { x.style.willChange = 'transform'; x.style.transform = ty; });
+    } else { hizNow = 0; if (w && kayan(w).some(x => x.style.transform)) kaydirmaSifirla(); }
     rafId = requestAnimationFrame(adim);
   }
   /* v71.7: sûre bitince 3 sn geri sayım → sıradaki sûre (mushaf / iniş sırasına göre) açılır, kaydırma sürer */
@@ -2762,10 +2775,11 @@ window.hvWidgetAc = function (h) {
   kok.querySelector('.ok-mod-cip').onclick = () => {
     if (!window.hvOkumaMenu) return;
     const calisiyordu = akiyor; if (akiyor) dur();
-    window.hvOkumaMenu(() => { acik = true; ciz(); basla(); }, () => { ciz(); if (calisiyordu) basla(); });
+    const eskiMod = modu();
+    window.hvOkumaMenu(() => { acik = true; if (modu() !== eskiMod) { try { window.hvOkuMotor && window.hvOkuMotor.sifirla && window.hvOkuMotor.sifirla(); } catch (e) {} } ciz(); basla(); }, () => { ciz(); if (calisiyordu) basla(); });
   };
   oynat.onclick = () => { if (gecisT) gecisIptal(false); akiyor ? dur() : basla(); };
-  kok.querySelector('.ok-kapat').onclick = () => { if (gecisT) gecisIptal(false); dur(); acik = false; ciz(); };
+  kok.querySelector('.ok-kapat').onclick = () => { if (gecisT) gecisIptal(false); dur(); try { window.hvOkuMotor && window.hvOkuMotor.sifirla && window.hvOkuMotor.sifirla(); } catch (e) {} acik = false; ciz(); };   // v72.9: kapatınca soluk yazı kalmasın
   kok.querySelectorAll('.ok-hizlar button').forEach(b => b.onclick = () => {
     seviye = b.dataset.h; yz('hv_otokay_hiz2', seviye); ciz();
     try { const M = motor(); if (M && akiyor) M.hiz(seviye); } catch (e) {}
@@ -2787,6 +2801,22 @@ window.hvWidgetAc = function (h) {
   document.addEventListener('mousedown', (e) => { if (akiyor && kutu() && kutu().contains(e.target) && window.hvOkuMotor && window.hvOkuMotor.modDokun && window.hvOkuMotor.modDokun() && !('ontouchstart' in window)) { window.hvOkuMotor.ileri(); yut = Date.now(); } }, true);
   document.addEventListener('click', (e) => { if (yut && Date.now() - yut < 700 && kutu() && kutu().contains(e.target)) { e.stopPropagation(); e.preventDefault(); yut = 0; } }, true);
   document.addEventListener('touchstart', eldenDur, { passive: true });
+  // v72.9: durmuşken (panel açık) metne kısa bir dokunuş → kaldığı yerden devam eder.
+  // Kaydırmak için sürükleme ya da basılı tutma (yer imi) devam ettirmez.
+  let dv = null;
+  document.addEventListener('touchstart', (e) => {
+    dv = null;
+    if (akiyor || !acik || gecis || e.touches.length !== 1 || (yut && Date.now() - yut < 80)) return;   // aynı dokunuş az önce durdurduysa devam ettirme
+    const k = kutu(); if (!k || !k.contains(e.target) || kok.contains(e.target)) return;
+    if (e.target.closest && e.target.closest('button, a, input, textarea, .kr-mp')) return;
+    dv = { x: e.touches[0].clientX, y: e.touches[0].clientY, t: Date.now(), st: k.scrollTop };
+  }, { passive: true });
+  document.addEventListener('touchmove', (e) => { if (dv && (Math.abs(e.touches[0].clientX - dv.x) > 10 || Math.abs(e.touches[0].clientY - dv.y) > 10)) dv = null; }, { passive: true });
+  document.addEventListener('touchend', () => {
+    const d = dv; dv = null; if (!d || akiyor || !acik) return;
+    const k = kutu(); if (!k || Date.now() - d.t > 350 || Math.abs(k.scrollTop - d.st) > 3) return;
+    yut = Date.now(); basla();
+  }, { passive: true });
   document.addEventListener('wheel', eldenDur, { passive: true });
   document.addEventListener('visibilitychange', () => { if (document.hidden) dur(); });
 

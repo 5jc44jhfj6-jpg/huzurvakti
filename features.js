@@ -2619,7 +2619,21 @@ async function hvBuildShareCard(data) {
   // ── Desenli arka plan (varsa) + bakır tonlama ──
   const bg = await hvCardLoadBg();
   ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';   // v67.9: arka plan keskin
-  if (bg) {
+  const TM = bg && bg._tema ? bg._tema : null;   // v72.9: "Okuma temam" — okuma ekranının rengi ve yazı tipi
+  if (TM) {
+    const lg = ctx.createLinearGradient(0, 0, HV_CARD_W, 0);
+    lg.addColorStop(0, TM.D); lg.addColorStop(0.16, TM.z); lg.addColorStop(0.5, TM.L); lg.addColorStop(0.84, TM.z); lg.addColorStop(1, TM.D);
+    ctx.fillStyle = lg; ctx.fillRect(0, 0, HV_CARD_W, HV_CARD_H);
+    const rg = ctx.createRadialGradient(HV_CARD_W / 2, 0, 40, HV_CARD_W / 2, 0, HV_CARD_H * 0.6);
+    rg.addColorStop(0, TM.L); rg.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = rg; ctx.fillRect(0, 0, HV_CARD_W, HV_CARD_H);
+    const vg2 = ctx.createLinearGradient(0, HV_CARD_H * 0.6, 0, HV_CARD_H);
+    vg2.addColorStop(0, 'rgba(0,0,0,0)'); vg2.addColorStop(1, TM.koyu ? 'rgba(0,0,0,0.35)' : 'rgba(0,0,0,0.06)');
+    ctx.fillStyle = vg2; ctx.fillRect(0, 0, HV_CARD_W, HV_CARD_H);
+    // ince çerçeve, temanın vurgu renginde
+    ctx.strokeStyle = TM.v; ctx.globalAlpha = 0.55; ctx.lineWidth = 3;
+    hvCardRoundRect(ctx, 54, 54, HV_CARD_W - 108, HV_CARD_H - 108, 40); ctx.stroke(); ctx.globalAlpha = 1;
+  } else if (bg) {
     const s = Math.max(HV_CARD_W / bg.width, HV_CARD_H / bg.height);
     const w = bg.width * s, h = bg.height * s;
     ctx.drawImage(bg, (HV_CARD_W - w) / 2, (HV_CARD_H - h) / 2, w, h);
@@ -2643,9 +2657,9 @@ async function hvBuildShareCard(data) {
     vg.addColorStop(0.45, 'rgba(20,10,4,0.62)');
     vg.addColorStop(1, 'rgba(12,6,2,0.82)');
   }
-  ctx.fillStyle = vg; ctx.fillRect(0, 0, HV_CARD_W, HV_CARD_H);
+  if (!TM) { ctx.fillStyle = vg; ctx.fillRect(0, 0, HV_CARD_W, HV_CARD_H); }
 
-  const GOLD = '#F3CF86', CREAM = '#F6E4C0', WHITE = '#FFFFFF';
+  const GOLD = TM ? TM.v : '#F3CF86', CREAM = TM ? TM.y : '#F6E4C0', WHITE = TM ? TM.y : '#FFFFFF';
   const M = 82;
   const cx = HV_CARD_W / 2;
 
@@ -2683,7 +2697,7 @@ async function hvBuildShareCard(data) {
     }
     const pz = Math.max(0.6, Math.min(1.8, Number(d.punto) || 1));   // v70: punto ayarı
     const bodyFit = hvCardFit(ctx, '\u201C' + (d.text || '') + '\u201D', boxW,
-      (avail - lblH - arH - 130) * pz, { max: Math.round(bodyMax * pz), min: Math.round(34 * Math.min(1, pz)), weight: '500', lineHeight: 1.36, family: "'Lora', Georgia, serif" });
+      (avail - lblH - arH - 130) * pz, { max: Math.round(bodyMax * pz), min: Math.round(34 * Math.min(1, pz)), weight: TM && TM.k ? '700' : '500', lineHeight: 1.36, family: TM && TM.font ? TM.font : "'Lora', Georgia, serif" });
     const bodyH = bodyFit.lines.length * bodyFit.size * bodyFit.lh;
     return { TOP, avail, arFit, arH, bodyFit, bodyH, top: lblH + arH + bodyH + srcH };
   };
@@ -2724,7 +2738,7 @@ async function hvBuildShareCard(data) {
   }
 
   ctx.fillStyle = WHITE;
-  ctx.font = `${bodyFit.weight} ${bodyFit.size}px ${bodyFit.family}`;
+  ctx.font = `${TM && TM.i ? 'italic ' : ''}${bodyFit.weight} ${bodyFit.size}px ${bodyFit.family}`;
   for (const ln of bodyFit.lines) { y += bodyFit.size * bodyFit.lh; ctx.fillText(ln, cx, y); }
 
   if (d.source) {

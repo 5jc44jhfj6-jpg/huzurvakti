@@ -92,4 +92,63 @@
   window.hvNotlarimCiz = liste;
   const kaydet = () => { if (window.FEATURE_ROUTES) window.FEATURE_ROUTES['notlarim'] = liste; };
   if (window.FEATURE_ROUTES) kaydet(); else document.addEventListener('DOMContentLoaded', kaydet);
+
+  /* ── v72.9: Yer İmlerim kartında âyetin notu da görünsün ── */
+  function imNotlari() {
+    const kok = document.getElementById('yerimleri-root'); if (!kok) return;
+    const o = oku();
+    kok.querySelectorAll('.yi-kart').forEach((k) => {
+      const p = (k.id || '').split('-'); const key = p[1] + ':' + p[2];
+      const n = o[key]; const var_ = k.querySelector('.yi-notu');
+      const imza = n ? String(n.t) : '';
+      if (var_ && var_.dataset.t === imza) return;
+      if (var_) var_.remove();
+      if (!n) return;
+      const yer = k.querySelector('.yi-m'); if (!yer) return;
+      const d = document.createElement('span'); d.className = 'yi-notu'; d.dataset.t = imza;
+      d.innerHTML = `<i>📝</i>${e(n.m.length > 120 ? n.m.slice(0, 118) + '…' : n.m)}`;
+      const sm = yer.querySelector('small'); if (sm) yer.insertBefore(d, sm); else yer.appendChild(d);
+    });
+  }
+  new MutationObserver(() => { if (document.getElementById('yerimleri-root')) imNotlari(); })
+    .observe(document.documentElement, { childList: true, subtree: true });
+
+  /* ── v72.9: okurken âyete BASILI TUT → yer imlerine ekle (tekrar basılı tut → kaldır) ── */
+  let zam = null, x0 = 0, y0 = 0, yutUntil = 0;
+  const ayetEl = (t) => {
+    const w = document.getElementById('ayah-list-wrap'); if (!w || !t || !t.closest) return null;
+    const el = t.closest('[id^="ayah-"]'); return el && w.contains(el) ? el : null;
+  };
+  const iptal = () => { if (zam) { clearTimeout(zam); zam = null; } document.querySelectorAll('.ok-basili').forEach(x => x.classList.remove('ok-basili')); };
+  function imle(el) {
+    const O = window.hvOK || {}; const s = Number(O.id), a = Number((el.id || '').slice(5));
+    if (!s || !a || typeof window.hvToggleBookmark !== 'function') return;
+    try { if (navigator.vibrate) navigator.vibrate(35); } catch (x) {}
+    window.hvToggleBookmark(s, a, null);
+    const on = !!((typeof hvGetBookmarks === 'function' ? hvGetBookmarks() : {})[s + ':' + a]);
+    el.classList.toggle('ayah-marked', on);
+    el.classList.remove('ok-basili'); el.classList.add('ok-imlendi');
+    setTimeout(() => el.classList.remove('ok-imlendi'), 700);
+    yutUntil = Date.now() + 800;
+  }
+  document.addEventListener('touchstart', (ev) => {
+    iptal(); if (ev.touches.length !== 1) return;
+    const el = ayetEl(ev.target); if (!el) return;
+    x0 = ev.touches[0].clientX; y0 = ev.touches[0].clientY;
+    el.classList.add('ok-basili');
+    zam = setTimeout(() => { zam = null; imle(el); }, 550);
+  }, { passive: true });
+  document.addEventListener('touchmove', (ev) => {
+    if (!zam) return; const t = ev.touches[0];
+    if (Math.abs(t.clientX - x0) > 10 || Math.abs(t.clientY - y0) > 10) iptal();
+  }, { passive: true });
+  document.addEventListener('touchend', iptal, { passive: true });
+  document.addEventListener('touchcancel', iptal, { passive: true });
+  // basılı tutma bitince gelen tıklama âyet penceresini açmasın
+  document.addEventListener('click', (ev) => { if (Date.now() < yutUntil && ayetEl(ev.target)) { ev.stopPropagation(); ev.preventDefault(); } }, true);
+  // uzun basınca çıkan kopyala/seç menüsü yerine yer imi (bilgisayarda sağ tık da aynı işi görür)
+  document.addEventListener('contextmenu', (ev) => {
+    const el = ayetEl(ev.target); if (!el) return;
+    ev.preventDefault(); if (Date.now() < yutUntil) return; iptal(); imle(el);
+  });
 })();
