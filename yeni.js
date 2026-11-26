@@ -2689,8 +2689,14 @@ window.hvWidgetAc = function (h) {
       const k = kutu(), w = icerik(); if (!k || !w) return;
       const kr = k.getBoundingClientRect(), wr = w.getBoundingClientRect();
       const cs = getComputedStyle(k), ust = kr.top + k.clientTop + (parseFloat(cs.paddingTop) || 0);   // yapışkan çubuğun durduğu yer
-      mp.style.position = 'fixed'; mp.style.top = Math.max(0, ust) + 'px';
-      mp.style.left = (wr.left - 2) + 'px'; mp.style.width = (wr.width + 4) + 'px'; mp.style.margin = '0';
+      const hedefUst = Math.max(0, ust), hedefSol = wr.left - 2;
+      mp.style.position = 'fixed'; mp.style.top = hedefUst + 'px';
+      mp.style.left = hedefSol + 'px'; mp.style.width = (wr.width + 4) + 'px'; mp.style.margin = '0';
+      // v73.1: sayfa geçiş animasyonu (#page-quran transform) "fixed"ı ekrana değil sayfaya göre yerleştiriyordu → çubuk sağa kayıyordu.
+      // Gerçek yerini ölç, farkı düzelt.
+      const gr = mp.getBoundingClientRect();
+      if (Math.abs(gr.left - hedefSol) > 0.5) mp.style.left = (hedefSol - (gr.left - hedefSol)) + 'px';
+      if (Math.abs(gr.top - hedefUst) > 0.5) mp.style.top = (hedefUst - (gr.top - hedefUst)) + 'px';
       mp.classList.add('ok-sabit');
     } else if (mp.classList.contains('ok-sabit')) {
       ['position', 'top', 'left', 'width', 'margin'].forEach(x => mp.style.removeProperty(x)); mp.classList.remove('ok-sabit');
