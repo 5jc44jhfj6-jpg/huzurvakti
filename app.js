@@ -2371,7 +2371,7 @@ function setupCompassTouchEvents() {
     const currentAngle = getAngleFromCenter(e);
     const delta = currentAngle - startTouchAngle;
     const newHeading = (startHeadingAngle - delta + 360) % 360;
-    smoothHeading = newHeading;
+    smoothHeading = newHeading; hvPusulaHedef = newHeading;
     const slider = document.getElementById('manual-compass-slider');
     if (slider) slider.value = Math.round(newHeading);
     updateQiblaUI(newHeading);
@@ -2485,7 +2485,7 @@ function startCompassSensors(isAutoStart = false) {
 
 function handleManualCompass(val) {
   const heading = parseFloat(val);
-  smoothHeading = heading;
+  smoothHeading = heading; hvPusulaHedef = heading;
   updateQiblaUI(heading);
 }
 
@@ -2593,25 +2593,50 @@ function handleOrientationEvent(e) {
   }
   hvPusulaGuvenilir();
 
-  if (smoothHeading === null) {
-    smoothHeading = compassHeading;
+  /* v73.3: yumuşatma artık ZAMANA göre (saniyede kaç veri geldiğinden bağımsız).
+     Eskiden her veri geldiğinde son derecelerin yalnız %2,5–7'si kapatılıyordu. iPhone pusulası
+     telefon durunca veri göndermediği için (1° filtresi) ibre hedefe hiç varamıyor, birkaç derece
+     geride takılı kalıyordu → "geç geliyor / yanlış gösteriyor". Şimdi son ölçüm HEDEF olur,
+     ibre ekran karesi başına hedefe doğru kayar ve veri gelmese de ~0,3 sn'de tam oturur. */
+  if (hvPusulaHedef === null) {
+    hvPusulaHedef = compassHeading;
   } else {
-    const oncekiNorm = ((smoothHeading % 360) + 360) % 360;
-    let diff = compassHeading - oncekiNorm;
-    if (diff > 180) diff -= 360;
-    if (diff < -180) diff += 360;
-    // v72.7: titremesin — 1,5° altındaki kıpırtıyı yok say; küçük farkı çok yavaş, büyük dönüşü hızlı izle
-    const ad = Math.abs(diff);
-    const k = ad > 25 ? 0.45 : (ad > 8 ? 0.2 : (ad > 1.5 ? 0.07 : 0.025));
-    smoothHeading = oncekiNorm + diff * k;
+    let fark = compassHeading - hvPusulaHedef;
+    if (fark > 180) fark -= 360;
+    if (fark < -180) fark += 360;
+    // 0,6° altındaki sensör kıpırtısı hedefi oynatmaz (titreme olmasın)
+    if (Math.abs(fark) >= 0.6) hvPusulaHedef = ((compassHeading % 360) + 360) % 360;
   }
-  // 0-360 dışına taşmasın (eskiden birikip 1000°+ gösteriyordu)
-  smoothHeading = ((smoothHeading % 360) + 360) % 360;
+  if (smoothHeading === null) smoothHeading = hvPusulaHedef;
+  hvPusulaDongu();
+}
 
-  const slider = document.getElementById('manual-compass-slider');
-  if (slider) slider.value = Math.round(smoothHeading);
-
-  updateQiblaUI(smoothHeading);
+let hvPusulaHedef = null, hvPusulaKare = 0, hvPusulaZaman = 0;
+function hvPusulaDongu() {
+  if (hvPusulaKare) return;
+  hvPusulaZaman = 0;
+  const adim = (t) => {
+    hvPusulaKare = 0;
+    if (hvPusulaHedef === null || smoothHeading === null) return;
+    const dt = hvPusulaZaman ? Math.min(0.1, (t - hvPusulaZaman) / 1000) : 0.016;
+    hvPusulaZaman = t;
+    let fark = hvPusulaHedef - smoothHeading;
+    if (fark > 180) fark -= 360;
+    if (fark < -180) fark += 360;
+    const ad = Math.abs(fark);
+    if (ad < 0.15) {
+      smoothHeading = hvPusulaHedef;
+    } else {
+      const tau = ad > 20 ? 0.07 : 0.12;   // büyük dönüşte hızlı, küçük düzeltmede yumuşak
+      smoothHeading += fark * (1 - Math.exp(-dt / tau));
+    }
+    smoothHeading = ((smoothHeading % 360) + 360) % 360;
+    const slider = document.getElementById('manual-compass-slider');
+    if (slider) slider.value = Math.round(smoothHeading);
+    updateQiblaUI(smoothHeading);
+    if (smoothHeading !== hvPusulaHedef && APP_STATE.currentPage === 'qibla') hvPusulaKare = requestAnimationFrame(adim);
+  };
+  hvPusulaKare = requestAnimationFrame(adim);
 }
 
 /* Sensör güvenilmezse bir kez uyar, ibreyi rastgele oynatma */

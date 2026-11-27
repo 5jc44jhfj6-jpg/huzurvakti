@@ -1474,13 +1474,20 @@ function doAyetArama(query) {
       if (idx[i].n.indexOf(ql) >= 0) bulunan.push(idx[i]);
     }
     const total = bulunan.length;
-    const goster = bulunan.slice(0, 60);
-    if (total > 0) {
-      c.innerHTML = `<div class="bebek-count-note">"${hvEsc(q)}" için ${total}${total >= 400 ? '+' : ''} ayet bulundu${total > 60 ? ' (ilk 60 gösteriliyor)' : ''}</div>` +
-        goster.map(m => `<div class="ayet-result" onclick="openSurahById(${m.s})">
+    // v73.5: sonuca dokununca doğrudan O ÂYETE gider (eskiden sûrenin başı açılıyordu); 60'tan fazlası "Daha fazla" ile
+    const kart = m => `<div class="ayet-result" onclick="window.hvAyetSecGit ? hvAyetSecGit(${m.s},${m.v}) : openSurahAt(${m.s},${m.v})">
               <div class="ayet-ref">${hvEsc(m.ad)} Sûresi • ${hvMealEtiket(m.s, m.v)}. Âyet <span class="ayet-go">›</span></div>
               <div class="ayet-meal">${hvHighlight(m.t, q)}</div>
-            </div>`).join('');
+            </div>`;
+    if (total > 0) {
+      let n = 60;
+      const ciz = () => {
+        c.innerHTML = `<div class="bebek-count-note">"${hvEsc(q)}" için ${total}${total >= 400 ? '+' : ''} ayet bulundu</div>` +
+          bulunan.slice(0, n).map(kart).join('') +
+          (total > n ? `<button class="ayet-daha" id="ayet-daha">Daha fazla göster (${Math.min(60, total - n)})</button>` : '');
+        const d = document.getElementById('ayet-daha'); if (d) d.onclick = () => { n += 60; const y = window.scrollY; ciz(); window.scrollTo(0, y); };
+      };
+      ciz();
     } else {
       c.innerHTML = '<div class="empty-note">"' + hvEsc(q) + '" kelimesini içeren ayet bulunamadı. Farklı bir kelime deneyin.</div>';
     }
@@ -2713,7 +2720,7 @@ async function hvBuildShareCard(data) {
   let y = yaziAlt ? Math.max(TOP, BOTTOM - L.top)
                   : TOP + Math.max(0, (avail - (lblH + arH + bodyH + srcH)) / 2);
   // v70: kullanıcı yazıyı sürükleyerek yukarı/aşağı taşıdıysa
-  y = Math.max(120, Math.min(HV_CARD_H - 420 - L.top, y + (Number(d.ofset) || 0)));
+  y = Math.max(120, Math.min(HV_CARD_H - 250 - L.top, y + (Number(d.ofset) || 0)));   // v73.2: aşağı da taşınabilir (imza yazının altına kayar)
 
   if (label) {
     y += LBL;
@@ -2748,19 +2755,20 @@ async function hvBuildShareCard(data) {
     ctx.fillText('\u2014 ' + d.source, cx, y);
   }
 
-  // ── Alt imza: hilal + isim (üst üste binmez) ──
+  // ── Alt imza: hilal + isim (üst üste binmez; yazı aşağı taşındıysa imza da aşağı kayar) ──
+  const IY = Math.min(HV_CARD_H - 110, Math.max(HV_CARD_H - 264, y + 140));
   ctx.strokeStyle = 'rgba(227,173,130,0.30)'; ctx.lineWidth = 2;
-  ctx.beginPath(); ctx.moveTo(cx - 140, HV_CARD_H - 344); ctx.lineTo(cx + 140, HV_CARD_H - 344); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(cx - 140, IY - 80); ctx.lineTo(cx + 140, IY - 80); ctx.stroke();
 
   const SS = 52, GAP = 24, name = 'Namaz Dostu';
   ctx.font = `600 ${SS}px 'Outfit', system-ui, sans-serif`;
   const tw = ctx.measureText(name).width;
   const r = SS * 0.46;
   const x0 = cx - (r * 2 + GAP + tw) / 2;
-  hvCardMoon(ctx, x0 + r, HV_CARD_H - 264 - SS * 0.34, r, GOLD, 0.95);
+  hvCardMoon(ctx, x0 + r, IY - SS * 0.34, r, GOLD, 0.95);
   ctx.textAlign = 'left';
   ctx.fillStyle = CREAM;
-  ctx.fillText(name, x0 + r * 2 + GAP, HV_CARD_H - 264);
+  ctx.fillText(name, x0 + r * 2 + GAP, IY);
   ctx.textAlign = 'center';
 
   return cv;

@@ -557,7 +557,16 @@ const DUVARLAR = [
   ['Modern Kubbe', 'Gündüz'], ['Mavi Saat', 'Hilal'], ['Çöl Akşamı', 'Gün batımı'], ['Sahil Camii', 'Gündüz'], ['Fırtınalı Sahil', 'Bulutlu'],
   ['Endülüs · Gece', 'Mavi saat'], ['Kızıl Gökyüzü', 'Çöl'], ['Orman Camii', 'Yağmur'], ['Sonbahar Sabahı', 'Sis'], ['Ay Işığı', 'Dolunay'],
   ['Lale Kubbe', 'Akşam'], ['Samanyolu', 'Gece'], ['Karlı Çini Cami', 'Kış'], ['Sahil · Bulutlu', 'Sabah'], ['Pembe Akşam', 'Gün batımı'],
-  ['Işık Huzmesi', 'Bulutlu'], ['Boğaz Akşamı', 'İstanbul'], ['Şehir Gecesi', 'Gece']];
+  ['Işık Huzmesi', 'Bulutlu'], ['Boğaz Akşamı', 'İstanbul'], ['Şehir Gecesi', 'Gece'],
+  // v73.5: kullanıcının yeni setinden 25 özgün arka plan (duvar_55 … duvar_79), netleştirilmiş
+  ['Karlı Gece', 'Dolunay'], ['Fener ve Hilal', 'Gece'], ['Altın Yansıma', 'Akşam'], ['Ortaköy · Akşam', 'İstanbul'],
+  ['Haliç Silueti', 'İstanbul'], ['Geniş Ufuk', 'Uzun âyetler için'], ['Rahle ve Kemer', 'Akşam'], ['Rahle · Pembe Gök', 'Akşam'],
+  ['Kemerli Avlu', 'Gün batımı'], ['Mermer Revak', 'Gündüz'], ['Kayrevan', 'Tunus'], ['Çifte Minare', 'İran'],
+  ['İsfahan · Gece', 'Havuz'], ['İsfahan · Mavi Kubbe', 'Gündüz'], ['Altın Kubbe', 'Yansıma'], ['Faysal Camii', 'İslamabad'],
+  ['Hasan II · Dalgalar', 'Kazablanka'], ['Çin Üslubu Cami', 'Bahçe'], ['Beyaz Kemerler', 'Akşam'], ['Beyaz Kubbeler', 'Gündüz'],
+  ['Kul Şerif · Kar', 'Kazan'], ['Bursa Ulu Camii · Kar', 'Bursa'], ['Karlı Şadırvan', 'Kış'], ['Mavi Mihrap', 'Cami içi'],
+  ['Beyaz İç Mekân', 'Cami içi']
+];
 /* Yazının yeri: [üst, alt] ekran oranı — gökyüzü / boş duvar olan bantta, cami açıkta kalsın. Listede olmayanlar eskisi gibi altta. */
 const DUVAR_UST = { 1: [0.26, 0.58], 2: [0.25, 0.54], 3: [0.24, 0.46], 5: [0.25, 0.50], 6: [0.25, 0.44], 7: [0.25, 0.48], 9: [0.25, 0.60], 10: [0.25, 0.50], 11: [0.25, 0.56], 12: [0.25, 0.50], 13: [0.25, 0.52], 14: [0.25, 0.56], 15: [0.25, 0.42], 17: [0.25, 0.46], 18: [0.25, 0.50], 19: [0.25, 0.42], 20: [0.25, 0.54], 21: [0.25, 0.38], 23: [0.25, 0.54], 24: [0.25, 0.52], 25: [0.25, 0.44], 26: [0.25, 0.44] };   // üst sınır ≥ %24: kilit ekranı saati
 const DUVAR_SURE = [['', 'Sade (yazısız)'], ['s:Fâtiha', 'Fâtiha Sûresi'], ['d:Âyetel Kürsî', 'Âyetel Kürsî'], ['s:İhlâs', 'İhlâs Sûresi']];
@@ -694,8 +703,9 @@ function duvarCiz(cv, W, H) {
       }
       res(cv);
     };
-    im.onerror = () => res(cv);
-    im.src = `img/duvar_${W >= 900 ? 'hd_' : ''}${String(_dv.i + 1).padStart(2, '0')}.jpg?v=3`;   // v71.5: 27+ setin de HD'si var   // v68.6: kaydederken yüksek çözünürlük
+    const no = String(_dv.i + 1).padStart(2, '0'), hd = W >= 900 && _dv.i < 54;   // v73.3: yeni set (55+) için ayrı HD dosya yok
+    im.onerror = () => { if (hd && !im._yedek) { im._yedek = 1; im.src = `img/duvar_${no}.jpg?v=3`; } else res(cv); };
+    im.src = `img/duvar_${hd ? 'hd_' : ''}${no}.jpg?v=3`;   // v71.5: 27+ setin de HD'si var   // v68.6: kaydederken yüksek çözünürlük
   });
 }
 window.hvDvSec = (i) => { _dv.i = i; renderDuvar(); };
@@ -1262,6 +1272,25 @@ window.hvAyetSecGit = (sid, n) => {
   if (Number(sid) === OK.id && $('ayah-' + n)) { OK.odak = n; const el = $('ayah-' + n); el.scrollIntoView({ behavior: 'smooth', block: 'center' }); el.classList.add('ayah-flash'); setTimeout(() => el.classList.remove('ayah-flash'), 2200); }
   else openSurahAt(sid, n);
 };
+/* ═════ v73.5 · Okurken "Bu sûrede ara": meâlde kelime yaz, geçtiği âyetlere tek dokunuşla git ═════ */
+window.hvSureAra = function (q0) {
+  const sid = OK.id; const s = sureBul(sid) || {};
+  sheetAc(shBas(esc(s.name || '') + ' Sûresi · ara') + `<div class="sa-kutu"><input id="sa-q" type="search" placeholder="Kelime yaz (ör. sabır, rahmet)" autocomplete="off" value="${esc(q0 || '')}"></div><div id="sa-son" class="sa-son"></div>`);
+  const inp = $('sa-q'), out = $('sa-son');
+  const ara = () => {
+    const q = (inp.value || '').trim();
+    if (q.length < 2) { out.innerHTML = '<div class="sa-not">En az 2 harf yaz.</div>'; return; }
+    const M = window.DIYANET_MEAL && window.DIYANET_MEAL[String(sid)];
+    if (!M) { out.innerHTML = '<div class="sa-not">Meâl yükleniyor…</div>'; if (typeof hvMealHazir === 'function') hvMealHazir().then(ara); return; }
+    const ql = hvTrNorm(q), R = []; let onceki = null;
+    for (let i = 0; i < M.length; i++) { const t = M[i]; if (!t || t === onceki) { onceki = t; continue; } onceki = t; if (hvTrNorm(t).indexOf(ql) >= 0) R.push([i + 1, t]); }
+    out.innerHTML = R.length
+      ? `<div class="sa-not">${R.length} âyette geçiyor</div>` + R.map(([n, t]) => `<button class="sa-s" onclick="hvAyetSecGit(${sid},${n})"><b>${n}. âyet</b><span>${hvHighlight(t, q)}</span></button>`).join('')
+      : `<div class="sa-not">“${esc(q)}” bu sûrenin meâlinde geçmiyor.</div>`;
+  };
+  let z = 0; inp.addEventListener('input', () => { clearTimeout(z); z = setTimeout(ara, 220); });
+  if (q0) ara(); setTimeout(() => { try { inp.focus(); } catch (e) {} }, 250);
+};
 window.hvOkYukari = () => { try { const v = $('surah-detail-view'); (v && v.scrollIntoView) ? v.scrollIntoView({ block: 'start' }) : window.scrollTo(0, 0); } catch (e) {} };
 window.hvKrAlt = () => { OK.altAcik = !OK.altAcik; const a = $('kr-alt'); if (a) a.outerHTML = krAltHtml(); };
 window.hvKrGeri = () => {
@@ -1336,8 +1365,8 @@ window.hvKrImler = () => {
 window.hvKrMenu = () => {
   const t = krTema(), fs = (typeof APP_STATE !== 'undefined' && APP_STATE.fontSize) || 20;
   sheetAc(shBas('Okuma ayarları') + `
+    <button class="kr-ayar-renk" onclick="hvSureAra()"><i>🔎</i><span>Bu sûrede ara<small>Meâlde bir kelime yaz, geçtiği âyete git</small></span>${IK.ok}</button>
     <button class="kr-ayar-renk" onclick="hvOkumaRenk()"><i>🎨</i><span>Renk, yazı tipi ve boyut<small>Zemin, yazı rengi ve yazı tipini kendin seç, önizle</small></span>${IK.ok}</button>
-    <div class="kr-ayar"><span>Yazı boyutu</span><div class="kr-fs"><button onclick="adjustQuranFontSize(-2);hvKrMenu()">A−</button><b>${fs}</b><button onclick="adjustQuranFontSize(2);hvKrMenu()">A+</button></div></div>
     <div class="kr-ayar"><span>Okunuşu göster</span><button class="kr-anah ${okOkunus() ? 'on' : ''}" onclick="hvOkOkunus();hvKrMenu()"><i></i></button></div>
     <div class="kr-ayar"><span>Sayfa / cüz ayraçları <small class="kr-ayar-not">Mushaf'ta yeni sayfa nerede başlıyor</small></span><button class="kr-anah ${yukle('ok_ayrac', true) ? 'on' : ''}" onclick="hvOkAyar('ayrac')"><i></i></button></div>
     <div class="kr-ayar"><span>İlerleme ve kalan süre <small class="kr-ayar-not">Üst çubukta: %40 · ~12 dk</small></span><button class="kr-anah ${yukle('ok_ilerle', true) ? 'on' : ''}" onclick="hvOkAyar('ilerle')"><i></i></button></div>
@@ -1347,9 +1376,6 @@ window.hvKrMenu = () => {
     <div class="kr-ayar"><span>Kavram açıklamaları <small class="kr-ayar-not">Mealdeki dinî kavramların altı çizili, dokununca anlamı</small></span><button class="kr-anah ${(() => { try { return localStorage.getItem('hv_kavram') !== '0'; } catch (e) { return true; } })() ? 'on' : ''}" onclick="hvKavramDegis(this)"><i></i></button></div>
     <div class="kr-ayar"><span>Okurken ekran kararmasın</span><button class="kr-anah ${yukle('ok_uyanik', true) ? 'on' : ''}" onclick="hvOkAyar('uyanik')"><i></i></button></div>
     <div class="kr-ayar"><span>Okudukça hatim ilerlesin <small class="kr-ayar-not">Hatim Takibi'nde “Meâlden Hatim”</small></span><button class="kr-anah ${yukle('ok_mhatim', true) ? 'on' : ''}" onclick="hvOkAyar('mhatim')"><i></i></button></div>
-    <div class="kr-ayar kr-ayar-d"><span>Görünüm <small class="kr-ayar-not">Ayarlar'daki “Yeşil tema” ile aynı</small></span><div class="kr-temalar">
-      <button class="${t === 'krem' ? 'on' : ''}" onclick="hvKrTema('krem')"><i class="kr-tm-krem"></i>Krem · Espresso</button>
-      <button class="${t === 'yesil' ? 'on' : ''}" onclick="hvKrTema('yesil')"><i class="kr-tm-yesil"></i>Koyu Yeşil · Altın</button></div></div>
     <button class="kr-ayar-git" onclick="hvOkKapat();navigateTo('mushaf')">${IK.mushaf}<span>Sayfa sayfa (mushaf) aç</span>${IK.ok}</button>`);
 };
 window.hvKrTema = (t) => {
@@ -1444,7 +1470,7 @@ function okShCiz() {
       <button class="${sonMu ? 'on' : ''}" onclick="hvOkIs('son')"><span>📍</span>${sonMu ? 'Kaldığın yer' : 'Buraya kadar'}</button>
       <button onclick="hvOkIs('pay')"><span>↗</span>Paylaş</button>
       <button onclick="hvOkIs('kop')"><span>⧉</span>Kopyala</button>
-    </div>`;
+    </div>${window.hvIlgiliHtml ? window.hvIlgiliHtml(id, n) : ''}`;
   if (k === 'elmalili' && !yz) elmalili(id).then((a) => { if (_okSh.n === n) { if (!a) { _okSh.k = 'diyanet'; toast('Elmalılı meâli alınamadı', 'İnternete bağlanınca tekrar dene.'); } okShCiz(); } });
 }
 window.hvOkAyet = (n) => {
@@ -1679,6 +1705,8 @@ window.hvPbModal = (k) => { kaydet('paylas_bg', k); if (_pbSonVeri) window.hvOpe
       const bas = (e) => { y0 = (e.touches ? e.touches[0].clientY : e.clientY); taban = Number(_son.ofset) || 0; img.classList.add('surukle'); };
       const git = (e) => { if (y0 === null) return; const y = (e.touches ? e.touches[0].clientY : e.clientY); img.style.transform = `translateY(${Math.round((y - y0) * 0.35)}px)`; e.preventDefault(); };
       const bit = (e) => { if (y0 === null) return; const y = (e.changedTouches ? e.changedTouches[0].clientY : e.clientY); const dy = (y - y0) * olcek(); y0 = null; img.classList.remove('surukle'); img.style.transform = ''; if (Math.abs(dy) > 12) { _son.ofset = taban + dy; yenidenAc(); } };
+      img.draggable = false; img.addEventListener('dragstart', (e) => e.preventDefault());   // v73.2: PC'de resim sürüklenmesin, yazı taşınsın
+      img.style.touchAction = 'none'; img.style.webkitTouchCallout = 'none'; img.style.userSelect = 'none';
       img.addEventListener('touchstart', bas, { passive: true }); img.addEventListener('touchmove', git, { passive: false }); img.addEventListener('touchend', bit);
       img.addEventListener('mousedown', bas); window.addEventListener('mousemove', git); window.addEventListener('mouseup', bit);
     }
@@ -2836,22 +2864,7 @@ window.hvWidgetAc = function (h) {
   document.addEventListener('mousedown', (e) => { if (akiyor && kutu() && kutu().contains(e.target) && window.hvOkuMotor && window.hvOkuMotor.modDokun && window.hvOkuMotor.modDokun() && !('ontouchstart' in window)) { window.hvOkuMotor.ileri(); yut = Date.now(); } }, true);
   document.addEventListener('click', (e) => { if (yut && Date.now() - yut < 700 && kutu() && kutu().contains(e.target)) { e.stopPropagation(); e.preventDefault(); yut = 0; } }, true);
   document.addEventListener('touchstart', eldenDur, { passive: true });
-  // v72.9: durmuşken (panel açık) metne kısa bir dokunuş → kaldığı yerden devam eder.
-  // Kaydırmak için sürükleme ya da basılı tutma (yer imi) devam ettirmez.
-  let dv = null;
-  document.addEventListener('touchstart', (e) => {
-    dv = null;
-    if (akiyor || !acik || gecis || e.touches.length !== 1 || (yut && Date.now() - yut < 80)) return;   // aynı dokunuş az önce durdurduysa devam ettirme
-    const k = kutu(); if (!k || !k.contains(e.target) || kok.contains(e.target)) return;
-    if (e.target.closest && e.target.closest('button, a, input, textarea, .kr-mp')) return;
-    dv = { x: e.touches[0].clientX, y: e.touches[0].clientY, t: Date.now(), st: k.scrollTop };
-  }, { passive: true });
-  document.addEventListener('touchmove', (e) => { if (dv && (Math.abs(e.touches[0].clientX - dv.x) > 10 || Math.abs(e.touches[0].clientY - dv.y) > 10)) dv = null; }, { passive: true });
-  document.addEventListener('touchend', () => {
-    const d = dv; dv = null; if (!d || akiyor || !acik) return;
-    const k = kutu(); if (!k || Date.now() - d.t > 350 || Math.abs(k.scrollTop - d.st) > 3) return;
-    yut = Date.now(); basla();
-  }, { passive: true });
+  // v73.2: durmuşken dokununca devam etme kaldırıldı (kullanıcı isteği) — dokunuş âyet menüsünü (not, buraya kadar okudum) açar; devam için ▶
   document.addEventListener('wheel', eldenDur, { passive: true });
   document.addEventListener('visibilitychange', () => { if (document.hidden) dur(); });
 
@@ -3211,3 +3224,28 @@ window.HV_SURE_OZET_SLUG = ["fatiha-suresi","bakara-suresi","al-i-imran-suresi",
     setInterval(() => { try { ciz(); } catch (e) {} }, 60000);   // gündüz/akşam/gece geçişi
   });
 })();
+
+/* ═════ v73.2 · Ana sayfa: Perşembe akşamından Cuma öğlesine kadar Günün Âyeti kartında "🕌 Cuma" düğmesi ═════ */
+(function () {
+  let sira = -1;
+  // Perşembe akşam ezanından Cuma öğle ezanına kadar (vakit yoksa 18:00 → 13:00)
+  const vdk = (id, yedek) => { const t = typeof APP_STATE !== 'undefined' && APP_STATE.prayerTimes && APP_STATE.prayerTimes[id]; if (!t) return yedek; const p = String(t).split(':'); return (parseInt(p[0], 10) || 0) * 60 + (parseInt(p[1], 10) || 0); };
+  const cumaMi = () => { if (window.hvCumaTest) return true; const d = new Date(), g = d.getDay(), dk = d.getHours() * 60 + d.getMinutes(); return (g === 4 && dk >= vdk('Maghrib', 18 * 60)) || (g === 5 && dk < vdk('Dhuhr', 13 * 60)); };
+  window.hvCumaPaylas = function (ev) {
+    if (ev && ev.stopPropagation) ev.stopPropagation();
+    if (typeof CUMA_MESAJLARI === 'undefined' || !CUMA_MESAJLARI.length) { navigateTo('paylasim'); return; }
+    if (sira < 0) sira = Math.floor(Math.random() * CUMA_MESAJLARI.length); else sira = (sira + 1) % CUMA_MESAJLARI.length;
+    const m = CUMA_MESAJLARI[sira];
+    if (typeof hvOpenShareCard === 'function') hvOpenShareCard({ badge: '🕌 Cuma Mesajı', text: m, source: '', fallbackText: '🕌 Cuma Mesajı\n\n' + m });
+  };
+  function ciz() {
+    const af = document.querySelector('#daily-ayet-card .ya-af'); if (!af) return;
+    let b = af.querySelector('.ya-cuma');
+    if (cumaMi()) {
+      if (!b) { b = document.createElement('button'); b.className = 'ya-paylas ya-cuma'; b.textContent = '🕌 Cuma'; b.onclick = window.hvCumaPaylas; af.insertBefore(b, af.querySelector('.ya-paylas')); }
+    } else if (b) b.remove();
+  }
+  window.hvCumaDugme = ciz;
+  document.addEventListener('DOMContentLoaded', () => { setTimeout(ciz, 900); setInterval(ciz, 60000); });
+})();
+

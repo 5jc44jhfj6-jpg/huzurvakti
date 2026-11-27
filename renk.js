@@ -37,7 +37,10 @@
     ['#2e1f13', 'Kahve', '#45301e', '#170f08', '#e9b264'],
     ['#22170d', 'Mum ışığı', '#3d2812', '#0e0905', '#ffb24d'],
     ['#161616', 'Gece', '#262626', '#080808', '#d6b46a'],
-    ['#050505', 'Siyah', '#151515', '#000000', '#f6c95e']
+    ['#050505', 'Siyah', '#151515', '#000000', '#f6c95e'],
+    // v73.5: kullanıcının beğendiği tarzda yeni tonlar
+    ['#f6efe0', 'Fildişi kâğıt', '#fcf8ee', '#e2d4b8', '#9a7236'], ['#efd9ae', 'Kehribar', '#f8e9c8', '#d6b274', '#8a5420'],
+    ['#2a1c12', 'Kahve krem', '#3f2b1c', '#130c07', '#e5b86c'], ['#3d0f1a', 'Yakut', '#5a1a29', '#1e050b', '#f0c070']
   ];
   const YAZI = [
     ['#111111', 'Siyah'], ['#2b1d14', 'Koyu kahve'], ['#5a3d22', 'Kahve'], ['#1f4a2c', 'Koyu yeşil'], ['#0d4a3b', 'Zümrüt'],
@@ -49,7 +52,8 @@
     ['Krem', null, null], ['Sepya', '#f1e4c9', '#5a3d22'], ['İnci', '#fbfbfa', '#111111'], ['Açık yeşil', '#e6f2df', '#1f4a2c'],
     ['Nane', '#e6f6ee', '#0d4a3b'], ['Gök', '#e9f0fc', '#1d3a6b'], ['Şeftali', '#ffeedf', '#6a2c14'], ['Lavanta', '#efe9fd', '#3a2470'],
     ['Zümrüt', '#0f3d2e', '#f3ead2'], ['Orman', '#1f4b2b', '#e6f2cf'], ['Lacivert', '#10224a', '#f6d98e'], ['Bordo', '#521424', '#f3ead2'],
-    ['Mor', '#3a1f4f', '#e4d9ff'], ['Mum ışığı', '#22170d', '#f2d29b'], ['Gece', '#161616', '#f3ead2'], ['Siyah · Altın', '#050505', '#f6d98e']
+    ['Mor', '#3a1f4f', '#e4d9ff'], ['Mum ışığı', '#22170d', '#f2d29b'], ['Gece', '#161616', '#f3ead2'], ['Siyah · Altın', '#050505', '#f6d98e'],
+    ['Fildişi', '#f6efe0', '#2b2118'], ['Kehribar', '#efd9ae', '#3a2410'], ['Kahve · Krem', '#2a1c12', '#f1e2c4'], ['Yakut', '#3d0f1a', '#f6e6d0']
   ];
   const zBul = (h) => ZEMIN.find(x => x[0] === h);
   // kâğıt dokusu (çok hafif); düz renk gibi değil, kâğıt gibi dursun
@@ -130,21 +134,27 @@
   /* v72.9 · YAZI TİPLERİ (meâl + Arapça). Türkçe harflerin hepsini destekleyen, uzun okuma için bilinen yazı tipleri.
      Seçilen yazı tipi Google Fonts'tan bir kez indirilir; internet yoksa varsayılan yazı tipiyle görünür. */
   const FANAH = 'hv_okuma_font';
-  const MFONT = [
-    ['', 'Varsayılan', "'Outfit', sans-serif", null],
-    ['lora', 'Lora', "'Lora', serif", 'Lora:ital,wght@0,400;0,700;1,400;1,700'],
-    ['literata', 'Literata', "'Literata', serif", 'Literata:ital,wght@0,400;0,700;1,400;1,700'],
-    ['merriweather', 'Merriweather', "'Merriweather', serif", 'Merriweather:ital,wght@0,400;0,700;1,400;1,700'],
-    ['notoserif', 'Noto Serif', "'Noto Serif', serif", 'Noto+Serif:ital,wght@0,400;0,700;1,400;1,700'],
-    ['nunito', 'Nunito', "'Nunito', sans-serif", 'Nunito:ital,wght@0,400;0,700;1,400;1,700'],
-    ['sourcesans', 'Source Sans', "'Source Sans 3', sans-serif", 'Source+Sans+3:ital,wght@0,400;0,700;1,400;1,700']
+  const MFONT = [   // v73.3: birbirinden net ayrılan 11 yazı tipi — hepsi Türkçe harfleri tam destekler (Google Fonts latin-ext)
+    ['', 'Varsayılan', "'Outfit', sans-serif", null, 'Sade, modern'],
+    ['atkinson', 'Atkinson', "'Atkinson Hyperlegible Next', sans-serif", 'Atkinson+Hyperlegible+Next:ital,wght@0,400;0,700;1,400;1,700', 'En okunaklı'],
+    ['lexend', 'Lexend', "'Lexend', sans-serif", 'Lexend:wght@400;700', 'Akıcı okuma'],
+    ['andika', 'Andika', "'Andika', sans-serif", 'Andika:ital,wght@0,400;0,700;1,400;1,700', 'İri, sade harf'],
+    ['nunito', 'Nunito', "'Nunito', sans-serif", 'Nunito:ital,wght@0,400;0,700;1,400;1,700', 'Yumuşak, yuvarlak'],
+    ['lora', 'Lora', "'Lora', serif", 'Lora:ital,wght@0,400;0,700;1,400;1,700', 'Kitap'],
+    ['merriweather', 'Merriweather', "'Merriweather', serif", 'Merriweather:ital,wght@0,400;0,700;1,400;1,700', 'Ekranda dolgun'],
+    ['baskerville', 'Baskerville', "'Libre Baskerville', serif", 'Libre+Baskerville:ital,wght@0,400;0,700;1,400', 'Geniş, ferah'],
+    ['crimson', 'Crimson', "'Crimson Pro', serif", 'Crimson+Pro:ital,wght@0,400;0,700;1,400;1,700', 'İnce, zarif'],
+    ['garamond', 'Garamond', "'EB Garamond', serif", 'EB+Garamond:ital,wght@0,400;0,700;1,400;1,700', 'Klasik matbaa'],
+    ['alegreya', 'Alegreya', "'Alegreya', serif", 'Alegreya:ital,wght@0,400;0,700;1,400;1,700', 'Edebî, kalem'],
   ];
   const AFONT = [
     ['', 'Amiri Kur\'an', "'Amiri Quran', 'Amiri', serif", null],
     ['scheherazade', 'Scheherazade', "'Scheherazade New', serif", 'Scheherazade+New:wght@400;700'],
     ['naskh', 'Noto Nesih', "'Noto Naskh Arabic', serif", 'Noto+Naskh+Arabic:wght@400;600']
   ];
-  const fOku = () => { try { const o = JSON.parse(localStorage.getItem(FANAH) || 'null'); return o || Object.assign({}, FVARS); } catch (x) { return Object.assign({}, FVARS); } };
+  // v73.5: listeden çıkan eski yazı tiplerini seçmiş olanlar en yakın yeni yazı tipine geçsin (sessizce Varsayılan'a düşmesin)
+  const ESKI_FONT = { literata: 'lora', notoserif: 'merriweather', sourcesans: 'atkinson' };
+  const fOku = () => { try { const o = JSON.parse(localStorage.getItem(FANAH) || 'null'); if (o && ESKI_FONT[o.m]) { o.m = ESKI_FONT[o.m]; try { localStorage.setItem(FANAH, JSON.stringify(o)); } catch (y) {} } return o || Object.assign({}, FVARS); } catch (x) { return Object.assign({}, FVARS); } };
   const fYaz = (o) => { try { localStorage.setItem(FANAH, JSON.stringify(o)); } catch (x) {} };
   const fBul = (L, id) => L.find(x => x[0] === (id || '')) || L[0];
   const yuklendi = {};
@@ -249,7 +259,7 @@
       <div class="okr-et">Yazı rengi</div>
       <div class="okr-renkler">${YAZI.map(([h, ad]) => `<button class="${o.y === h ? 'on' : ''}" style="background:${h}" title="${e(ad)}" aria-label="${e(ad)}" onclick="hvOkumaRenkSec('y','${h}')"></button>`).join('')}</div>
       <div class="okr-et">Meâl yazı tipi</div>
-      <div class="okr-fontlar">${MFONT.map(f => `<button class="${(fo.m || '') === f[0] ? 'on' : ''}" onclick="hvOkumaFont('m','${f[0]}')"><span style="font-family:${f[2]}">Aa Rahmân</span><small>${e(f[1])}</small></button>`).join('')}</div>
+      <div class="okr-fontlar">${MFONT.map(f => `<button class="${(fo.m || '') === f[0] ? 'on' : ''}" onclick="hvOkumaFont('m','${f[0]}')"><span style="font-family:${f[2]}">Aa Rahmân</span><small>${e(f[1])}</small>${f[4] ? `<em>${e(f[4])}</em>` : ''}</button>`).join('')}</div>
       <div class="okr-stil"><button class="${fo.k ? 'on' : ''}" onclick="hvOkumaStil('k')"><b>K</b> Kalın</button><button class="${fo.i ? 'on' : ''}" onclick="hvOkumaStil('i')"><i>İ</i> İtalik</button></div>
       <div class="okr-et">Arapça yazı tipi</div>
       <div class="okr-fontlar okr-fontlar-ar">${AFONT.map(f => `<button class="${(fo.a || '') === f[0] ? 'on' : ''}" onclick="hvOkumaFont('a','${f[0]}')"><span style="font-family:${f[2]}">الرَّحْمَٰن</span><small>${e(f[1])}</small></button>`).join('')}</div>

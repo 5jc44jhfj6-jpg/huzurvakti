@@ -32,3 +32,37 @@
   const kaydet = () => { if (window.FEATURE_ROUTES) window.FEATURE_ROUTES['konular'] = ciz; };
   if (window.FEATURE_ROUTES) kaydet(); else document.addEventListener('DOMContentLoaded', kaydet);
 })();
+
+/* ═════ v73.3 · Âyet menüsünde "🔗 İlgili âyetler" ═════
+   Kaynak yalnızca uygulamadaki kendi verimiz: Konulara Göre Kur'an (31 konu) + Peygamber kıssaları.
+   Okunan âyet bunlardan birinde geçiyorsa menüde çıkar; geçmiyorsa hiç görünmez. Meâller Diyanet. */
+(function () {
+  let acik = '';
+  const esc = (t) => String(t == null ? '' : t).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const sAd = (s) => { try { const x = (ALL_114_SURAHS || []).find(z => Number(z.id) === Number(s)); return x ? x.name : s + '. sûre'; } catch (e) { return s + '. sûre'; } };
+  const meal = (s, a) => { const M = window.DIYANET_MEAL; const x = M && M[s]; const t = Array.isArray(x) ? x[a - 1] : (x && x[a]); return t || ''; };
+  const icinde = (y, s, n) => y[0] === Number(s) && n >= y[1] && n <= y[2];
+  function bul(s, n) {
+    const g = [];
+    (window.HV_KONU || []).forEach((k, i) => { if (k.y.some(y => icinde(y, s, n))) { const d = k.y.filter(y => !icinde(y, s, n)); if (d.length) g.push({ key: 'k' + i, ad: k.ad, ik: k.ik || '🗂️', tur: 'konu', y: d }); } });
+    const P = window.HV_PEYGAMBER; if (P) ['p', 'd'].forEach(t => (P[t] || []).forEach(p => { if (p.y.some(y => icinde(y, s, n))) { const d = p.y.filter(y => !icinde(y, s, n)); if (d.length) g.push({ key: 'p' + p.id, ad: p.ad, ik: '📜', tur: 'kıssa', y: d }); } }));
+    return g;
+  }
+  function ciz(s, n) {
+    const g = bul(s, n); if (!g.length) return '';
+    if (acik && !g.some(x => x.key === acik)) acik = '';
+    return `<div id="ok-ilg" class="ok-ilg"><div class="ok-ilg-bas">🔗 İlgili âyetler</div>
+      <div class="ok-ilg-cip">${g.map(x => `<button class="${x.key === acik ? 'on' : ''}" onclick="hvIlgiliAc('${x.key}',${s},${n})">${x.ik} ${esc(x.ad)}${x.tur === 'kıssa' ? ' kıssası' : ''} <small>${x.y.length}</small></button>`).join('')}</div>
+      ${acik ? (() => { const x = g.find(z => z.key === acik); return `<div class="ok-ilg-lis">${x.y.map(y => { const m = meal(y[0], y[1]); return `<button onclick="hvIlgiliGit(${y[0]},${y[1]},${s},${n})"><b>${esc(sAd(y[0]))} ${y[1]}${y[2] > y[1] ? '–' + y[2] : ''}</b>${m ? `<span>${esc(m)}</span>` : ''}<i>›</i></button>`; }).join('')}</div>`; })() : ''}
+    </div>`;
+  }
+  window.hvIlgiliHtml = (s, n) => { try { return ciz(s, n); } catch (e) { return ''; } };
+  window.hvIlgiliAc = (k, s, n) => {
+    acik = acik === k ? '' : k;
+    const kutu = document.getElementById('ok-ilg'); if (!kutu) return;
+    const yap = () => { const t = document.createElement('div'); t.innerHTML = ciz(s, n); const y = t.firstElementChild; if (y) kutu.replaceWith(y); };
+    if (acik && !window.DIYANET_MEAL && typeof hvMealHazir === 'function') hvMealHazir().then(yap); else yap();
+    if (acik) setTimeout(() => { const l = document.querySelector('#ok-ilg .ok-ilg-lis'); if (l) l.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); }, 60);
+  };
+  window.hvIlgiliGit = (s, a, os, oa) => { acik = ''; try { hvOkKapat(); } catch (e) {} setTimeout(() => { if (window.hvKissaGit) hvKissaGit(s, a, os, oa); else openSurahAt(s, a); }, 200); };
+})();
